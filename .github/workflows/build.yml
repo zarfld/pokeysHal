@@ -24,6 +24,10 @@ jobs:
         libgtk2.0-dev python3-tk python3-dev libboost-python-dev libmodbus-dev \
         libusb-1.0-0-dev libudev-dev python3-serial python3-usb python3-numpy
 
+    - name: Authenticate GitHub CLI
+      run: |
+        echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
     - name: Build PoKeysLib
       run: |
         mkdir build && cd build
