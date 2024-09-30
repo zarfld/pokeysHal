@@ -1,0 +1,49 @@
+name: Build and Test PoKeysLib on LinuxCNC
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: self-hosted  # Use the self-hosted LinuxCNC runner
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake git libncurses5-dev libreadline-dev \
+        tcl8.6-dev tk8.6-dev bwidget libxmu-dev libglu1-mesa-dev libgl1-mesa-dev \
+        libgtk2.0-dev python3-tk python3-dev libboost-python-dev libmodbus-dev \
+        libusb-1.0-0-dev libudev-dev python3-serial python3-usb python3-numpy
+
+    - name: Build PoKeysLib
+      run: |
+        mkdir build && cd build
+        cmake ..
+        make
+      continue-on-error: true  # Continue to next steps even if the build fails
+
+    - name: Save build logs
+      run: |
+        if [ -f build.log ]; then
+          cat build.log
+        fi
+      if: failure()
+
+    - name: Create GitHub Issue on Failure
+      if: failure()
+      run: |
+        echo "Build failed, attaching logs."
+        LOG_FILE="build.log"
+        if [ -f $LOG_FILE ]; then
+          gh issue create --title "Build Error: ${{ github.sha }}" --body-file $LOG_FILE --label "build-error" --assignee @your-username
+        else
+          echo "No build log found."
