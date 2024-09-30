@@ -53,10 +53,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake git libncurses5-dev libreadline-dev \
-        tcl8.6-dev tk8.6-dev bwidget libxmu-dev libglu1-mesa-dev libgl1-mesa-dev \
-        libgtk2.0-dev python3-tk python3-dev libboost-python-dev libmodbus-dev \
-        libusb-1.0-0-dev libudev-dev python3-serial python3-usb python3-numpy
+        xargs -a prerequisites.txt sudo apt-get install -y
 
     - name: Authenticate GitHub CLI
       run: |
