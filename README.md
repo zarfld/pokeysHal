@@ -77,10 +77,28 @@ jobs:
       run: |
         echo "Build failed, attaching logs."
         LOG_FILE="build.log"
-        if [ -f $LOG_FILE ]; then
+        if [ -f $LOG_FILE]; then
           gh issue create --title "Build Error: ${{ github.sha }}" --body-file $LOG_FILE --label "build-error" --assignee @your-username
         else
           echo "No build log found."
+```
+
+## Setting up GitHub CLI Authentication
+
+To enable the `gh` command to create issues, you need to authenticate the GitHub CLI with a GitHub token. Follow these steps:
+
+1. Install GitHub CLI by following the instructions [here](https://cli.github.com/manual/installation).
+2. Authenticate the GitHub CLI with your GitHub account by running the following command and following the prompts:
+
+```sh
+gh auth login
+```
+
+3. Generate a GitHub token with the necessary permissions by following the instructions [here](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token).
+4. Configure the `gh` command to use the generated token by running the following command:
+
+```sh
+export GH_TOKEN=YOUR_GITHUB_TOKEN
 ```
 
 ## Testing the Setup
