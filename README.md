@@ -126,4 +126,26 @@ Example for integrating linuxcnc-docker:
 
 This integration could allow you to test the PoKeysLib build process inside a containerized LinuxCNC environment.
 
+## Using prerequisites.txt for Installing Dependencies
+
+To simplify the installation of dependencies, you can use a `prerequisites.txt` file. Follow these steps:
+
+1. Create a `prerequisites.txt` file in the root of your repository with the following content:
+
+```
+git
+build-essential
+libusb-1.0-0
+libusb-1.0-0-dev
+```
+
+2. Update the GitHub Actions workflow to install dependencies using the `prerequisites.txt` file:
+
+```yaml
+- name: Install dependencies
+  run: |
+    sudo apt-get update
+    xargs -a prerequisites.txt sudo apt-get install -y
+```
+
 By following this approach, your GitHub repository will be a fork of mbosnak's PoKeysLib, and it will build using the latest LinuxCNC ISO on a self-hosted runner. Any build errors will automatically create an issue with the build logs attached for easier debugging.
