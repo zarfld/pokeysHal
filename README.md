@@ -163,4 +163,93 @@ python3-numpy
     xargs -a prerequisites.txt sudo apt-get install -y
 ```
 
-By following this approach, your GitHub repository will be a fork of mbosnak's PoKeysLib, and it will build using the latest LinuxCNC ISO on a self-hosted runner. Any build errors will automatically create an issue with the build logs attached for easier debugging.
+## Marking Issues in GitHub
+
+In GitHub, the concept of **marking issues** typically refers to using **labels**, **milestones**, **projects**, **assignees**, **linked issues**, **automatic marking with keywords**, and **notifications and mentions** to organize and track the progress or status of issues. Each of these features offers a different way to categorize and manage issues in a repository. Here’s a breakdown of how each feature works for marking issues:
+
+### 1. **Labels**:
+   - **Purpose**: Labels are used to categorize issues based on their type, priority, status, or any other criteria you want to track.
+   - **How to Use**:
+     - Navigate to the **Issues** tab in your repository.
+     - Click on an issue to open it.
+     - On the right-hand side, find the **Labels** section, and click to select or create a new label.
+     - Labels are customizable and can include text like `bug`, `enhancement`, `help wanted`, `in progress`, etc.
+   - **Features**:
+     - Color-coded for easy identification.
+     - Can filter issues by label.
+     - Flexible for any categorization system.
+   - **Best Practices**:
+     - Establish a clear and consistent labeling system (e.g., label all bugs with `bug`, and use `enhancement` for new features).
+
+### 2. **Milestones**:
+   - **Purpose**: Milestones are used to group issues that are related to a specific goal or project phase (e.g., a release, sprint, or version).
+   - **How to Use**:
+     - In the **Issues** tab, click on **Milestones**.
+     - Create a new milestone, giving it a name, description, and due date.
+     - Once created, you can assign issues to this milestone.
+   - **Features**:
+     - Shows a progress bar that tracks the completion percentage based on the number of issues closed.
+     - Can set deadlines and descriptions.
+     - Useful for tracking progress toward releases or goals.
+
+### 3. **Assignees**:
+   - **Purpose**: Assignees help delegate responsibility for an issue to a specific person or a group of collaborators.
+   - **How to Use**:
+     - In an issue, you can find the **Assignees** section on the right-hand side.
+     - Click to assign one or more collaborators to the issue.
+   - **Features**:
+     - Helps indicate who is responsible for resolving an issue.
+     - You can filter issues by assignee to see what tasks are assigned to whom.
+     - Allows multiple assignees (if more than one person is working on an issue).
+   - **Best Practices**:
+     - Always assign an owner (assignee) to ensure responsibility for resolving the issue.
+
+### 4. **Projects**:
+   - **Purpose**: GitHub Projects are used to organize issues in a Kanban-style board, making it easy to track the status and flow of tasks.
+   - **How to Use**:
+     - Go to the **Projects** tab of the repository.
+     - Create a new project board (e.g., Kanban board with columns like `To Do`, `In Progress`, `Done`).
+     - Drag and drop issues from one column to another as their status changes.
+   - **Features**:
+     - Provides a visual representation of the workflow.
+     - Allows for project planning and tracking by moving issues between columns.
+     - Can set custom columns for workflows (e.g., `Backlog`, `In Progress`, `QA`, `Done`).
+   - **Best Practices**:
+     - Use GitHub Projects for Agile workflows, such as sprints or stages, to visually track the progress of issues across stages.
+
+### 5. **Linked Issues and Pull Requests**:
+   - **Purpose**: You can mark relationships between issues and pull requests by linking them. This helps keep track of the work done to resolve an issue.
+   - **How to Use**:
+     - In an issue or pull request, scroll down to the **Linked issues** section.
+     - Link the related issues or PRs, which shows the relationship and progress.
+   - **Features**:
+     - Automatically closes issues when linked pull requests are merged (using keywords like `Fixes #issue_number` in PR descriptions).
+     - Helps track which code changes resolve specific issues.
+   - **Best Practices**:
+     - Whenever a pull request is created to address an issue, make sure it is linked properly to automatically close the issue upon merging.
+
+### 6. **Automatic Marking with Keywords**:
+   - **Purpose**: You can use special keywords in pull request descriptions or commit messages to automatically close or mark issues.
+   - **How to Use**:
+     - In a PR or commit message, use keywords like `Fixes`, `Resolves`, or `Closes` followed by the issue number (e.g., `Fixes #123`).
+   - **Features**:
+     - When the pull request is merged, the linked issue is automatically closed.
+     - Keeps issues and code changes tightly integrated.
+
+### 7. **Notifications and Mentions**:
+   - **Purpose**: Mark an issue for attention by mentioning someone or requesting a review.
+   - **How to Use**:
+     - In the issue comment section, use the `@` symbol followed by a username (e.g., `@username`).
+     - The mentioned person will receive a notification, making it easier to get their attention.
+   - **Features**:
+     - Helps involve specific people in the discussion of an issue.
+     - Can also request a review if necessary.
+
+### Best Practices:
+- **Consistent Labeling**: Establish a clear and consistent labeling system (e.g., label all bugs with `bug`, and use `enhancement` for new features).
+- **Clear Milestones**: Define milestones based on significant project goals, like upcoming releases or major features, and assign issues accordingly.
+- **Assign Ownership**: Always assign an owner (assignee) to ensure responsibility for resolving the issue.
+- **Link Pull Requests**: Whenever a pull request is created to address an issue, make sure it is linked properly to automatically close the issue upon merging.
+- **Use Projects for Agile Workflows**: If working in sprints or stages, use GitHub Projects to visually track the progress of issues across stages.
+
+By leveraging these marking features effectively, you can streamline issue management and ensure better communication within your team.
