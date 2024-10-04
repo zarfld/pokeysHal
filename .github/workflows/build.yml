@@ -22,6 +22,9 @@ jobs:
       run: |
         git clone https://bitbucket.org/mbosnak/pokeyslib pokeyslib
 
+    - name: Create dummy file in pokeyslib
+      run: echo "dummy file" > pokeyslib/.dummy
+
     - name: Commit and push updates
       run: |
         git config --global user.name "github-actions[bot]"
@@ -37,6 +40,9 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
 
     - name: Install dependencies
       run: |
@@ -56,7 +62,7 @@ jobs:
 
     - name: Save build logs
       run: |
-        if [ -f build.log ]; then
+        if [ -f build.log]; then
           cat build.log
         fi
       if: failure()
@@ -66,7 +72,7 @@ jobs:
       run: |
         echo "Build failed, attaching logs."
         LOG_FILE="build.log"
-        if [ -f $LOG_FILE ]; then
+        if [ -f $LOG_FILE]; then
           gh issue create --title "Build Error: ${{ github.sha }}" --body-file $LOG_FILE --label "build-error" --assignee @your-username
         else
           echo "No build log found."
