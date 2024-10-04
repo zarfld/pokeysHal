@@ -60,7 +60,7 @@ jobs:
 
     - name: Save build logs
       run: |
-        if [ -f build.log]; then
+        if [ -f build.log ]; then
           cat build.log
         fi
       if: failure()
@@ -70,7 +70,7 @@ jobs:
       run: |
         echo "Build failed, attaching logs."
         LOG_FILE="build.log"
-        if [ -f $LOG_FILE]; then
+        if [ -f $LOG_FILE ]; then
           gh issue create --title "Build Error: ${{ github.sha }}" --body-file $LOG_FILE --label "build-error" --assignee @your-username
         else
           echo "No build log found."
