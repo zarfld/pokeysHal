@@ -18,6 +18,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Ensure submodule URL is set
+      run: |
+        git submodule init
+        git config submodule.pokeyslib.url https://bitbucket.org/mbosnak/pokeyslib.git
+
     - name: Initialize submodules
       run: git submodule update --init --recursive
 
@@ -55,7 +60,7 @@ jobs:
 
     - name: Save build logs
       run: |
-        if [ -f build.log]; then
+        if [ -f build.log ]; then
           cat build.log
         fi
       if: failure()
@@ -65,7 +70,7 @@ jobs:
       run: |
         echo "Build failed, attaching logs."
         LOG_FILE="build.log"
-        if [ -f $LOG_FILE]; then
+        if [ -f $LOG_FILE ]; then
           gh issue create --title "Build Error: ${{ github.sha }}" --body-file $LOG_FILE --label "build-error" --assignee @your-username
         else
           echo "No build log found."
@@ -117,6 +122,10 @@ jobs:
         echo "Setting up auth"
         git config --local --name-only --get-regexp core\.sshCommand
         git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+        if [ $? -ne 0 ]; then
+          echo "Error: Missing URL for submodule path 'pokeyslib' in .gitmodules"
+          exit 1
+        fi
         echo "Auth setup complete"
 
     - name: Log .gitmodules file
