@@ -41,10 +41,32 @@ on:
   pull_request:
     branches:
       - main
+  schedule:
+    - cron: '0 0 */14 * *'  # Run every two weeks
 
 jobs:
+  update-pokeyslib:
+    runs-on: self-hosted  # Use the self-hosted LinuxCNC runner
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Clone PoKeysLib repository
+      run: |
+        git clone https://bitbucket.org/mbosnak/pokeyslib pokeyslib
+
+    - name: Commit and push updates
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add pokeyslib
+        git commit -m "Update PoKeysLib subfolder"
+        git push
+
   build:
     runs-on: self-hosted  # Use the self-hosted LinuxCNC runner
+    needs: update-pokeyslib
 
     steps:
     - name: Checkout repository
@@ -78,7 +100,7 @@ jobs:
       run: |
         echo "Build failed, attaching logs."
         LOG_FILE="build.log"
-        if [ -f $LOG_FILE]; then
+        if [ -f $LOG_FILE ]; then
           gh issue create --title "Build Error: ${{ github.sha }}" --body-file $LOG_FILE --label "build-error" --assignee @your-username
         else
           echo "No build log found."
@@ -253,3 +275,13 @@ In GitHub, the concept of **marking issues** typically refers to using **labels*
 - **Use Projects for Agile Workflows**: If working in sprints or stages, use GitHub Projects to visually track the progress of issues across stages.
 
 By leveraging these marking features effectively, you can streamline issue management and ensure better communication within your team.
+
+## Subfolder Structure
+
+The source from the repository `https://bitbucket.org/mbosnak/pokeyslib` is placed in a subfolder named `pokeyslib`. This subfolder is automatically updated every two weeks to ensure that the latest changes from the original repository are included.
+
+## Automatic Update Mechanism
+
+The `.github/workflows/build.yml` file includes a scheduled job to update the content from the specified repository every two weeks. This job clones the repository `https://bitbucket.org/mbosnak/pokeyslib` into the `pokeyslib` subfolder and commits the updates to the repository.
+
+The update job is triggered by the `schedule` event, which is set to run at a two-week interval. This ensures that the `pokeyslib` subfolder is always up-to-date with the latest changes from the original repository.

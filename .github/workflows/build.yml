@@ -7,10 +7,32 @@ on:
   pull_request:
     branches:
       - main
+  schedule:
+    - cron: '0 0 */14 * *'  # Run every two weeks
 
 jobs:
+  update-pokeyslib:
+    runs-on: self-hosted  # Use the self-hosted LinuxCNC runner
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Clone PoKeysLib repository
+      run: |
+        git clone https://bitbucket.org/mbosnak/pokeyslib pokeyslib
+
+    - name: Commit and push updates
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add pokeyslib
+        git commit -m "Update PoKeysLib subfolder"
+        git push
+
   build:
     runs-on: self-hosted  # Use the self-hosted LinuxCNC runner
+    needs: update-pokeyslib
 
     steps:
     - name: Checkout repository
