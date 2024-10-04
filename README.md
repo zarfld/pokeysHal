@@ -52,6 +52,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Ensure submodule URL is set
+      run: |
+        git submodule init
+        git config submodule.pokeyslib.url https://bitbucket.org/mbosnak/pokeyslib.git
+
     - name: Initialize submodules
       run: git submodule update --init --recursive
 
@@ -110,6 +115,61 @@ jobs:
         mkdir build && cd build
         cmake ..
         make
+
+    - name: Run actions/checkout@v2
+      run: actions/checkout@v2
+
+    - name: Sync repository
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "Sync repository"
+        git push
+
+    - name: Get Git version info
+      run: git version
+
+    - name: Copy .gitconfig
+      run: cp /home/zarfld/.gitconfig /home/zarfld/actions-runner2/_work/_temp/e57545ec-8da1-4ecc-86a7-d75576d1a366/.gitconfig
+
+    - name: Override HOME
+      run: export HOME=/home/zarfld/actions-runner2/_work/_temp/e57545ec-8da1-4ecc-86a7-d75576d1a366
+
+    - name: Add safe directory
+      run: git config --global --add safe.directory /home/zarfld/actions-runner2/_work/pokeyslib-fork/pokeyslib-fork
+
+    - name: Get remote.origin.url
+      run: git config --local --get remote.origin.url
+
+    - name: Remove refs
+      run: git update-ref -d refs/heads/main
+
+    - name: Clean repository
+      run: git clean -fdx
+
+    - name: Disable garbage collection
+      run: git config --global gc.auto 0
+
+    - name: Set up auth
+      run: |
+        echo "Setting up auth"
+        git config --local --name-only --get-regexp core\.sshCommand
+        git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+        if [ $? -ne 0 ]; then
+          echo "Error: Missing URL for submodule path 'pokeyslib' in .gitmodules"
+          exit 1
+        fi
+        echo "Auth setup complete"
+
+    - name: Log .gitmodules file
+      run: |
+        echo "Logging .gitmodules file"
+        cat .gitmodules
+        echo "Logging complete"
+
+    - name: Temporarily override HOME
+      run: export HOME=/home/zarfld/actions-runner2/_work/_temp/1b4ae179-fc69-433d-ba3a-3ec87d24903c
 ```
 
 ## Setting up GitHub CLI Authentication
@@ -321,3 +381,20 @@ make
 ```
 
 These steps will compile PoKeysLib for Linux.
+
+## Submodule URL Issue
+
+There is a known issue where the process `/usr/bin/git` fails with exit code 128 due to the missing URL for submodule path `pokeyslib` in `.gitmodules`. The error message "Schwerwiegend: Keine URL für Submodul-Pfad 'pokeyslib' in .gitmodules gefunden" indicates the missing URL.
+
+To resolve this issue, ensure that the `.gitmodules` file contains the correct URL for the submodule `pokeyslib` as `https://bitbucket.org/mbosnak/pokeyslib.git`.
+
+Additionally, a new step has been added to the GitHub Actions workflow to ensure the submodule URL is set before initializing submodules. This step is included in the `.github/workflows/build.yml` file as follows:
+
+```yaml
+- name: Ensure submodule URL is set
+  run: |
+    git submodule init
+    git config submodule.pokeyslib.url https://bitbucket.org/mbosnak/pokeyslib.git
+```
+
+This step ensures that the submodule URL is correctly set before initializing submodules, preventing the error from occurring.

@@ -18,6 +18,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Ensure submodule URL is set
+      run: |
+        git submodule init
+        git config submodule.pokeyslib.url https://bitbucket.org/mbosnak/pokeyslib.git
+
     - name: Initialize submodules
       run: git submodule update --init --recursive
 
@@ -117,6 +122,10 @@ jobs:
         echo "Setting up auth"
         git config --local --name-only --get-regexp core\.sshCommand
         git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+        if [ $? -ne 0 ]; then
+          echo "Error: Missing URL for submodule path 'pokeyslib' in .gitmodules"
+          exit 1
+        fi
         echo "Auth setup complete"
 
     - name: Log .gitmodules file
