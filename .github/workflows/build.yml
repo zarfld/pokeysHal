@@ -37,9 +37,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Initialize submodules
-      run: git submodule update --init --recursive
-
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -117,8 +114,16 @@ jobs:
 
     - name: Set up auth
       run: |
+        echo "Setting up auth"
         git config --local --name-only --get-regexp core\.sshCommand
         git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+        echo "Auth setup complete"
+
+    - name: Log .gitmodules file
+      run: |
+        echo "Logging .gitmodules file"
+        cat .gitmodules
+        echo "Logging complete"
 
     - name: Temporarily override HOME
       run: export HOME=/home/zarfld/actions-runner2/_work/_temp/1b4ae179-fc69-433d-ba3a-3ec87d24903c
