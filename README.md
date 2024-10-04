@@ -104,6 +104,13 @@ jobs:
           gh issue create --title "Build Error: ${{ github.sha }}" --body-file $LOG_FILE --label "build-error" --assignee @your-username
         else
           echo "No build log found."
+
+    - name: Build PoKeysLib for Linux
+      run: |
+        cd pokeyslib
+        mkdir build && cd build
+        cmake ..
+        make
 ```
 
 ## Setting up GitHub CLI Authentication
@@ -285,3 +292,33 @@ The source from the repository `https://bitbucket.org/mbosnak/pokeyslib` is plac
 The `.github/workflows/build.yml` file includes a scheduled job to update the content from the specified repository every two weeks. This job clones the repository `https://bitbucket.org/mbosnak/pokeyslib` into the `pokeyslib` subfolder and commits the updates to the repository.
 
 The update job is triggered by the `schedule` event, which is set to run at a two-week interval. This ensures that the `pokeyslib` subfolder is always up-to-date with the latest changes from the original repository.
+
+## Compiling PoKeysLib for Linux
+
+To compile PoKeysLib for Linux, follow these steps:
+
+1. Navigate to the `pokeyslib` subfolder:
+
+```sh
+cd pokeyslib
+```
+
+2. Create a build directory and navigate into it:
+
+```sh
+mkdir build && cd build
+```
+
+3. Run CMake to configure the build:
+
+```sh
+cmake ..
+```
+
+4. Build the project:
+
+```sh
+make
+```
+
+These steps will compile PoKeysLib for Linux.
