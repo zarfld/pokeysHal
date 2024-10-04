@@ -52,9 +52,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Clone PoKeysLib repository
-      run: |
-        git clone https://bitbucket.org/mbosnak/pokeyslib pokeyslib
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
 
     - name: Commit and push updates
       run: |
