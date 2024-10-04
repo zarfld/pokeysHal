@@ -119,3 +119,6 @@ jobs:
       run: |
         git config --local --name-only --get-regexp core\.sshCommand
         git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+
+    - name: Temporarily override HOME
+      run: export HOME=/home/zarfld/actions-runner2/_work/_temp/1b4ae179-fc69-433d-ba3a-3ec87d24903c
