@@ -18,12 +18,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Clone PoKeysLib repository
-      run: |
-        git clone https://bitbucket.org/mbosnak/pokeyslib pokeyslib
-
-    - name: Create dummy file in pokeyslib
-      run: echo "dummy file" > pokeyslib/.dummy
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
 
     - name: Commit and push updates
       run: |
@@ -83,3 +79,46 @@ jobs:
         mkdir build && cd build
         cmake ..
         make
+
+    - name: Run actions/checkout@v2
+      run: actions/checkout@v2
+
+    - name: Sync repository
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "Sync repository"
+        git push
+
+    - name: Get Git version info
+      run: git version
+
+    - name: Copy .gitconfig
+      run: cp /home/zarfld/.gitconfig /home/zarfld/actions-runner2/_work/_temp/e57545ec-8da1-4ecc-86a7-d75576d1a366/.gitconfig
+
+    - name: Override HOME
+      run: export HOME=/home/zarfld/actions-runner2/_work/_temp/e57545ec-8da1-4ecc-86a7-d75576d1a366
+
+    - name: Add safe directory
+      run: git config --global --add safe.directory /home/zarfld/actions-runner2/_work/pokeyslib-fork/pokeyslib-fork
+
+    - name: Get remote.origin.url
+      run: git config --local --get remote.origin.url
+
+    - name: Remove refs
+      run: git update-ref -d refs/heads/main
+
+    - name: Clean repository
+      run: git clean -fdx
+
+    - name: Disable garbage collection
+      run: git config --global gc.auto 0
+
+    - name: Set up auth
+      run: |
+        git config --local --name-only --get-regexp core\.sshCommand
+        git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+
+    - name: Temporarily override HOME
+      run: export HOME=/home/zarfld/actions-runner2/_work/_temp/1b4ae179-fc69-433d-ba3a-3ec87d24903c
