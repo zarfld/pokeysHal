@@ -52,6 +52,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Ensure pokeyslib submodule exists
+      run: |
+        if [ ! -d "pokeyslib/.git" ]; then
+          echo "Submodule not found — adding it"
+          git submodule add https://bitbucket.org/mbosnak/pokeyslib.git pokeyslib
+        else
+          echo "Submodule already exists — skipping add"
+        fi
+
     - name: Ensure submodule URL is set
       run: |
         git submodule init
