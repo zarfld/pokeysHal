@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "pokeyslibcore.h": "c",
+        "pokeyslibasync.h": "c"
+    }
+}
