@@ -5,6 +5,18 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+typedef enum {
+    PK_CMD_DIGITAL_INPUTS_GET   = 0x10,
+    PK_CMD_DIGITAL_OUTPUTS_SET  = 0x11,
+    PK_CMD_ENCODER_VALUES_GET   = 0x28,
+    PK_CMD_ENCODER_SETUP_GET    = 0x29,
+    PK_CMD_ENCODER_SETUP_SET    = 0x2A,
+    PK_CMD_ANALOG_INPUTS_GET    = 0x20,
+    PK_CMD_ANALOG_OUTPUTS_SET   = 0x21,
+    PK_CMD_DEVICE_INFO_GET      = 0x05,
+    // usw...
+} pokeys_command_t;
+
 // Define the mailbox entry structure
 typedef struct {
     uint8_t request_id;
@@ -21,14 +33,14 @@ typedef struct {
 } mailbox_entry_t;
 
 // Function declarations
-int CreateRequestAsync(pokeys_device_t *dev, pokeys_command_t cmd,
+int CreateRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,
                        const uint8_t *params, size_t params_len,
                        void *target_ptr, size_t target_size);
 
-int SendRequestAsync(pokeys_device_t *dev, uint8_t request_id);
+int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id);
 
-int PK_ReceiveAndDispatch(pokeys_device_t *dev);
+int PK_ReceiveAndDispatch(sPoKeysDevice *dev);
 
-void PK_TimeoutAndRetryCheck(pokeys_device_t *dev, uint64_t timeout_us);
+void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us);
 
 #endif // POKEYSLIB_ASYNC_H

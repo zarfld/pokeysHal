@@ -75,7 +75,7 @@ async_transaction_t* transaction_find(uint8_t request_id)
  * @param target_size Size of the target buffer.
  * @return Request ID on success, negative error code on failure.
  */
-int CreateRequestAsync(pokeys_device_t *dev, pokeys_command_t cmd,
+int CreateRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,
     const uint8_t *params, size_t params_len,
     void *target_ptr, size_t target_size)
 {
@@ -126,7 +126,7 @@ return req_id;
  * @param request_id Request ID of the transaction to send.
  * @return 0 on success, negative error code on failure.
  */
-int SendRequestAsync(pokeys_device_t *dev, uint8_t request_id)
+int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
 {
     async_transaction_t *t = transaction_find(request_id);
     if (!t) {
@@ -153,7 +153,7 @@ int SendRequestAsync(pokeys_device_t *dev, uint8_t request_id)
  * @param dev Pointer to the PoKeys device structure.
  * @return Number of responses processed, or 0 if none.
  */
-int PK_ReceiveAndDispatch(pokeys_device_t *dev)
+int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
 {
     uint8_t rx_buffer[64];
     ssize_t len;
@@ -205,7 +205,7 @@ int PK_ReceiveAndDispatch(pokeys_device_t *dev)
  * @param dev Pointer to the PoKeys device structure.
  * @param timeout_us Timeout threshold in microseconds per attempt.
  */
-void PK_TimeoutAndRetryCheck(pokeys_device_t *dev, uint64_t timeout_us)
+void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
 {
     uint64_t now = get_current_time_us();
 
