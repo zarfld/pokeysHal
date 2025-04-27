@@ -40,7 +40,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Install dependencies
       run: |
@@ -81,9 +81,6 @@ jobs:
         mkdir build && cd build
         cmake ..
         make
-
-    - name: Run actions/checkout@v2
-      run: actions/checkout@v2
 
     - name: Sync repository
       run: |
