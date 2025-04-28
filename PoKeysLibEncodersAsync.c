@@ -140,7 +140,7 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
     // Step 1: Basic encoder options (0xC4)
     for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
         CreateRequestAsync(device, 0xC4, NULL, 0,
-            &device->Encoders[i].encoderOptions, sizeof(device->Encoders[i].encoderOptions));
+            &device->Encoders[i].encoderOptions, sizeof(device->Encoders[i].encoderOptions),NULL);
     }
 
     // Step 2: Channel mappings (0xC5)
@@ -151,7 +151,7 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
 
         // Channel B pin
         CreateRequestAsync(device, 0xC5, NULL, 0,
-            &device->Encoders[i].channelBpin, sizeof(device->Encoders[i].channelBpin));
+            &device->Encoders[i].channelBpin, sizeof(device->Encoders[i].channelBpin),NULL);
     }
 
     if (device->info.iKeyMapping)
@@ -159,17 +159,17 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
         // Step 3: Direction A key mapping (0xC6)
         for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
             CreateRequestAsync(device, 0xC6, NULL, 0,
-                &device->Encoders[i].dirAkeyCode, sizeof(device->Encoders[i].dirAkeyCode));
+                &device->Encoders[i].dirAkeyCode, sizeof(device->Encoders[i].dirAkeyCode),NULL);
             CreateRequestAsync(device, 0xC6, NULL, 0,
-                &device->Encoders[i].dirAkeyModifier, sizeof(device->Encoders[i].dirAkeyModifier));
+                &device->Encoders[i].dirAkeyModifier, sizeof(device->Encoders[i].dirAkeyModifier),NULL);
         }
 
         // Step 4: Direction B key mapping (0xC7)
         for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
             CreateRequestAsync(device, 0xC7, NULL, 0,
-                &device->Encoders[i].dirBkeyCode, sizeof(device->Encoders[i].dirBkeyCode));
+                &device->Encoders[i].dirBkeyCode, sizeof(device->Encoders[i].dirBkeyCode),NULL);
             CreateRequestAsync(device, 0xC7, NULL, 0,
-                &device->Encoders[i].dirBkeyModifier, sizeof(device->Encoders[i].dirBkeyModifier));
+                &device->Encoders[i].dirBkeyModifier, sizeof(device->Encoders[i].dirBkeyModifier),NULL);
         }
     }
 
@@ -177,20 +177,20 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
     {
         uint8_t params_fast[] = {2}; // As seen in original 0xCE, param=2
         CreateRequestAsync(device, 0xCE, params_fast, 1,
-            &device->FastEncodersConfiguration, sizeof(device->FastEncodersConfiguration));
+            &device->FastEncodersConfiguration, sizeof(device->FastEncodersConfiguration),NULL);
         CreateRequestAsync(device, 0xCE, params_fast, 1,
-            &device->FastEncodersOptions, sizeof(device->FastEncodersOptions));
+            &device->FastEncodersOptions, sizeof(device->FastEncodersOptions),NULL);
     }
 
     if (device->info.iUltraFastEncoders)
     {
         uint8_t params_ultra[] = {0xFF}; // 0x1C, param=0xFF
         CreateRequestAsync(device, 0x1C, params_ultra, 1,
-            &device->UltraFastEncoderConfiguration, sizeof(device->UltraFastEncoderConfiguration));
+            &device->UltraFastEncoderConfiguration, sizeof(device->UltraFastEncoderConfiguration),NULL);
         CreateRequestAsync(device, 0x1C, params_ultra, 1,
             &device->UltraFastEncoderOptions, sizeof(device->UltraFastEncoderOptions));
         CreateRequestAsync(device, 0x1C, params_ultra, 1,
-            &device->UltraFastEncoderFilter, sizeof(device->UltraFastEncoderFilter));
+            &device->UltraFastEncoderFilter, sizeof(device->UltraFastEncoderFilter),NULL);
     }
 
     return PK_OK;
@@ -237,7 +237,7 @@ int PK_EncoderConfigurationSetAsync(sPoKeysDevice *device)
         buffer_mapping[33 + i] = device->Encoders[i].channelBpin;
     }
 
-    CreateRequestAsync(device, 0xC5, params_mapping, 1, NULL, 0);
+    CreateRequestAsync(device, 0xC5, params_mapping, 1, NULL, 0,NULL);
     memcpy(device->request + 8, buffer_mapping + 8, device->info.iBasicEncoderCount);
     memcpy(device->request + 33, buffer_mapping + 33, device->info.iBasicEncoderCount);
 
@@ -254,7 +254,7 @@ int PK_EncoderConfigurationSetAsync(sPoKeysDevice *device)
             buffer_dirA[33 + i] = device->Encoders[i].dirAkeyModifier;
         }
 
-        CreateRequestAsync(device, 0xC6, params_dir_mapping, 1, NULL, 0);
+        CreateRequestAsync(device, 0xC6, params_dir_mapping, 1, NULL, 0, NULL);
         memcpy(device->request + 8, buffer_dirA + 8, device->info.iBasicEncoderCount);
         memcpy(device->request + 33, buffer_dirA + 33, device->info.iBasicEncoderCount);
 
@@ -269,7 +269,7 @@ int PK_EncoderConfigurationSetAsync(sPoKeysDevice *device)
             buffer_dirB[33 + i] = device->Encoders[i].dirBkeyModifier;
         }
 
-        CreateRequestAsync(device, 0xC7, params_dir_mapping, 1, NULL, 0);
+        CreateRequestAsync(device, 0xC7, params_dir_mapping, 1, NULL, 0, NULL);
         memcpy(device->request + 8, buffer_dirB + 8, device->info.iBasicEncoderCount);
         memcpy(device->request + 33, buffer_dirB + 33, device->info.iBasicEncoderCount);
     }
