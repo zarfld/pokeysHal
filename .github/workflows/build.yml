@@ -95,9 +95,14 @@ jobs:
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git add .
-        git commit -m "Sync repository"
-        git push
+        if git status --porcelain | grep .; then
+          git add .
+          git submodule foreach git add .
+          git commit -m "Sync repository"
+          git push
+        else
+          echo "No changes to sync."
+        fi
 
     - name: Get Git version info
       run: git version
