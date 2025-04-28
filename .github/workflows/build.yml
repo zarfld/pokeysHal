@@ -118,17 +118,6 @@ jobs:
     - name: Get Git version info
       run: git version
 
-    - name: Copy .gitconfig if exists
-      run: |
-        if [ -f "${HOME}/.gitconfig" ]; then
-          cp "${HOME}/.gitconfig" "${GITHUB_WORKSPACE}/../_temp/gitconfig"
-        else
-          echo "No .gitconfig found, skipping copy."
-        fi
-
-    - name: Override HOME
-      run: export HOME=/home/zarfld/actions-runner2/_work/_temp/e57545ec-8da1-4ecc-86a7-d75576d1a366
-
     - name: Add safe directory
       run: git config --global --add safe.directory /home/zarfld/actions-runner2/_work/pokeyslib-fork/pokeyslib-fork
 
@@ -160,6 +149,3 @@ jobs:
         echo "Logging .gitmodules file"
         cat .gitmodules
         echo "Logging complete"
-
-    - name: Temporarily override HOME
-      run: export HOME=/home/zarfld/actions-runner2/_work/_temp/1b4ae179-fc69-433d-ba3a-3ec87d24903c
