@@ -59,9 +59,10 @@ jobs:
 
     - name: Build PoKeysLib
       run: |
+        dir
         mkdir -p pokeyslib-build
         cd pokeyslib-build
-        sudo make -f pokeyslib/Makefile.noqmake install 
+        sudo make -f ../pokeyslib/Makefile.noqmake install 
       continue-on-error: true
 
     - name: Save build logs on failure
