@@ -132,20 +132,3 @@ jobs:
 
     - name: Disable garbage collection
       run: git config --global gc.auto 0
-
-    - name: Set up auth
-      run: |
-        echo "Setting up auth"
-        git config --local --name-only --get-regexp core\.sshCommand
-        git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-        if [ $? -ne 0 ]; then
-          echo "Error: Missing URL for submodule path 'pokeyslib' in .gitmodules"
-          exit 1
-        fi
-        echo "Auth setup complete"
-
-    - name: Log .gitmodules file
-      run: |
-        echo "Logging .gitmodules file"
-        cat .gitmodules
-        echo "Logging complete"
