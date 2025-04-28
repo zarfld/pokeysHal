@@ -77,7 +77,8 @@ jobs:
           gh issue create --title "Build Error: ${{ github.sha }}" --body-file build.log --label build-error
         else
           echo "No build log found."
-
+        fi
+        
     - name: Build PoKeysLib for Linux
       run: |
         cd pokeyslib
