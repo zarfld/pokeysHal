@@ -22,6 +22,9 @@ jobs:
 
     - name: Update submodules
       run: git submodule update --remote --recursive
+          sleep 3
+          git status
+          ls -la pokeyslib
 
     - name: Commit and push updates if needed
       run: |
