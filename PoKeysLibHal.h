@@ -372,7 +372,7 @@ typedef struct
     hal_u32_t iPulseEnginev2;                   ///< Pulse engine v2 support
     hal_u32_t iEasySensors;                     ///< EasySensors support
     hal_u32_t reserved[3];                      ///< Reserved space
-} sPoKeysDevice_Info_HAL;
+} sPoKeysDevice_Info;
 
 
 // Pulse engine v2 information
