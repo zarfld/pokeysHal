@@ -184,7 +184,46 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
      return PK_OK;
  }
  
-
+ int PK_EncoderValuesGetAsync_ProcessPage0(sPoKeysDevice *device, const uint8_t *response)
+ {
+     if (device == NULL || response == NULL) return PK_ERR_TRANSFER;
+ 
+     for (uint32_t i = 0; i < 13; i++) {
+         device->Encoders[i].encoderValue = *(uint32_t*)&response[8 + (i * 4)];
+     }
+     return PK_OK;
+ }
+ 
+ int PK_EncoderValuesGetAsync_ProcessPage1(sPoKeysDevice *device, const uint8_t *response)
+ {
+     if (device == NULL || response == NULL) return PK_ERR_TRANSFER;
+ 
+     for (uint32_t i = 0; i < 13; i++) {
+         device->Encoders[13 + i].encoderValue = *(uint32_t*)&response[8 + (i * 4)];
+     }
+     return PK_OK;
+ }
+ 
+ int PK_EncoderValuesGetAsync_ProcessPage1_FastOnly(sPoKeysDevice *device, const uint8_t *response)
+ {
+     if (device == NULL || response == NULL) return PK_ERR_TRANSFER;
+ 
+     for (uint32_t i = 0; i < 12; i++) {
+         device->Encoders[13 + i].encoderValue = *(uint32_t*)&response[8 + (i * 4)];
+     }
+     return PK_OK;
+ }
+ 
+ int PK_EncoderValuesGetAsync_ProcessUltraFast(sPoKeysDevice *device, const uint8_t *response)
+ {
+     if (device == NULL || response == NULL) return PK_ERR_TRANSFER;
+ 
+     device->PEv2.EncoderIndexCount    = *(uint32_t*)&response[8];
+     device->PEv2.EncoderTicksPerRotation = *(uint32_t*)&response[12];
+     device->PEv2.EncoderVelocity       = *(uint32_t*)&response[16];
+     return PK_OK;
+ }
+ 
 /**
  * @brief Starts the asynchronous encoder configuration retrieval.
  *
@@ -362,44 +401,44 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
  * @param device Pointer to PoKeys device
  * @return PK_OK on success, PK_ERR otherwise
  */
-int PK_EncoderValuesGetAsync(sPoKeysDevice *device)
-{
-    if (device == NULL) return PK_ERR_NOT_CONNECTED;
-
-    // Read the first 13 encoders (always needed)
-    CreateRequestAsync(device, 0xCD, NULL, 0,
-                       &device->Encoders[0].encoderValue,
-                       13 * sizeof(uint32_t)); // 13 encoders × 4 bytes each
-
-    if (device->info.iBasicEncoderCount >= 25)
-    {
-        // Depending if UltraFast is present
-        if (device->info.iUltraFastEncoders != 0)
-        {
-            // Read the next 13 encoders
-            uint8_t param_next = 1; // Page 1
-            CreateRequestAsync(device, 0xCD, &param_next, 1,
-                               &device->Encoders[13].encoderValue,
-                               13 * sizeof(uint32_t)); // 13 more encoders
-
-            // Read UltraFast encoder extra values
-            uint8_t params_ultrafast[] = {0x37}; // specific sub-command
-            CreateRequestAsync(device, 0x85, params_ultrafast, 1,
-                               &device->PEv2.EncoderIndexCount,
-                               3 * sizeof(uint32_t)); // 3 fields: IndexCount, TicksPerRotation, Velocity
-        }
-        else
-        {
-            // Fast mode: Read next 12 encoders only (no UltraFast)
-            uint8_t param_next = 1; // Page 1
-            CreateRequestAsync(device, 0xCD, &param_next, 1,
-                               &device->Encoders[13].encoderValue,
-                               12 * sizeof(uint32_t)); // 12 encoders
-        }
-    }
-
-    return PK_OK;
-}
+ int PK_EncoderValuesGetAsync(sPoKeysDevice *device)
+ {
+     if (device == NULL) return PK_ERR_NOT_CONNECTED;
+ 
+     // Always read the first 13 encoders
+     CreateRequestAsync(device, 0xCD, NULL, 0,
+         NULL, 0, // target_ptr=NULL: will parse manually
+         PK_EncoderValuesGetAsync_ProcessPage0);
+ 
+     if (device->info.iBasicEncoderCount >= 25)
+     {
+         if (device->info.iUltraFastEncoders != 0)
+         {
+             // Read the next 13 encoders (Page 1, with UltraFast)
+             uint8_t param_next = 1;
+             CreateRequestAsync(device, 0xCD, &param_next, 1,
+                 NULL, 0,
+                 PK_EncoderValuesGetAsync_ProcessPage1);
+ 
+             // Read UltraFast encoder extra values
+             uint8_t params_ultrafast[] = {0x37}; // Sub-command for test mode
+             CreateRequestAsync(device, 0x85, params_ultrafast, 1,
+                 NULL, 0,
+                 PK_EncoderValuesGetAsync_ProcessUltraFast);
+         }
+         else
+         {
+             // Fast encoders only: next 12 encoders (Page 1)
+             uint8_t param_next = 1;
+             CreateRequestAsync(device, 0xCD, &param_next, 1,
+                 NULL, 0,
+                 PK_EncoderValuesGetAsync_ProcessPage1_FastOnly);
+         }
+     }
+ 
+     return PK_OK;
+ }
+ 
 
 /**
  * @brief Starts asynchronous encoder values set sequence.
