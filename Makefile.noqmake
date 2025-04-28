@@ -12,24 +12,26 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-libusb.c PoKeysLibFastUSB.c \
         PoKeysLibUART.c \
         PoKeysLibCAN.c \
         PoKeysLibFailsafe.c \
-        PoKeysLibWS2812.c
-
+        PoKeysLibWS2812.c \
+        PoKeysLibEncodersAsync.c \
+        PoKeysLibRTCAsync.c \
+        PoKeysLibAsync.c
 
 OBJECTS=$(SOURCES:.c=.o)
 
 install: all
-	cp libPoKeys.so /usr/lib
-	cp PoKeysLib.h /usr/include
+	cp libPoKeysHal.so /usr/lib
+	cp PoKeysHal.h /usr/include
 
-all: $(SOURCES) libPoKeys.so
+all: $(SOURCES) libPoKeysHal.so
 
-static: libPoKeys.a
+static: libPoKeysHal.a
 
 libPoKeys.a: $(OBJECTS)
-	$(AR) rcs libPoKeys.a $(OBJECTS)
+	$(AR) rcs libPoKeysHal.a $(OBJECTS)
 
 libPoKeys.so: $(OBJECTS)
-	$(CC) -shared $(OBJECTS) -o libPoKeys.so $(LDFLAGS)
+	$(CC) -shared $(OBJECTS) -o libPoKeysHal.so $(LDFLAGS)
 	
 clean:
 	-rm *.a

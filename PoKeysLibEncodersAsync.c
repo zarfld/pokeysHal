@@ -20,6 +20,112 @@ typedef struct {
 static PKEncoderCfgAsyncContext encoderCfgContext = {PK_ENCODERCFG_STEP_NONE, 0};
 
 /**
+ * @brief Exports all encoder HAL pins and parameters for a PoKeys device.
+ *
+ * @param prefix HAL naming prefix
+ * @param comp_id HAL component ID
+ * @param device Pointer to PoKeys device structure
+ * @return 0 on success, negative HAL error code
+ */
+int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
+{
+    if (device == NULL)
+        return -1;
+
+    int r = 0;
+
+    // Export debounced encoder output value (optional - check if needed)
+    r = hal_pin_s32_newf(HAL_OUT, &(device->encoder_deb_out), comp_id, "%s.encoder.deb.out", prefix);
+    if (r != 0) return r;
+
+    // Loop over each basic encoder
+    for (int i = 0; i < device->info.iBasicEncoderCount; i++) {
+        sPoKeysEncoder *enc = &device->Encoders[i];
+
+        r = hal_pin_s32_newf(HAL_OUT, &(enc->encoderValue), comp_id, "%s.encoder.%d.count", prefix, i);
+        if (r != 0) return r;
+        r = hal_pin_float_newf(HAL_OUT, &(enc->position), comp_id, "%s.encoder.%d.position", prefix, i);
+        if (r != 0) return r;
+        r = hal_pin_float_newf(HAL_OUT, &(enc->velocity), comp_id, "%s.encoder.%d.velocity", prefix, i);
+        if (r != 0) return r;
+        r = hal_pin_bit_newf(HAL_IN, &(enc->reset), comp_id, "%s.encoder.%d.reset", prefix, i);
+        if (r != 0) return r;
+        r = hal_pin_bit_newf(HAL_IN, &(enc->index_enable), comp_id, "%s.encoder.%d.index-enable", prefix, i);
+        if (r != 0) return r;
+
+        // Parameters
+        r = hal_param_float_newf(HAL_RW, &(enc->scale), comp_id, "%s.encoder.%d.scale", prefix, i);
+        if (r != 0) return r;
+        r = hal_param_u32_newf(HAL_RW, &(enc->encoderOptions), comp_id, "%s.encoder.%d.encoderOptions", prefix, i);
+        if (r != 0) return r;
+        r = hal_param_bit_newf(HAL_RW, &(enc->enable), comp_id, "%s.encoder.%d.enable", prefix, i);
+        if (r != 0) return r;
+        r = hal_param_bit_newf(HAL_RW, &(enc->x4_sampling), comp_id, "%s.encoder.%d.x4_sampling", prefix, i);
+        if (r != 0) return r;
+        r = hal_param_bit_newf(HAL_RW, &(enc->x2_sampling), comp_id, "%s.encoder.%d.x2_sampling", prefix, i);
+        if (r != 0) return r;
+
+        r = hal_param_u32_newf(HAL_RW, &(enc->channelApin), comp_id, "%s.encoder.%d.channelApin", prefix, i);
+        if (r != 0) return r;
+        r = hal_param_u32_newf(HAL_RW, &(enc->channelBpin), comp_id, "%s.encoder.%d.channelBpin", prefix, i);
+        if (r != 0) return r;
+    }
+
+    // Export FastEncoder and UltraFastEncoder options if supported
+    if (device->info.iFastEncoders) {
+        r = hal_param_u32_newf(HAL_RW, &(device->FastEncodersConfiguration), comp_id, "%s.encoder.FastEncoders.Configuration", prefix);
+        if (r != 0) return r;
+        r = hal_param_u32_newf(HAL_RW, &(device->FastEncodersOptions), comp_id, "%s.encoder.FastEncoders.Options", prefix);
+        if (r != 0) return r;
+    }
+
+    if (device->info.iUltraFastEncoders) {
+        r = hal_param_u32_newf(HAL_RW, &(device->UltraFastEncoderConfiguration), comp_id, "%s.encoder.UltraFastEncoders.Configuration", prefix);
+        if (r != 0) return r;
+        r = hal_param_u32_newf(HAL_RW, &(device->UltraFastEncoderOptions), comp_id, "%s.encoder.UltraFastEncoders.Options", prefix);
+        if (r != 0) return r;
+        r = hal_param_u32_newf(HAL_RW, &(device->UltraFastEncoderFilter), comp_id, "%s.encoder.UltraFastEncoders.Filter", prefix);
+        if (r != 0) return r;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Parses encoderOptions field and fills HAL encoder parameters.
+ *
+ * @param device Pointer to PoKeys device
+ * @param response Full UDP response packet (starts at byte 0)
+ * @return PK_OK on success, PK_ERR otherwise
+ */
+ int PK_EncoderOptionsParse(sPoKeysDevice* device, const uint8_t* response)
+ {
+     if (device == NULL || response == NULL)
+         return PK_ERR_TRANSFER;
+ 
+     uint8_t encoder_index = response[6]; // Request ID echoes encoder index (if you organize it that way)
+     if (encoder_index >= device->info.iBasicEncoderCount)
+         return PK_ERR_INVALID_ARGUMENT;
+ 
+     sPoKeysEncoder* enc = &device->Encoders[encoder_index];
+ 
+     uint8_t options = response[8]; // Raw options byte from device
+ 
+     enc->encoderOptions = options; // Save full 8-bit value into hal_u32_t
+ 
+     enc->enable = (options & (1 << 0)) ? 1 : 0;
+     enc->x4_sampling = (options & (1 << 1)) ? 1 : 0;
+     enc->x2_sampling = (options & (1 << 2)) ? 1 : 0;
+     enc->keymap_dirA = (options & (1 << 4)) ? 1 : 0;
+     enc->macro_dirA  = (options & (1 << 5)) ? 1 : 0;
+     enc->keymap_dirB = (options & (1 << 6)) ? 1 : 0;
+     enc->macro_dirB  = (options & (1 << 7)) ? 1 : 0;
+ 
+     return PK_OK;
+ }
+
+ 
+/**
  * @brief Starts the asynchronous encoder configuration retrieval.
  *
  * This function issues multiple CreateRequestAsync() calls in sequence,

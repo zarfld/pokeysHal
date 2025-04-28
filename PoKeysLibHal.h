@@ -609,7 +609,7 @@ typedef struct
 typedef struct
 {
  hal_s32_t encoderValue;                      // Encoder current value
- uint8_t encoderOptions;                    // Encoder options -    bit 0: enable encoder
+ hal_u32_t encoderOptions;                    // Encoder options -    bit 0: enable encoder
                                             //                        bit 1: 4x sampling
                                             //                        bit 2: 2x sampling
                                             //                        bit 3: reserved
@@ -617,13 +617,22 @@ typedef struct
                                             //                        bit 5: mapped to macro for direction A
                                             //                        bit 6: direct key mapping for direction B
                                             //                        bit 7: mapped to macro for direction B
- uint8_t channelApin;                       // Channel A encoder pin
- uint8_t channelBpin;                       // Channel B encoder pin
- uint8_t dirAkeyCode;                       // USB keyboard key code for direction A
- uint8_t dirAkeyModifier;                   // USB keyboard key modifier for direction A
- uint8_t dirBkeyCode;                       // USB keyboard key code for direction B
- uint8_t dirBkeyModifier;                   // USB keyboard key modifier for direction B
- uint8_t reserved[5];                       // placeholder
+
+                                            hal_bit_t enable;         // pointer for "parameter io bit Encoders.#.enable [26]"  // Enable encoder
+                                            hal_bit_t x4_sampling;    // pointer for "parameter io bit Encoders.#.x4_sampling [26]"  // 4x sampling
+                                            hal_bit_t x2_sampling;    // pointer for "parameter io bit Encoders.#.x2_sampling [26]"  // 2x sampling
+                                            hal_bit_t keymap_dirA;    // pointer for "parameter io bit Encoders.#.keymap_dirA [26]"  // Direct key mapping for direction A
+                                            hal_bit_t macro_dirA;     // pointer for "parameter io bit Encoders.#.macro_dirA [26]"  // Map to macro for direction A
+                                            hal_bit_t keymap_dirB;    // pointer for "parameter io bit Encoders.#.keymap_dirB [26]"  // Direct key mapping for direction B
+                                            hal_bit_t macro_dirB;     // pointer for "parameter io bit Encoders.#.macro_dirB [26]"  // Map to macro for direction B
+
+ hal_u32_t channelApin;                       // Channel A encoder pin
+ hal_u32_t channelBpin;                       // Channel B encoder pin
+ hal_u32_t dirAkeyCode;                       // USB keyboard key code for direction A
+ hal_u32_t dirAkeyModifier;                   // USB keyboard key modifier for direction A
+ hal_u32_t dirBkeyCode;                       // USB keyboard key code for direction B
+ hal_u32_t dirBkeyModifier;                   // USB keyboard key modifier for direction B
+ hal_u32_t reserved[5];                       // placeholder
 } sPoKeysEncoder;
 
 // PWM-specific data
