@@ -103,7 +103,7 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
  
      uint8_t encoder_index = response[6]; // Request ID echoes encoder index (if you organize it that way)
      if (encoder_index >= device->info.iBasicEncoderCount)
-         return PK_ERR_INVALID_ARGUMENT;
+         return PK_ERR_PARAMETER;
  
      sPoKeysEncoder* enc = &device->Encoders[encoder_index];
  
