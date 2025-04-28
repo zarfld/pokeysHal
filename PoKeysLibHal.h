@@ -947,7 +947,11 @@ typedef struct
  hal_u32_t                   UltraFastEncoderConfiguration; // Ultra fast encoder configuration (see protocol specification for details)
  hal_u32_t                   UltraFastEncoderOptions;       // Ultra fast encoder additional options
  hal_u32_t                   UltraFastEncoderFilter;        // Ultra fast encoder digital filter setting
+ hal_bit_t UltraFastEncoder_invert_direction;
+ hal_bit_t UltraFastEncoder_signal_mode;
+ hal_bit_t UltraFastEncoder_enable_4x;
 
+ 
  ALIGN_TEST(4)
  uint8_t*                  PoExtBusData;                  // PoExtBus outputs buffer
 
