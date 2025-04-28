@@ -612,7 +612,7 @@ typedef struct
 // Encoder-specific data
 typedef struct
 {
- hal_s32_t encoderValue;                      // Encoder current value
+ hal_s32_t *encoderValue;                      // Encoder current value
  hal_u32_t encoderOptions;                    // Encoder options -    bit 0: enable encoder
                                             //                        bit 1: 4x sampling
                                             //                        bit 2: 2x sampling
@@ -637,6 +637,12 @@ typedef struct
  hal_u32_t dirBkeyCode;                       // USB keyboard key code for direction B
  hal_u32_t dirBkeyModifier;                   // USB keyboard key modifier for direction B
  hal_u32_t reserved[5];                       // placeholder
+
+  hal_float_t *position;
+  hal_float_t *velocity;
+  hal_bit_t *reset;
+  hal_bit_t *index_enable;
+ hal_float_t scale;                        // Encoder scale factor (in pulses per rotation)
 } sPoKeysEncoder;
 
 // PWM-specific data
