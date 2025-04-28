@@ -27,6 +27,11 @@ jobs:
         git status
         ls -la pokeyslib
 
+    - name: Ignore untracked build artifacts in submodules
+      run: |
+        git config --global submodule.recurse true
+        git submodule foreach --recursive git config --local status.showUntrackedFiles no
+        
     - name: Commit and push updates if needed
       run: |
         git config --global user.name "github-actions[bot]"
@@ -91,6 +96,11 @@ jobs:
         mkdir -p build && cd build
         cmake ..
         make
+
+    - name: Ignore untracked build artifacts in submodules
+      run: |
+        git config --global submodule.recurse true
+        git submodule foreach --recursive git config --local status.showUntrackedFiles no
 
     - name: Sync repository
       run: |
