@@ -20,3 +20,4 @@ libudev-dev
 python3-serial
 python3-usb
 python3-numpy
+gh
