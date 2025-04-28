@@ -49,6 +49,10 @@
  #define POKEYSDECL
 #endif
 
+#if !defined(RTAPI) && !defined(ULAPI)
+#define ULAPI
+#endif
+
 #include "hal.h" // Make sure to include LinuxCNC's hal.h first
 
 //#define USE_ALIGN_TEST
