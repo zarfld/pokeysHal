@@ -27,10 +27,10 @@ all: $(SOURCES) libPoKeysHal.so
 
 static: libPoKeysHal.a
 
-libPoKeys.a: $(OBJECTS)
+libPoKeysHal.a: $(OBJECTS)
 	$(AR) rcs libPoKeysHal.a $(OBJECTS)
 
-libPoKeys.so: $(OBJECTS)
+libPoKeyHal.so: $(OBJECTS)
 	$(CC) -shared $(OBJECTS) -o libPoKeysHal.so $(LDFLAGS)
 	
 clean:
