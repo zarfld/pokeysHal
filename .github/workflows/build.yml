@@ -102,6 +102,12 @@ jobs:
         git config --global submodule.recurse true
         git submodule foreach --recursive git config --local status.showUntrackedFiles no
 
+    - name: Build modified PoKeysHalLib
+      run: |
+        echo "Building PoKeysHalLib from custom Makefile..."
+        make -f Makefile.noqmake
+      continue-on-error: true
+
     - name: Sync repository
       run: |
         git config --global user.name "github-actions[bot]"
