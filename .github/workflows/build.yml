@@ -31,6 +31,7 @@ jobs:
         # Check if there are changes
         if git status --porcelain | grep .; then
           git add .
+          git submodule foreach git add .
           git commit -m "Update PoKeysLib submodule"
           git push
         else
