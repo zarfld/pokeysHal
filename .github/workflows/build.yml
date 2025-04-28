@@ -105,7 +105,7 @@ jobs:
     - name: Build modified PoKeysHalLib
       run: |
         echo "Building PoKeysHalLib from custom Makefile..."
-        make -f Makefile.noqmake
+        sudo make -f Makefile.noqmake
       continue-on-error: true
 
     - name: Sync repository
