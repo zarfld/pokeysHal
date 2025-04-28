@@ -78,7 +78,7 @@ jobs:
         else
           echo "No build log found."
         fi
-        
+
     - name: Build PoKeysLib for Linux
       run: |
         cd pokeyslib
@@ -97,8 +97,13 @@ jobs:
     - name: Get Git version info
       run: git version
 
-    - name: Copy .gitconfig
-      run: cp /home/zarfld/.gitconfig /home/zarfld/actions-runner2/_work/_temp/e57545ec-8da1-4ecc-86a7-d75576d1a366/.gitconfig
+    - name: Copy .gitconfig if exists
+      run: |
+        if [ -f "${HOME}/.gitconfig" ]; then
+          cp "${HOME}/.gitconfig" "${GITHUB_WORKSPACE}/../_temp/gitconfig"
+        else
+          echo "No .gitconfig found, skipping copy."
+        fi
 
     - name: Override HOME
       run: export HOME=/home/zarfld/actions-runner2/_work/_temp/e57545ec-8da1-4ecc-86a7-d75576d1a366
