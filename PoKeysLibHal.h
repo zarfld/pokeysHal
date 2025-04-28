@@ -803,16 +803,16 @@ typedef struct
 
 typedef struct
 {
- uint8_t  SEC;
- uint8_t  MIN;
- uint8_t  HOUR;
- uint8_t  DOW;
- uint8_t  DOM;
- uint8_t  tmp;
- uint16_t DOY;
- uint16_t MONTH;
- uint16_t YEAR;
- hal_u32_t  reserved;
+    hal_u32_t SEC;       ///< Seconds (0..59)
+    hal_u32_t MIN;       ///< Minutes (0..59)
+    hal_u32_t HOUR;      ///< Hours (0..23)
+    hal_u32_t DOW;       ///< Day of Week (0..6)
+    hal_u32_t DOM;       ///< Day of Month (1..31)
+    hal_u32_t tmp;       ///< Temperature (or reserved) - device-specific
+    hal_u32_t DOY;       ///< Day of Year (1..366)
+    hal_u32_t MONTH;     ///< Month (1..12)
+    hal_u32_t YEAR;      ///< Year (full, e.g., 2024)
+    hal_u32_t reserved;  ///< Reserved for future expansion
 } sPoKeysRTC;
 
 // CAN message structure
@@ -940,6 +940,10 @@ typedef struct
  uint8_t					  multiPartData[448];			 // Multi-part request buffer
  uint64_t                  reserved64;
  uint8_t*                  multiPartBuffer;
+
+
+ // extended for Async
+ uint8_t rtc_response_buffer[64]; // in sPoKeysDevice
 } sPoKeysDevice;
 
 

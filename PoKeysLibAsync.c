@@ -113,6 +113,7 @@ t->timestamp_sent = 0;                        // Will be set on first send
 
 t->target_ptr = target_ptr;
 t->target_size = target_size;
+t->response_parser = parser_func; // <=== New! Optional parser function
 
 // (response_buffer will be filled when receiving, no need to touch here)
 
@@ -188,6 +189,11 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
     if (t->target_ptr && t->target_size > 0) {
         memcpy(t->target_ptr, &rx_buffer[8], t->target_size);
         // Note: Response payload starts at byte 9 (index 8) according to PoKeys protocol
+    }
+
+    // NEW: call optional parser function after response received
+    if (t->response_parser) {
+        t->response_parser(dev, rx_buffer);
     }
 
     t->status = TRANSACTION_COMPLETED;

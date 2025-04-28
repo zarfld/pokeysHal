@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include "PoKeysLibHal.h" // Include the main PoKeysLib header for device structure definitions
 
 typedef enum {
     PK_CMD_DIGITAL_INPUTS_GET   = 0x10,
@@ -17,7 +18,8 @@ typedef enum {
     // usw...
 } pokeys_command_t;
 
-// Define the mailbox entry structure
+typedef int (*pokeys_response_parser_t)(sPoKeysDevice *dev, const uint8_t *response);
+
 typedef struct {
     uint8_t request_id;
     pokeys_command_t command_sent;
@@ -27,6 +29,7 @@ typedef struct {
 
     void *target_ptr;
     size_t target_size;
+    pokeys_response_parser_t response_parser; // << NEW! Optional per-request parser function
 
     uint8_t request_buffer[64];
     uint8_t response_buffer[64];
@@ -34,8 +37,9 @@ typedef struct {
 
 // Function declarations
 int CreateRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,
-                       const uint8_t *params, size_t params_len,
-                       void *target_ptr, size_t target_size);
+    const uint8_t *params, size_t params_len,
+    void *target_ptr, size_t target_size,
+    pokeys_response_parser_t parser_func);
 
 int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id);
 
