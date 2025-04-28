@@ -121,6 +121,78 @@ return req_id;
 }
 
 /**
+ * @brief Prepares an asynchronous PoKeys request with optional payload data after header.
+ *
+ * @param device Pointer to PoKeys device
+ * @param cmd PoKeys command ID (e.g., 0xC4, 0xC5, 0xCE, etc.)
+ * @param params Optional pointer to up to 4 parameter bytes (NULL if none)
+ * @param params_len Length of params (max 4 bytes)
+ * @param payload Optional pointer to payload (e.g., encoder options) to copy starting at byte 8
+ * @param payload_size Size of payload (must fit into remaining packet space)
+ * @param parser_func Optional parser function for response (NULL for write-only operations)
+ * @return Request ID on success, negative error code on failure
+ */
+ int CreateRequestAsyncWithPayload(
+    sPoKeysDevice *device,
+    pokeys_command_t cmd,
+    const uint8_t *params,
+    size_t params_len,
+    const void *payload,
+    size_t payload_size,
+    pokeys_response_parser_t parser_func
+)
+{
+    if (device == NULL)
+        return -1; // Error: No device
+
+    async_transaction_t *t = transaction_alloc();
+    if (!t)
+        return -2; // No free slot available
+
+    uint8_t req_id = next_request_id();
+
+    // Initialize request buffer
+    memset(t->request_buffer, 0, sizeof(t->request_buffer));
+    t->request_buffer[0] = 0xBB;            // Start byte
+    t->request_buffer[1] = (uint8_t)cmd;     // Command ID
+
+    // Insert parameters
+    if (params && params_len > 0 && params_len <= 4) {
+        memcpy(&t->request_buffer[2], params, params_len); // params at bytes 2–5
+    }
+
+    t->request_buffer[6] = req_id;           // Request ID at byte 6
+
+    // Calculate checksum (sum of first 7 bytes)
+    uint8_t checksum = 0;
+    for (int i = 0; i <= 6; i++) {
+        checksum += t->request_buffer[i];
+    }
+    t->request_buffer[7] = checksum;         // Checksum at byte 7
+
+    // If payload is present, insert into request_buffer starting at byte 8
+    if (payload && payload_size > 0) {
+        if (payload_size > (sizeof(t->request_buffer) - 8)) {
+            return -3; // Error: Payload too big
+        }
+        memcpy(&t->request_buffer[8], payload, payload_size);
+    }
+
+    // Fill transaction metadata
+    t->request_id = req_id;
+    t->command_sent = cmd;
+    t->status = TRANSACTION_PENDING;
+    t->retries_left = 2; // 2 retries allowed
+    t->timestamp_sent = 0; // Will be set when sent
+
+    t->target_ptr = NULL; // No response buffer for write commands
+    t->target_size = 0;
+    t->response_parser = parser_func; // Could be NULL if no response parsing needed
+
+    return req_id;
+}
+
+/**
  * @brief Sends an asynchronous request that was prepared earlier.
  *
  * @param dev Pointer to the PoKeys device structure.

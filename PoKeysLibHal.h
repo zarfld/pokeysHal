@@ -935,10 +935,17 @@ typedef struct
  sPoKeysFailsafeSettings   failsafeSettings;
  ALIGN_TEST(3)
 
- uint8_t                   FastEncodersConfiguration;     // Fast encoders configuration, invert settings and 4x sampling (see protocol specification for details)
- uint8_t                   FastEncodersOptions;           // Fast encoders additional options
- uint8_t                   UltraFastEncoderConfiguration; // Ultra fast encoder configuration (see protocol specification for details)
- uint8_t                   UltraFastEncoderOptions;       // Ultra fast encoder additional options
+ hal_u32_t                   FastEncodersConfiguration;     // Fast encoders configuration, invert settings and 4x sampling (see protocol specification for details)
+ hal_u32_t                   FastEncodersOptions;           // Fast encoders additional options
+
+ hal_bit_t FastEncoder_enable;
+ hal_bit_t FastEncoder_invert_E1;
+ hal_bit_t FastEncoder_invert_E2;
+ hal_bit_t FastEncoder_invert_E3;
+ hal_bit_t FastEncoder_disable_4x;
+
+ hal_u32_t                   UltraFastEncoderConfiguration; // Ultra fast encoder configuration (see protocol specification for details)
+ hal_u32_t                   UltraFastEncoderOptions;       // Ultra fast encoder additional options
  hal_u32_t                   UltraFastEncoderFilter;        // Ultra fast encoder digital filter setting
 
  ALIGN_TEST(4)

@@ -73,7 +73,23 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
     if (device->info.iFastEncoders) {
         r = hal_param_u32_newf(HAL_RW, &(device->FastEncodersConfiguration), comp_id, "%s.encoder.FastEncoders.Configuration", prefix);
         if (r != 0) return r;
+    
         r = hal_param_u32_newf(HAL_RW, &(device->FastEncodersOptions), comp_id, "%s.encoder.FastEncoders.Options", prefix);
+        if (r != 0) return r;
+    
+        r = hal_pin_bit_newf(HAL_OUT, &(device->FastEncoder_enable), comp_id, "%s.encoder.FastEncoders.enable", prefix);
+        if (r != 0) return r;
+    
+        r = hal_pin_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E1), comp_id, "%s.encoder.FastEncoders.invert_E1", prefix);
+        if (r != 0) return r;
+    
+        r = hal_pin_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E2), comp_id, "%s.encoder.FastEncoders.invert_E2", prefix);
+        if (r != 0) return r;
+    
+        r = hal_pin_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E3), comp_id, "%s.encoder.FastEncoders.invert_E3", prefix);
+        if (r != 0) return r;
+    
+        r = hal_pin_bit_newf(HAL_OUT, &(device->FastEncoder_disable_4x), comp_id, "%s.encoder.FastEncoders.disable_4x", prefix);
         if (r != 0) return r;
     }
 
@@ -124,6 +140,52 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 
  
 /**
+ * @brief Parses FastEncodersOptions byte into individual HAL parameters.
+ *
+ * @param device Pointer to PoKeys device
+ * @param response Pointer to received UDP packet
+ * @return PK_OK on success, PK_ERR otherwise
+ */
+ int PK_FastEncodersOptionsParse(sPoKeysDevice* device, const uint8_t* response)
+ {
+     if (device == NULL || response == NULL)
+         return PK_ERR_TRANSFER;
+ 
+     device->FastEncodersConfiguration = response[2];
+     device->FastEncodersOptions = response[3];
+ 
+     uint8_t options = response[3];
+     device->FastEncoder_enable        = (options & (1 << 0)) ? 1 : 0;
+     device->FastEncoder_invert_E1     = (options & (1 << 1)) ? 1 : 0;
+     device->FastEncoder_invert_E2     = (options & (1 << 2)) ? 1 : 0;
+     device->FastEncoder_invert_E3     = (options & (1 << 3)) ? 1 : 0;
+     device->FastEncoder_disable_4x    = (options & (1 << 4)) ? 1 : 0;
+ 
+     return PK_OK;
+ }
+ 
+
+ int PK_UltraFastEncoderOptionsParse(sPoKeysDevice* device, const uint8_t* response)
+ {
+     if (device == NULL || response == NULL)
+         return PK_ERR_TRANSFER;
+ 
+     // Extract configuration fields
+     device->UltraFastEncoderConfiguration = response[2];
+     device->UltraFastEncoderOptions = response[3];
+     device->UltraFastEncoderFilter = *((uint32_t*)&response[8]); // Little endian assumed
+ 
+     // Unpack UltraFastEncoderOptions bits
+     uint8_t options = response[3];
+     device->UltraFastEncoder_invert_direction = (options & (1 << 0)) ? 1 : 0;
+     device->UltraFastEncoder_signal_mode      = (options & (1 << 1)) ? 1 : 0;
+     device->UltraFastEncoder_enable_4x        = (options & (1 << 2)) ? 1 : 0;
+ 
+     return PK_OK;
+ }
+ 
+
+/**
  * @brief Starts the asynchronous encoder configuration retrieval.
  *
  * This function issues multiple CreateRequestAsync() calls in sequence,
@@ -140,7 +202,7 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
     // Step 1: Basic encoder options (0xC4)
     for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
         CreateRequestAsync(device, 0xC4, NULL, 0,
-            &device->Encoders[i].encoderOptions, sizeof(device->Encoders[i].encoderOptions),NULL);
+            &device->Encoders[i].encoderOptions, sizeof(device->Encoders[i].encoderOptions),PK_EncoderOptionsParse);
     }
 
     // Step 2: Channel mappings (0xC5)
@@ -176,122 +238,123 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
     if (device->info.iFastEncoders)
     {
         uint8_t params_fast[] = {2}; // As seen in original 0xCE, param=2
+
         CreateRequestAsync(device, 0xCE, params_fast, 1,
-            &device->FastEncodersConfiguration, sizeof(device->FastEncodersConfiguration),NULL);
-        CreateRequestAsync(device, 0xCE, params_fast, 1,
-            &device->FastEncodersOptions, sizeof(device->FastEncodersOptions),NULL);
+                   NULL, 0,
+                   PK_FastEncodersOptionsParse);
     }
 
     if (device->info.iUltraFastEncoders)
     {
         uint8_t params_ultra[] = {0xFF}; // 0x1C, param=0xFF
         CreateRequestAsync(device, 0x1C, params_ultra, 1,
-            &device->UltraFastEncoderConfiguration, sizeof(device->UltraFastEncoderConfiguration),NULL);
-        CreateRequestAsync(device, 0x1C, params_ultra, 1,
-            &device->UltraFastEncoderOptions, sizeof(device->UltraFastEncoderOptions));
-        CreateRequestAsync(device, 0x1C, params_ultra, 1,
-            &device->UltraFastEncoderFilter, sizeof(device->UltraFastEncoderFilter),NULL);
+            NULL, 0,
+            PK_UltraFastEncoderOptionsParse);
     }
 
     return PK_OK;
 }
 
 /**
- * @brief Starts the asynchronous encoder configuration write sequence.
+ * @brief Asynchronously sets the full PoKeys encoder configuration.
  *
- * Fills requests with current device->Encoders[] values, using CreateRequestAsync().
+ * Prepares asynchronous requests to configure:
+ * - Basic encoder options (0xC4)
+ * - Encoder channel A/B mappings (0xC5)
+ * - Direction A and B key codes and modifiers (0xC6/0xC7)
+ * - Fast encoder configuration (0xCE)
+ * - Ultra fast encoder configuration and filter (0x1C)
  *
- * @param device Pointer to PoKeys device
- * @return PK_OK on success, PK_ERR otherwise
+ * @param device Pointer to PoKeys device structure.
+ * @return PK_OK (0) on success, or negative error code.
  */
-int PK_EncoderConfigurationSetAsync(sPoKeysDevice *device)
-{
-    if (device == NULL) return PK_ERR_NOT_CONNECTED;
-    if (!device->info.iBasicEncoderCount) return PK_ERR_NOT_SUPPORTED;
-
-    uint8_t params_basic[] = {1}; // 0xC4, 1
-    uint8_t params_mapping[] = {1}; // 0xC5, 1
-    uint8_t params_dir_mapping[] = {1}; // 0xC6 / 0xC7, 1
-
-    // 1. Set basic encoder options (0xC4, 1)
-    uint8_t buffer_basic[64] = {0};
-    buffer_basic[0] = 0xBB;
-    buffer_basic[1] = 0xC4;
-    buffer_basic[2] = 1; // Operation: Write
-
-    for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
-        buffer_basic[8 + i] = device->Encoders[i].encoderOptions;
-    }
-
-    CreateRequestAsync(device, 0xC4, params_basic, 1, NULL, 0);
-    memcpy(device->request + 8, buffer_basic + 8, device->info.iBasicEncoderCount);
-
-    // 2. Set channel mappings (0xC5, 1)
-    uint8_t buffer_mapping[64] = {0};
-    buffer_mapping[0] = 0xBB;
-    buffer_mapping[1] = 0xC5;
-    buffer_mapping[2] = 1; // Operation: Write
-
-    for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
-        buffer_mapping[8 + i] = device->Encoders[i].channelApin;
-        buffer_mapping[33 + i] = device->Encoders[i].channelBpin;
-    }
-
-    CreateRequestAsync(device, 0xC5, params_mapping, 1, NULL, 0,NULL);
-    memcpy(device->request + 8, buffer_mapping + 8, device->info.iBasicEncoderCount);
-    memcpy(device->request + 33, buffer_mapping + 33, device->info.iBasicEncoderCount);
-
-    if (device->info.iKeyMapping)
-    {
-        // 3. Direction A key mapping (0xC6)
-        uint8_t buffer_dirA[64] = {0};
-        buffer_dirA[0] = 0xBB;
-        buffer_dirA[1] = 0xC6;
-        buffer_dirA[2] = 1;
-
-        for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
-            buffer_dirA[8 + i] = device->Encoders[i].dirAkeyCode;
-            buffer_dirA[33 + i] = device->Encoders[i].dirAkeyModifier;
-        }
-
-        CreateRequestAsync(device, 0xC6, params_dir_mapping, 1, NULL, 0, NULL);
-        memcpy(device->request + 8, buffer_dirA + 8, device->info.iBasicEncoderCount);
-        memcpy(device->request + 33, buffer_dirA + 33, device->info.iBasicEncoderCount);
-
-        // 4. Direction B key mapping (0xC7)
-        uint8_t buffer_dirB[64] = {0};
-        buffer_dirB[0] = 0xBB;
-        buffer_dirB[1] = 0xC7;
-        buffer_dirB[2] = 1;
-
-        for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
-            buffer_dirB[8 + i] = device->Encoders[i].dirBkeyCode;
-            buffer_dirB[33 + i] = device->Encoders[i].dirBkeyModifier;
-        }
-
-        CreateRequestAsync(device, 0xC7, params_dir_mapping, 1, NULL, 0, NULL);
-        memcpy(device->request + 8, buffer_dirB + 8, device->info.iBasicEncoderCount);
-        memcpy(device->request + 33, buffer_dirB + 33, device->info.iBasicEncoderCount);
-    }
-
-    if (device->info.iFastEncoders)
-    {
-        // 5. Set fast encoders (0xCE)
-        uint8_t params_fast[] = { device->FastEncodersConfiguration, device->FastEncodersOptions };
-        CreateRequestAsync(device, 0xCE, params_fast, 2, NULL, 0);
-    }
-
-    if (device->info.iUltraFastEncoders)
-    {
-        // 6. Set ultra fast encoders (0x1C)
-        uint8_t params_ultra[] = { device->UltraFastEncoderConfiguration, device->UltraFastEncoderOptions };
-        CreateRequestAsync(device, 0x1C, params_ultra, 2, NULL, 0);
-        CreateRequestAsync(device, 0x1C, NULL, 0, 
-                           &device->UltraFastEncoderFilter, sizeof(device->UltraFastEncoderFilter));
-    }
-
-    return PK_OK;
-}
+ int PK_EncoderConfigurationSetAsync(sPoKeysDevice *device)
+ {
+     if (device == NULL) return PK_ERR_NOT_CONNECTED;
+     if (!device->info.iBasicEncoderCount) return PK_ERR_NOT_SUPPORTED;
+ 
+     uint8_t params_basic[] = {1};       // Write mode
+     uint8_t params_mapping[] = {1};
+     uint8_t params_dir_mapping[] = {1};
+     uint8_t params_fast[] = {1};
+     uint8_t params_ultra[] = {1};
+ 
+     // 1. Set basic encoder options (0xC4)
+     uint8_t payload_encoderOptions[56] = {0};
+     for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
+         payload_encoderOptions[i] = device->Encoders[i].encoderOptions;
+     }
+     CreateRequestAsyncWithPayload(device, 0xC4, params_basic, 1,
+                                    payload_encoderOptions, device->info.iBasicEncoderCount,
+                                    NULL);
+ 
+     // 2. Set channel mappings (0xC5)
+     uint8_t payload_mapping[56] = {0};
+     for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
+         payload_mapping[i] = device->Encoders[i].channelApin;
+         payload_mapping[25 + i + 1] = device->Encoders[i].channelBpin;
+     }
+     CreateRequestAsyncWithPayload(device, 0xC5, params_mapping, 1,
+                                    payload_mapping, sizeof(payload_mapping),
+                                    NULL);
+ 
+     if (device->info.iKeyMapping)
+     {
+         // 3. Direction A mapping (0xC6)
+         uint8_t payload_dirA[56] = {0};
+         uint8_t payload_dirB[56] = {0};
+ 
+         for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
+             payload_dirA[i] = device->Encoders[i].dirAkeyCode;
+             payload_dirA[25 + i + 1] = device->Encoders[i].dirAkeyModifier;
+ 
+             payload_dirB[i] = device->Encoders[i].dirBkeyCode;
+             payload_dirB[25 + i + 1] = device->Encoders[i].dirBkeyModifier;
+         }
+ 
+         CreateRequestAsyncWithPayload(device, 0xC6, params_dir_mapping, 1,
+                                        payload_dirA, sizeof(payload_dirA),
+                                        NULL);
+ 
+         // 4. Direction B mapping (0xC7)
+         CreateRequestAsyncWithPayload(device, 0xC7, params_dir_mapping, 1,
+                                        payload_dirB, sizeof(payload_dirB),
+                                        NULL);
+     }
+ 
+     if (device->info.iFastEncoders)
+     {
+         // 5. Set fast encoders (0xCE)
+         uint8_t payload_fast[2] = {
+             device->FastEncodersConfiguration,
+             device->FastEncodersOptions
+         };
+ 
+         CreateRequestAsyncWithPayload(device, 0xCE, params_fast, 1,
+                                        payload_fast, sizeof(payload_fast),
+                                        NULL);
+     }
+ 
+     if (device->info.iUltraFastEncoders)
+     {
+         // 6. Set ultra fast encoders (0x1C)
+         uint8_t payload_ultra[6] = {0};
+         payload_ultra[0] = device->UltraFastEncoderConfiguration;
+         payload_ultra[1] = device->UltraFastEncoderOptions;
+ 
+         uint32_t filter = device->UltraFastEncoderFilter;
+         payload_ultra[2] = (filter >>  0) & 0xFF;
+         payload_ultra[3] = (filter >>  8) & 0xFF;
+         payload_ultra[4] = (filter >> 16) & 0xFF;
+         payload_ultra[5] = (filter >> 24) & 0xFF;
+ 
+         CreateRequestAsyncWithPayload(device, 0x1C, params_ultra, 1,
+                                        payload_ultra, sizeof(payload_ultra),
+                                        NULL);
+     }
+ 
+     return PK_OK;
+ }
 
 /**
  * @brief Starts asynchronous encoder values retrieval.

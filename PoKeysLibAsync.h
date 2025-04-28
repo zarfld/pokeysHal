@@ -41,6 +41,16 @@ int CreateRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,
     void *target_ptr, size_t target_size,
     pokeys_response_parser_t parser_func);
 
+int CreateRequestAsyncWithPayload(
+        sPoKeysDevice *device,
+        pokeys_command_t cmd,
+        const uint8_t *params,
+        size_t params_len,
+        const void *payload,
+        size_t payload_size,
+        pokeys_response_parser_t parser_func
+    );
+
 int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id);
 
 int PK_ReceiveAndDispatch(sPoKeysDevice *dev);
