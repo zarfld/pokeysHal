@@ -30,7 +30,7 @@ static: libPoKeysHal.a
 libPoKeysHal.a: $(OBJECTS)
 	$(AR) rcs libPoKeysHal.a $(OBJECTS)
 
-libPoKeyHal.so: $(OBJECTS)
+libPoKeysHal.so: $(OBJECTS)
 	$(CC) -shared $(OBJECTS) -o libPoKeysHal.so $(LDFLAGS)
 	
 clean:
