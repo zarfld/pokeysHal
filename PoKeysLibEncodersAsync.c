@@ -35,8 +35,6 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
     int r = 0;
 
     // Export debounced encoder output value (optional - check if needed)
-    r = hal_pin_s32_newf(HAL_OUT, &(device->encoder_deb_out), comp_id, "%s.encoder.deb.out", prefix);
-    if (r != 0) return r;
 
     // Loop over each basic encoder
     for (int i = 0; i < device->info.iBasicEncoderCount; i++) {
