@@ -315,3 +315,4 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
         }
     }
 }
+
