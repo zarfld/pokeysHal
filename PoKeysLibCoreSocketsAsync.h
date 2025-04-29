@@ -1,3 +1,12 @@
+#ifndef POKEYSLIBCORESOCKETSASYNC_H
+#define POKEYSLIBCORESOCKETSASYNC_H
+
+#include "PoKeysLibHal.h"  // sPoKeysDevice, sPoKeysNetworkDeviceSummary
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Global (or device-specific) discovery context
 typedef struct {
     int txSocket;
@@ -8,8 +17,22 @@ typedef struct {
     uint32_t serialNumberToFind;
 } PoKeysDiscoveryContext;
 
-// Returns a transaction ID, tracks discovery state via callback
-int PK_SearchNetworkDevicesAsync(sPoKeysNetworkDeviceSummary *devices, uint32_t timeout_us);
+uint32_t* PK_GetBroadcastAddressesAsync(void);
 
-// Connects using an async transaction (non-blocking connect)
-int PK_ConnectToNetworkDeviceAsync(sPoKeysNetworkDeviceSummary *device);
+int32_t PK_SearchNetworkDevicesAsync(sPoKeysNetworkDeviceSummary* devices, uint32_t timeout_ms, uint32_t serialNumberToFind);
+
+sPoKeysDevice* PK_ConnectToNetworkDeviceAsync(const sPoKeysNetworkDeviceSummary* device);
+
+int32_t PK_SendEthRequestAsync(sPoKeysDevice* device);
+
+int32_t PK_SendEthRequestNoResponseAsync(sPoKeysDevice* device);
+
+int32_t PK_SendEthRequestBigAsync(sPoKeysDevice* device);
+
+int32_t PK_RecvEthBigResponseAsync(sPoKeysDevice* device);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // POKEYSLIBCORESOCKETSASYNC_H
