@@ -16,6 +16,7 @@
 extern int getChecksum(const uint8_t *buffer);
 extern void InitializeNewDevice(sPoKeysDevice *device);
 extern void debug_printf(const char *fmt, ...);
+extern uint64_t get_current_time_us(void);
 
 PoKeysDiscoveryContext discoveryCtx;
 
@@ -226,7 +227,7 @@ int PK_SearchNetworkDevicesAsync_Process(void)
  * @see PK_SearchNetworkDevicesAsync_Start()
  * @see PK_SearchNetworkDevicesAsync_Process()
  */
- sPoKeysDevice* PK_ConnectToNetworkDeviceAsync(sPoKeysNetworkDeviceSummary* device)
+ sPoKeysDevice* PK_ConnectToNetworkDeviceAsync(const sPoKeysNetworkDeviceSummary* device)
  {
      if (device == NULL)
          return NULL;
