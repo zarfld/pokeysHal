@@ -77,7 +77,8 @@ async_transaction_t* transaction_find(uint8_t request_id)
  */
 int CreateRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,
     const uint8_t *params, size_t params_len,
-    void *target_ptr, size_t target_size)
+    void *target_ptr, size_t target_size,
+    int (*parser_func)(sPoKeysDevice *, const uint8_t *))
 {
 async_transaction_t *t = transaction_alloc();
 if (!t)

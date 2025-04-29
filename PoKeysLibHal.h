@@ -974,6 +974,9 @@ typedef struct
 
  // extended for Async
  uint8_t rtc_response_buffer[64]; // in sPoKeysDevice
+ int sockfd;
+ struct sockaddr_in addr;
+ 
 } sPoKeysDevice;
 
 
