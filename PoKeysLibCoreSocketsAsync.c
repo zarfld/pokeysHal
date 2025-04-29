@@ -195,3 +195,75 @@ int PK_SearchNetworkDevicesAsync_Process(void)
 }
 
 
+/**
+ * @brief Connects to a PoKeys network device asynchronously (UDP only, Linux-only).
+ *
+ * This function creates a non-blocking UDP socket and prepares the connection 
+ * structure for communicating with the PoKeys device. 
+ * No blocking calls (like connect or select) are used, ensuring realtime safety.
+ *
+ * @param device Pointer to the sPoKeysNetworkDeviceSummary structure containing 
+ *               the device IP address and connection parameters.
+ *
+ * @return Pointer to an initialized sPoKeysDevice structure on success, 
+ *         or NULL on failure (e.g., memory allocation failure or socket creation error).
+ *
+ * @note
+ * - Only UDP connections are supported (TCP not implemented here).
+ * - Socket is set to non-blocking mode immediately after creation.
+ * - All memory allocations use hal_malloc() for realtime safety.
+ * - The resulting sPoKeysDevice must be managed and eventually released properly.
+ *
+ * @usage
+ * After calling PK_SearchNetworkDevicesAsync and finding a device, 
+ * use this function to establish a realtime-safe UDP connection to it.
+ *
+ * @see PK_SearchNetworkDevicesAsync_Start()
+ * @see PK_SearchNetworkDevicesAsync_Process()
+ */
+ sPoKeysDevice* PK_ConnectToNetworkDeviceAsync(sPoKeysNetworkDeviceSummary* device)
+ {
+     if (device == NULL)
+         return NULL;
+ 
+     sPoKeysDevice* tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
+     if (!tmpDevice)
+         return NULL;
+ 
+     memset(tmpDevice, 0, sizeof(sPoKeysDevice));
+ 
+     tmpDevice->devHandle2 = hal_malloc(sizeof(struct sockaddr_in));
+     if (!tmpDevice->devHandle2)
+         return NULL;
+ 
+     tmpDevice->connectionType = PK_DeviceType_NetworkDevice; // Network device
+     tmpDevice->connectionParam = device->useUDP;
+ 
+     uint32_t addr = (uint32_t)device->IPaddress[0]
+                   + ((uint32_t)device->IPaddress[1] << 8)
+                   + ((uint32_t)device->IPaddress[2] << 16)
+                   + ((uint32_t)device->IPaddress[3] << 24);
+ 
+     struct sockaddr_in* remoteEP = (struct sockaddr_in*)tmpDevice->devHandle2;
+     memset(remoteEP, 0, sizeof(struct sockaddr_in));
+     remoteEP->sin_family = AF_INET;
+     remoteEP->sin_port = htons(20055);
+     remoteEP->sin_addr.s_addr = addr;
+ 
+     tmpDevice->devHandle = hal_malloc(sizeof(int));
+     if (!tmpDevice->devHandle)
+         return NULL;
+ 
+     *(int*)tmpDevice->devHandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP); // Always UDP
+     if (*(int*)tmpDevice->devHandle == -1)
+         return NULL;
+ 
+     // Set non-blocking immediately
+     fcntl(*(int*)tmpDevice->devHandle, F_SETFL, O_NONBLOCK);
+ 
+     debug_printf("Socket created for device. Non-blocking UDP mode.\n");
+ 
+     InitializeNewDevice(tmpDevice);
+ 
+     return tmpDevice;
+ }
