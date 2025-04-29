@@ -21,7 +21,7 @@ OBJECTS=$(SOURCES:.c=.o)
 
 install: all
 	cp libPoKeysHal.so /usr/lib
-	cp PoKeysHal.h /usr/include
+	cp PoKeysLibHal.h /usr/include
 
 all: $(SOURCES) libPoKeysHal.so
 
