@@ -1,5 +1,6 @@
 #include "PoKeysLibHal.h"
 #include "PoKeysLibAsync.h"
+#include "PoKeysLibCoreSocketsAsync.h"
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -11,6 +12,10 @@
 #include <net/if.h>
 #include "hal.h"  // for hal_malloc
 
+
+extern int getChecksum(const uint8_t *buffer);
+extern void InitializeNewDevice(sPoKeysDevice *device);
+extern void debug_printf(const char *fmt, ...);
 
 PoKeysDiscoveryContext discoveryCtx;
 

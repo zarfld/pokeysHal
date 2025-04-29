@@ -7,6 +7,11 @@
 extern "C" {
 #endif
 
+#define PK_ERR_SOCKET    (-201)
+#define PK_ERR_TIMEOUT   (-202)
+#define PK_ERR_AGAIN     (-203)
+#define PK_OK_FOUND      (201)
+
 // Global (or device-specific) discovery context
 typedef struct {
     int txSocket;
