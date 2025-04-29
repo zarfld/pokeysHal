@@ -15,6 +15,7 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-libusb.c PoKeysLibFastUSB.c \
         PoKeysLibWS2812.c \
         PoKeysLibEncodersAsync.c \
         PoKeysLibRTCAsync.c \
+        PoKeysLibAsync.c \
         PoKeysLibAsync.c
 
 OBJECTS=$(SOURCES:.c=.o)
