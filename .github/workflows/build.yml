@@ -108,6 +108,11 @@ jobs:
         sudo make -f Makefile.noqmake
       continue-on-error: true
 
+    - name: Check for multiple transaction definitions
+      run: |
+        echo "Checking for multiple 'transactions' symbols in object files..."
+        nm -o *.o | grep "transactions" | awk '{print $3}' | sort | uniq -d > duplicates.txt
+
     - name: Sync repository
       run: |
         git config --global user.name "github-actions[bot]"
