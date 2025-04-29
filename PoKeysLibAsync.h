@@ -54,8 +54,6 @@ typedef struct {
     size_t target_size;
 } async_transaction_t;
 
-extern async_transaction_t transactions[MAX_TRANSACTIONS];
-
 typedef struct {
     uint8_t request_id;
     pokeys_command_t command_sent;
