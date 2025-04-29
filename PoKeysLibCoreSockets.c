@@ -65,7 +65,7 @@ typedef unsigned long uint32;
     }
 #endif
 
-uint32 * GetBroadcastAddresses()
+static uint32 * GetBroadcastAddresses()
 {
     uint32 * list = malloc(sizeof(uint32) * 100);
     uint32* ptr = list;
