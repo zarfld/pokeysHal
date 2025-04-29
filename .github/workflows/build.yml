@@ -102,6 +102,14 @@ jobs:
         git config --global submodule.recurse true
         git submodule foreach --recursive git config --local status.showUntrackedFiles no
 
+    - name: Clean previous builds
+      run: |
+        make clean || true
+        rm -rf build/
+        find . -name '*.o' -delete
+        find . -name '*.so' -delete
+     
+
     - name: Build modified PoKeysHalLib
       run: |
         echo "Building PoKeysHalLib from custom Makefile..."
