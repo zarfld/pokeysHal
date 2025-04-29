@@ -822,16 +822,16 @@ typedef struct
 
 typedef struct
 {
-    hal_u32_t SEC;       ///< Seconds (0..59)
-    hal_u32_t MIN;       ///< Minutes (0..59)
-    hal_u32_t HOUR;      ///< Hours (0..23)
-    hal_u32_t DOW;       ///< Day of Week (0..6)
-    hal_u32_t DOM;       ///< Day of Month (1..31)
-    hal_u32_t tmp;       ///< Temperature (or reserved) - device-specific
-    hal_u32_t DOY;       ///< Day of Year (1..366)
-    hal_u32_t MONTH;     ///< Month (1..12)
-    hal_u32_t YEAR;      ///< Year (full, e.g., 2024)
-    hal_u32_t reserved;  ///< Reserved for future expansion
+    hal_u32_t *SEC;       ///< Seconds (0..59)
+    hal_u32_t *MIN;       ///< Minutes (0..59)
+    hal_u32_t *HOUR;      ///< Hours (0..23)
+    hal_u32_t *DOW;       ///< Day of Week (0..6)
+    hal_u32_t *DOM;       ///< Day of Month (1..31)
+    uint8_t tmp;       ///< Temperature (or reserved) - device-specific
+    hal_u32_t *DOY;       ///< Day of Year (1..366)
+    hal_u32_t *MONTH;     ///< Month (1..12)
+    hal_u32_t *YEAR;      ///< Year (full, e.g., 2024)
+    uint32_t reserved;  ///< Reserved for future expansion
 } sPoKeysRTC;
 
 // CAN message structure

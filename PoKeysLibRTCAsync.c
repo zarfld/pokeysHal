@@ -72,9 +72,6 @@
      r = hal_pin_u32_newf(HAL_OUT, &(device->RTC.DOM), comp_id, "%s.rtc.dom", prefix);
      if (r != 0) return r;
  
-     r = hal_pin_u32_newf(HAL_OUT, &(device->RTC.tmp), comp_id, "%s.rtc.tmp", prefix);
-     if (r != 0) return r;
- 
      r = hal_pin_u32_newf(HAL_OUT, &(device->RTC.DOY), comp_id, "%s.rtc.doy", prefix);
      if (r != 0) return r;
  

@@ -1,7 +1,7 @@
 CC = gcc
 AR = ar
 
-CFLAGS=-fPIC -I/usr/include/linuxcnc
+CFLAGS=-fPIC -DULAPI -I/usr/include/linuxcnc
 LDFLAGS=-lusb-1.0 -lpthread
 SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-libusb.c PoKeysLibFastUSB.c \
         PoKeysLibDeviceData.c \
