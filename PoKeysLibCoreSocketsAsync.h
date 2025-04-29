@@ -22,8 +22,6 @@ typedef struct {
     uint32_t serialNumberToFind;
 } PoKeysDiscoveryContext;
 
-uint32_t* PK_GetBroadcastAddressesAsync(void);
-
 int32_t PK_SearchNetworkDevicesAsync(sPoKeysNetworkDeviceSummary* devices, uint32_t timeout_ms, uint32_t serialNumberToFind);
 
 sPoKeysDevice* PK_ConnectToNetworkDeviceAsync(const sPoKeysNetworkDeviceSummary* device);
