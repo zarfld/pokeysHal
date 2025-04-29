@@ -208,9 +208,9 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
     }
 
     // Send the packet
-    ssize_t sent = sendto(dev->sockfd,
+    ssize_t sent = sendto(*(int*)dev->devHandle,
                           t->request_buffer, sizeof(t->request_buffer), 0,
-                          (struct sockaddr *)&dev->addr, sizeof(dev->addr));
+                          (struct sockaddr *)&dev->devHandle2, sizeof(struct sockaddr_in));
     if (sent < 0) {
         return -2; // Send error
     }
@@ -235,7 +235,7 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
     socklen_t addrlen = sizeof(addr);
 
     // Non-blocking UDP receive
-    len = recvfrom(dev->sockfd, rx_buffer, sizeof(rx_buffer),
+    len = recvfrom(*(int*)dev->devHandle, rx_buffer, sizeof(rx_buffer),
                    MSG_DONTWAIT, (struct sockaddr *)&addr, &addrlen);
 
     if (len <= 0)
@@ -295,9 +295,9 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
             if ((now - t->timestamp_sent) > timeout_us) {
                 if (t->retries_left > 0) {
                     // Retry sending
-                    ssize_t sent = sendto(dev->sockfd,
+                    ssize_t sent = sendto(*(int*)dev->devHandle,
                                           t->request_buffer, sizeof(t->request_buffer), 0,
-                                          (struct sockaddr *)&dev->addr, sizeof(dev->addr));
+                                          (struct sockaddr *)&dev->devHandle2, sizeof(struct sockaddr_in));
                     if (sent >= 0) {
                         t->timestamp_sent = now; // Update timestamp after successful resend
                         t->retries_left--;
