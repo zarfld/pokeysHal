@@ -189,7 +189,7 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
      if (device == NULL || response == NULL) return PK_ERR_TRANSFER;
  
      for (uint32_t i = 0; i < 13; i++) {
-         device->Encoders[i].encoderValue = *(uint32_t*)&response[8 + (i * 4)];
+        *(device->Encoders[i].encoderValue) = *(uint32_t*)&response[8 + (i * 4)];
      }
      return PK_OK;
  }
@@ -199,7 +199,7 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
      if (device == NULL || response == NULL) return PK_ERR_TRANSFER;
  
      for (uint32_t i = 0; i < 13; i++) {
-         device->Encoders[13 + i].encoderValue = *(uint32_t*)&response[8 + (i * 4)];
+        *(device->Encoders[13 + i].encoderValue) = *(uint32_t*)&response[8 + (i * 4)];
      }
      return PK_OK;
  }
@@ -209,7 +209,7 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
      if (device == NULL || response == NULL) return PK_ERR_TRANSFER;
  
      for (uint32_t i = 0; i < 12; i++) {
-         device->Encoders[13 + i].encoderValue = *(uint32_t*)&response[8 + (i * 4)];
+        *(device->Encoders[13 + i].encoderValue) = *(uint32_t*)&response[8 + (i * 4)];
      }
      return PK_OK;
  }

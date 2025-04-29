@@ -609,7 +609,7 @@ typedef struct
  uint8_t  reserved[3];
 } sPoKeysPinData;
 
-// Encoder-specific data
+// Encoder-specific data HAL version
 typedef struct
 {
  hal_s32_t *encoderValue;                      // Encoder current value
