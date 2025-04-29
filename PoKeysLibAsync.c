@@ -7,7 +7,7 @@
 
 extern uint64_t get_current_time_us(void); // Your system's high-res timer
 extern uint8_t next_request_id(void); // Request ID generator
-static async_transaction_t transactions[MAX_TRANSACTIONS];
+static async_transaction_t pk_transactions[MAX_TRANSACTIONS];
 
 /**
  * @brief Allocates a new free transaction.
@@ -17,14 +17,14 @@ static async_transaction_t transactions[MAX_TRANSACTIONS];
 async_transaction_t* transaction_alloc(void)
 {
     for (int i = 0; i < MAX_TRANSACTIONS; i++) {
-        if (transactions[i].status == TRANSACTION_COMPLETED ||
-            transactions[i].status == TRANSACTION_TIMEOUT ||
-            transactions[i].status == TRANSACTION_FAILED ||
-            transactions[i].request_id == 0) {
+        if (pk_transactions[i].status == TRANSACTION_COMPLETED ||
+            pk_transactions[i].status == TRANSACTION_TIMEOUT ||
+            pk_transactions[i].status == TRANSACTION_FAILED ||
+            pk_transactions[i].request_id == 0) {
             // Reset transaction
-            memset(&transactions[i], 0, sizeof(async_transaction_t));
-            transactions[i].status = TRANSACTION_PENDING;
-            return &transactions[i];
+            memset(&pk_transactions[i], 0, sizeof(async_transaction_t));
+            pk_transactions[i].status = TRANSACTION_PENDING;
+            return &pk_transactions[i];
         }
     }
     return NULL; // No available slot
@@ -56,9 +56,9 @@ uint8_t next_request_id(void)
 async_transaction_t* transaction_find(uint8_t request_id)
 {
     for (int i = 0; i < MAX_TRANSACTIONS; i++) {
-        if (transactions[i].request_id == request_id &&
-            transactions[i].status == TRANSACTION_PENDING) {
-            return &transactions[i];
+        if (pk_transactions[i].request_id == request_id &&
+            pk_transactions[i].status == TRANSACTION_PENDING) {
+            return &pk_transactions[i];
         }
     }
     return NULL; // Not found
@@ -289,7 +289,7 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
     uint64_t now = get_current_time_us();
 
     for (int i = 0; i < MAX_TRANSACTIONS; i++) {
-        async_transaction_t *t = &transactions[i];
+        async_transaction_t *t = &pk_transactions[i];
 
         if (t->status == TRANSACTION_PENDING) {
             if ((now - t->timestamp_sent) > timeout_us) {
