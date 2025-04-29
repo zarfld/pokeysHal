@@ -1,7 +1,7 @@
 #ifndef POKEYSLIBCORESOCKETSASYNC_H
 #define POKEYSLIBCORESOCKETSASYNC_H
 
-#include "PoKeysLibHal.h"  // sPoKeysDevice, sPoKeysNetworkDeviceSummary
+
 
 #ifdef __cplusplus
 extern "C" {

@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "PoKeysLibHal.h" // Include the main PoKeysLib header for device structure definitions
 
 
 #define MAX_TRANSACTIONS 64 // Maximum number of async transactions
