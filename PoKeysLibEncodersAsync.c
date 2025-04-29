@@ -248,30 +248,35 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
     // Step 2: Channel mappings (0xC5)
     for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
         // Channel A pin
+        uint32_t tempA = device->Encoders[i].channelApin;
         CreateRequestAsync(device, 0xC5, NULL, 0,
-            &device->Encoders[i].channelApin, sizeof(device->Encoders[i].channelApin),NULL);
+            &tempA, sizeof(tempA),NULL);
 
         // Channel B pin
+        uint32_t tempB = device->Encoders[i].channelBpin;
         CreateRequestAsync(device, 0xC5, NULL, 0,
-            &device->Encoders[i].channelBpin, sizeof(device->Encoders[i].channelBpin),NULL);
+            &tempB, sizeof(tempB),NULL);
     }
 
     if (device->info.iKeyMapping)
     {
         // Step 3: Direction A key mapping (0xC6)
         for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
+            uint32_t tempA1 = device->Encoders[i].dirAkeyCode;
+            uint32_t tempA2 = device->Encoders[i].dirAkeyModifier;
             CreateRequestAsync(device, 0xC6, NULL, 0,
-                &device->Encoders[i].dirAkeyCode, sizeof(device->Encoders[i].dirAkeyCode),NULL);
+                &tempA1, sizeof(tempA1),NULL);
             CreateRequestAsync(device, 0xC6, NULL, 0,
-                &device->Encoders[i].dirAkeyModifier, sizeof(device->Encoders[i].dirAkeyModifier),NULL);
-        }
+                &tempA2, sizeof(tempA2),NULL);
+
 
         // Step 4: Direction B key mapping (0xC7)
-        for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
+        uint32_t tempB1 = device->Encoders[i].dirBkeyCode;
+        uint32_t tempB2 = device->Encoders[i].dirBkeyModifier;
             CreateRequestAsync(device, 0xC7, NULL, 0,
-                &device->Encoders[i].dirBkeyCode, sizeof(device->Encoders[i].dirBkeyCode),NULL);
+                &tempB1, sizeof(tempB1),NULL);
             CreateRequestAsync(device, 0xC7, NULL, 0,
-                &device->Encoders[i].dirBkeyModifier, sizeof(device->Encoders[i].dirBkeyModifier),NULL);
+                &tempB2, sizeof(tempB2),NULL);
         }
     }
 
