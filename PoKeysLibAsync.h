@@ -7,7 +7,14 @@
 #include "PoKeysLibHal.h" // Include the main PoKeysLib header for device structure definitions
 
 
+#define MAX_TRANSACTIONS 64 // Maximum number of async transactions
 
+typedef enum {
+    TRANSACTION_PENDING = 0,
+    TRANSACTION_COMPLETED = 1,
+    TRANSACTION_TIMEOUT = 2,
+    TRANSACTION_FAILED = 3
+} transaction_status_t;
 
 typedef enum {
     PK_CMD_DIGITAL_INPUTS_GET   = 0x10,
@@ -30,19 +37,24 @@ typedef enum {
 typedef int (*pokeys_response_parser_t)(sPoKeysDevice *dev, const uint8_t *response);
 
 typedef struct {
+    uint8_t request_buffer[64];
+    uint8_t response_buffer[64];
     uint8_t request_id;
     pokeys_command_t command_sent;
+
     uint64_t timestamp_sent;
-    int retries_left;
+    uint8_t retries_left;
+
+    transaction_status_t status;
     bool response_ready;
+    // Optional parser
+    int (*response_parser)(sPoKeysDevice *dev, const uint8_t *response);
 
     void *target_ptr;
     size_t target_size;
-    pokeys_response_parser_t response_parser;
-
-    uint8_t request_buffer[64];
-    uint8_t response_buffer[64];
 } async_transaction_t;
+
+async_transaction_t transactions[MAX_TRANSACTIONS]
 
 typedef struct {
     uint8_t request_id;
@@ -63,7 +75,7 @@ typedef struct {
 int CreateRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,
     const uint8_t *params, size_t params_len,
     void *target_ptr, size_t target_size,
-    pokeys_response_parser_t parser_func);
+    int (*parser_func)(sPoKeysDevice *dev, const uint8_t *response));
 
 int CreateRequestAsyncWithPayload(
         sPoKeysDevice *device,
