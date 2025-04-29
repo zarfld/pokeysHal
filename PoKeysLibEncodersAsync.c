@@ -240,15 +240,16 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
 
     // Step 1: Basic encoder options (0xC4)
     for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
+        uint32_t temp = device->Encoders[i].encoderOptions;
         CreateRequestAsync(device, 0xC4, NULL, 0,
-            &device->Encoders[i].encoderOptions, sizeof(device->Encoders[i].encoderOptions),PK_EncoderOptionsParse);
+            &temp, sizeof(temp),PK_EncoderOptionsParse);
     }
 
     // Step 2: Channel mappings (0xC5)
     for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
         // Channel A pin
         CreateRequestAsync(device, 0xC5, NULL, 0,
-            &device->Encoders[i].channelApin, sizeof(device->Encoders[i].channelApin));
+            &device->Encoders[i].channelApin, sizeof(device->Encoders[i].channelApin),NULL);
 
         // Channel B pin
         CreateRequestAsync(device, 0xC5, NULL, 0,
