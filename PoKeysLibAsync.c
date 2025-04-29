@@ -7,7 +7,7 @@
 
 extern uint64_t get_current_time_us(void); // Your system's high-res timer
 extern uint8_t next_request_id(void); // Request ID generator
-extern async_transaction_t transactions[MAX_TRANSACTIONS];
+async_transaction_t transactions[MAX_TRANSACTIONS];
 
 /**
  * @brief Allocates a new free transaction.
