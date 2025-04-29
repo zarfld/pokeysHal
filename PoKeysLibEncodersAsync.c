@@ -77,19 +77,19 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
         r = hal_param_u32_newf(HAL_RW, &(device->FastEncodersOptions), comp_id, "%s.encoder.FastEncoders.Options", prefix);
         if (r != 0) return r;
     
-        r = hal_pin_bit_newf(HAL_OUT, &(device->FastEncoder_enable), comp_id, "%s.encoder.FastEncoders.enable", prefix);
+        r = hal_param_u32_newf(HAL_OUT, &(device->FastEncoder_enable), comp_id, "%s.encoder.FastEncoders.enable", prefix);
         if (r != 0) return r;
     
-        r = hal_pin_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E1), comp_id, "%s.encoder.FastEncoders.invert_E1", prefix);
+        r = hal_param_u32_newf(HAL_OUT, &(device->FastEncoder_invert_E1), comp_id, "%s.encoder.FastEncoders.invert_E1", prefix);
         if (r != 0) return r;
     
-        r = hal_pin_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E2), comp_id, "%s.encoder.FastEncoders.invert_E2", prefix);
+        r = hal_param_u32_newf(HAL_OUT, &(device->FastEncoder_invert_E2), comp_id, "%s.encoder.FastEncoders.invert_E2", prefix);
         if (r != 0) return r;
     
-        r = hal_pin_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E3), comp_id, "%s.encoder.FastEncoders.invert_E3", prefix);
+        r = hal_param_u32_newf(HAL_OUT, &(device->FastEncoder_invert_E3), comp_id, "%s.encoder.FastEncoders.invert_E3", prefix);
         if (r != 0) return r;
     
-        r = hal_pin_bit_newf(HAL_OUT, &(device->FastEncoder_disable_4x), comp_id, "%s.encoder.FastEncoders.disable_4x", prefix);
+        r = hal_param_u32_newf(HAL_OUT, &(device->FastEncoder_disable_4x), comp_id, "%s.encoder.FastEncoders.disable_4x", prefix);
         if (r != 0) return r;
     }
 
