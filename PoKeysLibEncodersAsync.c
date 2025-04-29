@@ -446,27 +446,44 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
  * @param device Pointer to PoKeys device
  * @return PK_OK on success, PK_ERR otherwise
  */
-int PK_EncoderValuesSetAsync(sPoKeysDevice *device)
-{
-    if (device == NULL) return PK_ERR_NOT_CONNECTED;
-
-    if (device->info.iBasicEncoderCount >= 13)
-    {
-        // Write first 13 encoder values (0xCD, param 10)
-        uint8_t param_first = 10;
-        CreateRequestAsync(device, 0xCD, &param_first, 1,
-                           &device->Encoders[0].encoderValue,
-                           13 * sizeof(uint32_t)); // 13 encoders × 4 bytes each
-    }
-
-    if (device->info.iBasicEncoderCount >= 25)
-    {
-        // Write next 12 encoder values (0xCD, param 11)
-        uint8_t param_next = 11;
-        CreateRequestAsync(device, 0xCD, &param_next, 1,
-                           &device->Encoders[13].encoderValue,
-                           13 * sizeof(uint32_t)); // 13 more encoders
-    }
-
-    return PK_OK;
-}
+ int PK_EncoderValuesSetAsync(sPoKeysDevice *device)
+ {
+     if (device == NULL) return PK_ERR_NOT_CONNECTED;
+ 
+     if (device->info.iBasicEncoderCount >= 13)
+     {
+         uint8_t param_first = 10;
+         uint8_t payload[56] = {0}; // Payload for 13 encoders × 4 bytes each
+ 
+         for (uint32_t i = 0; i < 13; i++) {
+             uint32_t val = device->Encoders[i].encoderValue;
+             payload[8 + i * 4 + 0] = (val >> 0) & 0xFF;
+             payload[8 + i * 4 + 1] = (val >> 8) & 0xFF;
+             payload[8 + i * 4 + 2] = (val >> 16) & 0xFF;
+             payload[8 + i * 4 + 3] = (val >> 24) & 0xFF;
+         }
+ 
+         CreateRequestAsyncWithPayload(device, 0xCD, &param_first, 1,
+                                       &payload[8], 13 * 4, NULL); // Skip first 8 bytes
+     }
+ 
+     if (device->info.iBasicEncoderCount >= 25)
+     {
+         uint8_t param_next = 11;
+         uint8_t payload[56] = {0};
+ 
+         for (uint32_t i = 0; i < 13; i++) {
+             uint32_t val = device->Encoders[13 + i].encoderValue;
+             payload[8 + i * 4 + 0] = (val >> 0) & 0xFF;
+             payload[8 + i * 4 + 1] = (val >> 8) & 0xFF;
+             payload[8 + i * 4 + 2] = (val >> 16) & 0xFF;
+             payload[8 + i * 4 + 3] = (val >> 24) & 0xFF;
+         }
+ 
+         CreateRequestAsyncWithPayload(device, 0xCD, &param_next, 1,
+                                       &payload[8], 13 * 4, NULL);
+     }
+ 
+     return PK_OK;
+ }
+ 
