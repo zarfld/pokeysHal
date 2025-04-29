@@ -1,7 +1,0 @@
-/home/cnc/actions-runner-pokeysHal/_work/pokeysHal/pokeysHal/build/CMakeFiles/PoKeys.dir
-/home/cnc/actions-runner-pokeysHal/_work/pokeysHal/pokeysHal/build/CMakeFiles/edit_cache.dir
-/home/cnc/actions-runner-pokeysHal/_work/pokeysHal/pokeysHal/build/CMakeFiles/rebuild_cache.dir
-/home/cnc/actions-runner-pokeysHal/_work/pokeysHal/pokeysHal/build/CMakeFiles/list_install_components.dir
-/home/cnc/actions-runner-pokeysHal/_work/pokeysHal/pokeysHal/build/CMakeFiles/install.dir
-/home/cnc/actions-runner-pokeysHal/_work/pokeysHal/pokeysHal/build/CMakeFiles/install/local.dir
-/home/cnc/actions-runner-pokeysHal/_work/pokeysHal/pokeysHal/build/CMakeFiles/install/strip.dir
