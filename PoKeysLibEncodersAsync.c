@@ -462,7 +462,7 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
          uint8_t payload[56] = {0}; // Payload for 13 encoders × 4 bytes each
  
          for (uint32_t i = 0; i < 13; i++) {
-             uint32_t val = device->Encoders[i].encoderValue;
+             uint32_t val = (uint32_t)*(device->Encoders[i].encoderValue);
              payload[8 + i * 4 + 0] = (val >> 0) & 0xFF;
              payload[8 + i * 4 + 1] = (val >> 8) & 0xFF;
              payload[8 + i * 4 + 2] = (val >> 16) & 0xFF;
@@ -479,7 +479,7 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
          uint8_t payload[56] = {0};
  
          for (uint32_t i = 0; i < 13; i++) {
-             uint32_t val = device->Encoders[13 + i].encoderValue;
+             uint32_t val = (uint32_t)*(device->Encoders[13 + i].encoderValue);
              payload[8 + i * 4 + 0] = (val >> 0) & 0xFF;
              payload[8 + i * 4 + 1] = (val >> 8) & 0xFF;
              payload[8 + i * 4 + 2] = (val >> 16) & 0xFF;
