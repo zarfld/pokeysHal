@@ -1,6 +1,6 @@
 #ifndef POKEYSLIB_ASYNC_H
 #define POKEYSLIB_ASYNC_H
-
+#include "PoKeysLibHal.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
