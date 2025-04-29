@@ -20,7 +20,7 @@ extern uint64_t get_current_time_us(void);
 
 PoKeysDiscoveryContext discoveryCtx;
 
-uint32_t *GetBroadcastAddresses()
+uint32_t *GetBroadcastAddressesAsync()
 {
     // Reserve room for 100 addresses (99 + terminating zero)
     uint32_t *list = hal_malloc(sizeof(uint32_t) * 100);
