@@ -98,7 +98,7 @@ int PK_SearchNetworkDevicesAsync_Start(sPoKeysNetworkDeviceSummary* devices, uin
 
     setsockopt(discoveryCtx.txSocket, SOL_SOCKET, SO_BROADCAST, &UDPbroadcast, sizeof(UDPbroadcast));
 
-    addr = GetBroadcastAddresses();
+    addr = GetBroadcastAddressesAsync();
     if (!addr) return PK_ERR_SOCKET;
 
     for (uint32_t* p = addr; *p != 0; p++) {
