@@ -270,7 +270,7 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
     }
 
     t->status = TRANSACTION_COMPLETED;
-    t->response_received = true;
+    t->response_ready = true;
 
     // (Optional) You could immediately free/recycle the transaction here if desired
     // transaction_free(t);
