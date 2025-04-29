@@ -96,14 +96,14 @@
      if (device == NULL || response == NULL)
          return PK_ERR_TRANSFER;
  
-     device->RTC.SEC   = response[8];
-     device->RTC.MIN   = response[9];
-     device->RTC.HOUR  = response[10];
-     device->RTC.DOW   = response[11];
-     device->RTC.DOM   = response[12];
-     device->RTC.MONTH = response[13];
-     device->RTC.DOY   = ((uint16_t)response[14]) | (((uint16_t)response[15]) << 8);
-     device->RTC.YEAR  = ((uint16_t)response[16]) | (((uint16_t)response[17]) << 8);
+     *(device->RTC.SEC)   = response[8];
+        *(device->RTC.MIN)   = response[9];
+            *(device->RTC.HOUR)  = response[10];
+                *(device->RTC.DOW)   = response[11];
+                    *(device->RTC.DOM)   = response[12];
+                        *(device->RTC.MONTH) = response[13];
+                            *(device->RTC.DOY)   = ((uint16_t)response[14]) | (((uint16_t)response[15]) << 8);
+                            *(device->RTC.YEAR)  = ((uint16_t)response[16]) | (((uint16_t)response[17]) << 8);
  
      return PK_OK;
  }
