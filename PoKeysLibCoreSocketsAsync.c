@@ -1,5 +1,5 @@
 #include "PoKeysLibHal.h"
-#include "PoKeysLibAsync.h"
+//#include "PoKeysLibAsync.h"
 #include "PoKeysLibCoreSocketsAsync.h"
 #include <ifaddrs.h>
 #include <netinet/in.h>
