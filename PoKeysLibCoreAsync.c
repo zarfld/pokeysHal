@@ -155,39 +155,39 @@ void PK_CleanDeviceAsync(void *device_ptr)
     if (!device_ptr) return;
     sPoKeysDevice *device = (sPoKeysDevice *)device_ptr;
 
-    hal_free(device->Pins);
+    //hal_free(device->Pins);
     device->Pins = NULL;
 
-    hal_free(device->Encoders);
+    //hal_free(device->Encoders);
     device->Encoders = NULL;
 
-    hal_free(device->PWM.PWMduty);
+    //hal_free(device->PWM.PWMduty);
     device->PWM.PWMduty = NULL;
 
-    hal_free(device->PWM.PWMenabledChannels);
+    //hal_free(device->PWM.PWMenabledChannels);
     device->PWM.PWMenabledChannels = NULL;
 
-    hal_free(device->PWM.PWMpinIDs);
+    //hal_free(device->PWM.PWMpinIDs);
     device->PWM.PWMpinIDs = NULL;
 
-    hal_free(device->PoExtBusData);
+    //hal_free(device->PoExtBusData);
     device->PoExtBusData = NULL;
 
-    hal_free(device->MatrixLED);
+    //hal_free(device->MatrixLED);
     device->MatrixLED = NULL;
 
     if (device->multiPartBuffer) {
-        hal_free(device->multiPartBuffer);
+      //  hal_free(device->multiPartBuffer);
         device->multiPartBuffer = NULL;
     }
 
     if (device->EasySensors) {
-        hal_free(device->EasySensors);
+        //hal_free(device->EasySensors);
         device->EasySensors = NULL;
     }
 
     if (device->netDeviceData) {
-        hal_free(device->netDeviceData);
+        //hal_free(device->netDeviceData);
         device->netDeviceData = NULL;
     }
 }
