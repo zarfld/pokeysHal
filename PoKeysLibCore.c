@@ -191,36 +191,37 @@ void InitializeNewDevice(sPoKeysDevice* device)
 
 void CleanDevice(sPoKeysDevice* device)
 {    
-	free(device->Pins);
+    //in HAL there is no free. The entire HAL shared memory area is freed when the last component calls hal_exit()
+	//free(device->Pins);
 	device->Pins = NULL;
-	free(device->Encoders);
+	//free(device->Encoders);
 	device->Encoders = NULL;
-	free(device->PWM.PWMduty);
+	////free(device->PWM.PWMduty); in HAL there is no free. The entire HAL shared memory area is freed when the last component calls hal_exit()
 	device->PWM.PWMduty = NULL;
-	free(device->PWM.PWMenabledChannels);
+	//free(device->PWM.PWMenabledChannels);
 	device->PWM.PWMenabledChannels = NULL;
-	free(device->PWM.PWMpinIDs);
+	//free(device->PWM.PWMpinIDs);
 	device->PWM.PWMpinIDs = NULL;
-	free(device->PoExtBusData);
+	//free(device->PoExtBusData);
 	device->PoExtBusData = NULL;
-	free(device->MatrixLED);
+	//free(device->MatrixLED);
 	device->MatrixLED = NULL;
 
     if (device->multiPartBuffer != NULL)
     {
-        free(device->multiPartBuffer);
+        //free(device->multiPartBuffer);
         device->multiPartBuffer = NULL;
     }
 
     if (device->EasySensors != NULL)
     {
-        free(device->EasySensors);
+        //free(device->EasySensors);
         device->EasySensors = NULL;
     }
 
     if (device->netDeviceData != NULL)
     {
-        free(device->netDeviceData);
+        //free(device->netDeviceData);
         device->netDeviceData = NULL;
     }
 }
@@ -344,7 +345,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
                     InitializeNewDevice(tmpDevice);
 				} else
 				{
-					free(tmpDevice);
+					//free(tmpDevice);
 					tmpDevice = NULL;
 				}
                 //hid_set_nonblocking(devHandle);
@@ -380,7 +381,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
                     InitializeNewDevice(tmpDevice);
                 } else
                 {
-                    free(tmpDevice);
+                    //free(tmpDevice);
                     tmpDevice = NULL;
                 }
                 //hid_set_nonblocking(devHandle);
@@ -480,7 +481,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
 					}
 					else
                     {
-                        free(tmpDevice);
+                        //free(tmpDevice);
                         tmpDevice = NULL;
                     }
                     //hid_set_nonblocking(devHandle);
@@ -501,7 +502,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
 				}
 				else
                 {
-                    free(tmpDevice);
+                    //free(tmpDevice);
                     tmpDevice = NULL;
                     hid_free_enumeration(devs);
                     return NULL;
@@ -516,7 +517,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
 				else
                 {
                     CleanDevice(tmpDevice);
-                    free(tmpDevice);
+                    //free(tmpDevice);
                 }
             }
 
@@ -567,18 +568,18 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_Ethernet(uint32_t serialNumber, uint32_t
                 if (tmpDevice == NULL)
                 {
                     //CleanDevice(tmpDevice);
-                    free(tmpDevice);
+                    //free(tmpDevice);
                     //printf("\nProblem connecting to the device...");
 				}
 				else
                 {
-                    free(devices);
+                    //free(devices);
                     InitializeNewDevice(tmpDevice);
                     return tmpDevice;
                 }
             }
         }
-        free(devices);
+        //free(devices);
     }
 
     return NULL;
@@ -645,7 +646,7 @@ void PK_DisconnectDevice(sPoKeysDevice* device)
 		}
 
 		CleanDevice(device);
-		free(device);
+		//free(device);
     }
 }
 
