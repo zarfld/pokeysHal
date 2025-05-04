@@ -540,7 +540,15 @@ int32_t PK_PEv2_ProbingFinish(sPoKeysDevice * device)
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     // Copy the probe result position
-    memcpy(device->PEv2.ProbePosition, &device->response[8], 8*4);
+    //memcpy(device->PEv2.ProbePosition, &device->response[8], 8*4);
+    for (int i = 0; i < 8; i++) {
+        device->PEv2.ProbePosition[i] =
+            ((int32_t)device->response[8 + i * 4]) |
+            ((int32_t)device->response[8 + i * 4 + 1] << 8) |
+            ((int32_t)device->response[8 + i * 4 + 2] << 16) |
+            ((int32_t)device->response[8 + i * 4 + 3] << 24);
+    }
+    
     device->PEv2.ProbeStatus = device->response[40];
 
     return PK_OK;
@@ -557,8 +565,14 @@ int32_t PK_PEv2_ProbingFinishSimple(sPoKeysDevice * device)
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     // Copy the probe result position
-    memcpy(device->PEv2.ProbePosition, &device->response[8], 8*4);
-
+   // memcpy(device->PEv2.ProbePosition, &device->response[8], 8*4);
+    for (int i = 0; i < 8; i++) {
+        device->PEv2.ProbePosition[i] =
+            ((int32_t)device->response[8 + i * 4]) |
+            ((int32_t)device->response[8 + i * 4 + 1] << 8) |
+            ((int32_t)device->response[8 + i * 4 + 2] << 16) |
+            ((int32_t)device->response[8 + i * 4 + 3] << 24);
+    }
     return PK_OK;
 }
 
@@ -651,7 +665,11 @@ int32_t PK_PEv2_ThreadingStatusGet(sPoKeysDevice * device)
 
 	device->PEv2.spindleIndexCounter  = *(int32_t*)(device->response + 25);
 
-	memcpy(device->PEv2.DebugValues, device->response + 29, 35);
+	//memcpy(device->PEv2.DebugValues, device->response + 29, 35);
+    for (int i = 0; i < 35; i++) {
+        device->PEv2.DebugValues[i] = device->response[29 + i];
+    }
+    
 	return PK_OK;
 
 }

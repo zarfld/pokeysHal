@@ -796,7 +796,7 @@ typedef struct
 // EasySensor structure
 typedef struct
 {
- hal_s32_t sensorValue;            // Current sensor value
+ hal_s32_t *sensorValue;            // Current sensor value
 
  uint8_t sensorType;             // Type of the sensor
  uint8_t sensorRefreshPeriod;    // Refresh period in 0.1s
