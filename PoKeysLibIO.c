@@ -711,9 +711,22 @@ int32_t PK_PWMUpdate(sPoKeysDevice* device)
     {
 		if (device->PWM.PWMenabledChannels[n]) device->request[8] |= (unsigned char)(1 << n);
 
-		memcpy(&(device->request[9 + n * 4]), &(device->PWM.PWMduty[n]), 4);
+		// old: memcpy(&(device->request[9 + n * 4]), &(device->PWM.PWMduty[n]), 4);
+		uint32_t dutyValue = device->PWM.PWMduty[n];
+		device->request[9 + n * 4]     = (uint8_t)(dutyValue & 0xFF);
+		device->request[10 + n * 4]    = (uint8_t)((dutyValue >> 8) & 0xFF);
+		device->request[11 + n * 4]    = (uint8_t)((dutyValue >> 16) & 0xFF);
+		device->request[12 + n * 4]    = (uint8_t)((dutyValue >> 24) & 0xFF);
+
     }
-	memcpy(&(device->request[33]), &(device->PWM.PWMperiod), 4);
+	//memcpy(&(device->request[33]), &(device->PWM.PWMperiod), 4);
+	uint32_t periodValue = device->PWM.PWMperiod;
+	device->request[33] = (uint8_t)(periodValue & 0xFF);
+	device->request[34] = (uint8_t)((periodValue >> 8) & 0xFF);
+	device->request[35] = (uint8_t)((periodValue >> 16) & 0xFF);
+	device->request[36] = (uint8_t)((periodValue >> 24) & 0xFF);
+	
+
 	if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;   
 
 	return PK_OK;
@@ -728,7 +741,9 @@ int32_t PK_PWMConfigurationSetDirectly(sPoKeysDevice * device, uint32_t PWMperio
 
     device->PWM.PWMperiod = PWMperiod;
     memcpy(device->PWM.PWMenabledChannels, enabledChannels, 6);
-    memset(device->PWM.PWMduty, 0, 6*4);
+    //memset(device->PWM.PWMduty, 0, 6*4);
+	for (int i = 0; i < 6; i++)
+    	device->PWM.PWMduty[i] = 0;
     return PK_PWMConfigurationSet(device);
 }
 
@@ -736,7 +751,10 @@ int32_t PK_PWMUpdateDirectly(sPoKeysDevice * device, uint32_t * dutyCycles)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    memcpy(device->PWM.PWMduty, dutyCycles, 6*4);
+    //memcpy(device->PWM.PWMduty, dutyCycles, 6*4);
+	for (int i = 0; i < 6; i++)
+    	device->PWM.PWMduty[i] = dutyCycles[i];
+
     return PK_PWMUpdate(device);
 }
 
