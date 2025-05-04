@@ -143,12 +143,17 @@ void InitializeNewDevice(sPoKeysDevice* device)
     }
 
 	device->PWM.PWMduty = (uint32_t*)malloc(sizeof(uint32_t) * device->info.iPWMCount);
-	memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
+	//memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
+    for (uint32_t i = 0; i < device->info.iPWMCount; i++)
+        device->PWM.PWMduty[i] = 0;
+
 
 	if (device->info.iPWMCount > 0)
 	{
 		device->PWM.PWMenabledChannels = (unsigned char*)malloc(sizeof(unsigned char) * device->info.iPWMCount);
-		memset(device->PWM.PWMenabledChannels, 0, sizeof(unsigned char) * device->info.iPWMCount);
+		//memset(device->PWM.PWMenabledChannels, 0, sizeof(unsigned char) * device->info.iPWMCount);
+        for (uint32_t i = 0; i < device->info.iPWMCount; i++)
+            device->PWM.PWMenabledChannels[i] = 0;
 	}
 	else
 	{
