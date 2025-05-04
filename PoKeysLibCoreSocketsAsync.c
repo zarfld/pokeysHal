@@ -537,13 +537,11 @@ void PK_DisconnectNetworkDeviceAsync(sPoKeysDevice* device)
     if (device->devHandle != NULL)
     {
         close(*(int*)device->devHandle);
-        hal_free(device->devHandle);
         device->devHandle = NULL;
     }
 
     if (device->devHandle2 != NULL)
     {
-        hal_free(device->devHandle2);
         device->devHandle2 = NULL;
     }
 }
@@ -597,135 +595,3 @@ void PK_DisconnectNetworkDeviceAsync(sPoKeysDevice* device)
      return PK_OK;
  }
 
- /**
- * @brief Sends a large (multi-part) PoKeys request asynchronously (non-blocking).
- *
- * This function splits a prepared PoKeys request into 8 × 64-byte segments and
- * sends them as a single 512-byte UDP packet to the target device.
- *
- * This is typically used for sending larger payloads like motion buffers or extended data.
- *
- * @param device Pointer to the sPoKeysDevice structure, with valid multiPartData populated.
- *
- * @return PK_OK if the multi-part packet was sent successfully (512 bytes transmitted),
- *         PK_ERR_TRANSFER if sending failed,
- *         PK_ERR_GENERIC if device or buffers are invalid.
- *
- * @note
- * - No retries or blocking waits are performed inside this function.
- * - Only works with UDP connections (TCP not supported for multi-part transfers).
- * - Make sure `device->multiPartData` is filled with 448 bytes of payload data before calling.
- *
- * @see PK_RecvEthBigResponseAsync()
- */
-int PK_SendEthRequestBigAsync(sPoKeysDevice* device)
-{
-    if (device == NULL || device->multiPartBuffer == NULL || device->devHandle == NULL)
-        return PK_ERR_GENERIC;
-
-    // Fill 8 × 64-byte parts
-    for (uint32_t i = 0; i < 8; i++)
-    {
-        uint8_t* p = &device->multiPartBuffer[i * 64];
-
-        memcpy(p, device->request, 8);
-        p[0] = 0xBB;
-        p[2] = i;
-        if (i == 0) p[2] |= (1 << 3); // First
-        if (i == 7) p[2] |= (1 << 4); // Last
-
-        p[6] = ++device->requestID;
-        p[7] = getChecksum(p);
-
-        memcpy(p + 8, device->multiPartData + (i * 56), 56);
-    }
-
-    // Send entire 512-byte buffer
-    ssize_t sent = sendto(*(int*)device->devHandle,
-                          device->multiPartBuffer, 512, 0,
-                          (struct sockaddr*)device->devHandle2,
-                          sizeof(struct sockaddr_in));
-
-    return (sent == 512) ? PK_OK : PK_ERR_TRANSFER;
-}
-
-/**
- * @brief Receives the response to a large (multi-part) PoKeys request asynchronously.
- *
- * After sending a multi-part request with PK_SendEthRequestBigAsync(), this function
- * checks (non-blocking) if a valid response packet from the device is available.
- *
- * Verifies packet start byte, request ID match, and checksum integrity.
- *
- * @param device Pointer to the sPoKeysDevice structure.
- *
- * @return PK_OK if a valid 64-byte response packet was received,
- *         PK_ERR_AGAIN if no packet is available yet (socket would block),
- *         PK_ERR_TRANSFER if packet received is invalid or corrupted.
- *
- * @note
- * - Intended for use inside a polling loop after a big request was sent.
- * - No retries or waiting are performed internally (caller should retry if necessary).
- * - This method is realtime-safe and non-blocking.
- *
- * @see PK_SendEthRequestBigAsync()
- */
- int PK_RecvEthBigResponseAsync(sPoKeysDevice* device)
- {
-     if (device == NULL || device->devHandle == NULL)
-         return PK_ERR_GENERIC;
- 
-     unsigned char tmpbuf[64];
-     ssize_t received = recv(*(int*)device->devHandle, tmpbuf, sizeof(tmpbuf), MSG_DONTWAIT);
- 
-     if (received < 0)
-     {
-         if (errno == EAGAIN || errno == EWOULDBLOCK)
-             return PK_ERR_AGAIN;
-         else
-             return PK_ERR_TRANSFER;
-     }
- 
-     if (received != 64)
-         return PK_ERR_TRANSFER;
- 
-     if (tmpbuf[0] != 0xAA || tmpbuf[6] != device->requestID || tmpbuf[7] != getChecksum(tmpbuf))
-         return PK_ERR_TRANSFER;
- 
-     memcpy(device->response, tmpbuf, 64);
-     return PK_OK;
- }
-
- /**
- * @brief Disconnects from a PoKeys network device asynchronously.
- *
- * This function closes the non-blocking UDP socket and releases any allocated memory
- * associated with the device connection.
- *
- * @param device Pointer to the sPoKeysDevice structure.
- *
- * @note
- * - This function is non-blocking and safe for use inside a realtime loop.
- * - It ensures that all resources are properly released.
- * - The device structure itself is not freed, only the connection-related resources.
- *
- * @see PK_ConnectToNetworkDeviceAsync()
- */
-void PK_DisconnectNetworkDeviceAsync(sPoKeysDevice* device)
-{
-    if (device == NULL || device->connectionType != PK_DeviceType_NetworkDevice)
-        return;
-
-    if (device->devHandle != NULL)
-    {
-        close(*(int*)device->devHandle);
-        hal_free(device->devHandle);
-        device->devHandle = NULL;
-    }
-
-    if (device->devHandle2 != NULL)
-    {
-        hal_free(device->devHandle2);
-        device->devHandle2 = NULL;
-    }
-}
