@@ -106,7 +106,13 @@ int32_t PK_EasySensorsValueGetAll(sPoKeysDevice* device)
         {
             es = &device->EasySensors[i + t];
 
-            memcpy(&es->sensorValue, &device->response[8 + t*4], 4);
+            //memcpy(&es->sensorValue, &device->response[8 + t*4], 4);
+            *es->sensorValue =
+                ((int32_t)device->response[8 + t * 4])       |
+                ((int32_t)device->response[8 + t * 4 + 1] << 8)  |
+                ((int32_t)device->response[8 + t * 4 + 2] << 16) |
+                ((int32_t)device->response[8 + t * 4 + 3] << 24);
+
             // OK statuses are bit-mapped to bytes 4 and 5
             es->sensorOKstatus = (device->response[4 + t/8] >> (t % 8)) & 1;
         }
