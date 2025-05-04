@@ -642,9 +642,27 @@ int32_t PK_PWMConfigurationSet(sPoKeysDevice* device)
     {
         if (device->PWM.PWMenabledChannels[n]) device->request[8] |= (uint8_t)(1 << n);
 
-		memcpy(&(device->request[9 + n * 4]), &(device->PWM.PWMduty[n]), 4);
+		//old: memcpy(&(device->request[9 + n * 4]), &(device->PWM.PWMduty[n]), 4);
+		// Step 1: Read volatile data explicitly once into a temporary non-volatile variable
+		uint32_t dutyValue = device->PWM.PWMduty[n];
+
+		// Step 2: Explicitly serialize to request buffer (little-endian format)
+		device->request[9 + n * 4]     = (uint8_t)(dutyValue & 0xFF);
+		device->request[9 + n * 4 + 1] = (uint8_t)((dutyValue >> 8) & 0xFF);
+		device->request[9 + n * 4 + 2] = (uint8_t)((dutyValue >> 16) & 0xFF);
+		device->request[9 + n * 4 + 3] = (uint8_t)((dutyValue >> 24) & 0xFF);
+
     }
-	memcpy(&(device->request[33]), &(device->PWM.PWMperiod), 4);
+	//old: memcpy(&(device->request[33]), &(device->PWM.PWMperiod), 4);
+	// Step 1: Read volatile data explicitly once
+	uint32_t periodValue = device->PWM.PWMperiod;
+
+	// Step 2: Explicitly serialize to request buffer (little-endian format)
+	device->request[33] = (uint8_t)(periodValue & 0xFF);
+	device->request[34] = (uint8_t)((periodValue >> 8) & 0xFF);
+	device->request[35] = (uint8_t)((periodValue >> 16) & 0xFF);
+	device->request[36] = (uint8_t)((periodValue >> 24) & 0xFF);
+
 	if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;   
 
 	return PK_OK;
