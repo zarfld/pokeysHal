@@ -124,5 +124,5 @@ int32_t PK_SL_EasySensorValueGet(sPoKeysDevice* device, uint8_t index)
 {
     if (device == NULL) return 0;
     if (index >= device->info.iEasySensors) return 0;
-    return device->EasySensors[index].sensorValue;
+    return *device->EasySensors[index].sensorValue;
 }
