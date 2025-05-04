@@ -284,8 +284,8 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
     destination->matrixKB = original->matrixKB;
 
     destination->PWM.PWMperiod = original->PWM.PWMperiod;
-    memcpy(destination->PWM.PWMduty, original->PWM.PWMduty,
-           sizeof(uint32_t) * original->info.iPWMCount);
+    destination->PWM.PWMduty = original->PWM.PWMduty;
+    
     memcpy(destination->PWM.PWMenabledChannels, original->PWM.PWMenabledChannels,
            sizeof(unsigned char) * original->info.iPWMCount);
 	memcpy(destination->PWM.PWMpinIDs, original->PWM.PWMpinIDs,
