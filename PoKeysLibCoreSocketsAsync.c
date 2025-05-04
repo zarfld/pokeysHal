@@ -546,52 +546,5 @@ void PK_DisconnectNetworkDeviceAsync(sPoKeysDevice* device)
     }
 }
 
- /**
- * @brief Sends a PoKeys request packet asynchronously without expecting a response (fire-and-forget).
- *
- * Prepares a UDP packet with correct formatting (start byte, request ID, checksum) and 
- * sends it once over the network to the PoKeys device. No response is waited for.
- *
- * This is typically used for operations where the device executes the command
- * without sending a confirmation (e.g., certain control or update commands).
- *
- * @param device Pointer to the sPoKeysDevice structure.
- *
- * @return PK_OK if the packet was sent successfully (64 bytes transmitted),
- *         PK_ERR_TRANSFER if sending failed,
- *         PK_ERR_GENERIC if device pointer or connection is invalid.
- *
- * @note
- * - The socket must be pre-configured and connected via PK_ConnectToNetworkDeviceAsync().
- * - No retries or waiting are done inside this function (caller must handle retries if needed).
- * - Works in realtime-safe LinuxCNC HAL loops (non-blocking sendto()).
- *
- * @usage
- * - Prepare your device connection first.
- * - Then call PK_SendEthRequestNoResponseAsync() whenever you need to trigger an action without awaiting feedback.
- *
- * @see PK_ConnectToNetworkDeviceAsync()
- * @see PK_SendEthRequestAsync()
- */
- int PK_SendEthRequestNoResponseAsync(sPoKeysDevice* device)
- {
-     if (device == NULL || device->devHandle == NULL)
-         return PK_ERR_GENERIC;
  
-     device->requestID++;
- 
-     device->request[0] = 0xBB;
-     device->request[6] = device->requestID;
-     device->request[7] = getChecksum(device->request);
- 
-     ssize_t sent = sendto(*(int*)device->devHandle,
-                           device->request, 64, 0,
-                           (struct sockaddr*)device->devHandle2,
-                           sizeof(struct sockaddr_in));
- 
-     if (sent != 64)
-         return PK_ERR_TRANSFER;
- 
-     return PK_OK;
- }
 
