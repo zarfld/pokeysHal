@@ -182,7 +182,13 @@ int32_t PK_EncoderValuesGet(sPoKeysDevice* device)
 		{
 			for (i = 0; i < 13; i++)
 			{
-				device->Encoders[i].encoderValue = *((unsigned int*)&device->response[8 + i * 4]);
+				//device->Encoders[i].encoderValue = *((unsigned int*)&device->response[8 + i * 4]);
+				*device->Encoders[i].encoderValue =
+					((int32_t)device->response[8 + i * 4])
+					| ((int32_t)device->response[9 + i * 4] << 8)
+					| ((int32_t)device->response[10 + i * 4] << 16)
+					| ((int32_t)device->response[11 + i * 4] << 24);
+
 			}
 		} else return PK_ERR_TRANSFER;
 	}
@@ -195,7 +201,12 @@ int32_t PK_EncoderValuesGet(sPoKeysDevice* device)
 		{
 			for (i = 0; i < 12; i++)
 			{
-				device->Encoders[13 + i].encoderValue = *((unsigned int*)&device->response[8 + i * 4]);
+				//device->Encoders[13 + i].encoderValue = *((unsigned int*)&device->response[8 + i * 4]);
+				*device->Encoders[13 + i].encoderValue =
+					((int32_t)device->response[8 + i * 4])
+					| ((int32_t)device->response[9 + i * 4] << 8)
+					| ((int32_t)device->response[10 + i * 4] << 16)
+					| ((int32_t)device->response[11 + i * 4] << 24);
 			}
 		} else return PK_ERR_TRANSFER;
 	} else if (device->info.iBasicEncoderCount >= 25 && device->info.iUltraFastEncoders != 0)
@@ -206,7 +217,12 @@ int32_t PK_EncoderValuesGet(sPoKeysDevice* device)
 		{
 			for (i = 0; i < 13; i++)
 			{
-				device->Encoders[13 + i].encoderValue = *((unsigned int*)&device->response[8 + i * 4]);
+				//device->Encoders[13 + i].encoderValue = *((unsigned int*)&device->response[8 + i * 4]);
+				*device->Encoders[13 + i].encoderValue =
+					((int32_t)device->response[8 + i * 4])
+					| ((int32_t)device->response[9 + i * 4] << 8)
+					| ((int32_t)device->response[10 + i * 4] << 16)
+					| ((int32_t)device->response[11 + i * 4] << 24);
 			}
 		} else return PK_ERR_TRANSFER;
 		
@@ -238,7 +254,12 @@ int32_t PK_EncoderValuesSet(sPoKeysDevice* device)
 		CreateRequest(device->request, 0xCD, 10, 0, 0, 0);
 		for (i = 0; i < 13; i++)
 		{
-			*((unsigned int*)&device->request[8 + i * 4]) = device->Encoders[i].encoderValue;
+			//*((unsigned int*)&device->request[8 + i * 4]) = device->Encoders[i].encoderValue;
+			int32_t value = *device->Encoders[i].encoderValue;
+			device->request[8 + i * 4]     = (uint8_t)(value & 0xFF);
+			device->request[9 + i * 4]     = (uint8_t)((value >> 8) & 0xFF);
+			device->request[10 + i * 4]    = (uint8_t)((value >> 16) & 0xFF);
+			device->request[11 + i * 4]    = (uint8_t)((value >> 24) & 0xFF);
 		}
 		if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 	}
@@ -249,7 +270,12 @@ int32_t PK_EncoderValuesSet(sPoKeysDevice* device)
 		CreateRequest(device->request, 0xCD, 11, 0, 0, 0);
 		for (i = 0; i < 13; i++)
 		{
-			*((unsigned int*)&device->request[8 + i * 4]) = device->Encoders[13 + i].encoderValue;
+			//*((unsigned int*)&device->request[8 + i * 4]) = device->Encoders[13 + i].encoderValue;
+			int32_t value = *device->Encoders[13+i].encoderValue;
+			device->request[8 + i * 4]     = (uint8_t)(value & 0xFF);
+			device->request[9 + i * 4]     = (uint8_t)((value >> 8) & 0xFF);
+			device->request[10 + i * 4]    = (uint8_t)((value >> 16) & 0xFF);
+			device->request[11 + i * 4]    = (uint8_t)((value >> 24) & 0xFF);
 		}
 		if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 	}
@@ -259,5 +285,6 @@ int32_t PK_EncoderValuesSet(sPoKeysDevice* device)
 uint32_t PK_SL_EncoderValueGet(sPoKeysDevice* device, uint8_t index)
 {
     if (device == NULL) return 0;
-    return device->Encoders[index].encoderValue;
+    //return device->Encoders[index].encoderValue;
+	return (uint32_t)(*device->Encoders[index].encoderValue);
 }
