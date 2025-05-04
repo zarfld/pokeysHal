@@ -681,9 +681,20 @@ int32_t PK_PWMConfigurationGet(sPoKeysDevice* device)
     {
 		device->PWM.PWMenabledChannels[n] = (device->response[8] & (1<<n)) > 0 ? 1 : 0;
 
-		memcpy(&(device->PWM.PWMduty[n]), &(device->response[9 + n * 4]), 4);
+		//old: memcpy(&(device->PWM.PWMduty[n]), &(device->response[9 + n * 4]), 4);
+		device->PWM.PWMduty[n] = 
+				((uint32_t)device->response[9 + n * 4])
+			| ((uint32_t)device->response[10 + n * 4] << 8)
+			| ((uint32_t)device->response[11 + n * 4] << 16)
+			| ((uint32_t)device->response[12 + n * 4] << 24);
+
     }
-	memcpy(&(device->PWM.PWMperiod), &(device->response[33]), 4);
+	//old: memcpy(&(device->PWM.PWMperiod), &(device->response[33]), 4);
+	device->PWM.PWMperiod = 
+			((uint32_t)device->response[33])
+		| ((uint32_t)device->response[34] << 8)
+		| ((uint32_t)device->response[35] << 16)
+		| ((uint32_t)device->response[36] << 24);
 
 	return PK_OK;
 }
