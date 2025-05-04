@@ -333,7 +333,15 @@ int32_t PK_PEv2_PulseEngineMovePV(sPoKeysDevice * device)
     // Create request
     CreateRequest(device->request, 0x85, 0x25, device->PEv2.param2, 0, 0);
 
-    memcpy(&device->request[8], device->PEv2.ReferencePositionSpeed, 8*4);
+    //memcpy(&device->request[8], device->PEv2.ReferencePositionSpeed, 8*4);
+    for (int i = 0; i < 8; i++) {
+        int32_t val = device->PEv2.ReferencePositionSpeed[i];  // Read from volatile pin
+        device->request[8 + i * 4 + 0] = (uint8_t)(val & 0xFF);
+        device->request[8 + i * 4 + 1] = (uint8_t)((val >> 8) & 0xFF);
+        device->request[8 + i * 4 + 2] = (uint8_t)((val >> 16) & 0xFF);
+        device->request[8 + i * 4 + 3] = (uint8_t)((val >> 24) & 0xFF);
+    }
+
     for (i = 0; i < 8; i++) {
         tmpVelocity = (uint16_t)(device->PEv2.ReferenceVelocityPV[i] * 65535);
         memcpy(&device->request[40 + i * 2], &tmpVelocity, 2);
@@ -490,8 +498,14 @@ int32_t PK_PEv2_HomingStart(sPoKeysDevice * device)
     // Create request
     CreateRequest(device->request, 0x85, 0x21, device->PEv2.HomingStartMaskSetup, 0, 0);
 
-    memcpy(&device->request[8], device->PEv2.HomeOffsets, 8 * 4);
-
+    //memcpy(&device->request[8], device->PEv2.HomeOffsets, 8 * 4);
+    for (int i = 0; i < 8; i++) {
+        int32_t val = device->PEv2.HomeOffsets[i];  // Read from volatile pin
+        device->request[8 + i * 4 + 0] = (uint8_t)(val & 0xFF);
+        device->request[8 + i * 4 + 1] = (uint8_t)((val >> 8) & 0xFF);
+        device->request[8 + i * 4 + 2] = (uint8_t)((val >> 16) & 0xFF);
+        device->request[8 + i * 4 + 3] = (uint8_t)((val >> 24) & 0xFF);
+    }
     // Send request
     return SendRequest(device);
 }
@@ -519,7 +533,15 @@ int32_t PK_PEv2_ProbingStart(sPoKeysDevice * device)
     // Create request
     CreateRequest(device->request, 0x85, 0x23, device->PEv2.ProbeStartMaskSetup, 0, 0);
 
-    memcpy(&device->request[8], device->PEv2.ProbeMaxPosition, 8 * 4);
+    //memcpy(&device->request[8], device->PEv2.ProbeMaxPosition, 8 * 4);
+    for (int i = 0; i < 8; i++) {
+        int32_t val = device->PEv2.ProbeMaxPosition[i];  // Read from volatile pin
+        device->request[8 + i * 4 + 0] = (uint8_t)(val & 0xFF);
+        device->request[8 + i * 4 + 1] = (uint8_t)((val >> 8) & 0xFF);
+        device->request[8 + i * 4 + 2] = (uint8_t)((val >> 16) & 0xFF);
+        device->request[8 + i * 4 + 3] = (uint8_t)((val >> 24) & 0xFF);
+    }
+
     *(float*)(&device->request[40]) = device->PEv2.ProbeSpeed;
     device->request[44] = device->PEv2.ProbeInput;
     device->request[45] = device->PEv2.ProbeInputPolarity;
