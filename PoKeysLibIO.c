@@ -529,7 +529,13 @@ int32_t PK_AnalogRCFilterGet(sPoKeysDevice* device)
     CreateRequest(device->request, 0x38, 0, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
-    memcpy(&device->otherPeripherals.AnalogRCFilter, device->response + 2, 4);
+   // memcpy(&device->otherPeripherals.AnalogRCFilter, device->response + 2, 4);
+	device->otherPeripherals.AnalogRCFilter =
+		(uint32_t)(device->response[2])
+		| ((uint32_t)(device->response[3]) << 8)
+		| ((uint32_t)(device->response[4]) << 16)
+		| ((uint32_t)(device->response[5]) << 24);
+
     return PK_OK;
 }
 
@@ -542,7 +548,13 @@ int32_t PK_AnalogRCFilterSet(sPoKeysDevice* device)
 	// Set the value of RC filter
     CreateRequest(device->request, 0x39, 0, 0, 0, 0);
 
-    memcpy(device->request + 2, &device->otherPeripherals.AnalogRCFilter, 4);
+    //memcpy(device->request + 2, &device->otherPeripherals.AnalogRCFilter, 4);
+	uint32_t tmpValue = device->otherPeripherals.AnalogRCFilter; // volatile read once
+	device->request[2] = (uint8_t)(tmpValue & 0xFF);
+	device->request[3] = (uint8_t)((tmpValue >> 8) & 0xFF);
+	device->request[4] = (uint8_t)((tmpValue >> 16) & 0xFF);
+	device->request[5] = (uint8_t)((tmpValue >> 24) & 0xFF);
+	
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     return PK_OK;
