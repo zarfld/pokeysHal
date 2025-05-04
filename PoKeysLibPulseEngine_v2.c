@@ -46,8 +46,15 @@ void PK_PEv2_DecodeStatus(sPoKeysDevice * device)
     device->PEv2.HomeStatus = ans[14];
 
     memcpy(device->PEv2.AxesState, ans + 16, 8);
-    memcpy(device->PEv2.CurrentPosition, ans + 24, 8*4);
-
+    //memcpy(device->PEv2.CurrentPosition, ans + 24, 8*4);
+    for (int i = 0; i < 8; i++) {
+        device->PEv2.CurrentPosition[i] =
+            ((int32_t)ans[24 + i * 4]) |
+            ((int32_t)ans[25 + i * 4] << 8) |
+            ((int32_t)ans[26 + i * 4] << 16) |
+            ((int32_t)ans[27 + i * 4] << 24);
+    }
+    
     // Engine info
     device->PEv2.info.nrOfAxes = ans[56];
     device->PEv2.info.maxPulseFrequency = ans[57];
@@ -301,8 +308,15 @@ int32_t PK_PEv2_PulseEngineMove(sPoKeysDevice * device)
     // Create request
     CreateRequest(device->request, 0x85, 0x20, 0, 0, 0);
 
-    memcpy(&device->request[8], device->PEv2.ReferencePositionSpeed, 8*4);
-
+    //memcpy(&device->request[8], device->PEv2.ReferencePositionSpeed, 8*4);
+    for (int i = 0; i < 8; i++) {
+        int32_t val = device->PEv2.ReferencePositionSpeed[i];  // read from volatile pointer
+        device->request[8 + i * 4 + 0] = (uint8_t)(val & 0xFF);
+        device->request[8 + i * 4 + 1] = (uint8_t)((val >> 8) & 0xFF);
+        device->request[8 + i * 4 + 2] = (uint8_t)((val >> 16) & 0xFF);
+        device->request[8 + i * 4 + 3] = (uint8_t)((val >> 24) & 0xFF);
+    }
+    
     // Send request
     return SendRequest(device);
 }
