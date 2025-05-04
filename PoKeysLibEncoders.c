@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
 
-#include "PoKeysLib.h"
+#include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
 
 int32_t PK_EncoderConfigurationGet(sPoKeysDevice* device)

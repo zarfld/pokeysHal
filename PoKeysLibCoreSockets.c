@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
 
-#include "PoKeysLibHal.h"
+
 
 #include "PoKeysLibCore.h"
 
@@ -39,7 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include "PoKeysLib.h"
+#include "PoKeysLibHal.h"
 
 //#define DEBUG_PoKeysLibSockets
 

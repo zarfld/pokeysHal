@@ -1,6 +1,6 @@
 /*
 
-   Copyright (C) 2020 Matevž Bošnak (matevz@poscope.com)
+   Copyright (C) 2020 Matevï¿½ Boï¿½nak (matevz@poscope.com)
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 #ifndef __POKEYSLIBDEVICEPOKEYS57INDUSTRIAL_H
     #define __POKEYSLIBDEVICEPOKEYS57INDUSTRIAL_H
 
-    #include "PoKeysLib.h"
+    #include "PoKeysLibHal.h"
 
     // C
     #include <stdint.h>
