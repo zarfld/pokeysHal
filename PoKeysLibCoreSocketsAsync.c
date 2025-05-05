@@ -14,7 +14,7 @@
 
 extern int getChecksum(const uint8_t *buffer);
 extern void InitializeNewDevice(sPoKeysDevice *device);
-extern void debug_printf(const char *fmt, ...);
+//extern void debug_printf(const char *fmt, ...);
 extern uint64_t get_current_time_us(void);
 
 PoKeysDiscoveryContext discoveryCtx;
@@ -266,7 +266,7 @@ int PK_SearchNetworkDevicesAsync_Process(void)
      // Set non-blocking immediately
      fcntl(*(int*)tmpDevice->devHandle, F_SETFL, O_NONBLOCK);
  
-     debug_printf("Socket created for device. Non-blocking UDP mode.\n");
+  //   debug_printf("Socket created for device. Non-blocking UDP mode.\n");
  
      InitializeNewDevice(tmpDevice);
  
