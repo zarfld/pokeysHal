@@ -274,6 +274,40 @@ int PK_SearchNetworkDevicesAsync_Process(void)
  }
 
  /**
+ * @brief Disconnects from a PoKeys network device asynchronously.
+ *
+ * This function closes the non-blocking UDP socket and releases any allocated memory
+ * associated with the device connection.
+ *
+ * @param device Pointer to the sPoKeysDevice structure.
+ *
+ * @note
+ * - This function is non-blocking and safe for use inside a realtime loop.
+ * - It ensures that all resources are properly released.
+ * - The device structure itself is not freed, only the connection-related resources.
+ *
+ * @see PK_ConnectToNetworkDeviceAsync()
+ */
+ void PK_DisconnectNetworkDeviceAsync(sPoKeysDevice* device)
+ {
+     if (device == NULL || device->connectionType != PK_DeviceType_NetworkDevice)
+         return;
+ 
+     if (device->devHandle != NULL)
+     {
+         close(*(int*)device->devHandle);
+         device->devHandle = NULL;
+     }
+ 
+     if (device->devHandle2 != NULL)
+     {
+         device->devHandle2 = NULL;
+     }
+ }
+ 
+  
+
+ /**
  * @brief Sends a PoKeys request packet asynchronously (non-blocking, realtime-safe).
  *
  * Prepares the request buffer (sets command byte, request ID, checksum) and sends it 
@@ -414,7 +448,6 @@ int PK_RecvEthResponseAsync(sPoKeysDevice* device)
  }
 
  
- 
 /**
  * @brief Sends a large (multi-part) PoKeys request asynchronously (non-blocking).
  *
@@ -514,37 +547,5 @@ int PK_SendEthRequestBigAsync(sPoKeysDevice* device)
      return PK_OK;
  }
 
- /**
- * @brief Disconnects from a PoKeys network device asynchronously.
- *
- * This function closes the non-blocking UDP socket and releases any allocated memory
- * associated with the device connection.
- *
- * @param device Pointer to the sPoKeysDevice structure.
- *
- * @note
- * - This function is non-blocking and safe for use inside a realtime loop.
- * - It ensures that all resources are properly released.
- * - The device structure itself is not freed, only the connection-related resources.
- *
- * @see PK_ConnectToNetworkDeviceAsync()
- */
-void PK_DisconnectNetworkDeviceAsync(sPoKeysDevice* device)
-{
-    if (device == NULL || device->connectionType != PK_DeviceType_NetworkDevice)
-        return;
 
-    if (device->devHandle != NULL)
-    {
-        close(*(int*)device->devHandle);
-        device->devHandle = NULL;
-    }
-
-    if (device->devHandle2 != NULL)
-    {
-        device->devHandle2 = NULL;
-    }
-}
-
- 
 

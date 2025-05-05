@@ -121,6 +121,13 @@ jobs:
         echo "Checking for multiple 'transactions' symbols in object files..."
         nm -o *.o | grep "transactions" | awk '{print $3}' | sort | uniq -d > duplicates.txt
 
+    - name: hal_compile PoKeys_Async
+      run: |
+        echo "halcompile pokeys_async from custom Makefile..."
+        sudo halcompile --install experimantal/pokeys_async.comp
+        sudo halcompile --preprocess experimantal/pokeys_async.comp
+      continue-on-error: true
+
     - name: Sync repository
       run: |
         git config --global user.name "github-actions[bot]"

@@ -18,8 +18,8 @@
 
  */
 
- #ifndef __POKEYSLIB
- #define __POKEYSLIB
+ #ifndef __POKEYSLIBHAL
+ #define __POKEYSLIBHAL
  #define USE_STD_INT
 
  #ifdef USE_STD_INT
