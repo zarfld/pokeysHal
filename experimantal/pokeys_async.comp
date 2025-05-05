@@ -1,4 +1,4 @@
-component pokeys "PoKeys IO driver, by Mit Zot";
+component pokeys_async "PoKeys IO driver, by Mit Zot";
 
 option userspace yes;
 
