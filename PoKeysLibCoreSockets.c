@@ -67,7 +67,7 @@ typedef unsigned long uint32;
 
 static uint32 * GetBroadcastAddresses()
 {
-    uint32 * list = malloc(sizeof(uint32) * 100);
+    uint32 * list = hal_malloc(sizeof(uint32) * 100);
     uint32* ptr = list;
 #if defined(WIN32)
     uint32 i;
@@ -123,7 +123,7 @@ static uint32 * GetBroadcastAddresses()
          if (ipRet == ERROR_INSUFFICIENT_BUFFER)
          {
             free(ipTable);  // in case we had previously allocated it
-            ipTable = (MIB_IPADDRTABLE *) malloc(bufLen);
+            ipTable = (MIB_IPADDRTABLE *) hal_malloc(bufLen);
          }
          else if (ipRet == NO_ERROR) break;
          else
@@ -148,7 +148,7 @@ static uint32 * GetBroadcastAddresses()
             if (apRet == ERROR_BUFFER_OVERFLOW)
             {
                free(pAdapterInfo);  // in case we had previously allocated it
-               pAdapterInfo = (IP_ADAPTER_INFO *) malloc(bufLen);
+               pAdapterInfo = (IP_ADAPTER_INFO *) hal_malloc(bufLen);
             }
             else if (apRet == ERROR_SUCCESS) break;
             else
@@ -450,8 +450,8 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
 
     if (device == NULL) return NULL;
 
-    tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
-    tmpDevice->devHandle2 = malloc(sizeof(struct sockaddr_in));
+    tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
+    tmpDevice->devHandle2 = hal_malloc(sizeof(struct sockaddr_in));
 
     tmpDevice->connectionType = PK_DeviceType_NetworkDevice; // Network device
     tmpDevice->connectionParam = device->useUDP;
@@ -480,7 +480,7 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
 
     if ((SOCKET)tmpDevice->devHandle == -1)
 #else
-    tmpDevice->devHandle = malloc(sizeof(int));
+    tmpDevice->devHandle = hal_malloc(sizeof(int));
     if (tmpDevice->devHandle == NULL) return NULL;
     
     if (tmpDevice->connectionParam == PK_ConnectionParam_UDP)
@@ -493,9 +493,9 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
     {
         //CleanDevice(tmpDevice);
 #ifndef WIN32
-        free(tmpDevice->devHandle);
+        hal_free(tmpDevice->devHandle);
 #endif
-        free(tmpDevice);
+        hal_free(tmpDevice);
 
         return NULL; // Couldn't create the socket
     }
@@ -530,9 +530,9 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
         closesocket((SOCKET)tmpDevice->devHandle);
 #else
         close(*(int *)tmpDevice->devHandle);
-        free(tmpDevice->devHandle);
+        hal_free(tmpDevice->devHandle);
 #endif
-        free(tmpDevice);
+        hal_free(tmpDevice);
 
         return NULL; // Couldn't connect
     }
@@ -569,12 +569,11 @@ void PK_DisconnectNetworkDevice(sPoKeysDevice* device)
 		closesocket((SOCKET)device->devHandle);    
 #else
     close(*(int *)device->devHandle);
-    free(device->devHandle);
 #endif
 
     // Release secondary device handle
     if (device->devHandle2)
-        free(device->devHandle2);
+        device->devHandle2 = NULL;
 }
 
 
@@ -928,4 +927,3 @@ void PK_SetEthernetRetryCountAndTimeout(sPoKeysDevice * device, uint32_t sendRet
     device->readRetries = readRetries;
     device->socketTimeout = timeout;
 }
-

@@ -538,7 +538,7 @@ void InitializeNewDevice(sPoKeysDevice* device)
 
     PK_DeviceDataGet(device);
 
-    device->Pins = (sPoKeysPinData*)malloc(sizeof(sPoKeysPinData) * device->info.iPinCount);
+    device->Pins = (sPoKeysPinData*)hal_malloc(sizeof(sPoKeysPinData) * device->info.iPinCount);
     memset(device->Pins, 0, sizeof(sPoKeysPinData) * device->info.iPinCount);
 
 
@@ -553,43 +553,43 @@ void InitializeNewDevice(sPoKeysDevice* device)
         }
     }
 
-    device->Encoders = (sPoKeysEncoder*)malloc(sizeof(sPoKeysEncoder) * device->info.iEncodersCount);
+    device->Encoders = (sPoKeysEncoder*)hal_malloc(sizeof(sPoKeysEncoder) * device->info.iEncodersCount);
     memset(device->Encoders, 0, sizeof(sPoKeysEncoder) * device->info.iEncodersCount);
 
     if (device->info.iEasySensors)
     {
-        device->EasySensors = (sPoKeysEasySensor*)malloc(sizeof(sPoKeysEasySensor) * device->info.iEasySensors);
+        device->EasySensors = (sPoKeysEasySensor*)hal_malloc(sizeof(sPoKeysEasySensor) * device->info.iEasySensors);
         memset(device->EasySensors, 0, sizeof(sPoKeysEasySensor) * device->info.iEasySensors);
     } else
     {
         device->EasySensors = NULL;
     }
 
-    device->PWM.PWMduty = (uint32_t*)malloc(sizeof(uint32_t) * device->info.iPWMCount);
+    device->PWM.PWMduty = (uint32_t*)hal_malloc(sizeof(uint32_t) * device->info.iPWMCount);
     memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
 
     if (device->info.iPWMCount > 0)
     {
-        device->PWM.PWMenabledChannels = (unsigned char*)malloc(sizeof(unsigned char) * device->info.iPWMCount);
+        device->PWM.PWMenabledChannels = (unsigned char*)hal_malloc(sizeof(unsigned char) * device->info.iPWMCount);
         memset(device->PWM.PWMenabledChannels, 0, sizeof(unsigned char) * device->info.iPWMCount);
     }
     else
     {
         device->PWM.PWMenabledChannels = NULL;
     }
-    device->PWM.PWMpinIDs = (unsigned char*)malloc(sizeof(unsigned char) * device->info.iPWMCount);
+    device->PWM.PWMpinIDs = (unsigned char*)hal_malloc(sizeof(unsigned char) * device->info.iPWMCount);
     memset(device->PWM.PWMpinIDs, 0, sizeof(unsigned char) * device->info.iPWMCount);
 
     PK_FillPWMPinNumbers(device);
 
-    device->PoExtBusData = (unsigned char*)malloc(sizeof(unsigned char) * device->info.iPoExtBus);
+    device->PoExtBusData = (unsigned char*)hal_malloc(sizeof(unsigned char) * device->info.iPoExtBus);
 
-    device->MatrixLED = (sPoKeysMatrixLED*)malloc(sizeof(sPoKeysMatrixLED) * device->info.iMatrixLED);
+    device->MatrixLED = (sPoKeysMatrixLED*)hal_malloc(sizeof(sPoKeysMatrixLED) * device->info.iMatrixLED);
     memset(device->MatrixLED, 0, sizeof(sPoKeysMatrixLED) * device->info.iMatrixLED);
 
     memset(&device->PEv2, 0, sizeof(sPoKeysPEv2));
 
-    device-> multiPartBuffer = malloc(512);
+    device-> multiPartBuffer = hal_malloc(512);
     if (device->multiPartBuffer <= 0) device->multiPartBuffer = 0;
 
 #ifdef USE_ALIGN_TEST
@@ -609,36 +609,26 @@ void InitializeNewDevice(sPoKeysDevice* device)
 
 void CleanDevice(sPoKeysDevice* device)
 {    
-    free(device->Pins);
     device->Pins = NULL;
-    free(device->Encoders);
     device->Encoders = NULL;
-    free(device->PWM.PWMduty);
     device->PWM.PWMduty = NULL;
-    free(device->PWM.PWMenabledChannels);
     device->PWM.PWMenabledChannels = NULL;
-    free(device->PWM.PWMpinIDs);
     device->PWM.PWMpinIDs = NULL;
-    free(device->PoExtBusData);
     device->PoExtBusData = NULL;
-    free(device->MatrixLED);
     device->MatrixLED = NULL;
 
     if (device->multiPartBuffer != NULL)
     {
-        free(device->multiPartBuffer);
         device->multiPartBuffer = NULL;
     }
 
     if (device->EasySensors != NULL)
     {
-        free(device->EasySensors);
         device->EasySensors = NULL;
     }
 
     if (device->netDeviceData != NULL)
     {
-        free(device->netDeviceData);
         device->netDeviceData = NULL;
     }
 }
@@ -650,36 +640,32 @@ void PK_ReleaseDeviceStructure(sPoKeysDevice* device)
 
 void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination)
 {
-    // Reserve memory...
-    destination->Pins = (sPoKeysPinData*)malloc(sizeof(sPoKeysPinData) * original->info.iPinCount);
-    destination->Encoders = (sPoKeysEncoder*)malloc(sizeof(sPoKeysEncoder) * original->info.iEncodersCount);
-    destination->PWM.PWMduty = (uint32_t*)malloc(sizeof(uint32_t) * original->info.iPWMCount);
-    destination->PWM.PWMenabledChannels = (unsigned char*)malloc(sizeof(unsigned char) * original->info.iPWMCount);
+    destination->Pins = (sPoKeysPinData*)hal_malloc(sizeof(sPoKeysPinData) * original->info.iPinCount);
+    destination->Encoders = (sPoKeysEncoder*)hal_malloc(sizeof(sPoKeysEncoder) * original->info.iEncodersCount);
+    destination->PWM.PWMduty = (uint32_t*)hal_malloc(sizeof(uint32_t) * original->info.iPWMCount);
+    destination->PWM.PWMenabledChannels = (unsigned char*)hal_malloc(sizeof(unsigned char) * original->info.iPWMCount);
     if (original->info.iPWMCount == 0) destination->PWM.PWMenabledChannels = NULL;
-    destination->PWM.PWMpinIDs = (unsigned char*)malloc(sizeof(unsigned char) * original->info.iPWMCount);
-    destination->MatrixLED = (sPoKeysMatrixLED*)malloc(sizeof(sPoKeysMatrixLED) * original->info.iMatrixLED);
+    destination->PWM.PWMpinIDs = (unsigned char*)hal_malloc(sizeof(unsigned char) * original->info.iPWMCount);
+    destination->MatrixLED = (sPoKeysMatrixLED*)hal_malloc(sizeof(sPoKeysMatrixLED) * original->info.iMatrixLED);
 
     if (original->info.iEasySensors)
     {
-        destination->EasySensors = (sPoKeysEasySensor*)malloc(sizeof(sPoKeysEasySensor) * original->info.iEasySensors);
+        destination->EasySensors = (sPoKeysEasySensor*)hal_malloc(sizeof(sPoKeysEasySensor) * original->info.iEasySensors);
     } else
     {
         destination->EasySensors = 0;
     }
 
-    // Network device information structure...
     if (original->netDeviceData != 0)
     {
-        destination->netDeviceData = (sPoKeysNetworkDeviceInfo *)malloc(sizeof(sPoKeysNetworkDeviceInfo));
+        destination->netDeviceData = (sPoKeysNetworkDeviceInfo *)hal_malloc(sizeof(sPoKeysNetworkDeviceInfo));
         memcpy(destination->netDeviceData, original->netDeviceData, sizeof(sPoKeysNetworkDeviceInfo));
     } else
     {
         destination->netDeviceData = 0;
     }
-    destination->PoExtBusData = (unsigned char*)malloc(sizeof(unsigned char) * original->info.iPoExtBus);
+    destination->PoExtBusData = (unsigned char*)hal_malloc(sizeof(unsigned char) * original->info.iPoExtBus);
 
-
-    // Copy data
     destination->devHandle = original->devHandle;
     destination->devHandle2 = original->devHandle2;
 
@@ -690,7 +676,6 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
             original->info.iPinCount * sizeof(sPoKeysPinData));
     memcpy(&destination->Encoders[0], &original->Encoders[0],
             original->info.iEncodersCount * sizeof(sPoKeysEncoder));
-
 
     if (original->info.iEasySensors)
     {
@@ -748,7 +733,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
         {
             if (numDevices == deviceIndex)
             {
-                tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
+                tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
                 tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
                 tmpDevice->devHandle2 = NULL;
@@ -761,7 +746,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
                     InitializeNewDevice(tmpDevice);
                 } else
                 {
-                    free(tmpDevice);
+                    hal_free(tmpDevice);
                     tmpDevice = NULL;
                 }
                 hid_free_enumeration(devs);
@@ -782,7 +767,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
         {
             if (numDevices == deviceIndex)
             {
-                tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
+                tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
                 tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
                 tmpDevice->devHandle2 = NULL;
@@ -794,7 +779,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
                     InitializeNewDevice(tmpDevice);
                 } else
                 {
-                    free(tmpDevice);
+                    hal_free(tmpDevice);
                     tmpDevice = NULL;
                 }
                 hid_free_enumeration(devs);
@@ -811,7 +796,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
 
     if (devData != NULL)
     {
-        tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
+        tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
         tmpDevice->devHandle = NULL;
         tmpDevice->devHandle2 = devData;
@@ -839,7 +824,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
     void * devData = ConnectToFastUSBInterface(serialNumber);
     if (devData != NULL)
     {
-        tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
+        tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
         tmpDevice->devHandle = NULL;
         tmpDevice->devHandle2 = devData;
@@ -873,7 +858,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
 
                 if (k == 7)
                 {
-                    tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
+                    tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
                     tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
                     tmpDevice->devHandle2 = 0;
@@ -885,7 +870,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                     }
                     else
                     {
-                        free(tmpDevice);
+                        hal_free(tmpDevice);
                         tmpDevice = NULL;
                     }
                     hid_free_enumeration(devs);
@@ -894,7 +879,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
             }
             else
             {
-                tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
+                tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
                 tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
                 tmpDevice->devHandle2 = 0;
 
@@ -904,7 +889,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                 }
                 else
                 {
-                    free(tmpDevice);
+                    hal_free(tmpDevice);
                     tmpDevice = NULL;
                     hid_free_enumeration(devs);
                     return NULL;
@@ -919,7 +904,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                 else
                 {
                     CleanDevice(tmpDevice);
-                    free(tmpDevice);
+                    hal_free(tmpDevice);
                 }
             }
 
@@ -953,7 +938,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_Ethernet(uint32_t serialNumber, uint32_t
 
     if (checkForNetworkDevicesAndTimeout)
     {
-        devices = (sPoKeysNetworkDeviceSummary*)malloc(sizeof(sPoKeysNetworkDeviceSummary) * 16);
+        devices = (sPoKeysNetworkDeviceSummary*)hal_malloc(sizeof(sPoKeysNetworkDeviceSummary) * 16);
         iNet = PK_SearchNetworkDevices(devices, checkForNetworkDevicesAndTimeout, serialNumber);
 
         if (iNet > 16) iNet = 16;
@@ -966,17 +951,17 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_Ethernet(uint32_t serialNumber, uint32_t
                 tmpDevice = PK_ConnectToNetworkDevice(&devices[k]);
                 if (tmpDevice == NULL)
                 {
-                    free(tmpDevice);
+                    hal_free(tmpDevice);
                 }
                 else
                 {
-                    free(devices);
+                    hal_free(devices);
                     InitializeNewDevice(tmpDevice);
                     return tmpDevice;
                 }
             }
         }
-        free(devices);
+        hal_free(devices);
     }
 
     return NULL;
@@ -1033,7 +1018,7 @@ void PK_DisconnectDevice(sPoKeysDevice* device)
         }
 
         CleanDevice(device);
-        free(device);
+        hal_free(device);
     }
 }
 
