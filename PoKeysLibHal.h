@@ -1353,6 +1353,9 @@ POKEYSDECL int32_t PK_OEM_Martelli_SetThreshold(sPoKeysDevice* device, uint32_t 
 POKEYSDECL int32_t PK_OEM_Martelli_SetRate(sPoKeysDevice* device, uint32_t rate);
 
 
+POKEYSDECL int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
+POKEYSDECL void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
+
 extern int32_t LastRetryCount;
 extern int32_t LastWaitCount;
 
