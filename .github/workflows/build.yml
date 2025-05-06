@@ -136,21 +136,23 @@ jobs:
     - name: run uspace PoKeys_Async
       run: |
         echo "run uspace pokeys_async..."
-        halrun
+        halrun -f - <<EOF
         loadusr -W pokeys_async
         start
         show pin
-        exit 
+        exit
+        EOF
       continue-on-error: true  
 
     - name: run uspace PoKeys_Async
       run: |
         echo "run rt pokeys_async..."
-        halrun
+        halrun -f - <<EOF
         loadrt pokeys_async
         start
         show pin
-        exit 
+        exit
+        EOF
       continue-on-error: true 
 
     - name: Sync repository
