@@ -516,17 +516,17 @@ EXTRA_SETUP() {
 
     // usleep(wait_ms);  // wait for the HAL to start up
     for (i = 0; i < retry; i++) {
-        if (dev == NULL) {
+        if (inst->dev == NULL) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: TryConnectToDevice(0)\n", __FILE__, __FUNCTION__);
-            dev = TryConnectToDevice(device_id);
+            inst->dev = TryConnectToDevice(device_id);
         }
-        if (dev != NULL) {
+        if (inst->dev != NULL) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Connected\n", __FILE__, __FUNCTION__);
             break;
         }
     }
 
-    if (dev == NULL) {
+    if (inst->dev == NULL) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: could not connect to device\n", __FILE__, __FUNCTION__);
     }
     //	PKEncoder_init(comp_id, dev);
