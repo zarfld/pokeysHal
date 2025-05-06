@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <errno.h>
 
 extern uint64_t get_current_time_us(void); // Your system's high-res timer
 extern uint8_t next_request_id(void); // Request ID generator
@@ -219,7 +220,7 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
                           t->request_buffer, sizeof(t->request_buffer), 0,
                           (struct sockaddr *)&dev->devHandle2, sizeof(struct sockaddr_in));
     if (sent < 0) {
-        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: sendto failed for request ID %d\n", __FILE__, __FUNCTION__, request_id);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: sendto failed for request ID %d, errno=%d (%s)\n", __FILE__, __FUNCTION__, request_id, errno, strerror(errno));
         return -2; // Send error
     }
 
