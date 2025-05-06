@@ -253,3 +253,43 @@ void user_mainloop(void)
     exit(0);
 }
 static int __comp_get_data_size(void) { return 0; }
+
+EXTRA_SETUP() {
+    int wait_ms = 5000;
+    const char *ini_path = getenv("INI_FILE_NAME");
+    FILE *fp = fopen(ini_path, "r");
+    if (fp) {
+        iniFindInt(fp, "DEVICE_ID", "POKEYS", &device_id);
+        iniFindInt(fp, "COMM_TIMEOUT", "POKEYS", &timeout_ms);
+
+        // ApplyIniSettings
+        int tmpIniSettings = 0;
+        iniFindInt(fp, "ApplyIniSettings", "POKEYS", &tmpIniSettings);
+
+        if (tmpIniSettings != 0) {
+            ApplyIniSettings = true;
+        }
+    }
+
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: extra_arg=%s device_id=%i \n", __FILE__, __FUNCTION__, extra_arg, device_id);
+
+    // usleep(wait_ms);  // wait for the HAL to start up
+    for (i = 0; i < retry; i++) {
+        if (dev == NULL) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: TryConnectToDevice(0)\n", __FILE__, __FUNCTION__);
+            dev = TryConnectToDevice(device_id);
+        }
+        if (dev != NULL) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Connected\n", __FILE__, __FUNCTION__);
+            break;
+        }
+    }
+
+    if (dev == NULL) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: could not connect to device\n", __FILE__, __FUNCTION__);
+    }
+    //	PKEncoder_init(comp_id, dev);
+    rtapi_print("");
+    // devSerial = extra_arg;
+    return 0;
+}
