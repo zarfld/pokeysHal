@@ -221,7 +221,11 @@ int main(int argc_, char **argv_) {
 
 sPoKeysDevice * dev=0;
 int i=0;
+static char *serial_number = "";
+static int ConnectionType = 0; // 1..USB, 2..UDP, 3..Network, 4..fastUSB
+static char *IP = "0.0.0.0";
 static int timeout_ms = 2000;
+static int retry = 3;
 
 sPoKeysDevice *TryConnectToDevice(uint32_t intSerial) {
     rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: serial_number: %d\n", intSerial);
