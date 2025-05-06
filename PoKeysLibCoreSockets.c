@@ -122,13 +122,13 @@ static uint32 * GetBroadcastAddresses()
          ipRet = GetIpAddrTable(ipTable, &bufLen, 0);
          if (ipRet == ERROR_INSUFFICIENT_BUFFER)
          {
-            free(ipTable);  // in case we had previously allocated it
+           //free(ipTable);  // in case we had previously allocated it
             ipTable = (MIB_IPADDRTABLE *) hal_malloc(bufLen);
          }
          else if (ipRet == NO_ERROR) break;
          else
          {
-            free(ipTable);
+           //free(ipTable);
             ipTable = NULL;
             break;
          }
@@ -147,13 +147,13 @@ static uint32 * GetBroadcastAddresses()
             apRet = GetAdaptersInfo(pAdapterInfo, &bufLen);
             if (apRet == ERROR_BUFFER_OVERFLOW)
             {
-               free(pAdapterInfo);  // in case we had previously allocated it
+              //free(pAdapterInfo);  // in case we had previously allocated it
                pAdapterInfo = (IP_ADAPTER_INFO *) hal_malloc(bufLen);
             }
             else if (apRet == ERROR_SUCCESS) break;
             else
             {
-               free(pAdapterInfo);
+              //free(pAdapterInfo);
                pAdapterInfo = NULL;
                break;
             }
@@ -174,8 +174,8 @@ static uint32 * GetBroadcastAddresses()
 		 if (baddr) *(ptr++) = baddr;
       }
 
-      free(pAdapterInfo);
-      free(ipTable);
+      //free(pAdapterInfo);
+      //free(ipTable);
    }
 #else
    // Dunno what we're running on here!
@@ -304,7 +304,7 @@ int32_t PK_SearchNetworkDevices(sPoKeysNetworkDeviceSummary * devices, uint32_t 
         debug_printf(" done\n");
         addr++;
     }
-    free(addrPtr);
+    //free(addrPtr);
 
 
     debug_printf("Waiting for responses...\n");
