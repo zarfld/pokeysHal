@@ -135,7 +135,7 @@ jobs:
 
     - name: run uspace PoKeys_Async
       run: |
-        echo "halcompile uspace pokeys_async..."
+        echo "run uspace pokeys_async..."
         halrun
         loadusr -W pokeys_async
         start
@@ -145,9 +145,9 @@ jobs:
 
     - name: run uspace PoKeys_Async
       run: |
-        echo "halcompile uspace pokeys_async..."
+        echo "run rt pokeys_async..."
         halrun
-        load -W pokeys_async
+        loadrt pokeys_async
         start
         show pin
         exit 
