@@ -569,12 +569,11 @@ void PK_DisconnectNetworkDevice(sPoKeysDevice* device)
 		closesocket((SOCKET)device->devHandle);    
 #else
     close(*(int *)device->devHandle);
-    hal_free(device->devHandle);
 #endif
 
     // Release secondary device handle
     if (device->devHandle2)
-        hal_free(device->devHandle2);
+        device->devHandle2 = NULL;
 }
 
 
@@ -928,4 +927,3 @@ void PK_SetEthernetRetryCountAndTimeout(sPoKeysDevice * device, uint32_t sendRet
     device->readRetries = readRetries;
     device->socketTimeout = timeout;
 }
-

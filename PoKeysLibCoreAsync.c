@@ -609,36 +609,26 @@ void InitializeNewDevice(sPoKeysDevice* device)
 
 void CleanDevice(sPoKeysDevice* device)
 {    
-    hal_free(device->Pins);
     device->Pins = NULL;
-    hal_free(device->Encoders);
     device->Encoders = NULL;
-    hal_free(device->PWM.PWMduty);
     device->PWM.PWMduty = NULL;
-    hal_free(device->PWM.PWMenabledChannels);
     device->PWM.PWMenabledChannels = NULL;
-    hal_free(device->PWM.PWMpinIDs);
     device->PWM.PWMpinIDs = NULL;
-    hal_free(device->PoExtBusData);
     device->PoExtBusData = NULL;
-    hal_free(device->MatrixLED);
     device->MatrixLED = NULL;
 
     if (device->multiPartBuffer != NULL)
     {
-        hal_free(device->multiPartBuffer);
         device->multiPartBuffer = NULL;
     }
 
     if (device->EasySensors != NULL)
     {
-        hal_free(device->EasySensors);
         device->EasySensors = NULL;
     }
 
     if (device->netDeviceData != NULL)
     {
-        hal_free(device->netDeviceData);
         device->netDeviceData = NULL;
     }
 }
@@ -650,7 +640,6 @@ void PK_ReleaseDeviceStructure(sPoKeysDevice* device)
 
 void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination)
 {
-    // Reserve memory...
     destination->Pins = (sPoKeysPinData*)hal_malloc(sizeof(sPoKeysPinData) * original->info.iPinCount);
     destination->Encoders = (sPoKeysEncoder*)hal_malloc(sizeof(sPoKeysEncoder) * original->info.iEncodersCount);
     destination->PWM.PWMduty = (uint32_t*)hal_malloc(sizeof(uint32_t) * original->info.iPWMCount);
@@ -667,7 +656,6 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
         destination->EasySensors = 0;
     }
 
-    // Network device information structure...
     if (original->netDeviceData != 0)
     {
         destination->netDeviceData = (sPoKeysNetworkDeviceInfo *)hal_malloc(sizeof(sPoKeysNetworkDeviceInfo));
@@ -678,8 +666,6 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
     }
     destination->PoExtBusData = (unsigned char*)hal_malloc(sizeof(unsigned char) * original->info.iPoExtBus);
 
-
-    // Copy data
     destination->devHandle = original->devHandle;
     destination->devHandle2 = original->devHandle2;
 
@@ -690,7 +676,6 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
             original->info.iPinCount * sizeof(sPoKeysPinData));
     memcpy(&destination->Encoders[0], &original->Encoders[0],
             original->info.iEncodersCount * sizeof(sPoKeysEncoder));
-
 
     if (original->info.iEasySensors)
     {
