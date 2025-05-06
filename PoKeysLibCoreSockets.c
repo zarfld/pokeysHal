@@ -450,8 +450,8 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
 
     if (device == NULL) return NULL;
 
-    tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
-    tmpDevice->devHandle2 = malloc(sizeof(struct sockaddr_in));
+    tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
+    tmpDevice->devHandle2 = hal_malloc(sizeof(struct sockaddr_in));
 
     tmpDevice->connectionType = PK_DeviceType_NetworkDevice; // Network device
     tmpDevice->connectionParam = device->useUDP;
@@ -480,7 +480,7 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
 
     if ((SOCKET)tmpDevice->devHandle == -1)
 #else
-    tmpDevice->devHandle = malloc(sizeof(int));
+    tmpDevice->devHandle = hal_malloc(sizeof(int));
     if (tmpDevice->devHandle == NULL) return NULL;
     
     if (tmpDevice->connectionParam == PK_ConnectionParam_UDP)
@@ -493,9 +493,9 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
     {
         //CleanDevice(tmpDevice);
 #ifndef WIN32
-        free(tmpDevice->devHandle);
+        hal_free(tmpDevice->devHandle);
 #endif
-        free(tmpDevice);
+        hal_free(tmpDevice);
 
         return NULL; // Couldn't create the socket
     }
@@ -530,9 +530,9 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
         closesocket((SOCKET)tmpDevice->devHandle);
 #else
         close(*(int *)tmpDevice->devHandle);
-        free(tmpDevice->devHandle);
+        hal_free(tmpDevice->devHandle);
 #endif
-        free(tmpDevice);
+        hal_free(tmpDevice);
 
         return NULL; // Couldn't connect
     }
@@ -569,12 +569,12 @@ void PK_DisconnectNetworkDevice(sPoKeysDevice* device)
 		closesocket((SOCKET)device->devHandle);    
 #else
     close(*(int *)device->devHandle);
-    free(device->devHandle);
+    hal_free(device->devHandle);
 #endif
 
     // Release secondary device handle
     if (device->devHandle2)
-        free(device->devHandle2);
+        hal_free(device->devHandle2);
 }
 
 

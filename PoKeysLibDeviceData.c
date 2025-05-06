@@ -708,8 +708,8 @@ int32_t PK_DeviceDataGet(sPoKeysDevice* device)
 		case 3:
 			info->iPinCount = 0;
 			info->iEncodersCount = 0;
-			info->iPWMCount = 0;
 			info->iBasicEncoderCount = 0;
+			info->iPWMCount = 0;
 			break;
         
 		// PoKeys56U, PoKeys56E
@@ -853,7 +853,7 @@ int32_t PK_DeviceDataGet(sPoKeysDevice* device)
 
     if (devEth)
     {
-        device->netDeviceData = (sPoKeysNetworkDeviceInfo *)malloc(sizeof(sPoKeysNetworkDeviceInfo));
+        device->netDeviceData = (sPoKeysNetworkDeviceInfo *)hal_malloc(sizeof(sPoKeysNetworkDeviceInfo));
 
         // Get network device information...
         CreateRequest(device->request, 0xE0, 0, 0, 0, 0);

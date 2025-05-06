@@ -546,6 +546,3 @@ int PK_SendEthRequestBigAsync(sPoKeysDevice* device)
      memcpy(device->response, tmpbuf, 64);
      return PK_OK;
  }
-
-
-
