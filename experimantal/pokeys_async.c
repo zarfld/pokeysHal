@@ -470,29 +470,27 @@ sPoKeysDevice *TryConnectToDevice(uint32_t intSerial) {
 
 void user_mainloop(void) 
 { 
-   
+   int RTC_count =100;
+   int RTC_Trig = 100;
     while(0xb){
        FOR_ALL_INSTS() {
 
 	 while(dev == NULL)dev = PK_ConnectToDeviceWSerial(devSerial, 2000);  //waits for usb device
 	
-	
+     PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
+     PK_TimeoutAndRetryCheck(__comp_inst->dev, 0); // checks for timeout and retry
 	 alive=1; 
-	 if ((PK_DigitalIOGet(dev) == PK_OK) && (PK_AnalogIOGet(dev) == PK_OK)){  //gets IO data and checks return value 
-		err=0;
-		for(i=0;i<54;i++)in(i)=!dev->Pins[i].DigitalValueGet;           //just transfers values
-		for(i=0;i<3;i++)ain(i)=dev->Pins[i+44].AnalogValue;
-	 }
-         else{             		  //on connection error
-		PK_DisconnectDevice(dev);
-		dev=NULL;  		  //tries to reconnect
-		err=1;
-		for(i=0;i<54;i++)in(i)=0;
-		for(i=0;i<3;i++)ain(i)=0;
-	 }
-	 alive=0;
-	usleep(40000); 
+	if(RTC_count>=RTC_Trig){
+        if (PK_RTCGet(__comp_inst->dev)==PK_OK){
+            RTC_count = 0
         }
+    }
+    else{
+        RTC_count++;
+    }
+	 alive=0;
+	usleep(100); 
+        
     }
 
     exit(0);
