@@ -60,6 +60,12 @@ async_transaction_t* transaction_find(uint8_t request_id)
             pk_transactions[i].status == TRANSACTION_PENDING) {
             return &pk_transactions[i];
         }
+        else if(pk_transactions[i].request_id == request_id){
+            // Transaction found but not pending (e.g., completed, failed, or timed out)
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Transaction found but not pending (status: %d)\n",
+                __FILE__, __FUNCTION__, pk_transactions[i].status);
+            return &pk_transactions[i];
+        }
     }
     return NULL; // Not found
 }
@@ -204,6 +210,7 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
 {
     async_transaction_t *t = transaction_find(request_id);
     if (!t) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: No matching transaction found for request ID %d\n", __FILE__, __FUNCTION__, request_id);
         return -1; // No matching pending transaction found
     }
 
@@ -212,6 +219,7 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
                           t->request_buffer, sizeof(t->request_buffer), 0,
                           (struct sockaddr *)&dev->devHandle2, sizeof(struct sockaddr_in));
     if (sent < 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: sendto failed for request ID %d\n", __FILE__, __FUNCTION__, request_id);
         return -2; // Send error
     }
 
