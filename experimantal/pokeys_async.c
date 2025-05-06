@@ -482,7 +482,7 @@ void user_mainloop(void)
 	 alive=1; 
 	if(RTC_count>=RTC_Trig){
         if (PK_RTCGet(__comp_inst->dev)==PK_OK){
-            RTC_count = 0
+            RTC_count = 0;
         }
     }
     else{
