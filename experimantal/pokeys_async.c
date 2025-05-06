@@ -7,6 +7,7 @@
 #include "rtapi_errno.h"
 #include "hal.h"
 #include "rtapi_math64.h"
+#include "PoKeysLibHal.h"
 
 static int comp_id;
 
@@ -217,7 +218,7 @@ int main(int argc_, char **argv_) {
 #line 17 "experimantal/pokeys_async.comp"
 
 #include <unistd.h>   /* UNIX standard function definitions */
-#include "PoKeysLibHal.h"
+
 
 sPoKeysDevice * dev=0;
 int i=0;
