@@ -493,15 +493,15 @@ EXTRA_SETUP() {
     const char *ini_path = getenv("INI_FILE_NAME");
     FILE *fp = fopen(ini_path, "r");
     if (fp) {
-        iniFindInt(fp, "DEVICE_ID", "POKEYS", &device_id);
-        iniFindInt(fp, "COMM_TIMEOUT", "POKEYS", &timeout_ms);
+    //    iniFindInt(fp, "DEVICE_ID", "POKEYS", &device_id);
+    //    iniFindInt(fp, "COMM_TIMEOUT", "POKEYS", &timeout_ms);
 
         // ApplyIniSettings
         int tmpIniSettings = 0;
-        iniFindInt(fp, "ApplyIniSettings", "POKEYS", &tmpIniSettings);
+    //    iniFindInt(fp, "ApplyIniSettings", "POKEYS", &tmpIniSettings);
 
         if (tmpIniSettings != 0) {
-            ApplyIniSettings = true;
+    //        ApplyIniSettings = true;
         }
     }
 
