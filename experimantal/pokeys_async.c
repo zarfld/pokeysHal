@@ -62,6 +62,9 @@ static int export(char *prefix, long extra_arg) {
     if (r != 0)
         return r;
 
+    r = export_rtc_pins(prefix, comp_id, inst->dev); // Export RTC pins
+    if(r != 0) return r;
+
     for(j=0; j < (55); j++) {
         r = hal_pin_bit_newf(HAL_OUT, &(inst->in[j]), comp_id,
             "%s.in-%01d", prefix, j);
@@ -82,7 +85,7 @@ static int export(char *prefix, long extra_arg) {
         "%s.alive", prefix);
     if(r != 0) return r;
 
-    r = export_rtc_pins(prefix, comp_id, inst->dev); // Export RTC pins
+
 
     if(__comp_last_inst) __comp_last_inst->_next = inst;
     __comp_last_inst = inst;
