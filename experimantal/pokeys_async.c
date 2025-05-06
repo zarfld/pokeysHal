@@ -475,10 +475,10 @@ void user_mainloop(void)
     while(0xb){
        FOR_ALL_INSTS() {
 
-            while(dev == NULL)dev = PK_ConnectToDeviceWSerial(devSerial, 2000);  //waits for usb device
+           // while(dev == NULL)dev = PK_ConnectToDeviceWSerial(devSerial, 2000);  //waits for usb device
             
-            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
-            PK_TimeoutAndRetryCheck(__comp_inst->dev, 0); // checks for timeout and retry
+         //   PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
+         //   PK_TimeoutAndRetryCheck(__comp_inst->dev, 0); // checks for timeout and retry
             alive=1; 
             if(RTC_count>=RTC_Trig){
                 if (PK_RTCGet(__comp_inst->dev)==PK_OK){
