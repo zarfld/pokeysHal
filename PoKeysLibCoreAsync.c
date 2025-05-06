@@ -270,7 +270,7 @@ sPoKeysDevice* PK_ConnectToDeviceAsync(uint32_t deviceIndex)
                 if (tmpDevice->devHandle != NULL) {
                     PK_InitializeNewDeviceAsync(tmpDevice);
                 } else {
-                    hal_free(tmpDevice);
+                    //free(tmpDevice);
                     tmpDevice = NULL;
                 }
 
@@ -341,7 +341,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB_Async(uint32_t serialNumber, uint32_
                     if (tmpDevice->devHandle) {
                         PK_InitializeNewDeviceAsync(tmpDevice);
                     } else {
-                        hal_free(tmpDevice);
+                        //free(tmpDevice);
                         tmpDevice = NULL;
                     }
                     hid_free_enumeration(devs);
@@ -364,9 +364,9 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB_Async(uint32_t serialNumber, uint32_
                         return tmpDevice;
                     }
                     PK_CleanDeviceAsync(tmpDevice);
-                    hal_free(tmpDevice);
+                    //free(tmpDevice);
                 } else {
-                    hal_free(tmpDevice);
+                    //free(tmpDevice);
                 }
             }
         }
@@ -406,7 +406,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_Ethernet_Async(uint32_t serialNumber, ui
             sPoKeysDevice* tmpDevice = PK_ConnectToNetworkDevice(&devices[currentIndex]);
             if (tmpDevice) {
                 PK_InitializeNewDeviceAsync(tmpDevice);
-                hal_free(devices);
+                //free(devices);
                 devices = NULL;
                 return tmpDevice;
             }
@@ -415,7 +415,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_Ethernet_Async(uint32_t serialNumber, ui
     }
 
     if (devices) {
-        hal_free(devices);
+        //free(devices);
         devices = NULL;
     }
 
@@ -746,7 +746,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
                     InitializeNewDevice(tmpDevice);
                 } else
                 {
-                    hal_free(tmpDevice);
+                    //free(tmpDevice);
                     tmpDevice = NULL;
                 }
                 hid_free_enumeration(devs);
@@ -779,7 +779,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
                     InitializeNewDevice(tmpDevice);
                 } else
                 {
-                    hal_free(tmpDevice);
+                    //free(tmpDevice);
                     tmpDevice = NULL;
                 }
                 hid_free_enumeration(devs);
@@ -870,7 +870,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                     }
                     else
                     {
-                        hal_free(tmpDevice);
+                        //free(tmpDevice);
                         tmpDevice = NULL;
                     }
                     hid_free_enumeration(devs);
@@ -889,7 +889,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                 }
                 else
                 {
-                    hal_free(tmpDevice);
+                    //free(tmpDevice);
                     tmpDevice = NULL;
                     hid_free_enumeration(devs);
                     return NULL;
@@ -904,7 +904,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                 else
                 {
                     CleanDevice(tmpDevice);
-                    hal_free(tmpDevice);
+                    //free(tmpDevice);
                 }
             }
 
@@ -951,17 +951,17 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_Ethernet(uint32_t serialNumber, uint32_t
                 tmpDevice = PK_ConnectToNetworkDevice(&devices[k]);
                 if (tmpDevice == NULL)
                 {
-                    hal_free(tmpDevice);
+                    //free(tmpDevice);
                 }
                 else
                 {
-                    hal_free(devices);
+                    //free(devices);
                     InitializeNewDevice(tmpDevice);
                     return tmpDevice;
                 }
             }
         }
-        hal_free(devices);
+        //free(devices);
     }
 
     return NULL;
@@ -1018,7 +1018,7 @@ void PK_DisconnectDevice(sPoKeysDevice* device)
         }
 
         CleanDevice(device);
-        hal_free(device);
+        //free(device);
     }
 }
 

@@ -493,9 +493,9 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
     {
         //CleanDevice(tmpDevice);
 #ifndef WIN32
-        hal_free(tmpDevice->devHandle);
+        //free(tmpDevice->devHandle);
 #endif
-        hal_free(tmpDevice);
+        //free(tmpDevice);
 
         return NULL; // Couldn't create the socket
     }
@@ -530,9 +530,9 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
         closesocket((SOCKET)tmpDevice->devHandle);
 #else
         close(*(int *)tmpDevice->devHandle);
-        hal_free(tmpDevice->devHandle);
+        //free(tmpDevice->devHandle);
 #endif
-        hal_free(tmpDevice);
+        //free(tmpDevice);
 
         return NULL; // Couldn't connect
     }
