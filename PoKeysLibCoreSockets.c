@@ -67,7 +67,7 @@ typedef unsigned long uint32;
 
 static uint32 * GetBroadcastAddresses()
 {
-    uint32 * list = malloc(sizeof(uint32) * 100);
+    uint32 * list = hal_malloc(sizeof(uint32) * 100);
     uint32* ptr = list;
 #if defined(WIN32)
     uint32 i;
@@ -123,7 +123,7 @@ static uint32 * GetBroadcastAddresses()
          if (ipRet == ERROR_INSUFFICIENT_BUFFER)
          {
             free(ipTable);  // in case we had previously allocated it
-            ipTable = (MIB_IPADDRTABLE *) malloc(bufLen);
+            ipTable = (MIB_IPADDRTABLE *) hal_malloc(bufLen);
          }
          else if (ipRet == NO_ERROR) break;
          else
@@ -148,7 +148,7 @@ static uint32 * GetBroadcastAddresses()
             if (apRet == ERROR_BUFFER_OVERFLOW)
             {
                free(pAdapterInfo);  // in case we had previously allocated it
-               pAdapterInfo = (IP_ADAPTER_INFO *) malloc(bufLen);
+               pAdapterInfo = (IP_ADAPTER_INFO *) hal_malloc(bufLen);
             }
             else if (apRet == ERROR_SUCCESS) break;
             else
