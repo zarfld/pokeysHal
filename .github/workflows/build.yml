@@ -136,7 +136,7 @@ jobs:
     - name: run uspace PoKeys_Async
       run: |
         echo "run uspace pokeys_async..."
-        halrun -f - <<EOF
+        halrun <<EOF
         loadusr -W pokeys_async
         start
         show pin
@@ -147,7 +147,7 @@ jobs:
     - name: run uspace PoKeys_Async
       run: |
         echo "run rt pokeys_async..."
-        halrun -f - <<EOF
+        halrun <<EOF
         loadrt pokeys_async
         start
         show pin
