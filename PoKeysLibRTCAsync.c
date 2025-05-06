@@ -137,7 +137,14 @@
      uint8_t req_id = CreateRequestAsync(device, 0x83, params, 1,
                                         NULL, 0,
                                 PK_RTCGetAsync_Process); // Set parser function!
-
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync: req_id=%d\n", __FILE__, __FUNCTION__, req_id);
+ 
+     if (req_id < 0) {
+         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: CreateRequestAsync failed\n", __FILE__, __FUNCTION__);
+         return req_id; // Error in request creation
+     }
+ 
+     // Send the request
     return SendRequestAsync(device, req_id); // Send the request the first time
  }
 
