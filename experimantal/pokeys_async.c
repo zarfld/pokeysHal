@@ -477,11 +477,12 @@ void user_mainloop(void)
 
            // while(dev == NULL)dev = PK_ConnectToDeviceWSerial(devSerial, 2000);  //waits for usb device
             
-         //   PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
+            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
          //   PK_TimeoutAndRetryCheck(__comp_inst->dev, 0); // checks for timeout and retry
             alive=1; 
             if(RTC_count>=RTC_Trig){
                 if (PK_RTCGet(__comp_inst->dev)==PK_OK){
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet OK\n", __FILE__, __FUNCTION__);
                     RTC_count = 0;
                 }
             }
