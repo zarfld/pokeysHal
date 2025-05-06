@@ -6,6 +6,7 @@
 #include "rtapi_string.h"
 #include "rtapi_errno.h"
 #include "hal.h"
+#include "stdio.h"
 #include "rtapi_math64.h"
 #include "PoKeysLibHal.h"
 
@@ -215,14 +216,12 @@ int main(int argc_, char **argv_) {
 #define FOR_ALL_INSTS() struct __comp_state *__comp_inst; for(__comp_inst = __comp_first_inst; __comp_inst; __comp_inst = __comp_inst->_next)
 
 
-#line 17 "experimantal/pokeys_async.comp"
-
 #include <unistd.h>   /* UNIX standard function definitions */
 
 
 sPoKeysDevice * dev=0;
 int i=0;
-
+static int timeout_ms = 2000;
 void user_mainloop(void) 
 { 
    
