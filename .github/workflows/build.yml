@@ -144,7 +144,7 @@ jobs:
         EOF
       continue-on-error: true  
 
-    - name: run uspace PoKeys_Async
+    - name: run RT PoKeys_Async
       run: |
         echo "run rt pokeys_async..."
         halrun <<EOF
