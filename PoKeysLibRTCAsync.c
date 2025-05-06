@@ -134,9 +134,11 @@
      uint8_t params[1] = { 0x00 }; // Only param1 used
  
      // Important: Target is NOT device->RTC directly, but temporary response buffer
-     return CreateRequestAsync(device, 0x83, params, 1,
+     uint8_t req_id = CreateRequestAsync(device, 0x83, params, 1,
                                         NULL, 0,
                                 PK_RTCGetAsync_Process); // Set parser function!
+
+    return SendRequestAsync(device, req_id); // Send the request the first time
  }
 
  

@@ -481,7 +481,7 @@ void user_mainloop(void)
          //   PK_TimeoutAndRetryCheck(__comp_inst->dev, 0); // checks for timeout and retry
             alive=1; 
             if(RTC_count>=RTC_Trig){
-                if (PK_RTCGetAsync(__comp_inst->dev)==PK_OK){
+                if (PK_RTCGetAsync(__comp_inst->dev)==0){
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet OK\n", __FILE__, __FUNCTION__);
                     RTC_count = 0;
                 }
