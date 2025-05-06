@@ -64,7 +64,7 @@ static int export(char *prefix, long extra_arg) {
         return r;
     }
     r = export_rtc_pins(prefix, comp_id, inst->dev); // Export RTC pins
-    if(r != 0)){
+    if(r != 0){
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_rtc_pins faile %d \n", __FILE__, __FUNCTION__, prefix, r);
         return r;
     };
@@ -520,17 +520,17 @@ EXTRA_SETUP() {
 
     // usleep(wait_ms);  // wait for the HAL to start up
     for (i = 0; i < retry; i++) {
-        if (inst->dev == NULL) {
+        if (__comp_inst->dev == NULL) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: TryConnectToDevice(0)\n", __FILE__, __FUNCTION__);
-            inst->dev = TryConnectToDevice(device_id);
+            __comp_inst->dev = TryConnectToDevice(device_id);
         }
-        if (inst->dev != NULL) {
+        if (__comp_inst->dev != NULL) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Connected\n", __FILE__, __FUNCTION__);
             break;
         }
     }
 
-    if (inst->dev == NULL) {
+    if (__comp_inst->dev == NULL) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: could not connect to device\n", __FILE__, __FUNCTION__);
     }
     //	PKEncoder_init(comp_id, dev);
