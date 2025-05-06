@@ -140,6 +140,12 @@ jobs:
         loadusr -W pokeys_async
         start
         show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
         exit
         EOF
       continue-on-error: true  
