@@ -57,8 +57,17 @@
  {
      int r;
  
+     if (device == NULL) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device is NULL\n", __FILE__, __FUNCTION__);
+            return -1;
+     }
+
+     rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %%s.rtc.sec\n", __FILE__, __FUNCTION__, prefix);
      r = hal_pin_u32_newf(HAL_OUT, &(device->RTC.SEC), comp_id, "%s.rtc.sec", prefix);
-     if (r != 0) return r;
+     if (r != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %%s.rtc.sec failed\n", __FILE__, __FUNCTION__, prefix);
+        return r;
+    }
  
      r = hal_pin_u32_newf(HAL_OUT, &(device->RTC.MIN), comp_id, "%s.rtc.min", prefix);
      if (r != 0) return r;
