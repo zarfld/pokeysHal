@@ -1055,6 +1055,12 @@ POKEYSDECL int32_t PK_EncoderValuesGet(sPoKeysDevice* device);
 // Send encoder values to device
 POKEYSDECL int32_t PK_EncoderValuesSet(sPoKeysDevice* device);
 
+// Asynchronous functions
+POKEYSDECL int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device);
+POKEYSDECL int PK_EncoderConfigurationSetAsync(sPoKeysDevice* device);
+POKEYSDECL int PK_EncoderValuesGetAsync(sPoKeysDevice* device);
+POKEYSDECL int PK_EncoderValuesSetAsync(sPoKeysDevice* device);
+
 // Set digital outputs values
 POKEYSDECL int32_t PK_DigitalIOSet(sPoKeysDevice* device);
 // Get digital inputs values
@@ -1306,6 +1312,8 @@ POKEYSDECL int32_t PK_PoILTaskStatus(sPoKeysDevice * device);
 // RTC commands (real-time clock)
 POKEYSDECL int32_t PK_RTCGet(sPoKeysDevice* device);
 POKEYSDECL int32_t PK_RTCSet(sPoKeysDevice* device);
+POKEYSDECL int PK_RTCGetAsync(sPoKeysDevice* device);
+POKEYSDECL int export_rtc_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 
 // UART commands
 POKEYSDECL int32_t PK_UARTConfigure(sPoKeysDevice* device, uint32_t baudrate, uint8_t format, uint8_t interfaceID);
@@ -1348,12 +1356,8 @@ POKEYSDECL int32_t PK_OEM_Martelli_SetRate(sPoKeysDevice* device, uint32_t rate)
 extern int32_t LastRetryCount;
 extern int32_t LastWaitCount;
 
-// Asynchronous functions
-POKEYSDECL int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device);
-POKEYSDECL int PK_EncoderConfigurationSetAsync(sPoKeysDevice* device);
-POKEYSDECL int PK_EncoderValuesGetAsync(sPoKeysDevice* device);
-POKEYSDECL int PK_EncoderValuesSetAsync(sPoKeysDevice* device);
-POKEYSDECL int PK_RTCGetAsync(sPoKeysDevice* device);
+
+
 
 #ifdef __cplusplus
 }
