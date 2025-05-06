@@ -1347,6 +1347,14 @@ POKEYSDECL int32_t PK_OEM_Martelli_SetRate(sPoKeysDevice* device, uint32_t rate)
 
 extern int32_t LastRetryCount;
 extern int32_t LastWaitCount;
+
+// Asynchronous functions
+POKEYSDECL int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device);
+POKEYSDECL int PK_EncoderConfigurationSetAsync(sPoKeysDevice* device);
+POKEYSDECL int PK_EncoderValuesGetAsync(sPoKeysDevice* device);
+POKEYSDECL int PK_EncoderValuesSetAsync(sPoKeysDevice* device);
+POKEYSDECL int PK_RTCGetAsync(sPoKeysDevice* device);
+
 #ifdef __cplusplus
 }
 #endif
