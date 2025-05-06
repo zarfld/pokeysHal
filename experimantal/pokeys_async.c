@@ -470,25 +470,32 @@ sPoKeysDevice *TryConnectToDevice(uint32_t intSerial) {
 
 void user_mainloop(void) 
 { 
-   int RTC_count =100;
-   int RTC_Trig = 100;
+   int RTC_count =10;
+   int RTC_Trig = 10;
     while(0xb){
        FOR_ALL_INSTS() {
 
            // while(dev == NULL)dev = PK_ConnectToDeviceWSerial(devSerial, 2000);  //waits for usb device
             
-            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
-         //   PK_TimeoutAndRetryCheck(__comp_inst->dev, 0); // checks for timeout and retry
+
             alive=1; 
             if(RTC_count>=RTC_Trig){
+                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync\n", __FILE__, __FUNCTION__);
                 if (PK_RTCGetAsync(__comp_inst->dev)==0){
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet OK\n", __FILE__, __FUNCTION__);
                     RTC_count = 0;
+                }
+                else{
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet FAILED\n", __FILE__, __FUNCTION__);
                 }
             }
             else{
                 RTC_count++;
             }
+
+            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
+            PK_TimeoutAndRetryCheck(__comp_inst->dev, 6000); // checks for timeout and retry
+
             alive=0;
             usleep(100); 
         
