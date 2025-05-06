@@ -10,6 +10,7 @@
 
 static int comp_id;
 
+
 #ifdef MODULE_INFO
 MODULE_INFO(linuxcnc, "component:pokeys_async:PoKeys IO driver, by Mit Zot");
 MODULE_INFO(linuxcnc, "pin:in-#:bit:55:out::None:None");
@@ -29,9 +30,14 @@ struct __comp_state {
     hal_bit_t *err;
     hal_u32_t *devSerial;
     hal_bit_t *alive;
+
+    sPoKeysDevice *dev;
 };
+
 #include <stdlib.h>
 struct __comp_state *__comp_first_inst=0, *__comp_last_inst=0;
+static int extra_setup(struct __comp_state *__comp_inst, char *prefix, long extra_arg);
+uint32_t device_id = 0;
 
 static int __comp_get_data_size(void);
 #undef TRUE
@@ -49,6 +55,11 @@ static int export(char *prefix, long extra_arg) {
     int sz = sizeof(struct __comp_state) + __comp_get_data_size();
     struct __comp_state *inst = hal_malloc(sz);
     memset(inst, 0, sz);
+
+    r = extra_setup(inst, prefix, extra_arg);
+    if (r != 0)
+        return r;
+
     for(j=0; j < (55); j++) {
         r = hal_pin_bit_newf(HAL_OUT, &(inst->in[j]), comp_id,
             "%s.in-%01d", prefix, j);
@@ -68,6 +79,9 @@ static int export(char *prefix, long extra_arg) {
     r = hal_pin_bit_newf(HAL_OUT, &(inst->alive), comp_id,
         "%s.alive", prefix);
     if(r != 0) return r;
+
+    r = export_rtc_pins(prefix, comp_id, inst->dev); // Export RTC pins
+
     if(__comp_last_inst) __comp_last_inst->_next = inst;
     __comp_last_inst = inst;
     if(!__comp_first_inst) __comp_first_inst = inst;

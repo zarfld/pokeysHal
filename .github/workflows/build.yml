@@ -124,8 +124,7 @@ jobs:
     - name: hal_compile PoKeys_Async
       run: |
         echo "halcompile pokeys_async from custom Makefile..."
-        sudo halcompile --install experimantal/pokeys_async.comp
-        sudo halcompile --preprocess experimantal/pokeys_async.comp
+        sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimantal/pokeys_async.c
       continue-on-error: true
 
     - name: Sync repository
