@@ -586,7 +586,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_Ethernet(uint32_t serialNumber, uint32_t
                     struct sockaddr_in *a = (struct sockaddr_in *)&tmpDevice->devHandle2;
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle2=%d\n", __FILE__, __FUNCTION__,tmpDevice->devHandle2);
                     InitializeNewDevice(tmpDevice);
-                    *a = (struct sockaddr_in *)&tmpDevice->devHandle2;
+                    
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: -> InitializeNewDevice -done : devHandle2=%d\n", __FILE__, __FUNCTION__,tmpDevice->devHandle2);
                     return tmpDevice;
                 }
