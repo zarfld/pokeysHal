@@ -50,7 +50,7 @@ int32_t PK_EnumerateUSBDevices()
         printf("  Product:      %ls\n", cur_dev->product_string);
         printf("  Interface:    %d\n",  cur_dev->interface_number);
         printf("\n");*/
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Device Found, Serial: %ls, Product: %ls, Interface: %d\n", __FILE__, __FUNCTION__, cur_dev->serial_number, cur_dev->product_string, cur_dev->interface_number);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Device Found, Serial: %ls, Product: %ls, Interface: %d\n", __FILE__, __FUNCTION__, cur_dev->serial_number, cur_dev->product_string, cur_dev->interface_number);
         if (PKI_CheckInterface(cur_dev))
         {
             numDevices++;
@@ -70,7 +70,7 @@ int32_t PK_EnumerateUSBDevices()
         printf("  Product:      %ls\n", cur_dev->product_string);
         printf("  Interface:    %d\n",  cur_dev->interface_number);
         printf("\n");*/
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Device Found, Serial: %ls, Product: %ls, Interface: %d\n", __FILE__, __FUNCTION__, cur_dev->serial_number, cur_dev->product_string, cur_dev->interface_number);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Device Found, Serial: %ls, Product: %ls, Interface: %d\n", __FILE__, __FUNCTION__, cur_dev->serial_number, cur_dev->product_string, cur_dev->interface_number);
         if (cur_dev->interface_number == -1) numDevices++;
         cur_dev = cur_dev->next;
     }
@@ -264,9 +264,9 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
 
 
     // Copy data
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Copying devHandle (dest:%d org: %d)\n", __FILE__, __FUNCTION__ ,destination->devHandle, original->devHandle );
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Copying devHandle (dest:%d org: %d)\n", __FILE__, __FUNCTION__ ,destination->devHandle, original->devHandle );
     destination->devHandle = original->devHandle;
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Copying devHandle2 (dest:%d org: %d)\n", __FILE__, __FUNCTION__ ,destination->devHandle2, original->devHandle2 );
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Copying devHandle2 (dest:%d org: %d)\n", __FILE__, __FUNCTION__ ,destination->devHandle2, original->devHandle2 );
     destination->devHandle2 = original->devHandle2;
 
     destination->info = original->info;
@@ -337,10 +337,10 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
 				tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
                 //printf("Connect to this device...");
-                rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...  (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
+                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Connect to this device...  (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
 				tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
                 tmpDevice->devHandle2 = NULL;
-                rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
+                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
 
 				tmpDevice->connectionType = PK_DeviceType_USBDevice;
 
@@ -376,18 +376,18 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
                 tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
                 //printf("Connect to this device...");
-                rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
+                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
                 tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
                 tmpDevice->devHandle2 = NULL;
-                rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
+                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
                
                 tmpDevice->connectionType = PK_DeviceType_USBDevice;
 
                 if (tmpDevice->devHandle != NULL)
                 {
-                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...(devHandle:%d devHandle2:%d) \n", __FILE__, __FUNCTION__, tmpDevice->devHandle,tmpDevice->devHandle2); 
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Connect to this device...(devHandle:%d devHandle2:%d) \n", __FILE__, __FUNCTION__, tmpDevice->devHandle,tmpDevice->devHandle2); 
                     InitializeNewDevice(tmpDevice);
-                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...(devHandle:%d devHandle2:%d) \n", __FILE__, __FUNCTION__, tmpDevice->devHandle,tmpDevice->devHandle2); 
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Connect to this device...(devHandle:%d devHandle2:%d) \n", __FILE__, __FUNCTION__, tmpDevice->devHandle,tmpDevice->devHandle2); 
                 } else
                 {
                     //free(tmpDevice);
@@ -456,7 +456,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
     cur_dev = devs;
 
     //sprintf((char*)serialSearch, "x.%05u", serialNumber % 100000);
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Searching for device with serial number %s\n", __FILE__, __FUNCTION__, serialSearch);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Searching for device with serial number %s\n", __FILE__, __FUNCTION__, serialSearch);
     //sprintf(serialSearch58, "3.%05u", serialNumber % 100000);
 
     while (cur_dev)
@@ -481,10 +481,10 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                     tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
                     //printf("Connect to this device...");
-                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...(devHandle: %d  devHandle2: %d )\n", __FILE__, __FUNCTION__, tmpDevice->devHandle, tmpDevice->devHandle2);
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Connect to this device...(devHandle: %d  devHandle2: %d )\n", __FILE__, __FUNCTION__, tmpDevice->devHandle, tmpDevice->devHandle2);
                     tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
                     tmpDevice->devHandle2 = 0;
-                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: ( hid_open_path devHandle: %d  devHandle2: %d )\n", __FILE__, __FUNCTION__, tmpDevice->devHandle, tmpDevice->devHandle2);
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: ( hid_open_path devHandle: %d  devHandle2: %d )\n", __FILE__, __FUNCTION__, tmpDevice->devHandle, tmpDevice->devHandle2);
 
                     tmpDevice->connectionType = PK_DeviceType_USBDevice;
                     if (tmpDevice->devHandle != NULL)
