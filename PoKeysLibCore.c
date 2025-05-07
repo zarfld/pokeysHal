@@ -264,9 +264,9 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
 
 
     // Copy data
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Copying devHandle (dest:%d org: %d)\n", __FILE__, __FUNCTION__ destination->devHandle, original->devHandle );
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Copying devHandle (dest:%d org: %d)\n", __FILE__, __FUNCTION__ ,destination->devHandle, original->devHandle );
     destination->devHandle = original->devHandle;
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Copying devHandle2 (dest:%d org: %d)\n", __FILE__, __FUNCTION__ destination->devHandle2, original->devHandle2 );
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Copying devHandle2 (dest:%d org: %d)\n", __FILE__, __FUNCTION__ ,destination->devHandle2, original->devHandle2 );
     destination->devHandle2 = original->devHandle2;
 
     destination->info = original->info;
