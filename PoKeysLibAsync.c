@@ -223,7 +223,7 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: sendto failed for request ID %d, errno=%d (%s)\n", __FILE__, __FUNCTION__, request_id, errno, strerror(errno));
 
         struct sockaddr_in *a = (struct sockaddr_in *)&dev->devHandle2;
-        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: → sendto: sin_family=%d, ip=%08x, port=%d\n"", __FILE__, __FUNCTION__,a->sin_family, ntohl(a->sin_addr.s_addr), ntohs(a->sin_port));
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: → sendto: sin_family=%d, ip=%08x, port=%d\n", __FILE__, __FUNCTION__,a->sin_family, ntohl(a->sin_addr.s_addr), ntohs(a->sin_port));
 
         return -2; // Send error
     }
