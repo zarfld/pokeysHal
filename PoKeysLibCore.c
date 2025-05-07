@@ -583,7 +583,11 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_Ethernet(uint32_t serialNumber, uint32_t
 				else
                 {
                     //free(devices);
+                    struct sockaddr_in *a = (struct sockaddr_in *)&tmpDevice->devHandle2;
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: sin_family=%d, ip=%08x, port=%d\n", __FILE__, __FUNCTION__,a->sin_family, ntohl(a->sin_addr.s_addr), ntohs(a->sin_port));
                     InitializeNewDevice(tmpDevice);
+                    *a = (struct sockaddr_in *)&tmpDevice->devHandle2;
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: -> InitializeNewDevice sin_family=%d, ip=%08x, port=%d\n", __FILE__, __FUNCTION__,a->sin_family, ntohl(a->sin_addr.s_addr), ntohs(a->sin_port));
                     return tmpDevice;
                 }
             }
@@ -607,6 +611,8 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice(uint32_t serialNumber, uint32_t checkFor
 	if ((flags & (1 << 8)) && checkForNetworkDevicesAndTimeout > 0)
 	{
 		tmpDevice = PK_ConnectToPoKeysDevice_Ethernet(serialNumber, checkForNetworkDevicesAndTimeout, flags);
+        struct sockaddr_in *a = (struct sockaddr_in *)&tmpDevice->devHandle2;
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: → PK_ConnectToPoKeysDevice_Ethernet: sin_family=%d, ip=%08x, port=%d\n", __FILE__, __FUNCTION__,a->sin_family, ntohl(a->sin_addr.s_addr), ntohs(a->sin_port));
 	}
 
 	// Otherwise, check USB first
@@ -618,6 +624,8 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice(uint32_t serialNumber, uint32_t checkFor
 	if (tmpDevice == NULL && ((flags & (1 << 8)) == 0) && checkForNetworkDevicesAndTimeout > 0)
 	{
 		tmpDevice = PK_ConnectToPoKeysDevice_Ethernet(serialNumber, checkForNetworkDevicesAndTimeout, flags);
+        struct sockaddr_in *a = (struct sockaddr_in *)&tmpDevice->devHandle2;
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: → PK_ConnectToPoKeysDevice_Ethernet: sin_family=%d, ip=%08x, port=%d\n", __FILE__, __FUNCTION__,a->sin_family, ntohl(a->sin_addr.s_addr), ntohs(a->sin_port));
 	}
 	return tmpDevice;
 }
@@ -631,6 +639,7 @@ sPoKeysDevice* PK_ConnectToDeviceWSerial(uint32_t serialNumber, uint32_t checkFo
 sPoKeysDevice* PK_ConnectToDeviceWSerial_UDP(uint32_t serialNumber, uint32_t checkForNetworkDevicesAndTimeout)
 {
     return PK_ConnectToPoKeysDevice(serialNumber, checkForNetworkDevicesAndTimeout, 1);
+
 }
 
 void PK_DisconnectDevice(sPoKeysDevice* device)
