@@ -264,7 +264,9 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
 
 
     // Copy data
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Copying devHandle (dest:%d org: %d)\n", __FILE__, __FUNCTION__ destination->devHandle, original->devHandle );
     destination->devHandle = original->devHandle;
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Copying devHandle2 (dest:%d org: %d)\n", __FILE__, __FUNCTION__ destination->devHandle2, original->devHandle2 );
     destination->devHandle2 = original->devHandle2;
 
     destination->info = original->info;
@@ -335,9 +337,10 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
 				tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
                 //printf("Connect to this device...");
-                rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...\n", __FILE__, __FUNCTION__);
+                rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...  (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
 				tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
                 tmpDevice->devHandle2 = NULL;
+                rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
 
 				tmpDevice->connectionType = PK_DeviceType_USBDevice;
 
@@ -373,18 +376,18 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
                 tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
                 //printf("Connect to this device...");
-                
+                rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
                 tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
                 tmpDevice->devHandle2 = NULL;
-
+                rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
                
                 tmpDevice->connectionType = PK_DeviceType_USBDevice;
 
                 if (tmpDevice->devHandle != NULL)
                 {
-                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...(devHandle:%d) \n", __FILE__, __FUNCTION__, tmpDevice->devHandle); 
+                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...(devHandle:%d devHandle2:%d) \n", __FILE__, __FUNCTION__, tmpDevice->devHandle,tmpDevice->devHandle2); 
                     InitializeNewDevice(tmpDevice);
-                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...(devHandle:%d) \n", __FILE__, __FUNCTION__, tmpDevice->devHandle); 
+                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...(devHandle:%d devHandle2:%d) \n", __FILE__, __FUNCTION__, tmpDevice->devHandle,tmpDevice->devHandle2); 
                 } else
                 {
                     //free(tmpDevice);
@@ -478,9 +481,10 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                     tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
 
                     //printf("Connect to this device...");
-                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...\n", __FILE__, __FUNCTION__);
+                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Connect to this device...(devHandle: %d  devHandle2: %d )\n", __FILE__, __FUNCTION__, tmpDevice->devHandle, tmpDevice->devHandle2);
                     tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
                     tmpDevice->devHandle2 = 0;
+                    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: ( hid_open_path devHandle: %d  devHandle2: %d )\n", __FILE__, __FUNCTION__, tmpDevice->devHandle, tmpDevice->devHandle2);
 
                     tmpDevice->connectionType = PK_DeviceType_USBDevice;
                     if (tmpDevice->devHandle != NULL)
