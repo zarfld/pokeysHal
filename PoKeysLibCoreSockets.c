@@ -518,12 +518,13 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
         result = 0;
 #else
 	result = 0;
-    if (tmpDevice->connectionParam != PK_ConnectionParam_UDP)
+    if (tmpDevice->connectionParam != PK_ConnectionParam_UDP){
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle=%d  devHandle2=%d\n", __FILE__, __FUNCTION__,*(int *)tmpDevice->devHandle,*(int *)tmpDevice->devHandle2);
         result = connect(*(int *)tmpDevice->devHandle, (struct sockaddr *)tmpDevice->devHandle2, sizeof(struct sockaddr_in));
-	else
+    }
+	else{
         result = 0;
-		
+    }
 #endif
 
     if (result == -1)
