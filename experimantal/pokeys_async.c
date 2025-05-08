@@ -482,9 +482,13 @@ void user_mainloop(void)
             if(RTC_count>=RTC_Trig){
                 rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync\n", __FILE__, __FUNCTION__);
                 if (PK_RTCGetAsync(__comp_inst->dev)==0){
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet OK\n", __FILE__, __FUNCTION__);
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync OK\n", __FILE__, __FUNCTION__);
                     RTC_count = 0;
                 }
+                else if (PK_RTCGet(__comp_inst->dev)==PK_OK){
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet OK\n", __FILE__, __FUNCTION__);
+                    RTC_count = 0;
+                
                 else{
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet FAILED\n", __FILE__, __FUNCTION__);
                 }
