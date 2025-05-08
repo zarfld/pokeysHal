@@ -216,9 +216,8 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
     }
 
     // Send the packet
-    ssize_t sent = sendto(*(int*)dev->devHandle,
-                          t->request_buffer, sizeof(t->request_buffer), 0,
-                          (struct sockaddr *)&dev->devHandle2, sizeof(struct sockaddr_in));
+ //   ssize_t sent = sendto(*(int*)dev->devHandle, t->request_buffer, sizeof(t->request_buffer), 0,(struct sockaddr *)&dev->devHandle2, sizeof(struct sockaddr_in));
+ ssize_t sent = sendto(*(int*)dev->devHandle, t->request_buffer, sizeof(t->request_buffer), 0,(struct sockaddr *)dev->devHandle2, sizeof(struct sockaddr_in));
     if (sent < 0) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: sendto failed for request ID %d, errno=%d (%s)\n", __FILE__, __FUNCTION__, request_id, errno, strerror(errno));
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle2=%d\n", __FILE__, __FUNCTION__,dev->devHandle2);

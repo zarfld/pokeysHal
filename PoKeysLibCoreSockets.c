@@ -452,7 +452,7 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
 
     tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
     tmpDevice->devHandle2 = hal_malloc(sizeof(struct sockaddr_in));
-
+    memset(tmpDevice->devHandle2, 0, sizeof(struct sockaddr_in));  // ← CRUCIAL!
     tmpDevice->connectionType = PK_DeviceType_NetworkDevice; // Network device
     tmpDevice->connectionParam = device->useUDP;
 
@@ -616,6 +616,8 @@ int32_t SendEthRequest(sPoKeysDevice* device)
 #else
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle=%d\n", __FILE__, __FUNCTION__,device->devHandle);
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle2=%d\n", __FILE__, __FUNCTION__,device->devHandle2);
+            struct sockaddr_in *a = (struct sockaddr_in *)dev->devHandle2;
+            rtapi_print_msg(RTAPI_MSG_ERR, ""PoKeys: %s:%s: → sendto check: sin_family=%d, ip=%08x, port=%d\n", __FILE__, __FUNCTION__, a->sin_family, ntohl(a->sin_addr.s_addr), ntohs(a->sin_port));
             if (sendto(*(int*)device->devHandle, (char *)device->request, 64, 0, (SOCKADDR *)device->devHandle2, sizeof(struct sockaddr_in)) == -1)
 #endif
             {
@@ -749,6 +751,8 @@ int32_t SendEthRequest_NoResponse(sPoKeysDevice* device)
 #ifdef WIN32
             if (sendto((SOCKET)device->devHandle, (char *)device->request, 64, 0, (SOCKADDR *)device->devHandle2, sizeof(struct sockaddr_in)) == -1)
 #else
+            struct sockaddr_in *a = (struct sockaddr_in *)dev->devHandle2;
+            rtapi_print_msg(RTAPI_MSG_ERR, ""PoKeys: %s:%s: → sendto check: sin_family=%d, ip=%08x, port=%d\n", __FILE__, __FUNCTION__, a->sin_family, ntohl(a->sin_addr.s_addr), ntohs(a->sin_port));
             if (sendto(*(int*)device->devHandle, (char *)device->request, 64, 0, (SOCKADDR *)device->devHandle2, sizeof(struct sockaddr_in)) == -1)
 #endif
             {
@@ -827,6 +831,8 @@ int32_t SendEthRequestBig(sPoKeysDevice* device)
 #ifdef WIN32
             if (sendto((SOCKET)device->devHandle, (char *)requestBuffer, 512, 0, (SOCKADDR *)device->devHandle2, sizeof(struct sockaddr_in)) == -1)
 #else
+            struct sockaddr_in *a = (struct sockaddr_in *)dev->devHandle2;
+            rtapi_print_msg(RTAPI_MSG_ERR, ""PoKeys: %s:%s: → sendto check: sin_family=%d, ip=%08x, port=%d\n", __FILE__, __FUNCTION__, a->sin_family, ntohl(a->sin_addr.s_addr), ntohs(a->sin_port));
             if (sendto(*(int*)device->devHandle, (char *)requestBuffer, 512, 0, (SOCKADDR *)device->devHandle2, sizeof(struct sockaddr_in)) == -1)
 #endif
             {
