@@ -609,8 +609,8 @@ int32_t SendEthRequest(sPoKeysDevice* device)
 #ifdef WIN32
             if (sendto((SOCKET)device->devHandle, (char *)device->request, 64, 0, (SOCKADDR *)device->devHandle2, sizeof(struct sockaddr_in)) == -1)
 #else
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle=%d\n", __FILE__, __FUNCTION__,dev->devHandle);
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle2=%d\n", __FILE__, __FUNCTION__,dev->devHandle2);
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle=%d\n", __FILE__, __FUNCTION__,device->devHandle);
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle2=%d\n", __FILE__, __FUNCTION__,device->devHandle2);
             if (sendto(*(int*)device->devHandle, (char *)device->request, 64, 0, (SOCKADDR *)device->devHandle2, sizeof(struct sockaddr_in)) == -1)
 #endif
             {
