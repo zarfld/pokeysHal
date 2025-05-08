@@ -457,10 +457,13 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
     tmpDevice->connectionParam = device->useUDP;
 
     addr = (uint32)device->IPaddress[0] + ((uint32)device->IPaddress[1] << 8) + ((uint32)device->IPaddress[2] << 16) + ((uint32)device->IPaddress[3] << 24);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: addr=%d.%d.%d.%d\n", __FILE__, __FUNCTION__, (addr&0xFF),(addr>>8)&0xFF, (addr>>16)&0xFF, (addr>>24)&0xFF);
+
     // Set up the RecvAddr structure with the broadcast ip address and correct port number
     ((struct sockaddr_in*)tmpDevice->devHandle2)->sin_family = AF_INET;
     ((struct sockaddr_in*)tmpDevice->devHandle2)->sin_port = htons(20055);
     ((struct sockaddr_in*)tmpDevice->devHandle2)->sin_addr.s_addr = addr;
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle2=%d\n", __FILE__, __FUNCTION__,tmpDevice->devHandle2);
 
 #ifdef WIN32    
     if (InitWinsock() != 0)
@@ -516,6 +519,7 @@ sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device)
 #else
 	result = 0;
     if (tmpDevice->connectionParam != PK_ConnectionParam_UDP)
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle=%d  devHandle2=%d\n", __FILE__, __FUNCTION__,*(int *)tmpDevice->devHandle,*(int *)tmpDevice->devHandle2);
         result = connect(*(int *)tmpDevice->devHandle, (struct sockaddr *)tmpDevice->devHandle2, sizeof(struct sockaddr_in));
 	else
         result = 0;
