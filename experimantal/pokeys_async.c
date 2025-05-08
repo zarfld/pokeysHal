@@ -488,7 +488,7 @@ void user_mainloop(void)
                 else if (PK_RTCGet(__comp_inst->dev)==PK_OK){
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet OK\n", __FILE__, __FUNCTION__);
                     RTC_count = 0;
-                
+                }
                 else{
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet FAILED\n", __FILE__, __FUNCTION__);
                 }
