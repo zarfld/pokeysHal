@@ -20,13 +20,15 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-libusb.c PoKeysLibFastUSB.c \
 
 OBJECTS=$(SOURCES:.c=.o)
 
-install: all
+install_userspace: all
 	cp libPoKeysHal.so /usr/lib
 	cp PoKeysLibHal.h /usr/include
 
-install: static
+install_rt: static
 	cp libPoKeysHal.a /usr/lib
 	cp PoKeysLibHal.h /usr/include
+
+install: install_userspace install_rt
 
 all: $(SOURCES) libPoKeysHal.so
 

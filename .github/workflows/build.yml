@@ -113,7 +113,7 @@ jobs:
     - name: Build modified PoKeysHalLib
       run: |
         echo "Building PoKeysHalLib from custom Makefile..."
-        sudo make -f Makefile.noqmake
+        sudo make -f Makefile.noqmake install
       continue-on-error: true
 
     - name: Check for multiple transaction definitions
@@ -141,12 +141,6 @@ jobs:
         sudo halcompile --install --extra-link-args="-L/usr/lib -lPoKeysHal" experimantal/pokeys_async.c
       continue-on-error: true
 
-    - name: Build static PoKeysHal.a for RT usage
-      run: |
-        make -f Makefile.noqmake clean
-        make -f Makefile.noqmake static
-        dir
-    
     - name: hal_compile RT PoKeys_Async
       run: |
         echo "halcompile RT pokeys_async..."
