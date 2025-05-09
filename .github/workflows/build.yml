@@ -136,7 +136,7 @@ jobs:
     - name: hal_compile RT PoKeys_Async
       run: |
         echo "halcompile RT pokeys_async..."
-
+        dir
         # Extract just the SOURCES block and exclude non-source lines
         FILES=$(sed -n '/^SOURCES\s*=/,/^[^ \t\\]/p' Makefile.noqmake | grep -vE '(^SOURCES|^[[:space:]]*OBJECTS)' | tr -d '\\' | tr '\n' ' ')
 
@@ -155,12 +155,7 @@ jobs:
         loadusr -W pokeys_async
         start
         show pin
-        show pin
-        show pin
-        show pin
-        show pin
-        show pin
-        show pin
+        show params
         exit
         EOF
       continue-on-error: true  
