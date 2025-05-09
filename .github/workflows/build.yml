@@ -150,10 +150,16 @@ jobs:
     - name: hal_compile RT PoKeys_Async
       run: |
         echo "halcompile RT pokeys_async..."
-        sudo halcompile --install --extra-link-args="-L. -lPoKeysHal" experimantal/pokeys_async.c
+        sudo halcompile --install --extra-link-args="-L. -lPoKeysHal" experimantal/pokeys_async.c libPoKeysHal.a
         dir
-
       continue-on-error: true
+
+
+    - name: hal_compile RT PoKeys_Async
+      run: |
+        echo "halcompile RT pokeys_async..."
+        sudo halcompile --install --extra-link-args="-L. -libPoKeysHal" experimantal/pokeys_async.c libPoKeysHal.a
+        dir
 
     - name: run uspace PoKeys_Async
       run: |
