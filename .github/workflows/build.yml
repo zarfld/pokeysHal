@@ -134,8 +134,9 @@ jobs:
     - name: hal_compile RT PoKeys_Async
       run: |
         echo "halcompile RT pokeys_async..."
-        sudo halcompile --install --extra-link-args="-L. -lPoKeysHal" experimantal/pokeys_async.c
-        dir
+        nm -g libPoKeysHal.a | grep PK_RTCGetAsync
+
+        sudo halcompile --install --extra-link-args="-L/usr/lib -lPoKeysHal" experimantal/pokeys_async.c
       continue-on-error: true
 
     - name: run uspace PoKeys_Async
