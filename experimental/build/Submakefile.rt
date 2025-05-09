@@ -1,0 +1,50 @@
+# Include the main LinuxCNC makefile for realtime components
+include /usr/share/linuxcnc/Makefile.modinc
+
+# Define the component name
+COMPONENTS = pokeys_async
+
+# Compiler and linker arguments for realtime
+EXTRA_COMPILE_ARGS = -DRTAPI -I$(CURDIR)
+EXTRA_LINK_ARGS = -Wl,--whole-archive -lPoKeysHal -Wl,--no-whole-archive -llinuxcnchal
+
+# Source file(s)
+SOURCES = pokeys_async.c
+
+# Default target
+all: $(COMPONENTS)
+
+# Build rule for realtime HAL component
+$(COMPONENTS): %: $(SOURCES) \
+	PoKeysLibCore.c \
+	PoKeysLibCoreSockets.c \
+	PoKeysLibFastUSB.c \
+	PoKeysLibDeviceData.c \
+	PoKeysLibIO.c \
+	PoKeysLibEncoders.c \
+	PoKeysLibMatrixLED.c \
+	PoKeysLibMatrixKB.c \
+	PoKeysLibPoNET.c \
+	PoKeysLibLCD.c \
+	PoKeysLibRTC.c \
+	PoKeysLibEasySensors.c \
+	PoKeysLibI2C.c \
+	PoKeysLib1Wire.c \
+	PoKeysLibSPI.c \
+	PoKeysLibPulseEngine_v2.c \
+	PoKeysLibUART.c \
+	PoKeysLibCAN.c \
+	PoKeysLibFailsafe.c \
+	PoKeysLibWS2812.c \
+	PoKeysLibEncodersAsync.c \
+	PoKeysLibRTCAsync.c \
+	PoKeysLibAsync.c \
+	PoKeysLibCoreSocketsAsync.c
+	halcompile --compile --install \
+		--extra-compile-args="$(EXTRA_COMPILE_ARGS)" \
+		--extra-link-args="$(EXTRA_LINK_ARGS)" \
+		$^
+
+# Clean rule
+clean:
+	rm -f $(COMPONENTS) $(COMPONENTS:=.so) $(COMPONENTS:=.o)
