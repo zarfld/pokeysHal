@@ -904,7 +904,9 @@ typedef struct
 {
  void*                     devHandle;                     // Communication device handle
  void*                     devHandle2;
+ struct sockaddr_in *devHandle3; // Only used for async sendto()
 
+ 
  sPoKeysDevice_Info        info;                          // PoKeys device info
  sPoKeysDevice_Data        DeviceData;                    // PoKeys device-specific data
  sPoKeysNetworkDeviceInfo* netDeviceData;

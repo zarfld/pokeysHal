@@ -58,8 +58,9 @@ int32_t PK_EnumerateUSBDevices()
 
         cur_dev = cur_dev->next;
     }
+    #ifndef RTAPI
     hid_free_enumeration(devs);
-
+    #endif
     devs = hid_enumerate(0x1DC3, 0x1002);
     cur_dev = devs;
 
@@ -74,7 +75,9 @@ int32_t PK_EnumerateUSBDevices()
         if (cur_dev->interface_number == -1) numDevices++;
         cur_dev = cur_dev->next;
     }
+    #ifndef RTAPI
     hid_free_enumeration(devs);
+    #endif
 
 #ifdef POKEYSLIB_USE_LIBUSB
 	numDevices += PK_EnumerateFastUSBDevices();
@@ -354,14 +357,18 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
 					tmpDevice = NULL;
 				}
                 //hid_set_nonblocking(devHandle);
+                #ifndef RTAPI
                 hid_free_enumeration(devs);
+                #endif
                 return tmpDevice;
             }
             numDevices++;
         }
         cur_dev = cur_dev->next;
     }
+    #ifndef RTAPI
     hid_free_enumeration(devs);
+    #endif
 
     // Continue with 0x1002 devices
     devs = hid_enumerate(0x1DC3, 0x1002);
@@ -394,14 +401,18 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
                     tmpDevice = NULL;
                 }
                 //hid_set_nonblocking(devHandle);
+                #ifndef RTAPI
                 hid_free_enumeration(devs);
+                #endif
                 return tmpDevice;
             }
             numDevices++;
         }
         cur_dev = cur_dev->next;
     }
+    #ifndef RTAPI
     hid_free_enumeration(devs);
+    #endif
 
 #ifdef POKEYSLIB_USE_LIBUSB
 	// Try connecting to the bulk interface of the PoKeys device...
@@ -497,7 +508,9 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                         tmpDevice = NULL;
                     }
                     //hid_set_nonblocking(devHandle);
+                    #ifndef RTAPI
                     hid_free_enumeration(devs);
+                    #endif
                     return tmpDevice;
                 }
 			}
@@ -516,14 +529,18 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                 {
                     //free(tmpDevice);
                     tmpDevice = NULL;
+                    #ifndef RTAPI
                     hid_free_enumeration(devs);
+                    #endif
                     return NULL;
                 }
 
                 tmpDevice->connectionType = PK_DeviceType_USBDevice;
                 if (tmpDevice->DeviceData.SerialNumber == serialNumber)
                 {
-	                hid_free_enumeration(devs);
+                    #ifndef RTAPI
+                    hid_free_enumeration(devs);
+                    #endif
                     return tmpDevice;
 				}
 				else
@@ -543,14 +560,18 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
             switch (devRange)
             {
                 case 1:
-                    hid_free_enumeration(devs);
+                #ifndef RTAPI
+                hid_free_enumeration(devs);
+                #endif
                     devs = hid_enumerate(0x1DC3, 0x1001);
                     cur_dev = devs;
                     break;
             }
         }
     }
+    #ifndef RTAPI
     hid_free_enumeration(devs);
+    #endif
 	return NULL;
 }
 
