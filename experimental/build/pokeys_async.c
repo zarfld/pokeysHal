@@ -518,6 +518,7 @@ void user_mainloop(void)
     exit(0);
 }
 static int __comp_get_data_size(void) { return 0; }
+
 #ifdef RTAPI
 FUNCTION(_) {
             PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
@@ -536,6 +537,7 @@ FUNCTION(_) {
                 }
 }
 #endif
+
 EXTRA_SETUP() {
     int wait_ms = 5000;
     const char *ini_path = getenv("INI_FILE_NAME");
@@ -575,3 +577,5 @@ EXTRA_SETUP() {
     // devSerial = extra_arg;
     return 0;
 }
+
+hal_export_funct("pokeys_async.funct", FUNCTION, inst, 0, 0, comp_id);
