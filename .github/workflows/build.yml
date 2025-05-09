@@ -141,20 +141,15 @@ jobs:
         sudo halcompile --install --extra-link-args="-L/usr/lib -lPoKeysHal" experimantal/pokeys_async.c
       continue-on-error: true
 
+    - name: Build static PoKeysHal.a for RT usage
+      run: |
+        make -f Makefile.noqmake clean
+        make -f Makefile.noqmake static
+    
     - name: hal_compile RT PoKeys_Async
       run: |
         echo "halcompile RT pokeys_async..."
-        # Clean up old artifacts
-        find . -name '*.o' -delete
-        find . -name '*.ver' -delete
-        find . -name '*.so' ! -name 'libPoKeysHal.so' -delete
-        dir
-        # Extract just the SOURCES block and exclude non-source lines
-        FILES=$(sed -n '/^SOURCES\s*=/,/^[^ \t\\]/p' Makefile.noqmake | grep -vE '(^SOURCES|^[[:space:]]*OBJECTS)' | tr -d '\\' | tr '\n' ' ')
-
-        # Echo the list of source files
-        echo "Using source files:"
-        echo "$FILES"
+        sudo halcompile --install --extra-link-args="-L. -lPoKeysHal" experimantal/pokeys_async.c
 
         # Compile using halcompile with all sources
         sudo halcompile --install experimantal/pokeys_async.c $FILES
