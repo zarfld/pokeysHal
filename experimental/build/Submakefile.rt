@@ -1,50 +1,57 @@
-# Include the main LinuxCNC makefile for realtime components
+# Use the standard LinuxCNC modinc to locate halcompile
 include /usr/share/linuxcnc/Makefile.modinc
 
-# Define the component name
+# Component name
 COMPONENTS = pokeys_async
 
-# Compiler and linker arguments for realtime
+# Compiler and linker flags for realtime
 EXTRA_COMPILE_ARGS = -DRTAPI -I$(CURDIR)
-EXTRA_LINK_ARGS = -Wl,--whole-archive -lPoKeysHal -Wl,--no-whole-archive -llinuxcnchal
+EXTRA_LINK_ARGS = -Wl,--whole-archive -Wl,--no-whole-archive -llinuxcnchal
 
-# Source file(s)
+# All object files from your library
+OBJECTS = \
+  PoKeysLibCore.o \
+  PoKeysLibCoreSockets.o \
+  PoKeysLibFastUSB.o \
+  PoKeysLibDeviceData.o \
+  PoKeysLibIO.o \
+  PoKeysLibEncoders.o \
+  PoKeysLibMatrixLED.o \
+  PoKeysLibMatrixKB.o \
+  PoKeysLibPoNET.o \
+  PoKeysLibLCD.o \
+  PoKeysLibRTC.o \
+  PoKeysLibEasySensors.o \
+  PoKeysLibI2C.o \
+  PoKeysLib1Wire.o \
+  PoKeysLibSPI.o \
+  PoKeysLibPulseEngine_v2.o \
+  PoKeysLibUART.o \
+  PoKeysLibCAN.o \
+  PoKeysLibFailsafe.o \
+  PoKeysLibWS2812.o \
+  PoKeysLibEncodersAsync.o \
+  PoKeysLibRTCAsync.o \
+  PoKeysLibAsync.o \
+  PoKeysLibCoreSocketsAsync.o
+
+# Your main HAL component source
 SOURCES = pokeys_async.c
 
 # Default target
 all: $(COMPONENTS)
 
-# Build rule for realtime HAL component
-$(COMPONENTS): %: $(SOURCES) \
-	PoKeysLibCore.c \
-	PoKeysLibCoreSockets.c \
-	PoKeysLibFastUSB.c \
-	PoKeysLibDeviceData.c \
-	PoKeysLibIO.c \
-	PoKeysLibEncoders.c \
-	PoKeysLibMatrixLED.c \
-	PoKeysLibMatrixKB.c \
-	PoKeysLibPoNET.c \
-	PoKeysLibLCD.c \
-	PoKeysLibRTC.c \
-	PoKeysLibEasySensors.c \
-	PoKeysLibI2C.c \
-	PoKeysLib1Wire.c \
-	PoKeysLibSPI.c \
-	PoKeysLibPulseEngine_v2.c \
-	PoKeysLibUART.c \
-	PoKeysLibCAN.c \
-	PoKeysLibFailsafe.c \
-	PoKeysLibWS2812.c \
-	PoKeysLibEncodersAsync.c \
-	PoKeysLibRTCAsync.c \
-	PoKeysLibAsync.c \
-	PoKeysLibCoreSocketsAsync.c
-	halcompile --compile --install \
-		--extra-compile-args="$(EXTRA_COMPILE_ARGS)" \
-		--extra-link-args="$(EXTRA_LINK_ARGS)" \
-		$^
+# Build .o files individually
+%.o: %.c
+	$(CC) $(EXTRA_COMPILE_ARGS) -fPIC -c $< -o $@
+
+# Build the realtime HAL component and link against .o files
+$(COMPONENTS): %: $(OBJECTS) $(SOURCES)
+	sudo halcompile --install \
+	  --extra-compile-args="$(EXTRA_COMPILE_ARGS)" \
+	  --extra-link-args="$(OBJECTS) $(EXTRA_LINK_ARGS)" \
+	  $^
 
 # Clean rule
 clean:
-	rm -f $(COMPONENTS) $(COMPONENTS:=.so) $(COMPONENTS:=.o)
+	rm -f $(COMPONENTS) $(COMPONENTS:=.so) $(COMPONENTS:=.o) *.o
