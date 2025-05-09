@@ -162,7 +162,7 @@ jobs:
         sudo halcompile \
           --install \
           --extra-compile-args="-I." \
-          --extra-link-args="$OBJS" \
+          --extra-link-args="-l $OBJS" \
           pokeys_async.c
         # sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimental/pokeys_async.c  
       continue-on-error: true
