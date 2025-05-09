@@ -347,7 +347,9 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
 
                 //printf("Connect to this device...");
                 rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Connect to this device...  (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
+                #ifndef RTAPI
 				tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
+                #endif
                 tmpDevice->devHandle2 = NULL;
                 rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
 
@@ -390,7 +392,9 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
 
                 //printf("Connect to this device...");
                 rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
+                #ifndef RTAPI
                 tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
+                #endif
                 tmpDevice->devHandle2 = NULL;
                 rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: (devHandle:%d devHandle2:%d)\n", __FILE__, __FUNCTION__,tmpDevice->devHandle,tmpDevice->devHandle2);
                
@@ -499,7 +503,9 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
 
                     //printf("Connect to this device...");
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Connect to this device...(devHandle: %d  devHandle2: %d )\n", __FILE__, __FUNCTION__, tmpDevice->devHandle, tmpDevice->devHandle2);
+                    #ifndef RTAPI
                     tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
+                    #endif
                     tmpDevice->devHandle2 = 0;
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: ( hid_open_path devHandle: %d  devHandle2: %d )\n", __FILE__, __FUNCTION__, tmpDevice->devHandle, tmpDevice->devHandle2);
 
@@ -809,9 +815,9 @@ int32_t SendRequest(sPoKeysDevice* device)
                         printf("%X ", bufferOut[i]);
                 }
         #endif
-
+#ifndef RTAPI
         result = hid_write(devHandle, bufferOut, 65);
-
+#endif
         // In case of an error, try sending again
         if (result < 0)
         {
@@ -911,9 +917,9 @@ int32_t SendRequest_NoResponse(sPoKeysDevice* device)
                         printf("%X ", bufferOut[i]);
                 }
         #endif
-
+#ifndef RTAPI
         result = hid_write(devHandle, bufferOut, 65);
-
+#endif
         // In case of an error, try sending again
         if (result < 0)
         {
