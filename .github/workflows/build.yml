@@ -146,9 +146,9 @@ jobs:
 
         # 2. Copy relevant files
         cp libPoKeysHal.a experimental/build/
-        cp PoKeysLib*.h experimental/build/
-        cp PoKeysLib*.c experimental/build/
-        cp PoKeysLib*.o experimental/build/
+        cp *.h experimental/build/
+        cp *.c experimental/build/
+        cp *.o experimental/build/
         cp experimental/pokeys_async.c experimental/build/
 
         # 3. Run halcompile from inside the build folder
