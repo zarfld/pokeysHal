@@ -40,8 +40,9 @@ int32_t PK_EnumerateUSBDevices()
 {
     int32_t numDevices = 0;
     struct hid_device_info *devs, *cur_dev;
-
+#ifndef RTAPI
     devs = hid_enumerate(0x1DC3, 0x1001);
+    #endif
     cur_dev = devs;
 
     while (cur_dev)
@@ -61,8 +62,9 @@ int32_t PK_EnumerateUSBDevices()
     }
     
     hid_free_enumeration(devs);
-    
+    #ifndef RTAPI
     devs = hid_enumerate(0x1DC3, 0x1002);
+    #endif
     cur_dev = devs;
 
     while (cur_dev)
@@ -333,8 +335,9 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
     struct hid_device_info *devs, *cur_dev;
     sPoKeysDevice* tmpDevice;
     void * devData;
-
+#ifndef RTAPI
     devs = hid_enumerate(0x1DC3, 0x1001);
+    #endif
     cur_dev = devs;
 
     while (cur_dev)
@@ -377,9 +380,10 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
     #ifndef RTAPI
     hid_free_enumeration(devs);
     #endif
-
+#ifndef RTAPI
     // Continue with 0x1002 devices
     devs = hid_enumerate(0x1DC3, 0x1002);
+#endif
     cur_dev = devs;
 
     while (cur_dev)
@@ -472,8 +476,9 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
 		return tmpDevice;
 	}
 #endif
-
+#ifndef RTAPI
     devs = hid_enumerate(0x1DC3, 0x1001);
+#endif
     cur_dev = devs;
 
     //sprintf((char*)serialSearch, "x.%05u", serialNumber % 100000);
@@ -576,8 +581,9 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
                 case 1:
                 #ifndef RTAPI
                 hid_free_enumeration(devs);
-                #endif
+                
                     devs = hid_enumerate(0x1DC3, 0x1001);
+                    #endif
                     cur_dev = devs;
                     break;
             }
