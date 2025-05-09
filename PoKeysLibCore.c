@@ -685,7 +685,7 @@ void PK_DisconnectDevice(sPoKeysDevice* device)
 			DisconnectFromFastUSBInterface(device->devHandle2);
 			device->devHandle2 = NULL;
 #endif
-#ifndef 
+#ifndef RTAPI
 			if ((hid_device*)device->devHandle != NULL)
 			{
 				hid_close((hid_device*)device->devHandle);
