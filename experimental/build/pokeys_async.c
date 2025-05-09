@@ -477,6 +477,7 @@ sPoKeysDevice *TryConnectToDevice(uint32_t intSerial) {
 
 void user_mainloop(void) 
 { 
+    #ifndef RTAPI
    int RTC_count =10;
    int RTC_Trig = 10;
     while(0xb){
@@ -512,11 +513,28 @@ void user_mainloop(void)
         
         }
     }
-
+    #endif
     exit(0);
 }
 static int __comp_get_data_size(void) { return 0; }
+#ifdef RTAPI
+FUNCTION(_) {
+            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
+            PK_TimeoutAndRetryCheck(__comp_inst->dev, 6000); // checks for timeout and retry
 
+            if (PK_RTCGetAsync(__comp_inst->dev)==0){
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync OK\n", __FILE__, __FUNCTION__);
+                    RTC_count = 0;
+                }
+                else if (PK_RTCGet(__comp_inst->dev)==PK_OK){
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet OK\n", __FILE__, __FUNCTION__);
+                    RTC_count = 0;
+                }
+                else{
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet FAILED\n", __FILE__, __FUNCTION__);
+                }
+}
+#endif
 EXTRA_SETUP() {
     int wait_ms = 5000;
     const char *ini_path = getenv("INI_FILE_NAME");
