@@ -685,13 +685,13 @@ void PK_DisconnectDevice(sPoKeysDevice* device)
 			DisconnectFromFastUSBInterface(device->devHandle2);
 			device->devHandle2 = NULL;
 #endif
-
+#ifndef 
 			if ((hid_device*)device->devHandle != NULL)
 			{
 				hid_close((hid_device*)device->devHandle);
 			}
 		}
-
+#endif
 		CleanDevice(device);
 		//free(device);
     }
