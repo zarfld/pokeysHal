@@ -24,6 +24,10 @@ install: all
 	cp libPoKeysHal.so /usr/lib
 	cp PoKeysLibHal.h /usr/include
 
+install: static
+	cp libPoKeysHal.a /usr/lib
+	cp PoKeysLibHal.h /usr/include
+
 all: $(SOURCES) libPoKeysHal.so
 
 static: libPoKeysHal.a
