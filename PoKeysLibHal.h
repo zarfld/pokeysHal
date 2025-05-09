@@ -982,8 +982,10 @@ typedef struct
 
 
 // Enumerate USB devices. Returns number of USB devices detected.
+#ifndef RTAPI
 POKEYSDECL int32_t PK_EnumerateUSBDevices(void);
 POKEYSDECL int32_t PK_EnumerateFastUSBDevices(void);
+#endif
 // Enumerate network devices. Return the number of ethernet devices detected and the list of detected devices (parameter devices) is filled with devices' data
 POKEYSDECL int32_t PK_EnumerateNetworkDevices(sPoKeysNetworkDeviceSummary * devices, uint32_t timeout);
 POKEYSDECL int32_t PK_SearchNetworkDevices(sPoKeysNetworkDeviceSummary * devices, uint32_t timeout, uint32_t serialNumberToFind);
