@@ -169,7 +169,7 @@ jobs:
         sudo halcompile \
           --install \
           --extra-compile-args="-include PoKeysLibHal.h -Wall" \
-          --extra-link-args="$OBJS -Wl,--no-undefined -Wl,--warn-common -Wl,-Map=link.map" \
+          --extra-link-args="$OBJS ./libPoKeysHal.a -Wl,--no-undefined -Wl,--warn-common -Wl,-Map=link.map" \
           pokeys_async.c
         # sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimental/pokeys_async.c  
       continue-on-error: true
