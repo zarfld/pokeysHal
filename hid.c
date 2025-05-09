@@ -731,6 +731,7 @@ int HID_API_EXPORT HID_API_CALL hid_get_feature_report(hid_device *dev, unsigned
 #endif
 }
 
+#ifndef RTAPI
 void HID_API_EXPORT HID_API_CALL hid_close(hid_device *dev)
 {
 	if (!dev)
@@ -742,6 +743,13 @@ void HID_API_EXPORT HID_API_CALL hid_close(hid_device *dev)
 	free(dev->read_buf);
 	free(dev);
 }
+#else
+void HID_API_EXPORT HID_API_CALL hid_close(hid_device *dev)
+{
+	return;
+
+}
+#endif
 
 int HID_API_EXPORT_CALL HID_API_CALL hid_get_manufacturer_string(hid_device *dev, wchar_t *string, size_t maxlen)
 {
