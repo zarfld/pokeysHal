@@ -690,8 +690,9 @@ void PK_DisconnectDevice(sPoKeysDevice* device)
 			{
 				hid_close((hid_device*)device->devHandle);
 			}
-		}
 #endif
+		}
+
 		CleanDevice(device);
 		//free(device);
     }
