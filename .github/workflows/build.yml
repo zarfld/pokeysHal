@@ -160,8 +160,8 @@ jobs:
         OBJS="$(find . -name '*.o' | grep -v pokeys_async.o | tr '\n' ' ')"
         sudo halcompile \
           --install \
-          --extra-cflags="-I." \
-          --extra-ldflags="$OBJS" \
+          --extra-compile-args="-I." \
+          --extra-link-args="$OBJS" \
           pokeys_async.c
         # sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimental/pokeys_async.c  
       continue-on-error: true
