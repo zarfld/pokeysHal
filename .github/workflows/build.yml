@@ -124,11 +124,19 @@ jobs:
     - name: hal_compile uspace PoKeys_Async
       run: |
         echo "halcompile uspace pokeys_async..."
+        # Clean up old artifacts
+        find . -name '*.o' -delete
+        find . -name '*.ver' -delete
+        find . -name '*.so' ! -name 'libPoKeysHal.so' -delete
         sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimantal/pokeys_async.c
       continue-on-error: true
 
-    - name: hal_compile RT PoKeys_Async
+    - name: hal_compile USpace PoKeys_Async
       run: |
+        # Clean up old artifacts
+        find . -name '*.o' -delete
+        find . -name '*.ver' -delete
+        find . -name '*.so' ! -name 'libPoKeysHal.so' -delete
         echo "halcompile uspace pokeys_async..."
         sudo halcompile --install --extra-link-args="-L/usr/lib -lPoKeysHal" experimantal/pokeys_async.c
       continue-on-error: true
@@ -136,6 +144,10 @@ jobs:
     - name: hal_compile RT PoKeys_Async
       run: |
         echo "halcompile RT pokeys_async..."
+        # Clean up old artifacts
+        find . -name '*.o' -delete
+        find . -name '*.ver' -delete
+        find . -name '*.so' ! -name 'libPoKeysHal.so' -delete
         dir
         # Extract just the SOURCES block and exclude non-source lines
         FILES=$(sed -n '/^SOURCES\s*=/,/^[^ \t\\]/p' Makefile.noqmake | grep -vE '(^SOURCES|^[[:space:]]*OBJECTS)' | tr -d '\\' | tr '\n' ' ')
@@ -170,6 +182,13 @@ jobs:
         exit
         EOF
       continue-on-error: true 
+
+    - name: Clean build artifakts
+      run: |
+        make clean || true
+        rm -rf build/
+        find . -name '*.o' -delete
+        find . -name '*.so' -delete
 
     - name: Sync repository
       run: |
