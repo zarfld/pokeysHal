@@ -450,6 +450,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
 
 // Flags:
 // bits 7-1: deviceType specifier (2 - PoKeys56, 3 - PoKeys58, 4 - PoKeys16)
+#ifndef RTAPI
 sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flags)
 {
     int32_t numDevices = 0;
@@ -594,7 +595,12 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
     #endif
 	return NULL;
 }
-
+#else
+sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flags)
+{
+    return NULL;
+}
+#endif
 // Flags:
 // bit 0: use UDP
 sPoKeysDevice* PK_ConnectToPoKeysDevice_Ethernet(uint32_t serialNumber, uint32_t checkForNetworkDevicesAndTimeout, uint32_t flags)
