@@ -133,6 +133,21 @@ jobs:
         sudo halcompile --install --extra-link-args="-L/usr/lib -lPoKeysHal" experimantal/pokeys_async.c
       continue-on-error: true
 
+    - name: hal_compile RT PoKeys_Async
+      run: |
+        echo "halcompile RT pokeys_async..."
+
+        # Extract SOURCES list from Makefile.noqmake and flatten to one line
+        FILES=$(sed -n '/^SOURCES\s*=/,/^[^ \t]/p' Makefile.noqmake | grep -v '^SOURCES' | tr -d '\\' | tr '\n' ' ')
+
+        # Echo the list of source files
+        echo "Using source files:"
+        echo "$FILES"
+
+        # Compile using halcompile with all sources
+        sudo halcompile --install experimantal/pokeys_async.c $FILES
+      continue-on-error: true
+
     - name: run uspace PoKeys_Async
       run: |
         echo "run uspace pokeys_async..."
