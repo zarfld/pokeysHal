@@ -34,6 +34,7 @@ int32_t PKI_CheckInterface(struct hid_device_info * devInfo)
     return 0;
 }
 
+#ifndef RTAPI
 // Connection specific commands
 int32_t PK_EnumerateUSBDevices()
 {
@@ -58,9 +59,9 @@ int32_t PK_EnumerateUSBDevices()
 
         cur_dev = cur_dev->next;
     }
-    #ifndef RTAPI
+    
     hid_free_enumeration(devs);
-    #endif
+    
     devs = hid_enumerate(0x1DC3, 0x1002);
     cur_dev = devs;
 
@@ -75,16 +76,21 @@ int32_t PK_EnumerateUSBDevices()
         if (cur_dev->interface_number == -1) numDevices++;
         cur_dev = cur_dev->next;
     }
-    #ifndef RTAPI
+
     hid_free_enumeration(devs);
-    #endif
+
 
 #ifdef POKEYSLIB_USE_LIBUSB
 	numDevices += PK_EnumerateFastUSBDevices();
 #endif
     return numDevices;
 }
-
+#else
+int32_t PK_EnumerateUSBDevices()
+{
+    return PK_OK;
+}
+#endif
 int32_t PK_GetCurrentDeviceConnectionType(sPoKeysDevice* device)
 {
 	return device->connectionType;
