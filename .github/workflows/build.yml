@@ -128,7 +128,7 @@ jobs:
         find . -name '*.o' -delete
         find . -name '*.ver' -delete
         find . -name '*.so' ! -name 'libPoKeysHal.so' -delete
-        sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimantal/pokeys_async.c
+        sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimental/pokeys_async.c
       continue-on-error: true
 
     - name: Verify libPoKeysHal.a location
