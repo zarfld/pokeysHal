@@ -1,6 +1,10 @@
 #include "PoKeysLibAsync.h"
 #include <string.h>
+#ifndef RTAPI
 #include <time.h>
+#else
+#include "rtapi.h"
+#endif
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -33,9 +37,14 @@ async_transaction_t* transaction_alloc(void)
 
 uint64_t get_current_time_us(void)
 {
+    #ifndef RTAPI
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    return ((uint64_t)tv.tv_sec * 1000000ULL) + tv.tv_usec;
+     return ((uint64_t)tv.tv_sec * 1000000ULL) + tv.tv_usec;
+    #else
+    return rtapi_get_time() / 1000;  // convert ns → µs
+   
+   #endif
 }
 
 static uint8_t current_request_id = 0;
