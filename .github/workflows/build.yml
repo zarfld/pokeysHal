@@ -140,8 +140,9 @@ jobs:
       run: |
         echo "halcompile RT pokeys_async..."
         nm -g libPoKeysHal.a | grep PK_RTCGetAsync
-
-        sudo halcompile --install --extra-link-args="-Wl,--whole-archive -L.. -lPoKeysHal -Wl,--no-whole-archive" experimantal/pokeys_async.c
+        cp libPoKeysHal.a /usr/lib/linuxcnc/modules/
+        sudo halcompile --install --extra-link-args="-Wl,--whole-archive -L. -lPoKeysHal -Wl,--no-whole-archive" experimantal/pokeys_async.c
+        nm /usr/lib/linuxcnc/modules/pokeys_async.so | grep PK_RTCGetAsync
       continue-on-error: true
 
     - name: run uspace PoKeys_Async
