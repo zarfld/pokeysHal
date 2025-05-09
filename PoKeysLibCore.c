@@ -826,8 +826,9 @@ int32_t SendRequest(sPoKeysDevice* device)
         // Request receiving loop
         while (waits++ < 50)
         {
+            #ifndef RTAPI
             result = hid_read(devHandle, device->response, 65);
-
+            #endif
             // Error is not an option
             if (result < 0)
             {
