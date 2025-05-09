@@ -159,11 +159,13 @@ jobs:
 
         OBJS="$(find . -name '*.o' | grep -v pokeys_async.o | tr '\n' ' ')"
         echo "OBJS: $OBJS"
-        sudo halcompile \
-          --install \
-          --extra-compile-args="-I." \
-          --extra-link-args="-l $OBJS" \
-          pokeys_async.c
+        gcc -fPIC -DRTAPI -DULAPI \
+          -I/usr/include/linuxcnc \
+          -o pokeys_async.so -shared pokeys_async.c \
+          -Wl,--whole-archive libPoKeysHal.a -Wl,--no-whole-archive \
+          -lusb-1.0 -lpthread -llinuxcnchal \
+          -Wl,-rpath,/usr/lib/linuxcnc \
+        sudo cp pokeys_async.so /usr/lib/linuxcnc/modules/
         # sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimental/pokeys_async.c  
       continue-on-error: true
 
