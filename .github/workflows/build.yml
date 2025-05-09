@@ -145,14 +145,14 @@ jobs:
       run: |
         make -f Makefile.noqmake clean
         make -f Makefile.noqmake static
+        dir
     
     - name: hal_compile RT PoKeys_Async
       run: |
         echo "halcompile RT pokeys_async..."
         sudo halcompile --install --extra-link-args="-L. -lPoKeysHal" experimantal/pokeys_async.c
+        dir
 
-        # Compile using halcompile with all sources
-        sudo halcompile --install experimantal/pokeys_async.c $FILES
       continue-on-error: true
 
     - name: run uspace PoKeys_Async
