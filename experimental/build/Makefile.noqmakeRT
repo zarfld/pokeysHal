@@ -1,8 +1,8 @@
 CC = gcc
 AR = ar
 
-CFLAGS=-fPIC -DULAPI -I/usr/include/linuxcnc
-LDFLAGS=-lusb-1.0 -lpthread
+CFLAGS=-fPIC -RTAPI -I/usr/include/linuxcnc
+LDFLAGS=-lpthread
 SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-libusb.c PoKeysLibFastUSB.c \
         PoKeysLibDeviceData.c \
         PoKeysLibIO.c PoKeysLibEncoders.c PoKeysLibMatrixLED.c PoKeysLibMatrixKB.c \
@@ -24,11 +24,9 @@ install_userspace: all
 	cp libPoKeysHal.so /usr/lib
 	cp PoKeysLibHal.h /usr/include
 
-install_rt: static
+install: static
 	cp libPoKeysHal.a /usr/lib
 	cp PoKeysLibHal.h /usr/include
-
-install: install_userspace install_rt
 
 all: $(SOURCES) libPoKeysHal.so
 
