@@ -137,8 +137,8 @@ jobs:
       run: |
         echo "halcompile RT pokeys_async..."
 
-        # Extract SOURCES list from Makefile.noqmake and flatten to one line
-        FILES=$(sed -n '/^SOURCES\s*=/,/^[^ \t]/p' Makefile.noqmake | grep -v '^SOURCES' | tr -d '\\' | tr '\n' ' ')
+        # Extract just the SOURCES block and exclude non-source lines
+        FILES=$(sed -n '/^SOURCES\s*=/,/^[^ \t\\]/p' Makefile.noqmake | grep -vE '(^SOURCES|^[[:space:]]*OBJECTS)' | tr -d '\\' | tr '\n' ' ')
 
         # Echo the list of source files
         echo "Using source files:"
