@@ -138,19 +138,24 @@ jobs:
 
     - name: compile  RT PoKeys_Async
       run: |
+        set -euo pipefail
         echo "compile RT pokeys_async..."
         #nm -g libPoKeysHal.a | grep PK_RTCGetAsync
-        cd experimental/
-        make -f Submakefile.rt all
+
         # 1. Create clean build folder
-        #rm -rf experimental/build
-        #mkdir -p experimental/build
+        rm -rf experimental/build
+        mkdir -p experimental/build
 
         # 2. Copy relevant files
-        #cp Makefile.noqmakeRT experimental/build/
-        #cp *.h experimental/build/
-        #cp *.c experimental/build/
-        #cp experimental/pokeys_async.c experimental/build/
+        cp Makefile.noqmakeRT experimental/build/
+        cp *.h experimental/build/
+        cp *.c experimental/build/
+        cp experimental/pokeys_async.c experimental/build/
+        cp experimental/Submakefile.rt experimental/build/
+
+        # 3. Run halcompile from inside the build folder
+        cd experimental/build/
+        make -f Submakefile.rt all
 
         # 3. Run halcompile from inside the build folder
         #cd experimental/build
