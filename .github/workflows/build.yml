@@ -131,29 +131,12 @@ jobs:
         sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimantal/pokeys_async.c
       continue-on-error: true
 
-    - name: hal_compile USpace PoKeys_Async
-      run: |
-        # Clean up old artifacts
-        find . -name '*.o' -delete
-        find . -name '*.ver' -delete
-        find . -name '*.so' ! -name 'libPoKeysHal.so' -delete
-        echo "halcompile uspace pokeys_async..."
-        sudo halcompile --install --extra-link-args="-L/usr/lib -lPoKeysHal" experimantal/pokeys_async.c
-      continue-on-error: true
-
     - name: hal_compile RT PoKeys_Async
       run: |
         echo "halcompile RT pokeys_async..."
         sudo halcompile --install --extra-link-args="-L. -lPoKeysHal" experimantal/pokeys_async.c
         dir
       continue-on-error: true
-
-
-    - name: hal_compile RT PoKeys_Async
-      run: |
-        echo "halcompile RT pokeys_async..."
-        sudo halcompile --install --extra-link-args="-L. -libPoKeysHal" experimantal/pokeys_async.c
-        dir
 
     - name: run uspace PoKeys_Async
       run: |
