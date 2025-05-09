@@ -163,7 +163,7 @@ jobs:
           --extra-cflags="-I." \
           --extra-ldflags="$OBJS" \
           pokeys_async.c
-        sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimental/pokeys_async.c  
+        # sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimental/pokeys_async.c  
       continue-on-error: true
 
     - name: run uspace PoKeys_Async
