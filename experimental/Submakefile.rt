@@ -5,7 +5,7 @@ include /usr/share/linuxcnc/Makefile.modinc
 COMPONENTS = pokeys_async
 
 # Compiler and linker flags for realtime
-EXTRA_COMPILE_ARGS = -DRTAPI -I$(CURDIR)
+EXTRA_COMPILE_ARGS = -DRTAPI -I$(CURDIR) -I/usr/include/linuxcnc
 EXTRA_LINK_ARGS = -Wl,--whole-archive -Wl,--no-whole-archive -llinuxcnchal
 
 # All object files from your library
