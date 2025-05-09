@@ -530,7 +530,9 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice_USB(uint32_t serialNumber, uint32_t flag
             {
                 // Old, PoKeys55 device - we must to connect and read the serial number...
                 tmpDevice = (sPoKeysDevice*)hal_malloc(sizeof(sPoKeysDevice));
+                #ifndef RTAPI
                 tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
+                #endif
                 tmpDevice->devHandle2 = 0;
 
                 if (tmpDevice->devHandle != NULL)
