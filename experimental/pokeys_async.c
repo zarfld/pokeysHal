@@ -560,10 +560,10 @@ void user_mainloop(void)
 #ifdef RTAPI
 FUNCTION(_) {
     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d\n", __FILE__, __FUNCTION__,period);
-            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
-            PK_TimeoutAndRetryCheck(__comp_inst->dev, 6000); // checks for timeout and retry
+  //          PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
+  //          PK_TimeoutAndRetryCheck(__comp_inst->dev, 6000); // checks for timeout and retry
 
-            if (PK_RTCGetAsync(__comp_inst->dev)==0){
+   /*         if (PK_RTCGetAsync(__comp_inst->dev)==0){
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync OK\n", __FILE__, __FUNCTION__);
                  
                 }
@@ -573,7 +573,7 @@ FUNCTION(_) {
                 }
                 else{
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet FAILED\n", __FILE__, __FUNCTION__);
-                }
+                } */
 }
 #endif
 
