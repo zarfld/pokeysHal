@@ -188,20 +188,12 @@ jobs:
       run: |
         echo "run uspace pokeys_async..."
         halrun <<EOF
-        loadrt threads name1=test-thread period1=10000000
         loadusr -W pokeys_async
         show pin
         show funct
-        show thread
-        addf _ test-thread
-        addf pokeys-async.0 test-thread
-        addf pokeys_async.0 test-thread
         start
         show pin
         show params
-        show funct
-        show function
-        show thread
         exit
         EOF
       continue-on-error: true  
@@ -210,7 +202,13 @@ jobs:
       run: |
         echo "run rt pokeys_async..."
         halrun <<EOF
+        loadrt threads name1=test-thread period1=10000000
         loadrt pokeys_async
+        show funct
+        show thread
+        show pin
+        addf pokeys-async.0 test-thread
+        addf pokeys_async.0 test-thread
         start
         show pin
         exit
