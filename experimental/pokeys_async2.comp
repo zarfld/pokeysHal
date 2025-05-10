@@ -1,0 +1,49 @@
+component pokeys_async2 "PoKeys IO driver, by Mit Zot";
+
+pin out bit in-# [55];
+pin out unsigned ain-# [3];
+pin out bit err;
+pin in unsigned devSerial;
+pin out bit alive;
+
+license "GPL";
+
+option extra_link_args "-lPoKeysHal";
+
+;;
+
+#include <unistd.h>   /* UNIX standard function definitions */
+#include "PoKeysLibHal.h"
+
+sPoKeysDevice * dev=0;
+int i=0;
+
+void user_mainloop(void) 
+{ 
+   
+    while(0xb){
+       FOR_ALL_INSTS() {
+
+	 while(dev == NULL)dev = PK_ConnectToDeviceWSerial(devSerial, 2000);  //waits for usb device
+	
+	
+	 alive=1; 
+	 if ((PK_DigitalIOGet(dev) == PK_OK) && (PK_AnalogIOGet(dev) == PK_OK)){  //gets IO data and checks return value 
+		err=0;
+		for(i=0;i<54;i++)in(i)=!dev->Pins[i].DigitalValueGet;           //just transfers values
+		for(i=0;i<3;i++)ain(i)=dev->Pins[i+44].AnalogValue;
+	 }
+         else{             		  //on connection error
+		PK_DisconnectDevice(dev);
+		dev=NULL;  		  //tries to reconnect
+		err=1;
+		for(i=0;i<54;i++)in(i)=0;
+		for(i=0;i<3;i++)ain(i)=0;
+	 }
+	 alive=0;
+	usleep(40000); 
+        }
+    }
+
+    exit(0);
+}

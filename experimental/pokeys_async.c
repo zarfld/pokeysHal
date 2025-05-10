@@ -578,4 +578,6 @@ EXTRA_SETUP() {
     return 0;
 }
 
+#ifdef RTAPI
 hal_export_funct("pokeys_async.funct", FUNCTION, inst, 0, 0, comp_id);
+#endif
