@@ -189,9 +189,11 @@ jobs:
         echo "run uspace pokeys_async..."
         halrun <<EOF
         loadusr -W pokeys_async
+        addf _ servo-thread
         start
         show pin
         show params
+        show function
         exit
         EOF
       continue-on-error: true  
