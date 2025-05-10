@@ -517,7 +517,6 @@ void user_mainloop(void)
     #endif
     exit(0);
 }
-static int __comp_get_data_size(void) { return 0; }
 
 #ifdef RTAPI
 FUNCTION(_) {
@@ -537,6 +536,10 @@ FUNCTION(_) {
                 }
 }
 #endif
+
+static int __comp_get_data_size(void) { return 0; }
+
+
 
 EXTRA_SETUP() {
     int wait_ms = 5000;
@@ -579,5 +582,5 @@ EXTRA_SETUP() {
 }
 
 #ifdef RTAPI
-hal_export_funct("pokeys_async.funct", FUNCTION, inst, 0, 0, comp_id);
+//hal_export_funct("pokeys_async.funct", FUNCTION, inst, 0, 0, comp_id);
 #endif
