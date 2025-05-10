@@ -193,6 +193,8 @@ jobs:
         show funct
         show thread
         addf _ test-thread
+        addf pokeys-async.0 test-thread
+        addf pokeys_async.0 test-thread
         start
         show pin
         show params
