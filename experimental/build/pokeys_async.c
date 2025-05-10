@@ -20,6 +20,7 @@ MODULE_INFO(linuxcnc, "pin:ain-#:u32:3:out::None:None");
 MODULE_INFO(linuxcnc, "pin:err:bit:0:out::None:None");
 MODULE_INFO(linuxcnc, "pin:devSerial:u32:0:in::None:None");
 MODULE_INFO(linuxcnc, "pin:alive:bit:0:out::None:None");
+MODULE_INFO(linuxcnc, "funct:_:1:");
 MODULE_INFO(linuxcnc, "license:GPL");
 MODULE_LICENSE("GPL");
 #endif // MODULE_INFO
@@ -41,6 +42,7 @@ struct __comp_state *__comp_first_inst=0, *__comp_last_inst=0;
 static int extra_setup(struct __comp_state *__comp_inst, char *prefix, long extra_arg);
 uint32_t device_id = 0;
 
+static void _(struct __comp_state *__comp_inst, long period);
 static int __comp_get_data_size(void);
 #undef TRUE
 #define TRUE (1)
@@ -52,6 +54,7 @@ static int __comp_get_data_size(void);
 #define false (0)
 
 static int export(char *prefix, long extra_arg) {
+    char buf[HAL_NAME_LEN + 1];
     int r = 0;
     int j = 0;
     int sz = sizeof(struct __comp_state) + __comp_get_data_size();
@@ -97,7 +100,13 @@ static int export(char *prefix, long extra_arg) {
     return 0;
 }
 static int default_count=1, count=0;
+#ifdef RTAPI
+RTAPI_MP_INT(count, "number of pokeys_async");
+char *names = ""; // comma separated names
+RTAPI_MP_STRING(names, "names of pokeys_async");
+#else
 char *names[16] = {0,};
+#endif
 int rtapi_app_main(void) {
     int r = 0;
     int i;
@@ -116,10 +125,29 @@ int rtapi_app_main(void) {
             if(r != 0) break;
        }
     } else {
+#ifdef RTAPI
+        size_t i, j;
+        int idx;
+        char buf[HAL_NAME_LEN+1];
+        const size_t length = strlen(names);
+        for (i = j = idx = 0; i <= length; i++) {
+            const char c = buf[j] = names[i];
+            if ((c == ',') || (c == '\0')) {
+                buf[j] = '\0';
+                r = export(buf, idx);
+                if(r != 0) {break;}
+                idx++;
+                j = 0;
+            } else {
+                if (++j == (sizeof(buf) / sizeof(buf[0]))) {
+                    buf[j - 1] = '\0';
+                    rtapi_print_msg(RTAPI_MSG_ERR,"names: \"%s\" too long\n", buf);
+#else
         int max_names = sizeof(names)/sizeof(names[0]);
         for(i=0; (i < max_names) && names[i]; i++) {
             if (strlen(names[i]) < 1) {
                 rtapi_print_msg(RTAPI_MSG_ERR, "names[%d] is invalid (empty string)\n", i);
+#endif
                 r = -EINVAL;
                 break;
             }
