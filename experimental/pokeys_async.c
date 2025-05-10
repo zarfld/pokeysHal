@@ -174,6 +174,7 @@ int rtapi_app_main(void) {
 void rtapi_app_exit(void) {
     hal_exit(comp_id);
 }
+#ifndef RTAPI
 static void user_mainloop(void);
 
 int __comp_parse_count(int *argc, char **argv) {
@@ -236,6 +237,7 @@ int main(int argc_, char **argv_) {
     rtapi_app_exit();
     return 0;
 }
+#endif
 
 #undef FUNCTION
 #define FUNCTION(name) static void name(struct __comp_state *__comp_inst, long period)
