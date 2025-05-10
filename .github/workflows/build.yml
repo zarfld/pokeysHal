@@ -207,9 +207,17 @@ jobs:
         show funct
         show thread
         show pin
+        show params
         addf pokeys-async.0 test-thread
-        addf pokeys_async.0 test-thread
         start
+        show funct
+        show thread
+        show pin
+        show params        
+        show funct
+        show thread
+        show pin
+        show params
         show pin
         exit
         EOF
