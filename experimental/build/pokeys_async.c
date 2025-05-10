@@ -88,9 +88,9 @@ static int export(char *prefix, long extra_arg) {
     r = hal_pin_bit_newf(HAL_OUT, &(inst->alive), comp_id,
         "%s.alive", prefix);
     if(r != 0) return r;
-
-
-
+    rtapi_snprintf(buf, sizeof(buf), "%s", prefix);
+    r = hal_export_funct(buf, (void(*)(void *inst, long))_, inst, 1, 0, comp_id);
+    if(r != 0) return r;
     if(__comp_last_inst) __comp_last_inst->_next = inst;
     __comp_last_inst = inst;
     if(!__comp_first_inst) __comp_first_inst = inst;
