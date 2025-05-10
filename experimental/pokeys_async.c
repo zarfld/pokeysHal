@@ -91,9 +91,11 @@ static int export(char *prefix, long extra_arg) {
     r = hal_pin_bit_newf(HAL_OUT, &(inst->alive), comp_id,
         "%s.alive", prefix);
     if(r != 0) return r;
+#ifdef RTAPI
     rtapi_snprintf(buf, sizeof(buf), "%s", prefix);
     r = hal_export_funct(buf, (void(*)(void *inst, long))_, inst, 1, 0, comp_id);
     if(r != 0) return r;
+#endif
     if(__comp_last_inst) __comp_last_inst->_next = inst;
     __comp_last_inst = inst;
     if(!__comp_first_inst) __comp_first_inst = inst;
@@ -142,17 +144,23 @@ int rtapi_app_main(void) {
                 if (++j == (sizeof(buf) / sizeof(buf[0]))) {
                     buf[j - 1] = '\0';
                     rtapi_print_msg(RTAPI_MSG_ERR,"names: \"%s\" too long\n", buf);
+                    r = -EINVAL;
+                    break;
+                }
+            }
 #else
         int max_names = sizeof(names)/sizeof(names[0]);
         for(i=0; (i < max_names) && names[i]; i++) {
             if (strlen(names[i]) < 1) {
                 rtapi_print_msg(RTAPI_MSG_ERR, "names[%d] is invalid (empty string)\n", i);
-#endif
+
                 r = -EINVAL;
                 break;
             }
             r = export(names[i], i);
             if(r != 0) break;
+#endif
+
        }
     }
     if(r) {
