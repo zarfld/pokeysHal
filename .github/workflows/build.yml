@@ -202,7 +202,7 @@ jobs:
       run: |
         echo "run rt pokeys_async..."
         halrun <<EOF
-        loadrt threads name1=test-thread period1=10000000
+        loadrt threads name1=test-thread period1=1000000
         loadrt pokeys_async
         show funct
         show thread
