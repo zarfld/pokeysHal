@@ -72,25 +72,8 @@ static int export(char *prefix, long extra_arg) {
         return r;
     };
 
-    for(j=0; j < (55); j++) {
-        r = hal_pin_bit_newf(HAL_OUT, &(inst->in[j]), comp_id,
-            "%s.in-%01d", prefix, j);
-        if(r != 0) return r;
-    }
-    for(j=0; j < (3); j++) {
-        r = hal_pin_u32_newf(HAL_OUT, &(inst->ain[j]), comp_id,
-            "%s.ain-%01d", prefix, j);
-        if(r != 0) return r;
-    }
-    r = hal_pin_bit_newf(HAL_OUT, &(inst->err), comp_id,
-        "%s.err", prefix);
-    if(r != 0) return r;
-    r = hal_pin_u32_newf(HAL_IN, &(inst->devSerial), comp_id,
-        "%s.devSerial", prefix);
-    if(r != 0) return r;
-    r = hal_pin_bit_newf(HAL_OUT, &(inst->alive), comp_id,
-        "%s.alive", prefix);
-    if(r != 0) return r;
+
+
 #ifdef RTAPI
     rtapi_snprintf(buf, sizeof(buf), "%s", prefix);
     r = hal_export_funct(buf, (void(*)(void *inst, long))_, inst, 1, 0, comp_id);
