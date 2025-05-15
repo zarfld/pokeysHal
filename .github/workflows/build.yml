@@ -213,7 +213,8 @@ jobs:
         show funct
         show thread
         show pin
-        show params        
+        show params 
+        start       
         show funct
         show thread
         show pin
