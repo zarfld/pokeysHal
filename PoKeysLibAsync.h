@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 
-#define MAX_TRANSACTIONS 64 // Maximum number of async transactions
+
 
 typedef enum {
     TRANSACTION_PENDING = 0,

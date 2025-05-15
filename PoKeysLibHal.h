@@ -54,6 +54,7 @@
 #endif
 #include <pthread.h>
 #include "hal.h" // Make sure to include LinuxCNC's hal.h first
+#define MAX_TRANSACTIONS 256 // Maximum number of async transactions
 
 //#define USE_ALIGN_TEST
 
