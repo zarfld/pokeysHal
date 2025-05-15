@@ -927,38 +927,7 @@ typedef enum {
 
 
 
-typedef struct {
-    uint8_t request_buffer[64];
-    uint8_t response_buffer[64];
-    uint8_t request_id;
-    pokeys_command_t command_sent;
 
-    uint64_t timestamp_sent;
-    uint8_t retries_left;
-
-    transaction_status_t status;
-    bool response_ready;
-    // Optional parser
-    int (*response_parser)(sPoKeysDevice *dev, const uint8_t *response);
-
-    void *target_ptr;
-    size_t target_size;
-} async_transaction_t;
-
-typedef struct {
-    uint8_t request_id;
-    pokeys_command_t command_sent;
-    uint64_t timestamp_sent;
-    int retries_left;
-    bool response_ready;
-
-    void *target_ptr;
-    size_t target_size;
-    pokeys_response_parser_t response_parser; // << NEW! Optional per-request parser function
-
-    uint8_t request_buffer[64];
-    uint8_t response_buffer[64];
-} mailbox_entry_t;
 
 typedef struct {
     async_transaction_t transactions[MAX_TRANSACTIONS];
@@ -1048,6 +1017,39 @@ typedef struct
 } sPoKeysDevice;
 
 typedef int (*pokeys_response_parser_t)(sPoKeysDevice *dev, const uint8_t *response);
+
+typedef struct {
+    uint8_t request_buffer[64];
+    uint8_t response_buffer[64];
+    uint8_t request_id;
+    pokeys_command_t command_sent;
+
+    uint64_t timestamp_sent;
+    uint8_t retries_left;
+
+    transaction_status_t status;
+    bool response_ready;
+    // Optional parser
+    int (*response_parser)(sPoKeysDevice *dev, const uint8_t *response);
+
+    void *target_ptr;
+    size_t target_size;
+} async_transaction_t;
+
+typedef struct {
+    uint8_t request_id;
+    pokeys_command_t command_sent;
+    uint64_t timestamp_sent;
+    int retries_left;
+    bool response_ready;
+
+    void *target_ptr;
+    size_t target_size;
+    pokeys_response_parser_t response_parser; // << NEW! Optional per-request parser function
+
+    uint8_t request_buffer[64];
+    uint8_t response_buffer[64];
+} mailbox_entry_t;
 
 // Enumerate USB devices. Returns number of USB devices detected.
 #ifndef RTAPI
