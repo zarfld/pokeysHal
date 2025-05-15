@@ -53,6 +53,7 @@
 #define ULAPI
 #endif
 #include <pthread.h>
+#include PoKeysLibAsync.h
 #include "hal.h" // Make sure to include LinuxCNC's hal.h first
 #define MAX_TRANSACTIONS 256 // Maximum number of async transactions
 
