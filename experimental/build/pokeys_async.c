@@ -548,8 +548,8 @@ void user_mainloop(void)
 
 #ifdef RTAPI
 FUNCTION(_) {
-   // rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d\n", __FILE__, __FUNCTION__,period);
-   rtapi_print("pokeys_async function tick\n");
+   rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d\n", __FILE__, __FUNCTION__,period);
+
             PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
             PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000); // checks for timeout and retry
 
