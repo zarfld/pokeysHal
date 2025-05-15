@@ -72,7 +72,11 @@ static int export(char *prefix, long extra_arg) {
         return r;
     };
 
-
+    r=export_encoder_pins(prefix, comp_id, inst->dev); // Export encoder pins
+    if(r != 0){
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_encoder_pins failed %d \n", __FILE__, __FUNCTION__, prefix, r);
+        return r;
+    };
 
 #ifdef RTAPI
     rtapi_snprintf(buf, sizeof(buf), "%s", prefix);
