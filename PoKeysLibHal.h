@@ -925,7 +925,7 @@ typedef enum {
     // usw...
 } pokeys_command_t;
 
-typedef int (*pokeys_response_parser_t)(sPoKeysDevice *dev, const uint8_t *response);
+
 
 typedef struct {
     uint8_t request_buffer[64];
@@ -1047,6 +1047,7 @@ typedef struct
  
 } sPoKeysDevice;
 
+typedef int (*pokeys_response_parser_t)(sPoKeysDevice *dev, const uint8_t *response);
 
 // Enumerate USB devices. Returns number of USB devices detected.
 #ifndef RTAPI
