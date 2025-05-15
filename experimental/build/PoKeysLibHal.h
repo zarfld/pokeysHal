@@ -1064,6 +1064,7 @@ POKEYSDECL int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device);
 POKEYSDECL int PK_EncoderConfigurationSetAsync(sPoKeysDevice* device);
 POKEYSDECL int PK_EncoderValuesGetAsync(sPoKeysDevice* device);
 POKEYSDECL int PK_EncoderValuesSetAsync(sPoKeysDevice* device);
+POKEYSDECL int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 
 // Set digital outputs values
 POKEYSDECL int32_t PK_DigitalIOSet(sPoKeysDevice* device);
