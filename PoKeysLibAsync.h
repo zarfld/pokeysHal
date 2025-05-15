@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-
+#include <pthread.h>
 
 #define MAX_TRANSACTIONS 64 // Maximum number of async transactions
 
@@ -67,6 +67,11 @@ typedef struct {
     uint8_t request_buffer[64];
     uint8_t response_buffer[64];
 } mailbox_entry_t;
+
+typedef struct {
+    async_transaction_t transactions[MAX_TRANSACTIONS];
+    pthread_mutex_t mutex;
+} async_state_t;
 
 // Function declarations
 int CreateRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,

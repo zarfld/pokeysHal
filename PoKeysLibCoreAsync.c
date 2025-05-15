@@ -148,6 +148,13 @@ void PK_InitializeNewDeviceAsync(void *device_ptr)
 
     device->multiPartBuffer = hal_malloc(512);
     if ((intptr_t)device->multiPartBuffer <= 0) device->multiPartBuffer = 0;
+
+    // Initialize async_state_t
+    device->async_state = (async_state_t*)hal_malloc(sizeof(async_state_t));
+    if (device->async_state) {
+        memset(device->async_state, 0, sizeof(async_state_t));
+        pthread_mutex_init(&device->async_state->mutex, NULL);
+    }
 }
 
 void PK_CleanDeviceAsync(void *device_ptr)
@@ -179,6 +186,13 @@ void PK_CleanDeviceAsync(void *device_ptr)
 
     if (device->netDeviceData) {
         device->netDeviceData = NULL;
+    }
+
+    // Clean up async_state_t
+    if (device->async_state) {
+        pthread_mutex_destroy(&device->async_state->mutex);
+        hal_free(device->async_state);
+        device->async_state = NULL;
     }
 }
 
@@ -236,6 +250,13 @@ void PK_CloneDeviceStructureAsync(const sPoKeysDevice *original, sPoKeysDevice *
     memcpy(destination->PoExtBusData, original->PoExtBusData, sizeof(unsigned char) * original->info.iPoExtBus);
     destination->connectionType = original->connectionType;
     destination->requestID = original->requestID;
+
+    // Clone async_state_t
+    destination->async_state = (async_state_t*)hal_malloc(sizeof(async_state_t));
+    if (destination->async_state) {
+        memcpy(destination->async_state, original->async_state, sizeof(async_state_t));
+        pthread_mutex_init(&destination->async_state->mutex, NULL);
+    }
 }
 
 sPoKeysDevice* PK_ConnectToDeviceAsync(uint32_t deviceIndex)

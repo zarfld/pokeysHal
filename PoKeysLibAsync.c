@@ -12,26 +12,28 @@
 
 extern uint64_t get_current_time_us(void); // Your system's high-res timer
 extern uint8_t next_request_id(void); // Request ID generator
-static async_transaction_t pk_transactions[MAX_TRANSACTIONS];
 
 /**
  * @brief Allocates a new free transaction.
  *
  * @return Pointer to an empty async_transaction_t, or NULL if none available.
  */
-async_transaction_t* transaction_alloc(void)
+async_transaction_t* transaction_alloc(async_state_t *async_state)
 {
+    pthread_mutex_lock(&async_state->mutex);
     for (int i = 0; i < MAX_TRANSACTIONS; i++) {
-        if (pk_transactions[i].status == TRANSACTION_COMPLETED ||
-            pk_transactions[i].status == TRANSACTION_TIMEOUT ||
-            pk_transactions[i].status == TRANSACTION_FAILED ||
-            pk_transactions[i].request_id == 0) {
+        if (async_state->transactions[i].status == TRANSACTION_COMPLETED ||
+            async_state->transactions[i].status == TRANSACTION_TIMEOUT ||
+            async_state->transactions[i].status == TRANSACTION_FAILED ||
+            async_state->transactions[i].request_id == 0) {
             // Reset transaction
-            memset(&pk_transactions[i], 0, sizeof(async_transaction_t));
-            pk_transactions[i].status = TRANSACTION_PENDING;
-            return &pk_transactions[i];
+            memset(&async_state->transactions[i], 0, sizeof(async_transaction_t));
+            async_state->transactions[i].status = TRANSACTION_PENDING;
+            pthread_mutex_unlock(&async_state->mutex);
+            return &async_state->transactions[i];
         }
     }
+    pthread_mutex_unlock(&async_state->mutex);
     return NULL; // No available slot
 }
 
@@ -63,20 +65,24 @@ uint8_t next_request_id(void)
  * @param request_id The Request ID to search for.
  * @return Pointer to matching async_transaction_t or NULL if not found.
  */
-async_transaction_t* transaction_find(uint8_t request_id)
+async_transaction_t* transaction_find(async_state_t *async_state, uint8_t request_id)
 {
+    pthread_mutex_lock(&async_state->mutex);
     for (int i = 0; i < MAX_TRANSACTIONS; i++) {
-        if (pk_transactions[i].request_id == request_id &&
-            pk_transactions[i].status == TRANSACTION_PENDING) {
-            return &pk_transactions[i];
+        if (async_state->transactions[i].request_id == request_id &&
+            async_state->transactions[i].status == TRANSACTION_PENDING) {
+            pthread_mutex_unlock(&async_state->mutex);
+            return &async_state->transactions[i];
         }
-        else if(pk_transactions[i].request_id == request_id){
+        else if(async_state->transactions[i].request_id == request_id){
             // Transaction found but not pending (e.g., completed, failed, or timed out)
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Transaction found but not pending (status: %d)\n",
-                __FILE__, __FUNCTION__, pk_transactions[i].status);
-            return &pk_transactions[i];
+                __FILE__, __FUNCTION__, async_state->transactions[i].status);
+            pthread_mutex_unlock(&async_state->mutex);
+            return &async_state->transactions[i];
         }
     }
+    pthread_mutex_unlock(&async_state->mutex);
     return NULL; // Not found
 }
 
@@ -96,7 +102,7 @@ int CreateRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,
     void *target_ptr, size_t target_size,
     int (*parser_func)(sPoKeysDevice *, const uint8_t *))
 {
-async_transaction_t *t = transaction_alloc();
+async_transaction_t *t = transaction_alloc(dev->async_state);
 if (!t)
 return -1; // No free slot available
 
@@ -162,7 +168,7 @@ return req_id;
     if (device == NULL)
         return -1; // Error: No device
 
-    async_transaction_t *t = transaction_alloc();
+    async_transaction_t *t = transaction_alloc(device->async_state);
     if (!t)
         return -2; // No free slot available
 
@@ -218,7 +224,7 @@ return req_id;
  */
 int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
 {
-    async_transaction_t *t = transaction_find(request_id);
+    async_transaction_t *t = transaction_find(dev->async_state, request_id);
     if (!t) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: No matching transaction found for request ID %d\n", __FILE__, __FUNCTION__, request_id);
         return -1; // No matching pending transaction found
@@ -271,7 +277,7 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
     uint8_t req_id = rx_buffer[6]; // Request ID echoed back
 
     // Find the corresponding async transaction
-    async_transaction_t *t = transaction_find(req_id);
+    async_transaction_t *t = transaction_find(dev->async_state, req_id);
     if (!t) {
         return -2; // No matching open request
     }
@@ -310,7 +316,7 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
     uint64_t now = get_current_time_us();
 
     for (int i = 0; i < MAX_TRANSACTIONS; i++) {
-        async_transaction_t *t = &pk_transactions[i];
+        async_transaction_t *t = &dev->async_state->transactions[i];
 
         if (t->status == TRANSACTION_PENDING) {
             if ((now - t->timestamp_sent) > timeout_us) {
@@ -336,4 +342,3 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
         }
     }
 }
-

@@ -977,6 +977,7 @@ typedef struct
  // extended for Async
  uint8_t rtc_response_buffer[64]; // in sPoKeysDevice
 
+ async_state_t* async_state; // Pointer to async_state_t structure
  
 } sPoKeysDevice;
 
