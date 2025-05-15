@@ -41,65 +41,132 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
         sPoKeysEncoder *enc = &device->Encoders[i];
 
         r = hal_pin_s32_newf(HAL_OUT, &(enc->encoderValue), comp_id, "%s.encoder.%d.count", prefix, i);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_pin_s32_newf failed for %s.encoder.%d.count \n", __FILE__, __FUNCTION__,prefix, i);
+            return r;
+        }
         r = hal_pin_float_newf(HAL_OUT, &(enc->position), comp_id, "%s.encoder.%d.position", prefix, i);
-        if (r != 0) return r;
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_pin_float_newf failed for %s.encoder.%d.position\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
         r = hal_pin_float_newf(HAL_OUT, &(enc->velocity), comp_id, "%s.encoder.%d.velocity", prefix, i);
-        if (r != 0) return r;
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_pin_float_newf failed for %s.encoder.%d.velocity\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
         r = hal_pin_bit_newf(HAL_IN, &(enc->reset), comp_id, "%s.encoder.%d.reset", prefix, i);
-        if (r != 0) return r;
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_pin_bit_newf failed for %s.encoder.%d.reset\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
+
         r = hal_pin_bit_newf(HAL_IN, &(enc->index_enable), comp_id, "%s.encoder.%d.index-enable", prefix, i);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_pin_bit_newf failed for %s.encoder.%d.index-enable\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
 
         // Parameters
         r = hal_param_float_newf(HAL_RW, &(enc->scale), comp_id, "%s.encoder.%d.scale", prefix, i);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_float_newf failed for %s.encoder.%d.scale\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
         r = hal_param_u32_newf(HAL_RW, &(enc->encoderOptions), comp_id, "%s.encoder.%d.encoderOptions", prefix, i);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_u32_newf failed for %s.encoder.%d.encoderOptions\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
         r = hal_param_bit_newf(HAL_RW, &(enc->enable), comp_id, "%s.encoder.%d.enable", prefix, i);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.%d.enable\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
         r = hal_param_bit_newf(HAL_RW, &(enc->x4_sampling), comp_id, "%s.encoder.%d.x4_sampling", prefix, i);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.%d.x4_sampling\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
         r = hal_param_bit_newf(HAL_RW, &(enc->x2_sampling), comp_id, "%s.encoder.%d.x2_sampling", prefix, i);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.%d.x2_sampling\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
 
         r = hal_param_u32_newf(HAL_RW, &(enc->channelApin), comp_id, "%s.encoder.%d.channelApin", prefix, i);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_u32_newf failed for %s.encoder.%d.channelApin\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
         r = hal_param_u32_newf(HAL_RW, &(enc->channelBpin), comp_id, "%s.encoder.%d.channelBpin", prefix, i);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_u32_newf failed for %s.encoder.%d.channelBpin\n", __FILE__, __FUNCTION__, prefix, i);
+            return r;
+        }
     }
 
     // Export FastEncoder and UltraFastEncoder options if supported
     if (device->info.iFastEncoders) {
         r = hal_param_u32_newf(HAL_RW, &(device->FastEncodersConfiguration), comp_id, "%s.encoder.fast.Configuration", prefix);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_u32_newf failed for %s.encoder.fast.Configuration\n", __FILE__, __FUNCTION__, prefix);
+            return r;
+        }
     
         r = hal_param_u32_newf(HAL_RW, &(device->FastEncodersOptions), comp_id, "%s.encoder.fast.Options", prefix);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_u32_newf failed for %s.encoder.fast.Options\n", __FILE__, __FUNCTION__, prefix);
+            return r;
+        }
     
         r = hal_param_bit_newf(HAL_OUT, &(device->FastEncoder_enable), comp_id, "%s.encoder.fast.enable", prefix);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.fast.enable\n", __FILE__, __FUNCTION__, prefix);
+            return r;
+        }
     
         r = hal_param_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E1), comp_id, "%s.encoder.fast.invert_E1", prefix);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.fast.invert_E1\n", __FILE__, __FUNCTION__, prefix);
+            return r;
+        }
     
         r = hal_param_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E2), comp_id, "%s.encoder.fast.invert_E2", prefix);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.fast.invert_E2\n", __FILE__, __FUNCTION__, prefix);
+            return r;
+        }
     
         r = hal_param_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E3), comp_id, "%s.encoder.fast.invert_E3", prefix);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.fast.invert_E3\n", __FILE__, __FUNCTION__, prefix);
+            return r;
+        }
     
         r = hal_param_bit_newf(HAL_OUT, &(device->FastEncoder_disable_4x), comp_id, "%s.encoder.fast.disable_4x", prefix);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.fast.disable_4x\n", __FILE__, __FUNCTION__, prefix);
+            return r;
+        }
     }
 
     if (device->info.iUltraFastEncoders) {
         r = hal_param_u32_newf(HAL_RW, &(device->UltraFastEncoderConfiguration), comp_id, "%s.encoder.ultra.Configuration", prefix);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_u32_newf failed for %s.encoder.ultra.Configuration\n", __FILE__, __FUNCTION__, prefix);
+            return r;
+        }
         r = hal_param_u32_newf(HAL_RW, &(device->UltraFastEncoderOptions), comp_id, "%s.encoder.ultra.Options", prefix);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_u32_newf failed for %s.encoder.ultra.Options\n", __FILE__, __FUNCTION__, prefix);
+            return r;
+        }
         r = hal_param_u32_newf(HAL_RW, &(device->UltraFastEncoderFilter), comp_id, "%s.encoder.ultra.Filter", prefix);
-        if (r != 0) return r;
+        if (r != 0)  {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_u32_newf failed for %s.encoder.ultra.Filter\n", __FILE__, __FUNCTION__, prefix);
+            return r;
+        }
     }
 
     return 0;
