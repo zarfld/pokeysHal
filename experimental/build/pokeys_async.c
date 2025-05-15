@@ -508,7 +508,7 @@ void user_mainloop(void)
            // while(dev == NULL)dev = PK_ConnectToDeviceWSerial(devSerial, 2000);  //waits for usb device
             
 
-            alive=1; 
+          //  alive=1; 
             if(RTC_count>=RTC_Trig){
                 rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync\n", __FILE__, __FUNCTION__);
                 if (PK_RTCGetAsync(__comp_inst->dev)==0){
