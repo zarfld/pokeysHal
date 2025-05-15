@@ -120,31 +120,31 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
             return r;
         }
     
-        r = hal_param_bit_newf(HAL_OUT, &(device->FastEncoder_enable), comp_id, "%s.encoder.fast.enable", prefix);
+        r = hal_param_bit_newf(HAL_RW, &(device->FastEncoder_enable), comp_id, "%s.encoder.fast.enable", prefix);
         if (r != 0)  {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.fast.enable\n", __FILE__, __FUNCTION__, prefix);
             return r;
         }
     
-        r = hal_param_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E1), comp_id, "%s.encoder.fast.invert_E1", prefix);
+        r = hal_param_bit_newf(HAL_RW, &(device->FastEncoder_invert_E1), comp_id, "%s.encoder.fast.invert_E1", prefix);
         if (r != 0)  {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.fast.invert_E1\n", __FILE__, __FUNCTION__, prefix);
             return r;
         }
     
-        r = hal_param_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E2), comp_id, "%s.encoder.fast.invert_E2", prefix);
+        r = hal_param_bit_newf(HAL_RW, &(device->FastEncoder_invert_E2), comp_id, "%s.encoder.fast.invert_E2", prefix);
         if (r != 0)  {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.fast.invert_E2\n", __FILE__, __FUNCTION__, prefix);
             return r;
         }
     
-        r = hal_param_bit_newf(HAL_OUT, &(device->FastEncoder_invert_E3), comp_id, "%s.encoder.fast.invert_E3", prefix);
+        r = hal_param_bit_newf(HAL_RW, &(device->FastEncoder_invert_E3), comp_id, "%s.encoder.fast.invert_E3", prefix);
         if (r != 0)  {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.fast.invert_E3\n", __FILE__, __FUNCTION__, prefix);
             return r;
         }
     
-        r = hal_param_bit_newf(HAL_OUT, &(device->FastEncoder_disable_4x), comp_id, "%s.encoder.fast.disable_4x", prefix);
+        r = hal_param_bit_newf(HAL_RW, &(device->FastEncoder_disable_4x), comp_id, "%s.encoder.fast.disable_4x", prefix);
         if (r != 0)  {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: hal_param_bit_newf failed for %s.encoder.fast.disable_4x\n", __FILE__, __FUNCTION__, prefix);
             return r;
