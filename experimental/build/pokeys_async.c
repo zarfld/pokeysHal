@@ -527,6 +527,12 @@ void user_mainloop(void)
                 RTC_count++;
             }
 
+            if(PK_EncoderValuesGetAsync(__comp_inst->dev) == PK_OK) {
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync OK\n", __FILE__, __FUNCTION__);
+                } else {
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync FAILED\n", __FILE__, __FUNCTION__);
+                }
+
             PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
             PK_TimeoutAndRetryCheck(__comp_inst->dev, 6000); // checks for timeout and retry
 
@@ -551,13 +557,17 @@ FUNCTION(_) {
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync OK\n", __FILE__, __FUNCTION__);
                  
                 }
-                else if (PK_RTCGet(__comp_inst->dev)==PK_OK){
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet OK\n", __FILE__, __FUNCTION__);
-                
-                }
                 else{
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet FAILED\n", __FILE__, __FUNCTION__);
-                } 
+                }
+
+                if(PK_EncoderValuesGetAsync(__comp_inst->dev) == PK_OK) {
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync OK\n", __FILE__, __FUNCTION__);
+                } else {
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync FAILED\n", __FILE__, __FUNCTION__);
+                }
+            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
+            PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000); // checks for timeout and retry
 }
 #endif
 
