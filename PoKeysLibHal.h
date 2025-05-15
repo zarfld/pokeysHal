@@ -52,7 +52,7 @@
 #if !defined(RTAPI) && !defined(ULAPI)
 #define ULAPI
 #endif
-
+#include <pthread.h>
 #include "hal.h" // Make sure to include LinuxCNC's hal.h first
 
 //#define USE_ALIGN_TEST
@@ -898,6 +898,10 @@ typedef struct
  uint8_t bFailSafePWM[6];                                 // PWM outputs values
 } sPoKeysFailsafeSettings;
 
+typedef struct {
+    async_transaction_t transactions[MAX_TRANSACTIONS];
+    pthread_mutex_t mutex;
+} async_state_t;
 
 // Main PoKeys structure
 typedef struct
