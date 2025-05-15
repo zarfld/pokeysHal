@@ -219,6 +219,28 @@ jobs:
         show pin
         show params
         show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
+        show pin
         exit
         EOF
       continue-on-error: true 
