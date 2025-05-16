@@ -1,0 +1,310 @@
+#include "PoKeysLibHal.h"
+#include "PoKeysLibAsync.h"
+#include <cstdint>
+
+
+/**
+ * @brief Parser for pin function configuration response (CMD 0xC0, param1=0).
+ */
+int PK_ParsePinFunctionsResponse(sPoKeysDevice *dev, const uint8_t *resp) {
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
+        dev->Pins[i].PinFunction = resp[8 + i];
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Starts async pin function configuration request (CMD 0xC0, param1=0).
+ */
+int PK_StartPinFunctionsRequestAsync(sPoKeysDevice *dev) {
+    if (!dev) return PK_ERR_NOT_CONNECTED;
+    return CreateRequestAsync(dev, 0xC0, (const uint8_t[]){0}, 1,
+                               NULL, 0, PK_ParsePinFunctionsResponse);
+}
+
+/**
+ * @brief Parser for digital counter configuration response (CMD 0xC0, param1=1).
+ */
+int PK_PinCounterConfigurationParse(sPoKeysDevice *dev, const uint8_t *resp) {
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
+        if (PK_IsCounterAvailable(dev, (uint8_t)i)) {
+            dev->Pins[i].DigitalCounterAvailable = 1;
+            dev->Pins[i].CounterOptions = resp[8 + i];
+        } else {
+            dev->Pins[i].DigitalCounterAvailable = 0;
+        }
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Parser for pin key mapping type response (CMD 0xC1).
+ */
+int PK_PinKeyMappingTypeParse(sPoKeysDevice *dev, const uint8_t *resp) {
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
+        if (dev->Pins[i].PinFunction & PK_PinCap_digitalInput) {
+            dev->Pins[i].MappingType = resp[8 + i];
+        } else {
+            dev->Pins[i].MappingType = 0;
+        }
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Parser for pin key mapping codes response (CMD 0xC2).
+ */
+int PK_PinKeyMappingCodesParse(sPoKeysDevice *dev, const uint8_t *resp) {
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
+        if (dev->Pins[i].PinFunction & PK_PinCap_digitalInput) {
+            dev->Pins[i].KeyCodeMacroID = resp[8 + i];
+        } else {
+            dev->Pins[i].KeyCodeMacroID = 0;
+        }
+    }
+    return PK_OK;
+}
+
+
+/**
+ * @brief Parser for pin key mapping modifiers response (CMD 0xC3).
+ */
+int PK_PinKeyMappingModifiersParse(sPoKeysDevice *dev, const uint8_t *resp) {
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
+        if (dev->Pins[i].PinFunction & PK_PinCap_digitalInput) {
+            dev->Pins[i].KeyModifier = resp[8 + i];
+        } else {
+            dev->Pins[i].KeyModifier = 0;
+        }
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Parser for triggered key down macro ID mapping (CMD 0xD7, param1=11).
+ */
+int PK_PinTriggeredDownKeyCodeParse(sPoKeysDevice *dev, const uint8_t *resp) {
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
+        if (dev->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+            dev->Pins[i].downKeyCodeMacroID = resp[8 + i];
+        } else {
+            dev->Pins[i].downKeyCodeMacroID = 0;
+        }
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Parser for triggered key down modifiers (CMD 0xD7, param1=12).
+ */
+int PK_PinTriggeredDownKeyModifierParse(sPoKeysDevice *dev, const uint8_t *resp) {
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
+        if (dev->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+            dev->Pins[i].downKeyModifier = resp[8 + i];
+        } else {
+            dev->Pins[i].downKeyModifier = 0;
+        }
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Parser for triggered key up modifiers (CMD 0xD7, param1=14).
+ */
+int PK_PinTriggeredUpKeyModifierParse(sPoKeysDevice *dev, const uint8_t *resp) {
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
+        if (dev->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+            dev->Pins[i].upKeyModifier = resp[8 + i];
+        } else {
+            dev->Pins[i].upKeyModifier = 0;
+        }
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Parser for triggered key up macro IDs (CMD 0xD7, param1=13).
+ */
+int PK_PinTriggeredUpKeyCodeParse(sPoKeysDevice *dev, const uint8_t *resp) {
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
+        if (dev->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+            dev->Pins[i].upKeyCodeMacroID = resp[8 + i];
+        } else {
+            dev->Pins[i].upKeyCodeMacroID = 0;
+        }
+    }
+    return PK_OK;
+}
+
+int32_t PK_PinConfigurationGetAsync(sPoKeysDevice* device)
+{
+
+    if (device == NULL) return PK_ERR_NOT_CONNECTED;
+
+    // Get all pin configuration
+    CreateRequestAsync(device, 0xC0, (const uint8_t[]){0}, 1,
+                               NULL, 0, PK_ParsePinFunctionsResponse);
+
+    // If device supports digital counters, get the settings for them
+    if (device->info.iDigitalCounters) {
+        // Get all pin configuration - counter setup
+        CreateRequestAsync(device, 0xC0, (const uint8_t[]){1}, 1,
+                           NULL, 0, PK_PinCounterConfigurationParse);
+    }
+
+    // If the device supports key mapping, get the settings
+    if (device->info.iKeyMapping) {
+        // Get all pin key mapping - type
+        CreateRequestAsync(device, 0xC1, NULL, 0,
+                           NULL, 0, PK_PinKeyMappingTypeParse);
+        // Get all pin key mapping - key codes
+        CreateRequestAsync(device, 0xC2, NULL, 0,
+                           NULL, 0, PK_PinKeyMappingCodesParse);
+        // Get all pin key mapping - modifiers
+        CreateRequestAsync(device, 0xC3, NULL, 0,
+                           NULL, 0, PK_PinKeyMappingModifiersParse);
+    }
+
+    // Again, check if device supports triggered key mapping
+	if (device->info.iTriggeredKeyMapping)
+	{
+        // Get all pin key mapping - triggered inputs
+        CreateRequestAsync(device, 0xD7, (const uint8_t[]){11}, 1,
+                              NULL, 0, PK_PinTriggeredDownKeyCodeParse);
+
+        CreateRequestAsync(device, 0xD7, (const uint8_t[]){12}, 1,
+                              NULL, 0, PK_PinTriggeredDownKeyModifierParse);
+
+        CreateRequestAsync(device, 0xD7, (const uint8_t[]){13}, 1,
+                              NULL, 0, PK_PinTriggeredUpKeyCodeParse);
+
+        CreateRequestAsync(device, 0xD7, (const uint8_t[]){14}, 1,
+                              NULL, 0, PK_PinTriggeredUpKeyModifierParse);
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Sets all pin configuration fields asynchronously.
+ */
+int32_t PK_PinConfigurationSetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    // CMD 0xC0, param1=1: Set all pin functions
+    uint8_t bufferC0[56] = {0};
+    for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
+        bufferC0[i] = device->Pins[i].PinFunction;
+    }
+    CreateRequestAsync(device, 0xC0, (const uint8_t[]){1}, 1,
+                       bufferC0, 56, NULL);
+
+    // CMD 0xC0, param2=2: Set counter options
+    if (device->info.iDigitalCounters) {
+        uint8_t bufferCounters[56] = {0};
+        for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
+            bufferCounters[i] = device->Pins[i].CounterOptions;
+        }
+        CreateRequestAsync(device, 0xC0, (const uint8_t[]){0, 2}, 2,
+                           bufferCounters, 56, NULL);
+    }
+
+    if (device->info.iKeyMapping) {
+        uint8_t keyType[56] = {0};
+        uint8_t keyCode[56] = {0};
+        uint8_t keyMod[56] = {0};
+
+        for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
+            if (device->Pins[i].PinFunction & PK_PinCap_digitalInput) {
+                keyType[i] = device->Pins[i].MappingType;
+                keyCode[i] = device->Pins[i].KeyCodeMacroID;
+                keyMod[i] = device->Pins[i].KeyModifier;
+            }
+        }
+
+        CreateRequestAsync(device, 0xC1, (const uint8_t[]){1}, 1,
+                           keyType, 56, NULL);
+        CreateRequestAsync(device, 0xC2, (const uint8_t[]){1}, 1,
+                           keyCode, 56, NULL);
+        CreateRequestAsync(device, 0xC3, (const uint8_t[]){1}, 1,
+                           keyMod, 56, NULL);
+
+        if (device->info.iTriggeredKeyMapping) {
+            uint8_t downCode[56] = {0}, downMod[56] = {0}, upCode[56] = {0}, upMod[56] = {0};
+
+            for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
+                if (device->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+                    downCode[i] = device->Pins[i].downKeyCodeMacroID;
+                    downMod[i] = device->Pins[i].downKeyModifier;
+                    upCode[i] = device->Pins[i].upKeyCodeMacroID;
+                    upMod[i] = device->Pins[i].upKeyModifier;
+                }
+            }
+
+            CreateRequestAsync(device, 0xD7, (const uint8_t[]){1}, 1,
+                               downCode, 56, NULL);
+            CreateRequestAsync(device, 0xD7, (const uint8_t[]){2}, 1,
+                               downMod, 56, NULL);
+            CreateRequestAsync(device, 0xD7, (const uint8_t[]){3}, 1,
+                               upCode, 56, NULL);
+            CreateRequestAsync(device, 0xD7, (const uint8_t[]){4}, 1,
+                               upMod, 56, NULL);
+        }
+    }
+
+    return PK_OK;
+}
+
+/**
+ * @brief Asynchronously sets the digital IO values.
+ */
+int32_t PK_DigitalIOSetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    uint8_t dio[56] = {0};
+    uint8_t mask[56] = {0};
+
+    for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
+        if (device->Pins[i].preventUpdate > 0) {
+            mask[i / 8] |= (1 << (i % 8));
+        } else if (device->Pins[i].DigitalValueSet > 0) {
+            dio[i / 8] |= (1 << (i % 8));
+        }
+    }
+
+    for (uint8_t i = 0; i < 7; ++i) {
+        device->request[8 + i] = dio[i];
+        device->request[20 + i] = mask[i];
+    }
+
+    return CreateRequestAsync(device, 0xCC, (const uint8_t[]){1}, 1,
+                               device->request + 8, 56, NULL);
+}
+
+/**
+ * @brief Parser for digital IO input values (CMD 0xCC, param1=0)
+ */
+int PK_DigitalIOGetParse(sPoKeysDevice* device, const uint8_t* response) {
+    if (!device || !response) return PK_ERR_GENERIC;
+    for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
+        device->Pins[i].DigitalValueGet = ((response[8 + i / 8] & (1 << (i % 8))) != 0);
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Asynchronously requests digital IO input values.
+ */
+int PK_DigitalIOGetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    return CreateRequestAsync(device, 0xCC, (const uint8_t[]){0}, 1,
+                              NULL, 0, PK_DigitalIOGetParse);
+}
