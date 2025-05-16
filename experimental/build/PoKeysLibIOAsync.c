@@ -403,3 +403,73 @@ int PK_AnalogRCFilterSetAsync(sPoKeysDevice* device) {
 
     return CreateRequestAsync(device, 0x39, NULL, 0, payload, 4, NULL);
 }
+
+
+/**
+ * @brief Parser for digital counter values (CMD 0xD8).
+ */
+int PK_DigitalCounterParse(sPoKeysDevice* device, const uint8_t* response) {
+    if (!device || !response) return PK_ERR_GENERIC;
+    if (device->info.iDigitalCounters == 0) return PK_ERR_NOT_SUPPORTED;
+
+    for (uint32_t j = 0; j < 13; j++) {
+        uint8_t pinIndex = device->request[8 + j];
+        if (PK_IsCounterAvailable(device, pinIndex)) {
+            device->Pins[pinIndex].DigitalCounterValue = *(int32_t*)(&response[8 + j * 4]);
+        }
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Starts async request to get digital counter values (CMD 0xD8).
+ */
+int PK_DigitalCounterGetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    if (device->info.iDigitalCounters == 0) return PK_ERR_NOT_SUPPORTED;
+
+    uint8_t pinIndices[13];
+    size_t k = 0;
+    for (uint32_t i = 0; i < device->info.iPinCount && k < 13; i++) {
+        if (PK_IsCounterAvailable(device, i)) {
+            pinIndices[k++] = (uint8_t)i;
+        }
+    }
+    if (k == 0) return PK_OK; // no counters to query
+
+    return CreateRequestAsync(device, 0xD8, NULL, 0, pinIndices, k, PK_DigitalCounterParse);
+}
+
+/**
+ * @brief Starts async request to clear digital counters (CMD 0x1D).
+ */
+int PK_DigitalCounterClearAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    return CreateRequestAsync(device, 0x1D, NULL, 0, NULL, 0, NULL);
+}
+
+/**
+ * @brief Starts async command to configure PWM duty cycle and period (CMD 0xCB).
+ */
+int PK_PWMConfigurationSetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    uint8_t payload[37] = {0};
+    for (uint32_t n = 0; n < 6; n++) {
+        if (device->PWM.PWMenabledChannels[n]) {
+            payload[0] |= (uint8_t)(1 << n);
+        }
+        uint32_t duty = device->PWM.PWMduty[n];
+        payload[1 + n * 4] = (uint8_t)(duty & 0xFF);
+        payload[2 + n * 4] = (uint8_t)((duty >> 8) & 0xFF);
+        payload[3 + n * 4] = (uint8_t)((duty >> 16) & 0xFF);
+        payload[4 + n * 4] = (uint8_t)((duty >> 24) & 0xFF);
+    }
+    uint32_t period = device->PWM.PWMperiod;
+    payload[33] = (uint8_t)(period & 0xFF);
+    payload[34] = (uint8_t)((period >> 8) & 0xFF);
+    payload[35] = (uint8_t)((period >> 16) & 0xFF);
+    payload[36] = (uint8_t)((period >> 24) & 0xFF);
+
+    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1}, 1, payload, sizeof(payload), NULL);
+}
