@@ -359,3 +359,47 @@ int PK_AnalogIOGetAsync(sPoKeysDevice* device) {
     return CreateRequestAsync(device, 0x3A, (const uint8_t[]){1}, 1,
                               NULL, 0, PK_AnalogIOParse);
 }
+
+/**
+ * @brief Parser for RC analog filter configuration (CMD 0x38).
+ */
+int PK_AnalogRCFilterParse(sPoKeysDevice* device, const uint8_t* response) {
+    if (!device || !response) return PK_ERR_GENERIC;
+    if (device->info.iAnalogFiltering == 0) return PK_ERR_NOT_SUPPORTED;
+
+    device->otherPeripherals.AnalogRCFilter =
+        ((uint32_t)response[2]) |
+        ((uint32_t)response[3] << 8) |
+        ((uint32_t)response[4] << 16) |
+        ((uint32_t)response[5] << 24);
+
+    return PK_OK;
+}
+
+/**
+ * @brief Starts async request for RC analog filter value (CMD 0x38).
+ */
+int PK_AnalogRCFilterGetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    if (device->info.iAnalogFiltering == 0) return PK_ERR_NOT_SUPPORTED;
+
+    return CreateRequestAsync(device, 0x38, NULL, 0, NULL, 0, PK_AnalogRCFilterParse);
+}
+
+/**
+ * @brief Starts async command to set RC analog filter (CMD 0x39).
+ */
+int PK_AnalogRCFilterSetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    if (device->info.iAnalogFiltering == 0) return PK_ERR_NOT_SUPPORTED;
+
+    uint32_t tmp = device->otherPeripherals.AnalogRCFilter;
+    uint8_t payload[4] = {
+        (uint8_t)(tmp & 0xFF),
+        (uint8_t)((tmp >> 8) & 0xFF),
+        (uint8_t)((tmp >> 16) & 0xFF),
+        (uint8_t)((tmp >> 24) & 0xFF)
+    };
+
+    return CreateRequestAsync(device, 0x39, NULL, 0, payload, 4, NULL);
+}
