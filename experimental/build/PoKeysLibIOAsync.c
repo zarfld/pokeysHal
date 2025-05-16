@@ -308,3 +308,54 @@ int PK_DigitalIOGetAsync(sPoKeysDevice* device) {
     return CreateRequestAsync(device, 0xCC, (const uint8_t[]){0}, 1,
                               NULL, 0, PK_DigitalIOGetParse);
 }
+
+/**
+ * @brief Combined Set and Get digital IO in one async call.
+ */
+int PK_DigitalIOSetGetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    uint8_t dio[56] = {0};
+    uint8_t mask[56] = {0};
+
+    for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
+        if (device->Pins[i].preventUpdate > 0) {
+            mask[i / 8] |= (1 << (i % 8));
+        } else if (device->Pins[i].DigitalValueSet > 0) {
+            dio[i / 8] |= (1 << (i % 8));
+        }
+    }
+
+    for (uint8_t i = 0; i < 7; ++i) {
+        device->request[8 + i] = dio[i];
+        device->request[20 + i] = mask[i];
+    }
+
+    return CreateRequestAsync(device, 0xCC, (const uint8_t[]){1}, 1,
+                               device->request + 8, 
+                                 56, PK_DigitalIOGetParse);
+}
+
+/**
+ * @brief Parser for analog inputs (CMD 0x3A, param1=1).
+ */
+int PK_AnalogIOParse(sPoKeysDevice* device, const uint8_t* response) {
+    if (!device || !response) return PK_ERR_GENERIC;
+    if (device->info.iAnalogInputs == 0) return PK_ERR_NOT_SUPPORTED;
+
+    for (uint32_t i = 0; i < 7 && (40 + i) < device->info.iPinCount; ++i) {
+        device->Pins[40 + i].AnalogValue = ((uint32_t)response[8 + i * 2] << 8) + response[9 + i * 2];
+    }
+    return PK_OK;
+}
+
+/**
+ * @brief Starts async request for analog inputs (CMD 0x3A, param1=1).
+ */
+int PK_AnalogIOGetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    if (device->info.iAnalogInputs == 0) return PK_ERR_NOT_SUPPORTED;
+
+    return CreateRequestAsync(device, 0x3A, (const uint8_t[]){1}, 1,
+                              NULL, 0, PK_AnalogIOParse);
+}
