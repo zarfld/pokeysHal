@@ -473,3 +473,103 @@ int PK_PWMConfigurationSetAsync(sPoKeysDevice* device) {
 
     return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1}, 1, payload, sizeof(payload), NULL);
 }
+
+
+/**
+ * @brief Parser for reading PWM configuration (CMD 0xCB, param1=0)
+ */
+int PK_PWMConfigurationParse(sPoKeysDevice* device, const uint8_t* response) {
+    if (!device || !response) return PK_ERR_GENERIC;
+
+    for (uint32_t n = 0; n < 6; n++) {
+        device->PWM.PWMenabledChannels[n] = (response[8] & (1 << n)) ? 1 : 0;
+        device->PWM.PWMduty[n] =
+            ((uint32_t)response[9 + n * 4]) |
+            ((uint32_t)response[10 + n * 4] << 8) |
+            ((uint32_t)response[11 + n * 4] << 16) |
+            ((uint32_t)response[12 + n * 4] << 24);
+    }
+    device->PWM.PWMperiod =
+        ((uint32_t)response[33]) |
+        ((uint32_t)response[34] << 8) |
+        ((uint32_t)response[35] << 16) |
+        ((uint32_t)response[36] << 24);
+
+    return PK_OK;
+}
+
+/**
+ * @brief Starts async request to get PWM configuration (CMD 0xCB, param1=0)
+ */
+int PK_PWMConfigurationGetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){0}, 1, NULL, 0, PK_PWMConfigurationParse);
+}
+
+
+/**
+ * @brief Starts async command to update PWM values only (CMD 0xCB, param1=1, param2=1).
+ */
+int PK_PWMUpdateAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    uint8_t payload[37] = {0};
+    for (uint32_t n = 0; n < 6; n++) {
+        if (device->PWM.PWMenabledChannels[n]) {
+            payload[0] |= (uint8_t)(1 << n);
+        }
+        uint32_t duty = device->PWM.PWMduty[n];
+        payload[1 + n * 4] = (uint8_t)(duty & 0xFF);
+        payload[2 + n * 4] = (uint8_t)((duty >> 8) & 0xFF);
+        payload[3 + n * 4] = (uint8_t)((duty >> 16) & 0xFF);
+        payload[4 + n * 4] = (uint8_t)((duty >> 24) & 0xFF);
+    }
+    uint32_t period = device->PWM.PWMperiod;
+    payload[33] = (uint8_t)(period & 0xFF);
+    payload[34] = (uint8_t)((period >> 8) & 0xFF);
+    payload[35] = (uint8_t)((period >> 16) & 0xFF);
+    payload[36] = (uint8_t)((period >> 24) & 0xFF);
+
+    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
+}
+
+/**
+ * @brief Starts async request to set PoExtBus data (CMD 0xDA).
+ */
+int PK_PoExtBusSetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    uint32_t len = device->info.iPoExtBus;
+    if (len == 0 || !device->PoExtBusData) return PK_ERR_NOT_SUPPORTED;
+
+    // Prepare payload
+    uint8_t payload[64] = {0};
+    memcpy(payload, device->PoExtBusData, len);
+
+    // Define parser inline to verify response echo
+    int parser(sPoKeysDevice* dev, const uint8_t* resp) {
+        return memcmp(dev->PoExtBusData, resp + 8, len) == 0 ? PK_OK : PK_ERR_GENERIC;
+    }
+
+    return CreateRequestAsync(device, 0xDA, (const uint8_t[]){1, 0}, 2, payload, len, parser);
+}
+
+    int parse_PoExtBusGet(sPoKeysDevice* dev, const uint8_t* resp) {
+        memcpy(dev->PoExtBusData, resp + 8, len);
+        return PK_OK;
+    }
+
+/**
+ * @brief Starts async request to get PoExtBus data (CMD 0xDA, param1=2).
+ */
+int PK_PoExtBusGetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    uint32_t len = device->info.iPoExtBus;
+    if (len == 0 || !device->PoExtBusData) return PK_ERR_NOT_SUPPORTED;
+
+
+
+    return CreateRequestAsync(device, 0xDA, (const uint8_t[]){2, 0}, 2, NULL, 0, parse_PoExtBusGet);
+}
