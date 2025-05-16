@@ -533,3 +533,25 @@ int PK_PWMUpdateAsync(sPoKeysDevice* device) {
 
     return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
 }
+
+/**
+ * @brief Starts async request to set PoExtBus data (CMD 0xDA).
+ */
+int PK_PoExtBusSetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    uint32_t len = device->info.iPoExtBus;
+    if (len == 0 || !device->PoExtBusData) return PK_ERR_NOT_SUPPORTED;
+
+    // Prepare payload
+    uint8_t payload[64] = {0};
+    memcpy(payload, device->PoExtBusData, len);
+
+    // Define parser inline to verify response echo
+    int parser(sPoKeysDevice* dev, const uint8_t* resp) {
+        return memcmp(dev->PoExtBusData, resp + 8, len) == 0 ? PK_OK : PK_ERR_GENERIC;
+    }
+
+    return CreateRequestAsync(device, 0xDA, (const uint8_t[]){1, 0}, 2, payload, len, parser);
+}
+
