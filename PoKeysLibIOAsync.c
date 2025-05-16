@@ -506,3 +506,30 @@ int PK_PWMConfigurationGetAsync(sPoKeysDevice* device) {
 
     return CreateRequestAsync(device, 0xCB, (const uint8_t[]){0}, 1, NULL, 0, PK_PWMConfigurationParse);
 }
+
+
+/**
+ * @brief Starts async command to update PWM values only (CMD 0xCB, param1=1, param2=1).
+ */
+int PK_PWMUpdateAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    uint8_t payload[37] = {0};
+    for (uint32_t n = 0; n < 6; n++) {
+        if (device->PWM.PWMenabledChannels[n]) {
+            payload[0] |= (uint8_t)(1 << n);
+        }
+        uint32_t duty = device->PWM.PWMduty[n];
+        payload[1 + n * 4] = (uint8_t)(duty & 0xFF);
+        payload[2 + n * 4] = (uint8_t)((duty >> 8) & 0xFF);
+        payload[3 + n * 4] = (uint8_t)((duty >> 16) & 0xFF);
+        payload[4 + n * 4] = (uint8_t)((duty >> 24) & 0xFF);
+    }
+    uint32_t period = device->PWM.PWMperiod;
+    payload[33] = (uint8_t)(period & 0xFF);
+    payload[34] = (uint8_t)((period >> 8) & 0xFF);
+    payload[35] = (uint8_t)((period >> 16) & 0xFF);
+    payload[36] = (uint8_t)((period >> 24) & 0xFF);
+
+    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
+}
