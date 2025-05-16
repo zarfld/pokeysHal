@@ -555,3 +555,21 @@ int PK_PoExtBusSetAsync(sPoKeysDevice* device) {
     return CreateRequestAsync(device, 0xDA, (const uint8_t[]){1, 0}, 2, payload, len, parser);
 }
 
+    int parse_PoExtBusGet(sPoKeysDevice* dev, const uint8_t* resp) {
+        memcpy(dev->PoExtBusData, resp + 8, len);
+        return PK_OK;
+    }
+
+/**
+ * @brief Starts async request to get PoExtBus data (CMD 0xDA, param1=2).
+ */
+int PK_PoExtBusGetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    uint32_t len = device->info.iPoExtBus;
+    if (len == 0 || !device->PoExtBusData) return PK_ERR_NOT_SUPPORTED;
+
+
+
+    return CreateRequestAsync(device, 0xDA, (const uint8_t[]){2, 0}, 2, NULL, 0, parse_PoExtBusGet);
+}
