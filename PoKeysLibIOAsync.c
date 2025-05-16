@@ -473,3 +473,36 @@ int PK_PWMConfigurationSetAsync(sPoKeysDevice* device) {
 
     return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1}, 1, payload, sizeof(payload), NULL);
 }
+
+
+/**
+ * @brief Parser for reading PWM configuration (CMD 0xCB, param1=0)
+ */
+int PK_PWMConfigurationParse(sPoKeysDevice* device, const uint8_t* response) {
+    if (!device || !response) return PK_ERR_GENERIC;
+
+    for (uint32_t n = 0; n < 6; n++) {
+        device->PWM.PWMenabledChannels[n] = (response[8] & (1 << n)) ? 1 : 0;
+        device->PWM.PWMduty[n] =
+            ((uint32_t)response[9 + n * 4]) |
+            ((uint32_t)response[10 + n * 4] << 8) |
+            ((uint32_t)response[11 + n * 4] << 16) |
+            ((uint32_t)response[12 + n * 4] << 24);
+    }
+    device->PWM.PWMperiod =
+        ((uint32_t)response[33]) |
+        ((uint32_t)response[34] << 8) |
+        ((uint32_t)response[35] << 16) |
+        ((uint32_t)response[36] << 24);
+
+    return PK_OK;
+}
+
+/**
+ * @brief Starts async request to get PWM configuration (CMD 0xCB, param1=0)
+ */
+int PK_PWMConfigurationGetAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){0}, 1, NULL, 0, PK_PWMConfigurationParse);
+}
