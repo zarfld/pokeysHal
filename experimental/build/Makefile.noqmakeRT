@@ -14,6 +14,7 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c PoKeysLibFastUSB.c \
         PoKeysLibFailsafe.c \
         PoKeysLibWS2812.c \
         PoKeysLibEncodersAsync.c \
+        PoKeysLibIOAsync.c \
         PoKeysLibRTCAsync.c \
         PoKeysLibAsync.c \
         PoKeysLibCoreSocketsAsync.c
