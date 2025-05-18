@@ -1101,6 +1101,34 @@ POKEYSDECL int32_t PK_AnalogIOGetAsArray(sPoKeysDevice* device, uint32_t * buffe
 POKEYSDECL int32_t PK_AnalogRCFilterGet(sPoKeysDevice* device);
 POKEYSDECL int32_t PK_AnalogRCFilterSet(sPoKeysDevice* device);
 
+// --------------------
+// PoKeysLibIOAsync API
+// --------------------
+
+// Digital I/O
+int PK_DigitalIOGetAsync(sPoKeysDevice* device);
+int PK_DigitalIOSetGetAsync(sPoKeysDevice* device);
+
+// Analog I/O
+int PK_AnalogIOGetAsync(sPoKeysDevice* device);
+
+// Analog RC Filter
+int PK_AnalogRCFilterGetAsync(sPoKeysDevice* device);
+int PK_AnalogRCFilterSetAsync(sPoKeysDevice* device);
+
+// Digital Counters
+int PK_DigitalCounterGetAsync(sPoKeysDevice* device);
+int PK_DigitalCounterClearAsync(sPoKeysDevice* device);
+
+// PWM Configuration
+int PK_PWMConfigurationSetAsync(sPoKeysDevice* device);
+int PK_PWMConfigurationGetAsync(sPoKeysDevice* device);
+int PK_PWMUpdateAsync(sPoKeysDevice* device);
+
+// PoExtBus I/O
+int PK_PoExtBusSetAsync(sPoKeysDevice* device);
+int PK_PoExtBusGetAsync(sPoKeysDevice* device);
+
 // Get matrix keyboard configuration
 POKEYSDECL int32_t PK_MatrixKBConfigurationGet(sPoKeysDevice* device);
 // Set matrix keyboard configuration
