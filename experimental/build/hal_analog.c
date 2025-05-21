@@ -85,6 +85,7 @@ int hal_export_adcin(hal_adcin_t *adcin, const char *prefix, int index, int comp
     return 0;
 }
 
+#ifdef RTAPI
 /**
  * @brief Register a periodic HAL read function for a canonical analog input.
  * @ingroup hal_analog
@@ -120,6 +121,7 @@ int hal_register_adcin_func(const char *prefix, int index,
 
     return hal_export_funct(buf, read_func, inst, 1, 0, comp_id);
 }
+#endif
 
 /**
  * @brief Export HAL pins and parameters for a canonical analog output channel.
