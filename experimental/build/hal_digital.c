@@ -84,6 +84,7 @@ int hal_export_digin(hal_digin_t *digin, const char *prefix, int index, int comp
     return 0;
 }
 
+#ifdef RTAPI
 /**
  * @brief Register a HAL read function for a canonical digital input instance.
  * @ingroup hal_digital
@@ -113,7 +114,7 @@ int hal_register_digin_func(const char *prefix,
 
     return hal_export_funct(buf, read_func, inst, 1, 0, comp_id);
 }
-
+#endif
 
 /**
  * @brief Export canonical digital output pin and parameter for a specific device channel.
