@@ -153,6 +153,7 @@ int hal_export_digout(hal_digout_t *digout, const char *prefix, int index, int c
     return 0;
 }
 
+#ifdef RTAPI
 /**
  * @brief Register a HAL write function for a digout instance.
  * @ingroup hal_digital
@@ -164,7 +165,6 @@ int hal_export_digout(hal_digout_t *digout, const char *prefix, int index, int c
  * @param comp_id     HAL component ID
  * @return 0 on success or negative error code
  */
- #ifdef RTAPI
 int hal_register_digout_func(const char *prefix,
                               int index,
                               void (*write_func)(void *, long),
