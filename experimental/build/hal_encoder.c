@@ -92,6 +92,7 @@ int hal_export_encoder(hal_encoder_t *enc, const char *prefix, int index, int co
     return 0;
 }
 
+#ifdef RTAPI
 /**
  * @brief Register periodic read function for a canonical encoder channel.
  * @ingroup hal_encoder
@@ -123,3 +124,4 @@ int hal_register_encoder_func(const char *prefix, int index,
 
     return hal_export_funct(buf, read_func, inst, 1, 0, comp_id);  // uses_fp = 1
 }
+#endif

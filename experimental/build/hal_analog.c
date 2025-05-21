@@ -191,6 +191,7 @@ int hal_export_adcout(hal_adcout_t *adcout, const char *prefix, int index, int c
     return 0;
 }
 
+#ifdef RTAPI
 /**
  * @brief Register a HAL write function for a canonical analog output channel.
  * @ingroup hal_analog
@@ -227,3 +228,4 @@ int hal_register_adcout_func(const char *prefix, int index,
 
     return hal_export_funct(buf, write_func, inst, 1, 0, comp_id);
 }
+#endif

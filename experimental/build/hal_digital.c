@@ -164,6 +164,7 @@ int hal_export_digout(hal_digout_t *digout, const char *prefix, int index, int c
  * @param comp_id     HAL component ID
  * @return 0 on success or negative error code
  */
+ #ifdef RTAPI
 int hal_register_digout_func(const char *prefix,
                               int index,
                               void (*write_func)(void *, long),
@@ -177,5 +178,5 @@ int hal_register_digout_func(const char *prefix,
 
     return hal_export_funct(buf, write_func, inst, 1, 0, comp_id);
 }
-
+#endif
 /** @} */ // end of hal_digital
