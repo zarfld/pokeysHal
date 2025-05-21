@@ -153,6 +153,10 @@ jobs:
         cp *.c experimental/build/
         cp experimental/pokeys_async.c experimental/build/
         cp experimental/Submakefile.rt experimental/build/
+        cp hal-canon/hal_canon.h experimental/build/
+        cp hal-canon/hal_digital.c experimental/build/
+        cp hal-canon/hal_analog.c experimental/build/
+        cp hal-canon/hal_encoder.c experimental/build/
 
         # 3. Run halcompile from inside the build folder
         cd experimental/build/
