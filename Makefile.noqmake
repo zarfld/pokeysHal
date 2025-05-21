@@ -26,10 +26,12 @@ OBJECTS=$(SOURCES:.c=.o)
 install_userspace: all
 	cp libPoKeysHal.so /usr/lib
 	cp PoKeysLibHal.h /usr/include
+        cp hal-canon/hal_canon.h /usr/include
 
 install_rt: static
 	cp libPoKeysHal.a /usr/lib
 	cp PoKeysLibHal.h /usr/include
+        cp hal-canon/hal_canon.h /usr/include
 
 install: install_userspace install_rt
 
