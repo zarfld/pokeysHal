@@ -23,6 +23,13 @@
 #include <rtapi_string.h>
 #include "hal_canon.h"
 
+#if !defined(RTAPI) && !defined(ULAPI)
+#define ULAPI
+#endif
+#if defined(RTAPI) && defined(ULAPI)
+#undef RTAPI
+#endif
+
 /**
  * @defgroup hal_digital Canonical Digital I/O Export
  * @brief Export helpers for canonical digital input/output HAL interfaces.

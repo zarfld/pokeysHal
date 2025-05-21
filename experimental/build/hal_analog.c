@@ -23,6 +23,13 @@
 #include <rtapi_string.h>
 #include "hal_canon.h" 
 
+#if !defined(RTAPI) && !defined(ULAPI)
+#define ULAPI
+#endif
+#if defined(RTAPI) && defined(ULAPI)
+#undef RTAPI
+#endif
+
 /**
  * @brief Export HAL pins and parameters for a canonical analog input channel.
  * @ingroup hal_analog

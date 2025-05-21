@@ -33,6 +33,13 @@
 extern "C" {
 #endif
 
+
+#if !defined(RTAPI) && !defined(ULAPI)
+#define ULAPI
+#endif
+#if defined(RTAPI) && defined(ULAPI)
+#undef RTAPI
+#endif
 /**
  * @defgroup hal_digital Canonical Digital I/O
  * @brief Export and registration helpers for canonical digital input/output.
