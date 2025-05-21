@@ -17,7 +17,10 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c PoKeysLibFastUSB.c \
         PoKeysLibIOAsync.c \
         PoKeysLibRTCAsync.c \
         PoKeysLibAsync.c \
-        PoKeysLibCoreSocketsAsync.c
+        PoKeysLibCoreSocketsAsync.c \
+        hal_digital.c \
+        hal_analog.c \
+        hal_encoder.c
 
 OBJECTS=$(SOURCES:.c=.o)
 

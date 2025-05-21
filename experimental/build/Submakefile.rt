@@ -16,7 +16,7 @@ OBJECTS = \
   PoKeysLibRTC.o PoKeysLibEasySensors.o PoKeysLibI2C.o PoKeysLib1Wire.o PoKeysLibSPI.o \
   PoKeysLibPulseEngine_v2.o PoKeysLibUART.o PoKeysLibCAN.o PoKeysLibFailsafe.o PoKeysLibWS2812.o \
   PoKeysLibEncodersAsync.o PoKeysLibRTCAsync.o PoKeysLibAsync.o PoKeysLibCoreSocketsAsync.o \
-  pokeys_async.o PoKeysLibIOAsync.o
+  pokeys_async.o PoKeysLibIOAsync.o hal_digital.o hal_analog.o hal_encoder.o
 
 # Default target
 all: $(COMPONENTS).so
