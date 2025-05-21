@@ -231,7 +231,7 @@ int hal_register_adcin_func(const char *prefix, int index,
 typedef struct {
     hal_float_t *value;      // Pin: input to hardware (after scale/offset)
     hal_bit_t   *enable;     // Pin: if false, output 0
-    hal_float_t *offset;     // Parameter: added to value before hardware write
+    hal_float_t offset;     // Parameter: added to value before hardware write
     hal_float_t scale;      // Parameter: scale applied to value
     hal_float_t high_limit; // Parameter: optional upper clamp
     hal_float_t low_limit;  // Parameter: optional lower clamp
