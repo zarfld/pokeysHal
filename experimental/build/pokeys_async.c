@@ -78,6 +78,12 @@ static int export(char *prefix, long extra_arg) {
         return r;
     };
 
+    r=export_IO_pins(prefix, comp_id, inst->dev); // Export IO pins
+    if(r != 0){
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_IO_pins failed %d \n", __FILE__, __FUNCTION__, prefix, r);
+        return r;
+    };
+    
 #ifdef RTAPI
     rtapi_snprintf(buf, sizeof(buf), "%s", prefix);
     r = hal_export_funct(buf, (void(*)(void *inst, long))_, inst, 1, 0, comp_id);

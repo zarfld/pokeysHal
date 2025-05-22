@@ -595,8 +595,10 @@ typedef struct
  hal_u32_t  DigitalCounterValue;              // Digital counter current value (on supported pins when PinFunction is set to digital counter - use PK_IsCounterAvailable to check the pin)
  hal_u32_t  AnalogValue;                      // Analog input value (on supported pins when PinFunction is set as analog input)
  hal_u32_t  PinFunction;                      // Pin function code - see ePK_PinCap for values
+    hal_bit_t PinCap_invertPin;           // PinFunction flag 'PK_PinCap_invertPin': Invert digital pin polarity (set together with digital input, output or triggered input)
+
  uint8_t  CounterOptions;                   // Digital counter settings (on supported pins)
- uint8_t  DigitalValueGet;                  // Digital input value read
+ hal_digin_t  DigitalValueGet;                  // Digital input value read
  uint8_t  DigitalValueSet;                  // Digital output value set
  uint8_t  DigitalCounterAvailable;          // 1 if digital counter is available on this pin
  uint8_t  MappingType;                      // Digital input to USB keyboard mapping type - selects between direct key mapping and mapping to macro
@@ -623,13 +625,13 @@ typedef struct
                                             //                        bit 6: direct key mapping for direction B
                                             //                        bit 7: mapped to macro for direction B
 
-                                            hal_bit_t enable;         // pointer for "parameter io bit Encoders.#.enable [26]"  // Enable encoder
-                                            hal_bit_t x4_sampling;    // pointer for "parameter io bit Encoders.#.x4_sampling [26]"  // 4x sampling
-                                            hal_bit_t x2_sampling;    // pointer for "parameter io bit Encoders.#.x2_sampling [26]"  // 2x sampling
-                                            hal_bit_t keymap_dirA;    // pointer for "parameter io bit Encoders.#.keymap_dirA [26]"  // Direct key mapping for direction A
-                                            hal_bit_t macro_dirA;     // pointer for "parameter io bit Encoders.#.macro_dirA [26]"  // Map to macro for direction A
-                                            hal_bit_t keymap_dirB;    // pointer for "parameter io bit Encoders.#.keymap_dirB [26]"  // Direct key mapping for direction B
-                                            hal_bit_t macro_dirB;     // pointer for "parameter io bit Encoders.#.macro_dirB [26]"  // Map to macro for direction B
+                                            hal_bit_t enable;         // bit for "parameter io bit Encoders.#.enable [26]"  // Enable encoder
+                                            hal_bit_t x4_sampling;    // bit for "parameter io bit Encoders.#.x4_sampling [26]"  // 4x sampling
+                                            hal_bit_t x2_sampling;    // bit for "parameter io bit Encoders.#.x2_sampling [26]"  // 2x sampling
+                                            hal_bit_t keymap_dirA;    // bit for "parameter io bit Encoders.#.keymap_dirA [26]"  // Direct key mapping for direction A
+                                            hal_bit_t macro_dirA;     // bit for "parameter io bit Encoders.#.macro_dirA [26]"  // Map to macro for direction A
+                                            hal_bit_t keymap_dirB;    // bit for "parameter io bit Encoders.#.keymap_dirB [26]"  // Direct key mapping for direction B
+                                            hal_bit_t macro_dirB;     // bit for "parameter io bit Encoders.#.macro_dirB [26]"  // Map to macro for direction B
 
  hal_u32_t channelApin;                       // Channel A encoder pin
  hal_u32_t channelBpin;                       // Channel B encoder pin
@@ -1078,6 +1080,7 @@ POKEYSDECL int32_t PK_DigitalIOSetSingle(sPoKeysDevice* device, uint8_t pinID, u
 // Get single digital input value
 POKEYSDECL int32_t PK_DigitalIOGetSingle(sPoKeysDevice* device, uint8_t pinID, uint8_t * pinValue);
 
+
 // Set PoExtBus outputs
 POKEYSDECL int32_t PK_PoExtBusSet(sPoKeysDevice* device);
 // Get current PoExtBus outputs values
@@ -1105,7 +1108,7 @@ POKEYSDECL int32_t PK_AnalogRCFilterSet(sPoKeysDevice* device);
 // --------------------
 // PoKeysLibIOAsync API
 // --------------------
-
+POKEYSDECL int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 // Digital I/O
 int PK_DigitalIOGetAsync(sPoKeysDevice* device);
 int PK_DigitalIOSetGetAsync(sPoKeysDevice* device);
