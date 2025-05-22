@@ -595,6 +595,8 @@ typedef struct
  hal_u32_t  DigitalCounterValue;              // Digital counter current value (on supported pins when PinFunction is set to digital counter - use PK_IsCounterAvailable to check the pin)
  hal_u32_t  AnalogValue;                      // Analog input value (on supported pins when PinFunction is set as analog input)
  hal_u32_t  PinFunction;                      // Pin function code - see ePK_PinCap for values
+    hal_bit_t PinCap_invertPin;           // PinFunction flag 'PK_PinCap_invertPin': Invert digital pin polarity (set together with digital input, output or triggered input)
+
  uint8_t  CounterOptions;                   // Digital counter settings (on supported pins)
  hal_digin_t  DigitalValueGet;                  // Digital input value read
  uint8_t  DigitalValueSet;                  // Digital output value set
@@ -623,13 +625,13 @@ typedef struct
                                             //                        bit 6: direct key mapping for direction B
                                             //                        bit 7: mapped to macro for direction B
 
-                                            hal_bit_t enable;         // pointer for "parameter io bit Encoders.#.enable [26]"  // Enable encoder
-                                            hal_bit_t x4_sampling;    // pointer for "parameter io bit Encoders.#.x4_sampling [26]"  // 4x sampling
-                                            hal_bit_t x2_sampling;    // pointer for "parameter io bit Encoders.#.x2_sampling [26]"  // 2x sampling
-                                            hal_bit_t keymap_dirA;    // pointer for "parameter io bit Encoders.#.keymap_dirA [26]"  // Direct key mapping for direction A
-                                            hal_bit_t macro_dirA;     // pointer for "parameter io bit Encoders.#.macro_dirA [26]"  // Map to macro for direction A
-                                            hal_bit_t keymap_dirB;    // pointer for "parameter io bit Encoders.#.keymap_dirB [26]"  // Direct key mapping for direction B
-                                            hal_bit_t macro_dirB;     // pointer for "parameter io bit Encoders.#.macro_dirB [26]"  // Map to macro for direction B
+                                            hal_bit_t enable;         // bit for "parameter io bit Encoders.#.enable [26]"  // Enable encoder
+                                            hal_bit_t x4_sampling;    // bit for "parameter io bit Encoders.#.x4_sampling [26]"  // 4x sampling
+                                            hal_bit_t x2_sampling;    // bit for "parameter io bit Encoders.#.x2_sampling [26]"  // 2x sampling
+                                            hal_bit_t keymap_dirA;    // bit for "parameter io bit Encoders.#.keymap_dirA [26]"  // Direct key mapping for direction A
+                                            hal_bit_t macro_dirA;     // bit for "parameter io bit Encoders.#.macro_dirA [26]"  // Map to macro for direction A
+                                            hal_bit_t keymap_dirB;    // bit for "parameter io bit Encoders.#.keymap_dirB [26]"  // Direct key mapping for direction B
+                                            hal_bit_t macro_dirB;     // bit for "parameter io bit Encoders.#.macro_dirB [26]"  // Map to macro for direction B
 
  hal_u32_t channelApin;                       // Channel A encoder pin
  hal_u32_t channelBpin;                       // Channel B encoder pin
