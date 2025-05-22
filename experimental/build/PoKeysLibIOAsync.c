@@ -1,5 +1,6 @@
 #include "PoKeysLibHal.h"
 #include "PoKeysLibAsync.h"
+#include "hal_canon.h"
 
 
 int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
@@ -41,20 +42,6 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
             //hal_digin_t digin = device->Pins[j].DigitalValueGet;
 
             hal_export_digin(&device->Pins[j].DigitalValueGet, prefix, j, comp_id);
-            /* done in hal_export_digin already
-            rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.digin.%01d.in\n", __FILE__, __FUNCTION__, prefix, j);
-            r = hal_pin_bit_newf(HAL_OUT, &(digin->in), comp_id, "%s.digin.%01d.in", prefix, j);
-            if (r != 0) {
-                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.digin.%01d.in failed\n", __FILE__, __FUNCTION__, prefix, j);
-                return r;
-            }
-            rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.digin.%01d.in-not\n", __FILE__, __FUNCTION__, prefix, j);
-            r = hal_pin_bit_newf(HAL_OUT, &(digin->in_not), comp_id, "%s.digin.%01d.in-not", prefix, j);
-            if (r != 0) {
-                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.digin.%01d.in-not failed\n", __FILE__, __FUNCTION__, prefix, j);
-                return r;
-            }
-            */
 
             // pokeys specific additional options
             rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.digin.%01d.invert\n", __FILE__, __FUNCTION__, prefix, j);
@@ -63,6 +50,12 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
                 rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.digin.%01d.invert failed\n", __FILE__, __FUNCTION__, prefix, j);
                 return r;
             }
+        }
+
+        if (PK_CheckPinCapability(device, j, PK_AllPinCap_digitalOutput) == 1) {
+            // ensure &device->Pins[j].PinCap_invertPin is mapped/cloned to device->Pins[j].DigitalValueSet.invert 
+
+            hal_export_digout(&device->Pins[j].DigitalValueSet, prefix, j,  comp_id);
         }
     }
 
@@ -348,7 +341,7 @@ int32_t PK_DigitalIOSetAsync(sPoKeysDevice* device) {
     for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
         if (device->Pins[i].preventUpdate > 0) {
             mask[i / 8] |= (1 << (i % 8));
-        } else if (device->Pins[i].DigitalValueSet > 0) {
+        } else if (*(device->Pins[i].DigitalValueSet.out) > 0) {
             dio[i / 8] |= (1 << (i % 8));
         }
     }
@@ -395,7 +388,7 @@ int PK_DigitalIOSetGetAsync(sPoKeysDevice* device) {
     for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
         if (device->Pins[i].preventUpdate > 0) {
             mask[i / 8] |= (1 << (i % 8));
-        } else if (device->Pins[i].DigitalValueSet > 0) {
+        } else if (*(device->Pins[i].DigitalValueSet.out) > 0) {
             dio[i / 8] |= (1 << (i % 8));
         }
     }
