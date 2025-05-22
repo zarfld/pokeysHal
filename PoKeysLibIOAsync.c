@@ -29,6 +29,37 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
     // Digital Pins
     for (int j = 0; j < (device->info.iPinCount); j++) {
 
+        // PinFunction
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.Pins.%01d.PinFunction\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_param_u32_newf(HAL_RW, &(device->Pins[j].PinFunction), comp_id, "%s.pins.%01d.PinFunction", prefix, j);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.pins.%01d.PinFunction failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }
+
+        if (PK_CheckPinCapability(device, j, PK_AllPinCap_digitalInput) == 1) {
+            hal_digin_t digin = device->Pins[j].DigitalValueGet;
+
+            rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.digin.%01d.in\n", __FILE__, __FUNCTION__, prefix, j);
+            r = hal_pin_bit_newf(HAL_OUT, &(digin->in), comp_id, "%s.digin.%01d.in", prefix, j);
+            if (r != 0) {
+                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.digin.%01d.in failed\n", __FILE__, __FUNCTION__, prefix, j);
+                return r;
+            }
+            rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.digin.%01d.in-not\n", __FILE__, __FUNCTION__, prefix, j);
+            r = hal_pin_bit_newf(HAL_OUT, &(digin->in_not), comp_id, "%s.digin.%01d.in-not", prefix, j);
+            if (r != 0) {
+                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.digin.%01d.in-not failed\n", __FILE__, __FUNCTION__, prefix, j);
+                return r;
+            }
+
+            rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.digin.%01d.invert\n", __FILE__, __FUNCTION__, prefix, j);
+            r = hal_param_bit_newf(HAL_RW, &(device->Pins[j].PinCap_invertPin), id, "%s.digin.%01d.invert", prefix, j);
+            if (r != 0) {
+                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.digin.%01d.invert failed\n", __FILE__, __FUNCTION__, prefix, j);
+                return r;
+            }
+        }
     }
 
     return r;
@@ -41,6 +72,13 @@ int PK_ParsePinFunctionsResponse(sPoKeysDevice *dev, const uint8_t *resp) {
     if (!dev || !resp) return PK_ERR_GENERIC;
     for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
         dev->Pins[i].PinFunction = resp[8 + i];    // writing uint8_t to hal_u32_t
+
+        // hal_bit_t PinCap_invertPin;           // PinFunction flag 'PK_PinCap_invertPin': Invert digital pin polarity (set together with digital input, output or triggered input)
+        if (dev->Pins[i].PinFunction & PK_PinCap_invertPin) {
+            dev->Pins[i].PinCap_invertPin = 1;
+        } else {
+            dev->Pins[i].PinCap_invertPin = 0;
+        }
     }
     return PK_OK;
 }
