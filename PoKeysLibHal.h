@@ -596,7 +596,7 @@ typedef struct
  hal_u32_t  AnalogValue;                      // Analog input value (on supported pins when PinFunction is set as analog input)
  hal_u32_t  PinFunction;                      // Pin function code - see ePK_PinCap for values
  uint8_t  CounterOptions;                   // Digital counter settings (on supported pins)
- uint8_t  DigitalValueGet;                  // Digital input value read
+ hal_digin_t  DigitalValueGet;                  // Digital input value read
  uint8_t  DigitalValueSet;                  // Digital output value set
  uint8_t  DigitalCounterAvailable;          // 1 if digital counter is available on this pin
  uint8_t  MappingType;                      // Digital input to USB keyboard mapping type - selects between direct key mapping and mapping to macro
