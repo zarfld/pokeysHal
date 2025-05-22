@@ -419,7 +419,8 @@ int32_t PK_DigitalIOGet(sPoKeysDevice* device)
 
 	for (i = 0; i < device->info.iPinCount; i++)
     {
-		device->Pins[i].DigitalValueGet = ((unsigned char)(device->response[8 + i / 8] & (1 << (i % 8))) > 0) ? 1 : 0;
+		*(device->Pins[i].DigitalValueGet.in) = ((unsigned char)(device->response[8 + i / 8] & (1 << (i % 8))) > 0) ? 1 : 0;
+		*(device->Pins[i].DigitalValueGet.in_not) = ((unsigned char)(device->response[8 + i / 8] & (1 << (i % 8))) == 0) ? 1 : 0;
     }
 
 	return PK_OK;
@@ -446,7 +447,8 @@ int32_t PK_DigitalIOSetGet(sPoKeysDevice* device)
 	// Get digital inputs
 	for (i = 0; i < device->info.iPinCount; i++)
     {
-		device->Pins[i].DigitalValueGet = ((unsigned char)(device->response[8 + i / 8] & (1 << (i % 8))) > 0) ? 1 : 0;
+		*(device->Pins[i].DigitalValueGet.in) = ((unsigned char)(device->response[8 + i / 8] & (1 << (i % 8))) > 0) ? 1 : 0;
+		*(device->Pins[i].DigitalValueGet.in_not) = ((unsigned char)(device->response[8 + i / 8] & (1 << (i % 8))) == 0) ? 1 : 0;
     }
 
 	return PK_OK;
