@@ -594,7 +594,7 @@ typedef struct
 {
  hal_u32_t  DigitalCounterValue;              // Digital counter current value (on supported pins when PinFunction is set to digital counter - use PK_IsCounterAvailable to check the pin)
  hal_u32_t  AnalogValue;                      // Analog input value (on supported pins when PinFunction is set as analog input)
- uint8_t  PinFunction;                      // Pin function code - see ePK_PinCap for values
+ hal_u32_t  PinFunction;                      // Pin function code - see ePK_PinCap for values
  uint8_t  CounterOptions;                   // Digital counter settings (on supported pins)
  uint8_t  DigitalValueGet;                  // Digital input value read
  uint8_t  DigitalValueSet;                  // Digital output value set

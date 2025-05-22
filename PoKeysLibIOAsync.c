@@ -2,6 +2,37 @@
 #include "PoKeysLibAsync.h"
 
 
+int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
+{
+    if (device == NULL)
+        return -1;
+
+    int r = 0;
+
+    // AnalogOut Pins
+     for (int j = 0; j < (device->info.iPWMCount); j++) {
+
+     }
+
+     
+    r = hal_param_u32_newf(HAL_RW, &(device->PWM.PWMperiod), comp_id, "%s.adcout.pwm.period", prefix);
+    if (r != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.pwm.period failed\n", __FILE__, __FUNCTION__, prefix);
+        return r;
+    }
+     // AnalogIn Pins
+    int analogInCount = 7;
+    for (int j = 0; j < (analogInCount); j++) {
+
+    }
+
+    // Digital Pins
+    for (int j = 0; j < (device->info.iPinCount); j++) {
+
+    }
+
+    return r;
+}
 
 /**
  * @brief Parser for pin function configuration response (CMD 0xC0, param1=0).
