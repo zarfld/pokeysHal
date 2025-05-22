@@ -1,6 +1,6 @@
 #include "PoKeysLibHal.h"
 #include "PoKeysLibAsync.h"
-#include "hal-canon/hal_canon.h"
+#include "hal_canon.h"
 
 
 int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
