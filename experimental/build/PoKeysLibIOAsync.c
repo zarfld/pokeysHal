@@ -40,7 +40,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 int PK_ParsePinFunctionsResponse(sPoKeysDevice *dev, const uint8_t *resp) {
     if (!dev || !resp) return PK_ERR_GENERIC;
     for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
-        dev->Pins[i].PinFunction = resp[8 + i];
+        dev->Pins[i].PinFunction = resp[8 + i];    // writing uint8_t to hal_u32_t
     }
     return PK_OK;
 }
@@ -76,7 +76,7 @@ int PK_PinCounterConfigurationParse(sPoKeysDevice *dev, const uint8_t *resp) {
 int PK_PinKeyMappingTypeParse(sPoKeysDevice *dev, const uint8_t *resp) {
     if (!dev || !resp) return PK_ERR_GENERIC;
     for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
-        if (dev->Pins[i].PinFunction & PK_PinCap_digitalInput) {
+        if ((uint8_t)(dev->Pins[i].PinFunction)& PK_PinCap_digitalInput) {
             dev->Pins[i].MappingType = resp[8 + i];
         } else {
             dev->Pins[i].MappingType = 0;
@@ -91,7 +91,7 @@ int PK_PinKeyMappingTypeParse(sPoKeysDevice *dev, const uint8_t *resp) {
 int PK_PinKeyMappingCodesParse(sPoKeysDevice *dev, const uint8_t *resp) {
     if (!dev || !resp) return PK_ERR_GENERIC;
     for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
-        if (dev->Pins[i].PinFunction & PK_PinCap_digitalInput) {
+        if ((uint8_t)(dev->Pins[i].PinFunction) & PK_PinCap_digitalInput) {
             dev->Pins[i].KeyCodeMacroID = resp[8 + i];
         } else {
             dev->Pins[i].KeyCodeMacroID = 0;
@@ -107,7 +107,7 @@ int PK_PinKeyMappingCodesParse(sPoKeysDevice *dev, const uint8_t *resp) {
 int PK_PinKeyMappingModifiersParse(sPoKeysDevice *dev, const uint8_t *resp) {
     if (!dev || !resp) return PK_ERR_GENERIC;
     for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
-        if (dev->Pins[i].PinFunction & PK_PinCap_digitalInput) {
+        if ((uint8_t)(dev->Pins[i].PinFunction) & PK_PinCap_digitalInput) {
             dev->Pins[i].KeyModifier = resp[8 + i];
         } else {
             dev->Pins[i].KeyModifier = 0;
@@ -122,7 +122,7 @@ int PK_PinKeyMappingModifiersParse(sPoKeysDevice *dev, const uint8_t *resp) {
 int PK_PinTriggeredDownKeyCodeParse(sPoKeysDevice *dev, const uint8_t *resp) {
     if (!dev || !resp) return PK_ERR_GENERIC;
     for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
-        if (dev->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+        if ((uint8_t)(dev->Pins[i].PinFunction) & PK_PinCap_triggeredInput) {
             dev->Pins[i].downKeyCodeMacroID = resp[8 + i];
         } else {
             dev->Pins[i].downKeyCodeMacroID = 0;
@@ -137,7 +137,7 @@ int PK_PinTriggeredDownKeyCodeParse(sPoKeysDevice *dev, const uint8_t *resp) {
 int PK_PinTriggeredDownKeyModifierParse(sPoKeysDevice *dev, const uint8_t *resp) {
     if (!dev || !resp) return PK_ERR_GENERIC;
     for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
-        if (dev->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+        if ((uint8_t)(dev->Pins[i].PinFunction) & PK_PinCap_triggeredInput) {
             dev->Pins[i].downKeyModifier = resp[8 + i];
         } else {
             dev->Pins[i].downKeyModifier = 0;
@@ -152,7 +152,7 @@ int PK_PinTriggeredDownKeyModifierParse(sPoKeysDevice *dev, const uint8_t *resp)
 int PK_PinTriggeredUpKeyModifierParse(sPoKeysDevice *dev, const uint8_t *resp) {
     if (!dev || !resp) return PK_ERR_GENERIC;
     for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
-        if (dev->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+        if ((uint8_t)(dev->Pins[i].PinFunction) & PK_PinCap_triggeredInput) {
             dev->Pins[i].upKeyModifier = resp[8 + i];
         } else {
             dev->Pins[i].upKeyModifier = 0;
@@ -167,7 +167,7 @@ int PK_PinTriggeredUpKeyModifierParse(sPoKeysDevice *dev, const uint8_t *resp) {
 int PK_PinTriggeredUpKeyCodeParse(sPoKeysDevice *dev, const uint8_t *resp) {
     if (!dev || !resp) return PK_ERR_GENERIC;
     for (uint32_t i = 0; i < dev->info.iPinCount; ++i) {
-        if (dev->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+        if ((uint8_t)(dev->Pins[i].PinFunction) & PK_PinCap_triggeredInput) {
             dev->Pins[i].upKeyCodeMacroID = resp[8 + i];
         } else {
             dev->Pins[i].upKeyCodeMacroID = 0;
@@ -233,7 +233,7 @@ int32_t PK_PinConfigurationSetAsync(sPoKeysDevice* device) {
     // CMD 0xC0, param1=1: Set all pin functions
     uint8_t bufferC0[56] = {0};
     for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
-        bufferC0[i] = device->Pins[i].PinFunction;
+        bufferC0[i] = (uint8_t)(device->Pins[i].PinFunction);  // write (PinFunction)hal_u32_t to bufferC0 (uint8_t)
     }
     CreateRequestAsync(device, 0xC0, (const uint8_t[]){1}, 1,
                        bufferC0, 56, NULL);
@@ -254,7 +254,7 @@ int32_t PK_PinConfigurationSetAsync(sPoKeysDevice* device) {
         uint8_t keyMod[56] = {0};
 
         for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
-            if (device->Pins[i].PinFunction & PK_PinCap_digitalInput) {
+            if ((uint8_t)(device->Pins[i].PinFunction) & PK_PinCap_digitalInput) {
                 keyType[i] = device->Pins[i].MappingType;
                 keyCode[i] = device->Pins[i].KeyCodeMacroID;
                 keyMod[i] = device->Pins[i].KeyModifier;
@@ -272,7 +272,7 @@ int32_t PK_PinConfigurationSetAsync(sPoKeysDevice* device) {
             uint8_t downCode[56] = {0}, downMod[56] = {0}, upCode[56] = {0}, upMod[56] = {0};
 
             for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
-                if (device->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+                if ((uint8_t)(device->Pins[i].PinFunction) & PK_PinCap_triggeredInput) {
                     downCode[i] = device->Pins[i].downKeyCodeMacroID;
                     downMod[i] = device->Pins[i].downKeyModifier;
                     upCode[i] = device->Pins[i].upKeyCodeMacroID;
