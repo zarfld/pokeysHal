@@ -1080,6 +1080,7 @@ POKEYSDECL int32_t PK_DigitalIOSetSingle(sPoKeysDevice* device, uint8_t pinID, u
 // Get single digital input value
 POKEYSDECL int32_t PK_DigitalIOGetSingle(sPoKeysDevice* device, uint8_t pinID, uint8_t * pinValue);
 
+
 // Set PoExtBus outputs
 POKEYSDECL int32_t PK_PoExtBusSet(sPoKeysDevice* device);
 // Get current PoExtBus outputs values
@@ -1107,7 +1108,7 @@ POKEYSDECL int32_t PK_AnalogRCFilterSet(sPoKeysDevice* device);
 // --------------------
 // PoKeysLibIOAsync API
 // --------------------
-
+POKEYSDECL int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 // Digital I/O
 int PK_DigitalIOGetAsync(sPoKeysDevice* device);
 int PK_DigitalIOSetGetAsync(sPoKeysDevice* device);
