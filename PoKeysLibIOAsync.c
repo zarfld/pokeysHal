@@ -40,6 +40,8 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
         if (PK_CheckPinCapability(device, j, PK_AllPinCap_digitalInput) == 1) {
             hal_digin_t digin = device->Pins[j].DigitalValueGet;
 
+            hal_export_digin(&digin, prefix, j, comp_id);
+            /* done in hal_export_digin already
             rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.digin.%01d.in\n", __FILE__, __FUNCTION__, prefix, j);
             r = hal_pin_bit_newf(HAL_OUT, &(digin->in), comp_id, "%s.digin.%01d.in", prefix, j);
             if (r != 0) {
@@ -52,7 +54,9 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
                 rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.digin.%01d.in-not failed\n", __FILE__, __FUNCTION__, prefix, j);
                 return r;
             }
+            */
 
+            // pokeys specific additional options
             rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.digin.%01d.invert\n", __FILE__, __FUNCTION__, prefix, j);
             r = hal_param_bit_newf(HAL_RW, &(device->Pins[j].PinCap_invertPin), id, "%s.digin.%01d.invert", prefix, j);
             if (r != 0) {
@@ -364,7 +368,8 @@ int32_t PK_DigitalIOSetAsync(sPoKeysDevice* device) {
 int PK_DigitalIOGetParse(sPoKeysDevice* device, const uint8_t* response) {
     if (!device || !response) return PK_ERR_GENERIC;
     for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
-        device->Pins[i].DigitalValueGet = ((response[8 + i / 8] & (1 << (i % 8))) != 0);
+        *(device->Pins[i].DigitalValueGet.in) = ((response[8 + i / 8] & (1 << (i % 8))) != 0);
+        *(device->Pins[i].DigitalValueGet.in_not) = ((response[8 + i / 8] & (1 << (i % 8))) == 0);
     }
     return PK_OK;
 }
