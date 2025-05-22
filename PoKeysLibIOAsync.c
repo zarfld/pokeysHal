@@ -341,7 +341,7 @@ int32_t PK_DigitalIOSetAsync(sPoKeysDevice* device) {
     for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
         if (device->Pins[i].preventUpdate > 0) {
             mask[i / 8] |= (1 << (i % 8));
-        } else if (device->Pins[i].DigitalValueSet > 0) {
+        } else if (*(device->Pins[i].DigitalValueSet.out) > 0) {
             dio[i / 8] |= (1 << (i % 8));
         }
     }
@@ -388,7 +388,7 @@ int PK_DigitalIOSetGetAsync(sPoKeysDevice* device) {
     for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
         if (device->Pins[i].preventUpdate > 0) {
             mask[i / 8] |= (1 << (i % 8));
-        } else if (device->Pins[i].DigitalValueSet > 0) {
+        } else if (*(device->Pins[i].DigitalValueSet.out) > 0) {
             dio[i / 8] |= (1 << (i % 8));
         }
     }
