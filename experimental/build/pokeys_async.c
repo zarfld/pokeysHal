@@ -83,7 +83,7 @@ static int export(char *prefix, long extra_arg) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_IO_pins failed %d \n", __FILE__, __FUNCTION__, prefix, r);
         return r;
     };
-    
+
 #ifdef RTAPI
     rtapi_snprintf(buf, sizeof(buf), "%s", prefix);
     r = hal_export_funct(buf, (void(*)(void *inst, long))_, inst, 1, 0, comp_id);
@@ -565,7 +565,7 @@ FUNCTION(_) {
 
             if (PK_RTCGetAsync(__comp_inst->dev)==0){
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync OK\n", __FILE__, __FUNCTION__);
-                 
+                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
                 }
                 else{
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet FAILED\n", __FILE__, __FUNCTION__);
@@ -573,10 +573,19 @@ FUNCTION(_) {
 
                 if(PK_EncoderValuesGetAsync(__comp_inst->dev) == PK_OK) {
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync OK\n", __FILE__, __FUNCTION__);
+                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
                 } else {
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync FAILED\n", __FILE__, __FUNCTION__);
                 }
-            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
+
+                if (PK_DigitalIOSetGetAsync(__comp_inst->dev)==0){
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOSetGetAsync OK\n", __FILE__, __FUNCTION__);
+                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
+                }
+                else{
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOSetGet FAILED\n", __FILE__, __FUNCTION__);
+                }
+            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
             PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000); // checks for timeout and retry
 }
 #endif
