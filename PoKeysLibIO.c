@@ -33,6 +33,14 @@ int32_t PK_PinConfigurationGet(sPoKeysDevice* device)
 		for (i = 0; i < device->info.iPinCount; i++)
         {
             device->Pins[i].PinFunction = device->response[8 + i];
+			if (device->Pins[i].PinFunction & PK_PinCap_invertPin) {
+
+				device->Pins[i].PinCap_invertPin = 1;
+				device->Pins[i].DigitalValueSet.invert =1;
+			} else {
+				device->Pins[i].PinCap_invertPin = 0;
+				device->Pins[i].DigitalValueSet.invert =0;
+			}
 		}
 	} else return PK_ERR_TRANSFER;
 
@@ -164,6 +172,20 @@ int32_t PK_PinConfigurationSet(sPoKeysDevice* device)
     CreateRequest(device->request, 0xC0, 1, 0, 0, 0);
 	for (i = 0; i < device->info.iPinCount; i++)
     {
+		if (device->Pins[i].PinFunction & PK_PinCap_digitalInput || device->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+            if (device->Pins[i].PinCap_invertPin == 1){
+                device->Pins[i].PinFunction |= PK_PinCap_invertPin;
+            } else {
+                device->Pins[i].PinFunction &= ~PK_PinCap_invertPin;
+            }
+
+        } else if (device->Pins[i].PinFunction & PK_PinCap_digitalOutput) {
+            if (device->Pins[i].DigitalValueSet.invert == 1){
+                device->Pins[i].PinFunction |= PK_PinCap_invertPin;
+            } else {
+                device->Pins[i].PinFunction &= ~PK_PinCap_invertPin;
+            }
+        }
         device->request[8 + i] = device->Pins[i].PinFunction;
 	}
 	if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;

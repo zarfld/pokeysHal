@@ -72,9 +72,12 @@ int PK_ParsePinFunctionsResponse(sPoKeysDevice *dev, const uint8_t *resp) {
 
         // hal_bit_t PinCap_invertPin;           // PinFunction flag 'PK_PinCap_invertPin': Invert digital pin polarity (set together with digital input, output or triggered input)
         if (dev->Pins[i].PinFunction & PK_PinCap_invertPin) {
+
             dev->Pins[i].PinCap_invertPin = 1;
+            dev->Pins[i].DigitalValueSet.invert =1;
         } else {
             dev->Pins[i].PinCap_invertPin = 0;
+            dev->Pins[i].DigitalValueSet.invert =0;
         }
     }
     return PK_OK;
@@ -268,6 +271,21 @@ int32_t PK_PinConfigurationSetAsync(sPoKeysDevice* device) {
     // CMD 0xC0, param1=1: Set all pin functions
     uint8_t bufferC0[56] = {0};
     for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
+
+        if (device->Pins[i].PinFunction & PK_PinCap_digitalInput || device->Pins[i].PinFunction & PK_PinCap_triggeredInput) {
+            if (device->Pins[i].PinCap_invertPin == 1){
+                device->Pins[i].PinFunction |= PK_PinCap_invertPin;
+            } else {
+                device->Pins[i].PinFunction &= ~PK_PinCap_invertPin;
+            }
+
+        } else if (device->Pins[i].PinFunction & PK_PinCap_digitalOutput) {
+            if (device->Pins[i].DigitalValueSet.invert == 1){
+                device->Pins[i].PinFunction |= PK_PinCap_invertPin;
+            } else {
+                device->Pins[i].PinFunction &= ~PK_PinCap_invertPin;
+            }
+        }
         bufferC0[i] = (uint8_t)(device->Pins[i].PinFunction);  // write (PinFunction)hal_u32_t to bufferC0 (uint8_t)
     }
     CreateRequestAsync(device, 0xC0, (const uint8_t[]){1}, 1,
