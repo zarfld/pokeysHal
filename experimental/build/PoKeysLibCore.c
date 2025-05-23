@@ -964,7 +964,7 @@ uint8_t PK_SL_GetPinFunction(sPoKeysDevice* device, uint8_t pin)
 
 void PK_SL_DigitalOutputSet(sPoKeysDevice* device, uint8_t pin, uint8_t value)
 {
-    device->Pins[pin].DigitalValueSet = value;
+    *(device->Pins[pin].DigitalValueSet.out) = value;
 }
 
 uint8_t PK_SL_DigitalInputGet(sPoKeysDevice* device, uint8_t pin)

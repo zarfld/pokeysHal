@@ -599,7 +599,7 @@ typedef struct
 
  uint8_t  CounterOptions;                   // Digital counter settings (on supported pins)
  hal_digin_t  DigitalValueGet;                  // Digital input value read
- uint8_t  DigitalValueSet;                  // Digital output value set
+ hal_digout_t  DigitalValueSet;                  // Digital output value set
  uint8_t  DigitalCounterAvailable;          // 1 if digital counter is available on this pin
  uint8_t  MappingType;                      // Digital input to USB keyboard mapping type - selects between direct key mapping and mapping to macro
  uint8_t  KeyCodeMacroID;                   // USB keyboard key code or macro ID (depends on MappingType)
