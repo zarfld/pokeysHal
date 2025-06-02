@@ -5,8 +5,11 @@
 
 int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 {
-    if (device == NULL)
+    if (device == NULL){
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device is NULL\n", __FILE__, __FUNCTION__);
         return -1;
+    }
+
 
     int r = 0;
 
@@ -15,7 +18,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 
      }
 
-     
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcout.pwm\n", __FILE__, __FUNCTION__, prefix);
     r = hal_param_u32_newf(HAL_RW, &(device->PWM.PWMperiod), comp_id, "%s.adcout.pwm.period", prefix);
     if (r != 0) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.pwm.period failed\n", __FILE__, __FUNCTION__, prefix);
@@ -88,8 +91,12 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 
         if (PK_CheckPinCapability(device, j, PK_AllPinCap_digitalOutput) == 1) {
             // ensure &device->Pins[j].PinCap_invertPin is mapped/cloned to device->Pins[j].DigitalValueSet.invert 
-
-            hal_export_digout(&device->Pins[j].DigitalValueSet, prefix, j,  comp_id);
+            rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.digout.%01d\n", __FILE__, __FUNCTION__, prefix, j);
+            r = hal_export_digout(&device->Pins[j].DigitalValueSet, prefix, j,  comp_id);
+            if (r != 0) {
+                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: canonical %s.digout.%01d failed\n", __FILE__, __FUNCTION__, prefix, j);
+                return r;
+            }
         }
     }
 
