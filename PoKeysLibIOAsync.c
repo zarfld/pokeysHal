@@ -24,41 +24,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.pwm.period failed\n", __FILE__, __FUNCTION__, prefix);
         return r;
     }
-     // AnalogIn Pins
-    int analogInCount = 7;
-    for (int j = 0; j < (analogInCount); j++) {
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcin.%01d\n", __FILE__, __FUNCTION__, prefix, j);
-        r = hal_export_adcin(&device->AnalogInput[j].Canon, prefix, j, comp_id);
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: canonical %s.adcin.%01d failed\n", __FILE__, __FUNCTION__, prefix, j);
-            return r;
-        }
 
-        // pokeys specific additional pins & options
-/*
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcin.%01d.in.hw\n", __FILE__, __FUNCTION__, prefix, j);
-        r = hal_pin_u32_newf(HAL_OUT, &(device->Pins[40 + j].AnalogValue), comp_id, "%s.adcin.%01d.in.hw", prefix, j);
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcin.%01d.in.hw failed\n", __FILE__, __FUNCTION__, prefix, j);
-            return r;
-        }
-
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcin.%01d.in.raw\n", __FILE__, __FUNCTION__, prefix, j);
-        r = hal_pin_float_newf(HAL_OUT, &(device->AnalogInput[j].rawvalue), comp_id, "%s.adcin.%01d.in.raw", prefix, j);
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcin.%01d.in.raw failed\n", __FILE__, __FUNCTION__, prefix, j);
-            return r;
-        }
-
-
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcin.%01d.ReferenceVoltage\n", __FILE__, __FUNCTION__, prefix, j);
-        r = hal_param_float_newf(HAL_RO, &(device->AnalogInput[j].ReferenceVoltage), comp_id, "%s.adcin.%01d.ReferenceVoltage", prefix, j);
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcin.%01d.ReferenceVoltage failed\n", __FILE__, __FUNCTION__, prefix, j);
-            return r;
-        }*/
-        device->AnalogInput[j].ReferenceVoltage = 3.3; // default reference voltage
-    }
 
     // Digital Pins
     for (int j = 0; j < (device->info.iPinCount); j++) {
@@ -100,6 +66,43 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
         }
     }
 
+
+         // AnalogIn Pins
+    int analogInCount = 7;
+    for (int j = 0; j < (analogInCount); j++) {
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcin.%01d\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_export_adcin(&device->AnalogInput[j].Canon, prefix, j, comp_id);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: canonical %s.adcin.%01d failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }
+
+        // pokeys specific additional pins & options
+/*
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcin.%01d.in.hw\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_pin_u32_newf(HAL_OUT, &(device->Pins[40 + j].AnalogValue), comp_id, "%s.adcin.%01d.in.hw", prefix, j);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcin.%01d.in.hw failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }
+
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcin.%01d.in.raw\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_pin_float_newf(HAL_OUT, &(device->AnalogInput[j].rawvalue), comp_id, "%s.adcin.%01d.in.raw", prefix, j);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcin.%01d.in.raw failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }
+
+
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcin.%01d.ReferenceVoltage\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_param_float_newf(HAL_RO, &(device->AnalogInput[j].ReferenceVoltage), comp_id, "%s.adcin.%01d.ReferenceVoltage", prefix, j);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcin.%01d.ReferenceVoltage failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }*/
+        device->AnalogInput[j].ReferenceVoltage = 3.3; // default reference voltage
+    }
+    
     return r;
 }
 
