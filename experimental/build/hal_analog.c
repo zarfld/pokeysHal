@@ -60,28 +60,38 @@ int hal_export_adcin(hal_adcin_t *adcin, const char *prefix, int index, int comp
     // value (output)
     rtapi_snprintf(buf, sizeof(buf), "%s.adcin.%d.value", prefix, index);
     ret = hal_pin_float_newf(HAL_OUT, &adcin->value, comp_id, buf);
-    if (ret != 0) return ret;
-
+    if (ret != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "linuxcnc-hal-canon: %s:%s: %s.adcin.%d.value failed\n", __FILE__, __FUNCTION__, prefix, index);
+        return ret;
+    }
     // scale
     rtapi_snprintf(buf, sizeof(buf), "%s.adcin.%d.scale", prefix, index);
     ret = hal_param_float_newf(HAL_RW, &adcin->scale, comp_id, buf);
-    if (ret != 0) return ret;
-
+    if (ret != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "linuxcnc-hal-canon: %s:%s: %s.adcin.%d.scale failed\n", __FILE__, __FUNCTION__, prefix, index);
+        return ret;
+    }
     // offset
     rtapi_snprintf(buf, sizeof(buf), "%s.adcin.%d.offset", prefix, index);
     ret = hal_param_float_newf(HAL_RW, &adcin->offset, comp_id, buf);
-    if (ret != 0) return ret;
-
+    if (ret != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "linuxcnc-hal-canon: %s:%s: %s.adcin.%d.offset failed\n", __FILE__, __FUNCTION__, prefix, index);
+        return ret;
+    }
     // bit_weight
     rtapi_snprintf(buf, sizeof(buf), "%s.adcin.%d.bit-weight", prefix, index);
     ret = hal_param_float_newf(HAL_RW, &adcin->bit_weight, comp_id, buf);
-    if (ret != 0) return ret;
-
+    if (ret != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "linuxcnc-hal-canon: %s:%s: %s.adcin.%d.bit-weight failed\n", __FILE__, __FUNCTION__, prefix, index);
+        return ret;
+    }
     // hw_offset
     rtapi_snprintf(buf, sizeof(buf), "%s.adcin.%d.hw-offset", prefix, index);
     ret = hal_param_float_newf(HAL_RW, &adcin->hw_offset, comp_id, buf);
-    if (ret != 0) return ret;
-
+    if (ret != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "linuxcnc-hal-canon: %s:%s: %s.adcin.%d.hw-offset failed\n", __FILE__, __FUNCTION__, prefix, index);
+        return ret;
+    }
     return 0;
 }
 
