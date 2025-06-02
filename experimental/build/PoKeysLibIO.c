@@ -517,8 +517,10 @@ int32_t PK_AnalogIOGet(sPoKeysDevice* device)
 
 	for (i = 0; i < 7; i++)
     {
-        device->Pins[40 + i].AnalogValue = ((uint32_t)device->response[8 + i * 2] << 8) + (long)device->response[9 + i * 2];
-    }
+        *(device->Pins[40 + i].AnalogValue) = ((uint32_t)device->response[8 + i * 2] << 8) + (long)device->response[9 + i * 2];
+		*(device->AnalogInput[i].rawvalue) = *(device->Pins[40 + i].AnalogValue) * 4095 / device->AnalogInput[i].ReferenceVoltage;
+		*(device->AnalogInput[i].Canon.value) = *(device->AnalogInput[i].rawvalue) * device->AnalogInput[i].Canon.scale + device->AnalogInput[i].Canon.offset;
+	}
 
 	return PK_OK;
 }              
