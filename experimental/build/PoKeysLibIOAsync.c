@@ -78,7 +78,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
         }
 
         // pokeys specific additional pins & options
-/*
+
         rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcin.%01d.in.hw\n", __FILE__, __FUNCTION__, prefix, j);
         r = hal_pin_u32_newf(HAL_OUT, &(device->Pins[40 + j].AnalogValue), comp_id, "%s.adcin.%01d.in.hw", prefix, j);
         if (r != 0) {
@@ -99,10 +99,10 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
         if (r != 0) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcin.%01d.ReferenceVoltage failed\n", __FILE__, __FUNCTION__, prefix, j);
             return r;
-        }*/
+        }
         device->AnalogInput[j].ReferenceVoltage = 3.3; // default reference voltage
     }
-    
+
     return r;
 }
 
