@@ -539,7 +539,7 @@ int32_t PK_AnalogIOGetAsArray(sPoKeysDevice* device, uint32_t * buffer)
     {
         for (i = 0; i < 7; i++)
         {
-            buffer[i] = device->Pins[40+i].AnalogValue;
+            buffer[i] = *(device->Pins[40+i].AnalogValue);
         }
     }
     return result;

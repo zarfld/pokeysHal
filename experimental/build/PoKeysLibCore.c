@@ -974,6 +974,6 @@ uint8_t PK_SL_DigitalInputGet(sPoKeysDevice* device, uint8_t pin)
 
 uint32_t PK_SL_AnalogInputGet(sPoKeysDevice* device, uint8_t pin)
 {
-    return device->Pins[pin].AnalogValue;
+    return *(device->Pins[pin].AnalogValue);
 }
 
