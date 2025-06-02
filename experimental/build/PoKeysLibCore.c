@@ -130,6 +130,8 @@ void InitializeNewDevice(sPoKeysDevice* device)
     device->Pins = (sPoKeysPinData*)hal_malloc(sizeof(sPoKeysPinData) * device->info.iPinCount);
 	memset(device->Pins, 0, sizeof(sPoKeysPinData) * device->info.iPinCount);
 
+    device->AnalogInput = (sPoKeysAnalogData*)hal_malloc(sizeof(sPoKeysAnalogData) * 7);
+    memset(device->AnalogInput, 0, sizeof(sPoKeysAnalogData) * 7);
 
 	for (i = 0; i < device->info.iPinCount; i++)
 	{
