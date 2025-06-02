@@ -593,7 +593,7 @@ typedef struct
 typedef struct
 {
  hal_u32_t  DigitalCounterValue;              // Digital counter current value (on supported pins when PinFunction is set to digital counter - use PK_IsCounterAvailable to check the pin)
- hal_u32_t  AnalogValue;                      // Analog input value (on supported pins when PinFunction is set as analog input)
+ hal_u32_t  *AnalogValue;                      // Analog input value (on supported pins when PinFunction is set as analog input)
  hal_u32_t  PinFunction;                      // Pin function code - see ePK_PinCap for values
     hal_bit_t PinCap_invertPin;           // PinFunction flag 'PK_PinCap_invertPin': Invert digital pin polarity (set together with digital input, output or triggered input)
 
@@ -621,7 +621,7 @@ typedef struct
     // pokeys specific data
     hal_float_t *rawvalue;      // 𝑈(𝑘)[𝑉] * 4095 / ReferenceVoltage
     hal_float_t ReferenceVoltage;      // RO Parameter: Reference voltage for the analog input (in Volts) default is 3.3V
-} sPoKeysAnalogData
+} sPoKeysAnalogData;
 
 
 // Encoder-specific data HAL version
