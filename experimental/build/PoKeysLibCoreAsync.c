@@ -109,7 +109,8 @@ void PK_InitializeNewDeviceAsync(void *device_ptr)
 
     device->Pins = (sPoKeysPinData*)hal_malloc(sizeof(sPoKeysPinData) * device->info.iPinCount);
     memset(device->Pins, 0, sizeof(sPoKeysPinData) * device->info.iPinCount);
-
+//sPoKeysAnalogData
+    device->AnalogInput = (sPoKeysAnalogData*)hal_malloc(sizeof(sPoKeysAnalogData) * 7);
     for (i = 0; i < device->info.iPinCount; i++) {
         device->Pins[i].DigitalCounterAvailable = PK_IsCounterAvailable(device, i) ? 1 : 0;
     }
