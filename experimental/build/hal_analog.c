@@ -59,14 +59,14 @@ int hal_export_adcin(hal_adcin_t *adcin, const char *prefix, int index, int comp
 
     // value (output)
     rtapi_snprintf(buf, sizeof(buf), "%s.adcin.%d.value", prefix, index);
-    ret = hal_pin_float_newf(HAL_OUT, &adcin->value, comp_id, buf);
+    ret = hal_pin_float_newf(HAL_OUT, &(adcin->value), comp_id, buf);
     if (ret != 0) {
         rtapi_print_msg(RTAPI_MSG_ERR, "linuxcnc-hal-canon: %s:%s: %s.adcin.%d.value failed\n", __FILE__, __FUNCTION__, prefix, index);
         return ret;
     }
     // scale
     rtapi_snprintf(buf, sizeof(buf), "%s.adcin.%d.scale", prefix, index);
-    ret = hal_param_float_newf(HAL_RW, &adcin->scale, comp_id, buf);
+    ret = hal_param_float_newf(HAL_RW, &(adcin->scale), comp_id, buf);
     if (ret != 0) {
         rtapi_print_msg(RTAPI_MSG_ERR, "linuxcnc-hal-canon: %s:%s: %s.adcin.%d.scale failed\n", __FILE__, __FUNCTION__, prefix, index);
         return ret;
