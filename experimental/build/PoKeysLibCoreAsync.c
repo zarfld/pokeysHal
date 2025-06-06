@@ -566,9 +566,12 @@ void InitializeNewDevice(sPoKeysDevice* device)
         device->EasySensors = NULL;
     }
 
-    device->PWM.PWMduty = (uint32_t*)hal_malloc(sizeof(uint32_t) * device->info.iPWMCount);
-    memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
+    device->PWM.PWMduty = (hal_u32_t*)hal_malloc(sizeof(hal_u32_t) * device->info.iPWMCount);
+    memset(device->PWM.PWMduty, 0, sizeof(hal_u32_t) * device->info.iPWMCount);
 
+    device->AnalogOutput = (hal_adcout_t*)hal_malloc(sizeof(hal_adcout_t) * device->info.iPWMCount);
+    memset(device->AnalogOutput, 0, sizeof(hal_adcout_t) * device->info.iPWMCount);
+    
     if (device->info.iPWMCount > 0)
     {
         device->PWM.PWMenabledChannels = (unsigned char*)hal_malloc(sizeof(unsigned char) * device->info.iPWMCount);

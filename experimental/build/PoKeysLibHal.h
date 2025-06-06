@@ -929,7 +929,8 @@ typedef struct
  sPoKeysPinData*           Pins;                          // PoKeys pins
 
     sPoKeysAnalogData*          AnalogInput;                  // PoKeys analog inputs
-
+    hal_adcout_t*          AnalogOutput;                 // PoKeys analog outputs
+    
  sPoKeysEncoder*           Encoders;                      // PoKeys encoders
  ALIGN_TEST(1)
  sMatrixKeyboard           matrixKB;                      // Matrix keyboard structure
