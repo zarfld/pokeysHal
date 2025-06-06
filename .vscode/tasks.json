@@ -1,0 +1,86 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1 - Install apt dependencies",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-c", "xargs -a prerequisites.txt sudo apt-get install -y"],
+      "problemMatcher": []
+    },
+    {
+      "label": "2 - Build PoKeysHalLib (Makefile.noqmake)",
+      "type": "shell",
+      "command": "sudo",
+      "args": ["make", "-f", "Makefile.noqmake", "install"],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "3 - Build HAL userspace component",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "sudo halcompile --install --userspace --extra-link-args='-L/usr/lib -lPoKeysHal' experimental/pokeys_async.c && ",
+        "sudo halcompile --preprocess experimental/pokeys_async2.comp"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "4 - Build RT HAL component (Submakefile.rt)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "rm -rf experimental/build && mkdir -p experimental/build && ",
+        "cp Makefile.noqmakeRT *.h *.c experimental/pokeys_async.c experimental/Submakefile.rt experimental/build/ && ",
+        "cp hal-canon/*.c hal-canon/*.h experimental/build/ && ",
+        "cd experimental/build && make -f Submakefile.rt all && sudo make -f Submakefile.rt install"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "5 - Run pokeys_async in userspace (halrun)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "halrun <<EOF\n",
+        "loadusr -W pokeys_async\n",
+        "show pin\n",
+        "show funct\n",
+        "start\n",
+        "show pin\n",
+        "show param\n",
+        "exit\nEOF"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "6 - Run pokeys_async in RT (halrun)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "halrun <<EOF\n",
+        "loadrt threads name1=test-thread period1=1000000\n",
+        "loadrt pokeys_async\n",
+        "show funct\n",
+        "show thread\n",
+        "show pin\n",
+        "show param\n",
+        "addf pokeys-async.0 test-thread\n",
+        "start\n",
+        "show funct\n",
+        "show thread\n",
+        "show pin\n",
+        "show param\n",
+        "exit\nEOF"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

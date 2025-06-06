@@ -1,7 +1,26 @@
 {
-    "files.associations": {
-        "pokeyslibcore.h": "c",
-        "pokeyslibasync.h": "c"
-    },
-    "github.copilot.chat.localeOverride": "en"
+  "files.associations": {
+    "pokeyslibcore.h": "c",
+    "pokeyslibasync.h": "c"
+  },
+  "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+  "makefile.launchConfigurations": [
+    {
+      "cwd": "${workspaceFolder}",
+      "binaryPath": "${workspaceFolder}/build/bin/pokeys_async",
+      "binaryArgs": [],
+      "stopAtEntry": false,
+      "debuggerArgs": []
+    }
+  ],
+  "makefile.configurations": [
+    {
+      "name": "Debug",
+      "makeArgs": [],
+      "makefilePath": "Makefile",
+      "buildDirectory": "${workspaceFolder}/build"
+    }
+  ],
+  "makefile.defaultConfiguration": "Debug",
+  "github.copilot.chat.localeOverride": "en"
 }

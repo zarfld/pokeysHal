@@ -1,0 +1,13 @@
+{
+  "name": "Attach to GDB Remote (pokeys_async)",
+  "type": "cppdbg",
+  "request": "launch",
+  "MIMode": "gdb",
+  "miDebuggerServerAddress": "linuxcncpi5.local:1234",
+  "program": "${workspaceFolder}/build/bin/pokeys_async", // lokale Kopie
+  "cwd": "${workspaceFolder}",
+"stopAtEntry": false,
+"configurations": [
+
+]
+}
