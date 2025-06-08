@@ -611,9 +611,9 @@ int PK_PWMConfigurationSetAsync(sPoKeysDevice* device) {
         }
         hal_float_t val = hal_adcout_getscaledvalue(&device->PWM.PWManalogOutputs[n]);
 		//PWMduty[i] = (uint32_t)((tmp / max_v[i]) * PWMperiod);
-		device->PWM.PWMduty[n] = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
+		*(device->PWM.PWMduty[n]) = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
 
-        uint32_t duty = device->PWM.PWMduty[n];
+        uint32_t duty = (uint32_t)*(device->PWM.PWMduty[n]);
         payload[1 + n * 4] = (uint8_t)(duty & 0xFF);
         payload[2 + n * 4] = (uint8_t)((duty >> 8) & 0xFF);
         payload[3 + n * 4] = (uint8_t)((duty >> 16) & 0xFF);
@@ -637,7 +637,7 @@ int PK_PWMConfigurationParse(sPoKeysDevice* device, const uint8_t* response) {
 
     for (uint32_t n = 0; n < 6; n++) {
         device->PWM.PWMenabledChannels[n] = (response[8] & (1 << n)) ? 1 : 0;
-        device->PWM.PWMduty[n] =
+        *(device->PWM.PWMduty[n]) =
             ((uint32_t)response[9 + n * 4]) |
             ((uint32_t)response[10 + n * 4] << 8) |
             ((uint32_t)response[11 + n * 4] << 16) |
@@ -676,9 +676,9 @@ int PK_PWMUpdateAsync(sPoKeysDevice* device) {
         }
         hal_float_t val = hal_adcout_getscaledvalue(&device->PWM.PWManalogOutputs[n]);
 		//PWMduty[i] = (uint32_t)((tmp / max_v[i]) * PWMperiod);
-		device->PWM.PWMduty[n] = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
+		*(device->PWM.PWMduty[n]) = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
 
-        uint32_t duty = device->PWM.PWMduty[n];
+        uint32_t duty = (uint32_t)*(device->PWM.PWMduty[n]);
         payload[1 + n * 4] = (uint8_t)(duty & 0xFF);
         payload[2 + n * 4] = (uint8_t)((duty >> 8) & 0xFF);
         payload[3 + n * 4] = (uint8_t)((duty >> 16) & 0xFF);
