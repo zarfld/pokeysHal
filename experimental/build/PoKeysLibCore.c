@@ -212,7 +212,7 @@ void InitializeNewDevice(sPoKeysDevice* device)
             
         }
 
-        	device->PWM.PWMduty = (hal_u32_t*)hal_malloc(sizeof(hal_u32_t) * device->info.iPWMCount);
+        	*(device->PWM.PWMduty) = (hal_u32_t*)hal_malloc(sizeof(hal_u32_t) * device->info.iPWMCount);
             //memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
             for (uint32_t i = 0; i < device->info.iPWMCount; i++)
                 device->PWM.PWMduty[i] = 0;
@@ -277,7 +277,7 @@ void CleanDevice(sPoKeysDevice* device)
 	//free(device->Encoders);
 	device->Encoders = NULL;
 	////free(device->PWM.PWMduty); in HAL there is no free. The entire HAL shared memory area is freed when the last component calls hal_exit()
-	device->PWM.PWMduty = NULL;
+	*(device->PWM.PWMduty) = NULL;
 	//free(device->PWM.PWMenabledChannels);
 	device->PWM.PWMenabledChannels = NULL;
 	//free(device->PWM.PWMpinIDs);
@@ -316,7 +316,7 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
     // Reserve memory...
     destination->Pins = (sPoKeysPinData*)hal_malloc(sizeof(sPoKeysPinData) * original->info.iPinCount);
     destination->Encoders = (sPoKeysEncoder*)hal_malloc(sizeof(sPoKeysEncoder) * original->info.iEncodersCount);
-    destination->PWM.PWMduty = (uint32_t*)hal_malloc(sizeof(uint32_t) * original->info.iPWMCount);
+    *(destination->PWM.PWMduty) = (uint32_t*)hal_malloc(sizeof(uint32_t) * original->info.iPWMCount);
     destination->PWM.PWMenabledChannels = (unsigned char*)hal_malloc(sizeof(unsigned char) * original->info.iPWMCount);
 	if (original->info.iPWMCount == 0) destination->PWM.PWMenabledChannels = NULL;
     destination->PWM.PWMpinIDs = (unsigned char*)hal_malloc(sizeof(unsigned char) * original->info.iPWMCount);
@@ -366,7 +366,7 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
     destination->matrixKB = original->matrixKB;
 
     destination->PWM.PWMperiod = original->PWM.PWMperiod;
-    destination->PWM.PWMduty = original->PWM.PWMduty;
+    *(destination->PWM.PWMduty) = *(original->PWM.PWMduty);
     
     memcpy(destination->PWM.PWMenabledChannels, original->PWM.PWMenabledChannels,
            sizeof(unsigned char) * original->info.iPWMCount);
