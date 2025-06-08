@@ -23,14 +23,14 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
         }
 
         rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcout.%01d.max_voltage\n", __FILE__, __FUNCTION__, prefix, j);
-        r = hal_param_float_newf(HAL_RW, &(device->PWM.max_voltage[j]), comp_id, "%s.adcout.%01d.max_voltage", prefix, j);
+        r = hal_param_float_newf(HAL_RW, &(device->PWM.max_Voltage[j]), comp_id, "%s.adcout.%01d.max_voltage", prefix, j);
         if (r != 0) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.%01d.max_voltage failed\n", __FILE__, __FUNCTION__, prefix, j);
             return r;
         }
 
         rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty\n", __FILE__, __FUNCTION__, prefix, j);
-        r = hal_pin_float_newf(HAL_OUT, &(device->PWM.PWMduty[j]), comp_id, "%s.adcout.%01d.PWMduty", prefix, j);
+        r = hal_pin_u32_newf(HAL_OUT, &(device->PWM.PWMduty[j]), comp_id, "%s.adcout.%01d.PWMduty", prefix, j);
         if (r != 0) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty failed\n", __FILE__, __FUNCTION__, prefix, j);
             return r;
@@ -609,7 +609,7 @@ int PK_PWMConfigurationSetAsync(sPoKeysDevice* device) {
         if (device->PWM.PWMenabledChannels[n]) {
             payload[0] |= (uint8_t)(1 << n);
         }
-        hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutput[n]);
+        hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutputs[n]);
 		//PWMduty[i] = (uint32_t)((tmp / max_v[i]) * PWMperiod);
 		device->PWM.PWMduty[n] = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
 
@@ -674,7 +674,7 @@ int PK_PWMUpdateAsync(sPoKeysDevice* device) {
         if (device->PWM.PWMenabledChannels[n]) {
             payload[0] |= (uint8_t)(1 << n);
         }
-        hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutput[n]);
+        hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutputs[n]);
 		//PWMduty[i] = (uint32_t)((tmp / max_v[i]) * PWMperiod);
 		device->PWM.PWMduty[n] = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
 
