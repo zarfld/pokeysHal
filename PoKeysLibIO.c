@@ -670,7 +670,7 @@ int32_t PK_PWMConfigurationSet(sPoKeysDevice* device)
 
         if (device->PWM.PWMenabledChannels[n]) device->request[8] |= (uint8_t)(1 << n);
 
-		hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutput[n]);
+		hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutputs[n]);
 		//PWMduty[i] = (uint32_t)((tmp / max_v[i]) * PWMperiod);
 		device->PWM.PWMduty[n] = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
 
@@ -744,7 +744,7 @@ int32_t PK_PWMUpdate(sPoKeysDevice* device)
 		device->PWM.PWMenabledChannels[n] = (*(device->PWM.PWManalogOutputs[n].enable) != 0) ? 1 : 0;
 		if (device->PWM.PWMenabledChannels[n]) device->request[8] |= (unsigned char)(1 << n);
 
-		hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutput[n]);
+		hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutputs[n]);
 		//PWMduty[i] = (uint32_t)((tmp / max_v[i]) * PWMperiod);
 		device->PWM.PWMduty[n] = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
 		// old: memcpy(&(device->request[9 + n * 4]), &(device->PWM.PWMduty[n]), 4);
