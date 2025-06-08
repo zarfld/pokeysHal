@@ -15,7 +15,26 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 
     // AnalogOut Pins
      for (int j = 0; j < (device->info.iPWMCount); j++) {
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcout.%01d\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_export_adcout(&device->PWM.PWManalogOutputs[j], prefix, j, comp_id);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: canonical %s.adcout.%01d failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }
 
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcout.%01d.max_voltage\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_param_float_newf(HAL_RW, &(device->PWM.max_voltage[j]), comp_id, "%s.adcout.%01d.max_voltage", prefix, j);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.%01d.max_voltage failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }
+
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_pin_float_newf(HAL_OUT, &(device->PWM.PWMduty[j]), comp_id, "%s.adcout.%01d.PWMduty", prefix, j);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }
      }
 
     rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcout.pwm\n", __FILE__, __FUNCTION__, prefix);
@@ -92,7 +111,6 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcin.%01d.in.raw failed\n", __FILE__, __FUNCTION__, prefix, j);
             return r;
         }
-
 
         rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcin.%01d.ReferenceVoltage\n", __FILE__, __FUNCTION__, prefix, j);
         r = hal_param_float_newf(HAL_RO, &(device->AnalogInput[j].ReferenceVoltage), comp_id, "%s.adcin.%01d.ReferenceVoltage", prefix, j);
@@ -587,9 +605,14 @@ int PK_PWMConfigurationSetAsync(sPoKeysDevice* device) {
 
     uint8_t payload[37] = {0};
     for (uint32_t n = 0; n < 6; n++) {
+        device->PWM.PWMenabledChannels[n] = (*(device->PWM.PWManalogOutputs[n].enable) != 0) ? 1 : 0;
         if (device->PWM.PWMenabledChannels[n]) {
             payload[0] |= (uint8_t)(1 << n);
         }
+        hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutput[n]);
+		//PWMduty[i] = (uint32_t)((tmp / max_v[i]) * PWMperiod);
+		device->PWM.PWMduty[n] = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
+
         uint32_t duty = device->PWM.PWMduty[n];
         payload[1 + n * 4] = (uint8_t)(duty & 0xFF);
         payload[2 + n * 4] = (uint8_t)((duty >> 8) & 0xFF);
@@ -647,9 +670,14 @@ int PK_PWMUpdateAsync(sPoKeysDevice* device) {
 
     uint8_t payload[37] = {0};
     for (uint32_t n = 0; n < 6; n++) {
+        device->PWM.PWMenabledChannels[n] = (*(device->PWM.PWManalogOutputs[n].enable) != 0) ? 1 : 0;
         if (device->PWM.PWMenabledChannels[n]) {
             payload[0] |= (uint8_t)(1 << n);
         }
+        hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutput[n]);
+		//PWMduty[i] = (uint32_t)((tmp / max_v[i]) * PWMperiod);
+		device->PWM.PWMduty[n] = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
+
         uint32_t duty = device->PWM.PWMduty[n];
         payload[1 + n * 4] = (uint8_t)(duty & 0xFF);
         payload[2 + n * 4] = (uint8_t)((duty >> 8) & 0xFF);

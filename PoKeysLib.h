@@ -625,11 +625,14 @@ typedef struct
 // PWM-specific data
 typedef struct
 {
-    uint32_t  PWMperiod;                       // PWM period, shared among all channels
+    hal_u32_t PWMperiod;                       // PWM period, shared among all channels
     uint32_t  reserved;
-    uint32_t *PWMduty;                         // PWM duty cycles (range between 0 and PWM period)
+    hal_u32_t  *PWMduty;                         // PWM duty cycles (range between 0 and PWM period)
     uint8_t * PWMenabledChannels;              // List of enabled PWM channels
 	uint8_t * PWMpinIDs;
+    hal_adcout_t *PWManalogOutputs; // Analog outputs for PWM channels (if available)
+
+    hal_float_t *max_Voltage;                  // Maximum voltage for the PWM output (used for analog outputs)
 } sPoKeysPWM;
 
 // Matrix keyboard specific data
