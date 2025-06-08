@@ -609,7 +609,7 @@ int PK_PWMConfigurationSetAsync(sPoKeysDevice* device) {
         if (device->PWM.PWMenabledChannels[n]) {
             payload[0] |= (uint8_t)(1 << n);
         }
-        hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutputs[n]);
+        hal_float_t val = hal_adcout_getscaledvalue(&device->PWM.PWManalogOutputs[n]);
 		//PWMduty[i] = (uint32_t)((tmp / max_v[i]) * PWMperiod);
 		device->PWM.PWMduty[n] = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
 
@@ -674,7 +674,7 @@ int PK_PWMUpdateAsync(sPoKeysDevice* device) {
         if (device->PWM.PWMenabledChannels[n]) {
             payload[0] |= (uint8_t)(1 << n);
         }
-        hal_float_t val = hal_adcout_getscaledvalue(device->PWM.PWManalogOutputs[n]);
+        hal_float_t val = hal_adcout_getscaledvalue(&device->PWM.PWManalogOutputs[n]);
 		//PWMduty[i] = (uint32_t)((tmp / max_v[i]) * PWMperiod);
 		device->PWM.PWMduty[n] = (hal_u32_t)((val / device->PWM.max_Voltage[n]) * device->PWM.PWMperiod);
 
