@@ -1,6 +1,7 @@
+cmake_minimum_required(VERSION 3.5)
 project(PoKeys)
 
-cmake_minimum_required(VERSION 3.2)
+
 
 include(FindPkgConfig)
 
