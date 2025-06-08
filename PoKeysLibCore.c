@@ -212,12 +212,12 @@ void InitializeNewDevice(sPoKeysDevice* device)
             
         }
 
-        	*(device->PWM.PWMduty) = (hal_u32_t*)hal_malloc(sizeof(hal_u32_t) * device->info.iPWMCount);
+        	device->PWM.PWMduty = (hal_u32_t*)hal_malloc(sizeof(hal_u32_t) * device->info.iPWMCount);
             //memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
             for (uint32_t i = 0; i < device->info.iPWMCount; i++)
                 device->PWM.PWMduty[i] = 0;
 
-            *(device->PWM.PWManalogOutputs) = (hal_adcout_t*)hal_malloc(sizeof(hal_adcout_t) * device->info.iPWMCount);
+            device->PWM.PWManalogOutputs = (hal_adcout_t*)hal_malloc(sizeof(hal_adcout_t) * device->info.iPWMCount);
             for (uint32_t i = 0; i < device->info.iPWMCount; i++)
             {
                 *(device->PWM.PWManalogOutputs[i].value) = 0.0;
@@ -226,7 +226,7 @@ void InitializeNewDevice(sPoKeysDevice* device)
                 device->PWM.PWManalogOutputs[i].scale = 1.0;
                 device->PWM.PWManalogOutputs[i].high_limit = device->PWM.max_Voltage[i];
                 device->PWM.PWManalogOutputs[i].low_limit = 0.0;
-                device->PWM.PWManalogOutputs[i].bit_weight = device->PWM.max_voltage[i] / device->PWM.PWMperiod;;
+                device->PWM.PWManalogOutputs[i].bit_weight = device->PWM.max_Voltage[i] / device->PWM.PWMperiod;;
                 device->PWM.PWManalogOutputs[i].hw_offset = 0.0;
             }
 
