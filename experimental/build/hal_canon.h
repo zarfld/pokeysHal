@@ -194,6 +194,7 @@ typedef struct {
  * @brief Export canonical adcin pins and parameters.
  */
 int hal_export_adcin(hal_adcin_t *adcin, const char *prefix, int index, int comp_id);
+int hal_adcin_applyScaling(hal_adcin_t *adcin, float rawvalue);
 
 #ifdef RTAPI
 /**
@@ -250,6 +251,7 @@ typedef struct {
  * @brief Export canonical adcout pins and parameters.
  */
 int hal_export_adcout(hal_adcout_t *adcout, const char *prefix, int index, int comp_id);
+hal_float_t hal_adcout_getscaledvalue(hal_adcout_t *adcout);
 
 #ifdef RTAPI
 /**

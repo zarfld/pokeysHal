@@ -156,14 +156,80 @@ void InitializeNewDevice(sPoKeysDevice* device)
         device->EasySensors = NULL;
     }
 
-	device->PWM.PWMduty = (uint32_t*)hal_malloc(sizeof(uint32_t) * device->info.iPWMCount);
-	//memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
-    for (uint32_t i = 0; i < device->info.iPWMCount; i++)
-        device->PWM.PWMduty[i] = 0;
-
-
+    /**
+    General pin settings
+        PoKeys55, PoKeys56, PoKeys57 limitations
+        1. Pin codes used in PoKeys55 device are 0-based, e.g. pin 1 has pin code of 0, pin 55 has pin code of 54.
+        2. Analog input capable pins 43 to 47 have pin codes of 42 to 46.
+        3. Analog output capable pin 43 has pin code of 42.
+        4. PWM (pulse-width modulation) capable pins 17 to 22 have pin codes of 16-21 (PWM module outputs are in reversed order, e.g. pin 17 (pin coded as 16) is connected to PWM6 output – see specifications below).
+    */
 	if (device->info.iPWMCount > 0)
 	{
+        device->PWM.max_Voltage = (hal_float_t*)hal_malloc(sizeof(hal_float_t) * device->info.iPWMCount);
+        for (uint32_t i = 0; i < device->info.iPWMCount; i++)
+        {
+            // check for first pin of PK_DeviceID_PoKeys57CNC
+            if (i==5 && device->DeviceData.DeviceTypeID == PK_DeviceID_PoKeys57CNC)
+            {
+                /**
+                PoKeys57CNC device supports PWM output function on 4 pins (pins 18, 20, 21 and 22). Different duty
+                cycles can be assigned to each PWM output however, all outputs share the same PWM period. PWM
+                outputs can be easily amplified using an external transistor and used for control of loads with increased
+                increased current demand - pins with such function embedded are marked as OC (open-collector) in
+                the pinout diagram. PoKeys PWM outputs can also be used to drive various R/C servo motors that
+                accept PWM signal with 50 Hz frequency (20 ms PWM period) and duty cycles between 5 and 10 % (1
+                to 2 ms).
+                PoKeys devices have an in-built PWM module that operates at a fixed clock frequency (25 MHz). Both
+                the PWM period and the PWM duty cycles must be expressed as number of module clock cycles (i.e.
+                20 ms PWM period equates to 0.020 x 25 000 000 = 500 000)
+                */
+                device->PWM.max_Voltage[i] = 10.0; // Default max voltage for PWM outputs on PoKeys57CNC
+            }
+            else if (i==5 && device->DeviceData.DeviceTypeID == PK_DeviceID_PoKeys57CNCpro4x25)
+            {
+                /**
+                PoKeys57CNCpro4x25 device supports PWM output function on pins 17 and 20. Pin 17 is wired to 0-
+                10 V output for spindle control – the output voltage is proportional to the duty cycle of the PWM
+                output. PWM output on pin 20 is located on dedicated connector and can be easily amplified using an
+                external transistor and used for controlling the loads with increased current demand – we offer
+                MOSFET power switch adapter for such purposes in PoLabs online store.
+                The frequency of the generated PWM signal can be changed – for the analog output functionality on
+                pin 17 to operate as designed, a PWM frequency of 20 kHz is suggested. However, if needed, the
+                frequency of PoKeys PWM outputs can be reduced – e.g. to drive various R/C servo motors that accept
+                PWM signal with 50 Hz frequency (20 ms PWM period) and duty cycles between 5 and 10 % (1 to 2
+                ms). In such case, analog output on pin 17 will not be operational.
+                PoKeys devices have a built-in PWM module that operates at a fixed clock frequency of 25 MHz. Both
+                the PWM period and the PWM duty cycles must be expressed as number of module clock cycles (i.e.
+                20 ms PWM period equates to 0.020 x 25 000 000 = 500 000).
+                */
+                device->PWM.max_Voltage[i] = 10.0; // Default max voltage for PWM outputs on PoKeys57CNC
+            }
+            else{
+                // Default max voltage for other PWM outputs
+                device->PWM.max_Voltage[i] = 5.0; // Default max voltage for PWM outputs
+            }
+            
+        }
+
+        	device->PWM.PWMduty = (hal_u32_t*)hal_malloc(sizeof(hal_u32_t) * device->info.iPWMCount);
+            //memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
+            for (uint32_t i = 0; i < device->info.iPWMCount; i++)
+                device->PWM.PWMduty[i] = 0;
+
+            device->PWM.PWManalogOutputs = (hal_adcout_t*)hal_malloc(sizeof(hal_adcout_t) * device->info.iPWMCount);
+            for (uint32_t i = 0; i < device->info.iPWMCount; i++)
+            {
+                *(device->PWM.PWManalogOutputs[i].value) = 0.0;
+                *(device->PWM.PWManalogOutputs[i].enable) = 0;
+                device->PWM.PWManalogOutputs[i].offset = 0.0;
+                device->PWM.PWManalogOutputs[i].scale = 1.0;
+                device->PWM.PWManalogOutputs[i].high_limit = device->PWM.max_Voltage[i];
+                device->PWM.PWManalogOutputs[i].low_limit = 0.0;
+                device->PWM.PWManalogOutputs[i].bit_weight = device->PWM.max_Voltage[i] / device->PWM.PWMperiod;;
+                device->PWM.PWManalogOutputs[i].hw_offset = 0.0;
+            }
+
 		device->PWM.PWMenabledChannels = (unsigned char*)hal_malloc(sizeof(unsigned char) * device->info.iPWMCount);
 		//memset(device->PWM.PWMenabledChannels, 0, sizeof(unsigned char) * device->info.iPWMCount);
         for (uint32_t i = 0; i < device->info.iPWMCount; i++)

@@ -30,6 +30,7 @@
 #undef RTAPI
 #endif
 
+
 /**
  * @brief Export HAL pins and parameters for a canonical analog input channel.
  * @ingroup hal_analog
@@ -95,6 +96,12 @@ int hal_export_adcin(hal_adcin_t *adcin, const char *prefix, int index, int comp
     return 0;
 }
 
+int hal_adcin_applyScaling(hal_adcin_t *adcin, float rawvalue) {
+    // Apply scaling: value = (rawvalue * scale) - offset
+    *(adcin->value) = (rawvalue * adcin->scale) - adcin->offset + adcin->hw_offset;
+
+    return 0;
+}
 #ifdef RTAPI
 /**
  * @brief Register a periodic HAL read function for a canonical analog input.
@@ -209,7 +216,26 @@ int hal_export_adcout(hal_adcout_t *adcout, const char *prefix, int index, int c
 
     return 0;
 }
+hal_float_t hal_adcout_getscaledvalue(hal_adcout_t *adcout){
 
+    if( *adcout->enable == 0 ) {
+        // If the output is disabled, return 0
+        return 0.0f - adcout->hw_offset;
+    }
+
+    hal_float_t clamped_value = *(adcout->value);
+    if (adcout->high_limit > adcout->low_limit) {
+        // Clamp the value between high and low limits if defined
+        if (clamped_value > adcout->high_limit) {
+            clamped_value = adcout->high_limit;
+        } else if (clamped_value < adcout->low_limit) {
+            clamped_value = adcout->low_limit;
+        }
+    }
+
+    // Apply scaling: output = clamp((value * scale) + offset)
+    return (clamped_value * adcout->scale) + adcout->offset - adcout->hw_offset;
+}
 #ifdef RTAPI
 /**
  * @brief Register a HAL write function for a canonical analog output channel.
