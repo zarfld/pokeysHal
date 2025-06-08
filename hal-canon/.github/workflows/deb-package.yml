@@ -1,0 +1,49 @@
+name: Build .deb package
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-deb:
+    name: Build Debian package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🛠️ Set up packaging structure
+        run: |
+          VERSION=$(grep -oP 'Version: \K.*' hal_canon.pc || echo "0.1.0")
+          PKGROOT="hal-canon_${VERSION}"
+          mkdir -p "$PKGROOT/usr/include/linuxcnc"
+          mkdir -p "$PKGROOT/usr/share/hal_canon"
+          mkdir -p "$PKGROOT/usr/lib/pkgconfig"
+          mkdir -p "$PKGROOT/DEBIAN"
+
+          cp hal_canon.h "$PKGROOT/usr/include/linuxcnc/"
+          cp hal_*.c "$PKGROOT/usr/share/hal_canon/"
+          cp copy-helpers.sh "$PKGROOT/usr/share/hal_canon/"
+          cp hal_canon.pc "$PKGROOT/usr/lib/pkgconfig/"
+
+          echo "Package: hal-canon"              > "$PKGROOT/DEBIAN/control"
+          echo "Version: $VERSION"              >> "$PKGROOT/DEBIAN/control"
+          echo "Architecture: all"              >> "$PKGROOT/DEBIAN/control"
+          echo "Maintainer: Dominik Zarfl <zarfld@users.noreply.github.com>" >> "$PKGROOT/DEBIAN/control"
+          echo "Homepage: https://github.com/zarfld/linuxcnc-hal-canon" >> "$PKGROOT/DEBIAN/control"
+          echo "Description: Canonical Device Interface helper library for LinuxCNC HAL components" >> "$PKGROOT/DEBIAN/control"
+          echo "Depends:"                       >> "$PKGROOT/DEBIAN/control"
+          echo ""                              >> "$PKGROOT/DEBIAN/control"
+
+          dpkg-deb --build "$PKGROOT"
+
+      - name: 📦 Upload .deb as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hal-canon-deb
+          path: hal-canon_*.deb

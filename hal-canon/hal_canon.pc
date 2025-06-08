@@ -1,0 +1,9 @@
+prefix=/usr
+includedir=${prefix}/include/linuxcnc
+sharedir=${prefix}/share/hal_canon
+
+Name: hal_canon
+Description: Canonical Device Interface helper library for LinuxCNC HAL
+Version: 0.1.0
+Cflags: -I${includedir}
+HelperSourceDir: ${sharedir}
