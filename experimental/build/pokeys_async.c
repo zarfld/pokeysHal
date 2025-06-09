@@ -61,23 +61,25 @@ static int export(char *prefix, long extra_arg) {
     struct __comp_state *inst = hal_malloc(sz);
     memset(inst, 0, sz);
 
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: exporting component - extra_setup %s\n", __FILE__, __FUNCTION__, prefix);
     r = extra_setup(inst, prefix, extra_arg);
     if (r != 0){
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: extra_setup failed\n", __FILE__, __FUNCTION__);
         return r;
     }
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: exporting component - export_rtc_pins %s\n", __FILE__, __FUNCTION__, prefix);
     r = export_rtc_pins(prefix, comp_id, inst->dev); // Export RTC pins
     if(r != 0){
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_rtc_pins faile %d \n", __FILE__, __FUNCTION__, prefix, r);
         return r;
     };
-
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: exporting component - export_encoder_pins %s\n", __FILE__, __FUNCTION__, prefix);
     r=export_encoder_pins(prefix, comp_id, inst->dev); // Export encoder pins
     if(r != 0){
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_encoder_pins failed %d \n", __FILE__, __FUNCTION__, prefix, r);
         return r;
     };
-
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: exporting component - export_IO_pins %s\n", __FILE__, __FUNCTION__, prefix);
     r=export_IO_pins(prefix, comp_id, inst->dev); // Export IO pins
     if(r != 0){
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_IO_pins failed %d \n", __FILE__, __FUNCTION__, prefix, r);
