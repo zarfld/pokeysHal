@@ -268,6 +268,7 @@ void InitializeNewDevice(sPoKeysDevice* device)
     device->alignTest10 = 10;
     device->alignTest11 = 11;
 #endif
+rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Device initialized with %d pins, %d encoders, %d PWM channels, %d matrix LEDs\n", __FILE__, __FUNCTION__, device->info.iPinCount, device->info.iEncodersCount, device->info.iPWMCount, device->info.iMatrixLED);
 }
 
 void CleanDevice(sPoKeysDevice* device)
