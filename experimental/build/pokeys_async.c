@@ -561,7 +561,7 @@ void user_mainloop(void)
 #ifdef RTAPI
 FUNCTION(_) {
    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d\n", __FILE__, __FUNCTION__,period);
-    long act_time = rtapi_get_time();
+    int64_t act_time = rtapi_get_time();
     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d act_time:%d\n", __FILE__, __FUNCTION__,period,act_time);
             PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
             PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000); // checks for timeout and retry
@@ -624,7 +624,7 @@ FUNCTION(_) {
             PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
             PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000); // checks for timeout and retry
 
-            long end_time = rtapi_get_time();
+            int64_t  end_time = rtapi_get_time();
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d start_time:%d end_time:%d\n", __FILE__, __FUNCTION__,period,act_time,end_time);
 }
 #endif
