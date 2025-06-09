@@ -119,7 +119,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
             return r;
         }
 
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty\n", __FILE__, __FUNCTION__, prefix, j);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty\n", __FILE__, __FUNCTION__, prefix, j);
         r = hal_pin_u32_newf(HAL_OUT, &device->PWM.PWMduty[j], comp_id, "%s.adcout.%01d.PWMduty", prefix, j);
         if (r != 0) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty failed\n", __FILE__, __FUNCTION__, prefix, j);
@@ -127,7 +127,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
         }
      }
 
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcout.pwm\n", __FILE__, __FUNCTION__, prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: canonical %s.adcout.pwm\n", __FILE__, __FUNCTION__, prefix);
     r = hal_param_u32_newf(HAL_RW, &(device->PWM.PWMperiod), comp_id, "%s.adcout.pwm.period", prefix);
     if (r != 0) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.pwm.period failed\n", __FILE__, __FUNCTION__, prefix);
