@@ -17,6 +17,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 
 
     // Digital Pins
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: canonical %s.pins [count %d]\n", __FILE__, __FUNCTION__, prefix, device->info.iPinCount);
     for (int j = 0; j < (device->info.iPinCount); j++) {
 
         // PinFunction
@@ -59,6 +60,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 
          // AnalogIn Pins
     int analogInCount = 7;
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: canonical %s.adcin [count %d]\n", __FILE__, __FUNCTION__, prefix, analogInCount);
     for (int j = 0; j < (analogInCount); j++) {
         rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcin.%01d\n", __FILE__, __FUNCTION__, prefix, j);
         r = hal_export_adcin(&device->AnalogInput[j].Canon, prefix, j, comp_id);
@@ -93,6 +95,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
     }
 
         // AnalogOut Pins
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: canonical %s.adcout [count %d]\n", __FILE__, __FUNCTION__, prefix,device->info.iPWMCount);
      for (int j = 0; j < (device->info.iPWMCount); j++) {
         if(&device->PWM.PWManalogOutputs[j] == NULL) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device->PWM.PWManalogOutputs[%d] is NULL\n", __FILE__, __FUNCTION__, j);
