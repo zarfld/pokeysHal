@@ -100,6 +100,7 @@ int32_t PK_GetCurrentDeviceConnectionType(sPoKeysDevice* device)
 
 void InitializeNewDevice(sPoKeysDevice* device)
 {
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing new device...\n", __FILE__, __FUNCTION__);
     uint32_t i;    
 	memset(&device->info, 0, sizeof(sPoKeysDevice_Info));
     memset(&device->DeviceData, 0, sizeof(sPoKeysDevice_Data));
