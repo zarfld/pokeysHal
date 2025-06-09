@@ -232,6 +232,7 @@ void InitializeNewDevice(sPoKeysDevice* device)
             device->PWM.PWManalogOutputs[i].value = (hal_float_t*)hal_malloc(sizeof(hal_float_t));
             *(device->PWM.PWManalogOutputs[i].value) = 0.0;
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].enable\n", __FILE__, __FUNCTION__, i);
+            device->PWM.PWManalogOutputs[i].enable = (unsigned char*)hal_malloc(sizeof(unsigned char));
             *(device->PWM.PWManalogOutputs[i].enable) = 0;
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].offset\n", __FILE__, __FUNCTION__, i);
             device->PWM.PWManalogOutputs[i].offset = 0.0;
