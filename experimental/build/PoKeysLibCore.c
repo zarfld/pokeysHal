@@ -145,9 +145,12 @@ void InitializeNewDevice(sPoKeysDevice* device)
 		}
 	}
 
+    // Allocate memory for encoders
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Device iEncodersCount: %d\n", __FILE__, __FUNCTION__, device->info.iEncodersCount);
 	device->Encoders = (sPoKeysEncoder*)hal_malloc(sizeof(sPoKeysEncoder) * device->info.iEncodersCount);
 	memset(device->Encoders, 0, sizeof(sPoKeysEncoder) * device->info.iEncodersCount);
 
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Device iEasySensors: %d\n", __FILE__, __FUNCTION__, device->info.iEasySensors);
     if (device->info.iEasySensors)
     {
         device->EasySensors = (sPoKeysEasySensor*)hal_malloc(sizeof(sPoKeysEasySensor) * device->info.iEasySensors);
@@ -165,8 +168,10 @@ void InitializeNewDevice(sPoKeysDevice* device)
         3. Analog output capable pin 43 has pin code of 42.
         4. PWM (pulse-width modulation) capable pins 17 to 22 have pin codes of 16-21 (PWM module outputs are in reversed order, e.g. pin 17 (pin coded as 16) is connected to PWM6 output – see specifications below).
     */
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Device iPWMCount: %d\n", __FILE__, __FUNCTION__, device->info.iPinCount);
 	if (device->info.iPWMCount > 0)
 	{
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Allocating memory for PWM.max_Voltage...\n", __FILE__, __FUNCTION__);
         device->PWM.max_Voltage = (hal_float_t*)hal_malloc(sizeof(hal_float_t) * device->info.iPWMCount);
         for (uint32_t i = 0; i < device->info.iPWMCount; i++)
         {
@@ -213,23 +218,25 @@ void InitializeNewDevice(sPoKeysDevice* device)
             
         }
 
-        	*(device->PWM.PWMduty) = (hal_u32_t*)hal_malloc(sizeof(hal_u32_t) * device->info.iPWMCount);
-            //memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
-            for (uint32_t i = 0; i < device->info.iPWMCount; i++)
-                device->PWM.PWMduty[i] = 0;
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Allocating memory for PWM.PWMduty...\n", __FILE__, __FUNCTION__);
+        *(device->PWM.PWMduty) = (hal_u32_t*)hal_malloc(sizeof(hal_u32_t) * device->info.iPWMCount);
+        //memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
+        for (uint32_t i = 0; i < device->info.iPWMCount; i++)
+            device->PWM.PWMduty[i] = 0;
 
-            device->PWM.PWManalogOutputs = (hal_adcout_t*)hal_malloc(sizeof(hal_adcout_t) * device->info.iPWMCount);
-            for (uint32_t i = 0; i < device->info.iPWMCount; i++)
-            {
-                *(device->PWM.PWManalogOutputs[i].value) = 0.0;
-                *(device->PWM.PWManalogOutputs[i].enable) = 0;
-                device->PWM.PWManalogOutputs[i].offset = 0.0;
-                device->PWM.PWManalogOutputs[i].scale = 1.0;
-                device->PWM.PWManalogOutputs[i].high_limit = device->PWM.max_Voltage[i];
-                device->PWM.PWManalogOutputs[i].low_limit = 0.0;
-                device->PWM.PWManalogOutputs[i].bit_weight = device->PWM.max_Voltage[i] / device->PWM.PWMperiod;;
-                device->PWM.PWManalogOutputs[i].hw_offset = 0.0;
-            }
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Allocating memory for PWM.PWManalogOutputs...\n", __FILE__, __FUNCTION__);
+        device->PWM.PWManalogOutputs = (hal_adcout_t*)hal_malloc(sizeof(hal_adcout_t) * device->info.iPWMCount);
+        for (uint32_t i = 0; i < device->info.iPWMCount; i++)
+        {
+            *(device->PWM.PWManalogOutputs[i].value) = 0.0;
+            *(device->PWM.PWManalogOutputs[i].enable) = 0;
+            device->PWM.PWManalogOutputs[i].offset = 0.0;
+            device->PWM.PWManalogOutputs[i].scale = 1.0;
+            device->PWM.PWManalogOutputs[i].high_limit = device->PWM.max_Voltage[i];
+            device->PWM.PWManalogOutputs[i].low_limit = 0.0;
+            device->PWM.PWManalogOutputs[i].bit_weight = device->PWM.max_Voltage[i] / device->PWM.PWMperiod;;
+            device->PWM.PWManalogOutputs[i].hw_offset = 0.0;
+        }
 
 		device->PWM.PWMenabledChannels = (unsigned char*)hal_malloc(sizeof(unsigned char) * device->info.iPWMCount);
 		//memset(device->PWM.PWMenabledChannels, 0, sizeof(unsigned char) * device->info.iPWMCount);
