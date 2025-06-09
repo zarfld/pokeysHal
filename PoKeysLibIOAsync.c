@@ -15,7 +15,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 
     // AnalogOut Pins
      for (int j = 0; j < (device->info.iPWMCount); j++) {
-        if(device->PWM.PWManalogOutputs[j] == NULL) {
+        if(&device->PWM.PWManalogOutputs[j] == NULL) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device->PWM.PWManalogOutputs[%d] is NULL\n", __FILE__, __FUNCTION__, j);
             return -1;
         }
@@ -26,7 +26,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
             return r;
         }
 
-        if(device->PWM.max_Voltage[j] == NULL) {
+        if(&device->PWM.max_Voltage[j] == NULL) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device->PWM.max_Voltage[%d] is NULL\n", __FILE__, __FUNCTION__, j);
             return -1;
         }
@@ -37,7 +37,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
             return r;
         }
 
-        if(device->PWM.PWMduty[j] == NULL) {
+        if(&device->PWM.PWMduty[j] == NULL) {
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device->PWM.PWMduty[%d] is NULL\n", __FILE__, __FUNCTION__, j);
             return -1;
         }
