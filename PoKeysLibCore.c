@@ -226,14 +226,17 @@ void InitializeNewDevice(sPoKeysDevice* device)
 
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Allocating memory for PWM.PWManalogOutputs...\n", __FILE__, __FUNCTION__);
         device->PWM.PWManalogOutputs = (hal_adcout_t*)hal_malloc(sizeof(hal_adcout_t) * device->info.iPWMCount);
+        if (device->PWM.PWMperiod==0000){
+            device->PWM.PWMperiod = 500000; // Default PWM period in clock cycles (20 ms at 25 MHz)
+        }
         for (uint32_t i = 0; i < device->info.iPWMCount; i++)
         {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].value\n", __FILE__, __FUNCTION__, i);
-            device->PWM.PWManalogOutputs[i].value = (hal_float_t*)hal_malloc(sizeof(hal_float_t));
-            *(device->PWM.PWManalogOutputs[i].value) = 0.0;
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].enable\n", __FILE__, __FUNCTION__, i);
-            device->PWM.PWManalogOutputs[i].enable = (hal_bit_t *)hal_malloc(sizeof(hal_bit_t));
-            *(device->PWM.PWManalogOutputs[i].enable) = 0;
+          //  rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].value\n", __FILE__, __FUNCTION__, i);
+          //  device->PWM.PWManalogOutputs[i].value = (hal_float_t*)hal_malloc(sizeof(hal_float_t));
+          //  *(device->PWM.PWManalogOutputs[i].value) = 0.0;
+          //  rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].enable\n", __FILE__, __FUNCTION__, i);
+          //  device->PWM.PWManalogOutputs[i].enable = (hal_bit_t *)hal_malloc(sizeof(hal_bit_t));
+          //  *(device->PWM.PWManalogOutputs[i].enable) = 0;
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].offset\n", __FILE__, __FUNCTION__, i);
             device->PWM.PWManalogOutputs[i].offset = 0.0;
             rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].scale\n", __FILE__, __FUNCTION__, i);
