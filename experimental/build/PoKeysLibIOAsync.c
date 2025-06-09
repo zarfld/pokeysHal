@@ -13,48 +13,7 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 
     int r = 0;
 
-    // AnalogOut Pins
-     for (int j = 0; j < (device->info.iPWMCount); j++) {
-        if(&device->PWM.PWManalogOutputs[j] == NULL) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device->PWM.PWManalogOutputs[%d] is NULL\n", __FILE__, __FUNCTION__, j);
-            return -1;
-        }
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcout.%01d\n", __FILE__, __FUNCTION__, prefix, j);
-        r = hal_export_adcout(&device->PWM.PWManalogOutputs[j], prefix, j, comp_id);
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: canonical %s.adcout.%01d failed\n", __FILE__, __FUNCTION__, prefix, j);
-            return r;
-        }
 
-        if(&device->PWM.max_Voltage[j] == NULL) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device->PWM.max_Voltage[%d] is NULL\n", __FILE__, __FUNCTION__, j);
-            return -1;
-        }
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcout.%01d.max_voltage\n", __FILE__, __FUNCTION__, prefix, j);
-        r = hal_param_float_newf(HAL_RW, &(device->PWM.max_Voltage[j]), comp_id, "%s.adcout.%01d.max_voltage", prefix, j);
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.%01d.max_voltage failed\n", __FILE__, __FUNCTION__, prefix, j);
-            return r;
-        }
-
-        if(&device->PWM.PWMduty[j] == NULL) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device->PWM.PWMduty[%d] is NULL\n", __FILE__, __FUNCTION__, j);
-            return -1;
-        }
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty\n", __FILE__, __FUNCTION__, prefix, j);
-        r = hal_pin_u32_newf(HAL_OUT, &device->PWM.PWMduty[j], comp_id, "%s.adcout.%01d.PWMduty", prefix, j);
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty failed\n", __FILE__, __FUNCTION__, prefix, j);
-            return r;
-        }
-     }
-
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcout.pwm\n", __FILE__, __FUNCTION__, prefix);
-    r = hal_param_u32_newf(HAL_RW, &(device->PWM.PWMperiod), comp_id, "%s.adcout.pwm.period", prefix);
-    if (r != 0) {
-        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.pwm.period failed\n", __FILE__, __FUNCTION__, prefix);
-        return r;
-    }
 
 
     // Digital Pins
@@ -133,6 +92,48 @@ int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
         device->AnalogInput[j].ReferenceVoltage = 3.3; // default reference voltage
     }
 
+        // AnalogOut Pins
+     for (int j = 0; j < (device->info.iPWMCount); j++) {
+        if(&device->PWM.PWManalogOutputs[j] == NULL) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device->PWM.PWManalogOutputs[%d] is NULL\n", __FILE__, __FUNCTION__, j);
+            return -1;
+        }
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcout.%01d\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_export_adcout(&device->PWM.PWManalogOutputs[j], prefix, j, comp_id);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: canonical %s.adcout.%01d failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }
+
+        if(&device->PWM.max_Voltage[j] == NULL) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device->PWM.max_Voltage[%d] is NULL\n", __FILE__, __FUNCTION__, j);
+            return -1;
+        }
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcout.%01d.max_voltage\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_param_float_newf(HAL_RW, &(device->PWM.max_Voltage[j]), comp_id, "%s.adcout.%01d.max_voltage", prefix, j);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.%01d.max_voltage failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }
+
+        if(&device->PWM.PWMduty[j] == NULL) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: device->PWM.PWMduty[%d] is NULL\n", __FILE__, __FUNCTION__, j);
+            return -1;
+        }
+        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty\n", __FILE__, __FUNCTION__, prefix, j);
+        r = hal_pin_u32_newf(HAL_OUT, &device->PWM.PWMduty[j], comp_id, "%s.adcout.%01d.PWMduty", prefix, j);
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.%01d.PWMduty failed\n", __FILE__, __FUNCTION__, prefix, j);
+            return r;
+        }
+     }
+
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: canonical %s.adcout.pwm\n", __FILE__, __FUNCTION__, prefix);
+    r = hal_param_u32_newf(HAL_RW, &(device->PWM.PWMperiod), comp_id, "%s.adcout.pwm.period", prefix);
+    if (r != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.adcout.pwm.period failed\n", __FILE__, __FUNCTION__, prefix);
+        return r;
+    }
     return r;
 }
 
