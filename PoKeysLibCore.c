@@ -218,12 +218,13 @@ void InitializeNewDevice(sPoKeysDevice* device)
             
         }
 
+     /* that is done in hal_export_adcout
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Allocating memory for PWM.PWMduty...\n", __FILE__, __FUNCTION__);
         device->PWM.PWMduty = (hal_u32_t*)hal_malloc(sizeof(hal_u32_t) * device->info.iPWMCount);
         //memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
         for (uint32_t i = 0; i < device->info.iPWMCount; i++)
             device->PWM.PWMduty[i] = 0;
-
+    */
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Allocating memory for PWM.PWManalogOutputs...\n", __FILE__, __FUNCTION__);
         device->PWM.PWManalogOutputs = (hal_adcout_t*)hal_malloc(sizeof(hal_adcout_t) * device->info.iPWMCount);
         if (device->PWM.PWMperiod==0000){
