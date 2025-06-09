@@ -587,6 +587,32 @@ FUNCTION(_) {
                 else{
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOSetGet FAILED\n", __FILE__, __FUNCTION__);
                 }
+
+            if (PK_DigitalIOGetAsync(__comp_inst->dev)==0){
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOGetAsync OK\n", __FILE__, __FUNCTION__);
+                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
+                }
+                else{
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOGetAsync FAILED\n", __FILE__, __FUNCTION__);
+                }
+
+            if (PK_DigitalIOSetAsync(__comp_inst->dev)==0){
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOSetAsync OK\n", __FILE__, __FUNCTION__);
+                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
+                }
+                else{
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOSetAsync FAILED\n", __FILE__, __FUNCTION__);
+                }
+
+                if (PK_AnalogIOGetAsync(__comp_inst->dev)==0){
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_AnalogIOGetAsync OK\n", __FILE__, __FUNCTION__);
+                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
+                }
+                else{
+                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_AnalogIOGetAsync FAILED\n", __FILE__, __FUNCTION__);
+                }
+
+
             PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
             PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000); // checks for timeout and retry
 }
