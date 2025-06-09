@@ -625,7 +625,7 @@ FUNCTION(_) {
             PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000); // checks for timeout and retry
 
             int64_t  end_time = rtapi_get_time();
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d start_time:%d end_time:%d\n", __FILE__, __FUNCTION__,period,act_time,end_time);
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d start_time:%lld end_time:%lld\n", __FILE__, __FUNCTION__,period,act_time,end_time);
 }
 #endif
 
