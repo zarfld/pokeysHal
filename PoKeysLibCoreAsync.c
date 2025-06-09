@@ -3,7 +3,7 @@
  * @brief Async-safe USB enumeration logic for PoKeysLib.
  */
 #include <stdlib.h>
-#include "PoKeysLibCoreAsync_USB.h"
+//#include "PoKeysLibCoreAsync_USB.h"
 #include <hidapi/hidapi.h>
 #include <string.h>
 #include "stdio.h"
@@ -80,6 +80,8 @@ int32_t PK_EnumerateUSBDevicesAsync(PKUSBEnumerator *ctx)
 
 void PK_InitializeNewDeviceAsync(void *device_ptr)
 {
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing new device...\n", __FILE__, __FUNCTION__);
+    
     if (!device_ptr) return;
     sPoKeysDevice *device = (sPoKeysDevice *)device_ptr;
     uint32_t i;
