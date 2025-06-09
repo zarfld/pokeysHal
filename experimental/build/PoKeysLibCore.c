@@ -228,6 +228,7 @@ void InitializeNewDevice(sPoKeysDevice* device)
         device->PWM.PWManalogOutputs = (hal_adcout_t*)hal_malloc(sizeof(hal_adcout_t) * device->info.iPWMCount);
         for (uint32_t i = 0; i < device->info.iPWMCount; i++)
         {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d]\n", __FILE__, __FUNCTION__, i);
             *(device->PWM.PWManalogOutputs[i].value) = 0.0;
             *(device->PWM.PWManalogOutputs[i].enable) = 0;
             device->PWM.PWManalogOutputs[i].offset = 0.0;
@@ -238,6 +239,7 @@ void InitializeNewDevice(sPoKeysDevice* device)
             device->PWM.PWManalogOutputs[i].hw_offset = 0.0;
         }
 
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Allocating memory for PWM.PWMenabledChannels...\n", __FILE__, __FUNCTION__);
 		device->PWM.PWMenabledChannels = (unsigned char*)hal_malloc(sizeof(unsigned char) * device->info.iPWMCount);
 		//memset(device->PWM.PWMenabledChannels, 0, sizeof(unsigned char) * device->info.iPWMCount);
         for (uint32_t i = 0; i < device->info.iPWMCount; i++)
