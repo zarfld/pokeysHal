@@ -228,14 +228,28 @@ void InitializeNewDevice(sPoKeysDevice* device)
         device->PWM.PWManalogOutputs = (hal_adcout_t*)hal_malloc(sizeof(hal_adcout_t) * device->info.iPWMCount);
         for (uint32_t i = 0; i < device->info.iPWMCount; i++)
         {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d]\n", __FILE__, __FUNCTION__, i);
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].value\n", __FILE__, __FUNCTION__, i);
             *(device->PWM.PWManalogOutputs[i].value) = 0.0;
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].enable\n", __FILE__, __FUNCTION__, i);
+            
             *(device->PWM.PWManalogOutputs[i].enable) = 0;
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].offset\n", __FILE__, __FUNCTION__, i);
+            
             device->PWM.PWManalogOutputs[i].offset = 0.0;
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].scale\n", __FILE__, __FUNCTION__, i);
+            
             device->PWM.PWManalogOutputs[i].scale = 1.0;
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].high_limit\n", __FILE__, __FUNCTION__, i);
+            
             device->PWM.PWManalogOutputs[i].high_limit = device->PWM.max_Voltage[i];
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].low_limit\n", __FILE__, __FUNCTION__, i);
+            
             device->PWM.PWManalogOutputs[i].low_limit = 0.0;
-            device->PWM.PWManalogOutputs[i].bit_weight = device->PWM.max_Voltage[i] / device->PWM.PWMperiod;;
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].bit_weight\n", __FILE__, __FUNCTION__, i);
+            
+            device->PWM.PWManalogOutputs[i].bit_weight = device->PWM.max_Voltage[i] / device->PWM.PWMperiod;
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Initializing PWM.PWManalogOutputs[%d].hw_offset\n", __FILE__, __FUNCTION__, i);
+            
             device->PWM.PWManalogOutputs[i].hw_offset = 0.0;
         }
 
