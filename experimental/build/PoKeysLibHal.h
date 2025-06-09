@@ -1129,6 +1129,7 @@ POKEYSDECL int32_t PK_AnalogRCFilterSet(sPoKeysDevice* device);
 // --------------------
 POKEYSDECL int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 // Digital I/O
+int PK_DigitalIOSetAsync(sPoKeysDevice* device);
 int PK_DigitalIOGetAsync(sPoKeysDevice* device);
 int PK_DigitalIOSetGetAsync(sPoKeysDevice* device);
 
