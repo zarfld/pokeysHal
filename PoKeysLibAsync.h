@@ -234,8 +234,24 @@ typedef enum {
 typedef enum {
     POCAN_CMD_STATUS                     = 0x00,
     POCAN_CMD_ENABLE                     = 0x01,
-    POCAN_CMD_CONFIGURE                  = 0x02
+    POCAN_CMD_CONFIGURE                  = 0x02,
+
+    /* CAN bus requests */
+    POCAN_CMD_DEVICE_IDENTIFICATION      = 0x10,
+    POCAN_CMD_CONFIGURATION_READ         = 0x11,
+    POCAN_CMD_CONFIGURATION_WRITE        = 0x12,
+    POCAN_CMD_CONFIGURATION_SAVE         = 0x13
 } PoCAN_command_t;
+
+// Supported PoCAN device types
+typedef enum {
+    POCAN_DEVICE_PORELAY8                = 0x01,
+    POCAN_DEVICE_POCAN15I                = 0x02,
+    POCAN_DEVICE_POCAN_LIN               = 0x03,
+    POCAN_DEVICE_POCAN15TRIAC            = 0x04,
+    POCAN_DEVICE_KBD48CNC               = 0x05,
+    POCAN_DEVICE_POCAN4TRIAC             = 0x06
+} PoCAN_DeviceType_T;
 
 typedef int (*pokeys_response_parser_t)(sPoKeysDevice *dev, const uint8_t *response);
 
