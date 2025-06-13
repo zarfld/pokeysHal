@@ -12,6 +12,7 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-libusb.c PoKeysLibFastUSB.c \
         PoKeysLibUART.c \
         PoKeysLibCAN.c \
         PoKeysLibFailsafe.c \
+        PoKeysLibI2CAsync.c \
         PoKeysLibWS2812.c \
         PoKeysLibEncodersAsync.c \
         PoKeysLibRTCAsync.c \

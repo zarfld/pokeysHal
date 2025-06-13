@@ -229,8 +229,8 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         if git status --porcelain | grep .; then
-          git add .
-          git submodule foreach git add .
+          git add --all ':!experimental/build/'
+          git submodule foreach git add --all ':!experimental/build/'
           git commit -m "Sync repository"
           git push
         else
