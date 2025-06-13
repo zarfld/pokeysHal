@@ -253,6 +253,29 @@ typedef enum {
     POCAN_DEVICE_POCAN4TRIAC             = 0x06
 } PoCAN_DeviceType_T;
 
+// PoNET operations (used with PK_CMD_POI2C_COMMUNICATION)
+typedef enum {
+    PONET_OP_GET_STATUS                = 0x00,
+    PONET_OP_GET_MODULE_SETTINGS       = 0x10,
+    PONET_OP_GET_FIRMWARE_VERSION      = 0x11,
+    PONET_OP_SET_MODULE_SETTINGS       = 0x15,
+    PONET_OP_CLEAR_MODULE_SETTINGS     = 0x20,
+    PONET_OP_REINITIALIZE              = 0x21,
+    PONET_OP_REINIT_AND_CLEAR          = 0x25,
+    PONET_OP_DEVICE_DISCOVERY          = 0x30,
+    PONET_OP_CHECK_FOR_DEVICES         = 0x40,
+    PONET_OP_GET_MODULE_DATA           = 0x50,
+    PONET_OP_SET_MODULE_DATA           = 0x55,
+    PONET_OP_GET_LIGHT_SENSOR          = 0x60,
+    PONET_OP_SET_PWM_VALUE             = 0x70,
+    PONET_OP_START_BOOTLOADER          = 0xF0,
+    PONET_OP_START_PROGRAMMING         = 0xF1,
+    PONET_OP_TRANSFER_FIRMWARE_PART    = 0xF2,
+    PONET_OP_FINISH_FIRMWARE_TRANSFER  = 0xF3,
+    PONET_OP_EXIT_BOOTLOADER           = 0xF4,
+    PONET_OP_ACTIVATE_BOOTLOADER       = 0xF5
+} PoNET_operations_t;
+
 typedef int (*pokeys_response_parser_t)(sPoKeysDevice *dev, const uint8_t *response);
 
 typedef struct {
