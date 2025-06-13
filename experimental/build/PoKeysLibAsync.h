@@ -230,6 +230,13 @@ typedef enum {
     PEV2_CMD_OUTPUT_ENABLE               = 0xFF
 } PEv2_command_t;
 
+// PoCAN subcommands (used with PK_CMD_CAN_NODE_COMMANDS)
+typedef enum {
+    POCAN_CMD_STATUS                     = 0x00,
+    POCAN_CMD_ENABLE                     = 0x01,
+    POCAN_CMD_CONFIGURE                  = 0x02
+} PoCAN_command_t;
+
 typedef int (*pokeys_response_parser_t)(sPoKeysDevice *dev, const uint8_t *response);
 
 typedef struct {
