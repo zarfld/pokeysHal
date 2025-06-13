@@ -1383,6 +1383,12 @@ POKEYSDECL int32_t PK_CANRegisterFilter(sPoKeysDevice* device, uint8_t format, u
 POKEYSDECL int32_t PK_CANWrite(sPoKeysDevice* device, sPoKeysCANmsg * msg);
 POKEYSDECL int32_t PK_CANRead(sPoKeysDevice* device, sPoKeysCANmsg * msg, uint8_t * status);
 POKEYSDECL int32_t PK_CANFlush(sPoKeysDevice* device);
+// Asynchronous CAN API
+int PK_CANConfigureAsync(sPoKeysDevice* device, uint32_t bitrate);
+int PK_CANRegisterFilterAsync(sPoKeysDevice* device, uint8_t format, uint32_t CANid);
+int PK_CANWriteAsync(sPoKeysDevice* device, sPoKeysCANmsg * msg);
+int PK_CANReadAsync(sPoKeysDevice* device, sPoKeysCANmsg * msg, uint8_t * status);
+int PK_CANFlushAsync(sPoKeysDevice* device);
 
 // WS2812 commands
 POKEYSDECL int32_t PK_WS2812_Update(sPoKeysDevice* device, uint16_t LEDcount, uint8_t updateFlag);

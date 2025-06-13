@@ -26,6 +26,7 @@ add_library(PoKeys SHARED
             PoKeysLibSPI.c
             PoKeysLibPulseEngine_v2.c
             PoKeysLibCAN.c
+            PoKeysLibCANAsync.c
             PoKeysLibUART.c
             PoKeysLibWS2812.c)
 
