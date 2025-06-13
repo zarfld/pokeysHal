@@ -40,3 +40,8 @@ build/CMakeFiles/3.29.5-msvc4/CompilerIdCXX/Debug/CompilerIdCXX.tlog/link.second
 build/CMakeFiles/3.29.5-msvc4/CompilerIdCXX/Debug/CompilerIdCXX.tlog/link.write.1.tlog
 build/CMakeFiles/3.29.5-msvc4/VCTargetsPath/x64/Debug/VCTargetsPath.recipe
 build/CMakeFiles/3.29.5-msvc4/VCTargetsPath/x64/Debug/VCTargetsPath.tlog/VCTargetsPath.lastbuildstate
+experimental/build/*.c
+experimental/build/*.comp
+experimental/build/*.h
+experimental/build/Submakefile.rt
+experimental/build/Makefile.noqmakeRT
