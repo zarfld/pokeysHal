@@ -167,6 +167,69 @@ typedef enum {
     PK_CMD_BOOT_OEM_PARAMETERS           = 0xFD
 } pokeys_command_t;
 
+// Pulse engine v2 subcommands (used with PK_CMD_PULSE_ENGINE_V2)
+typedef enum {
+    /* Status and configuration */
+    PEV2_CMD_GET_STATUS                  = 0x00,
+    PEV2_CMD_SETUP                       = 0x01,
+    PEV2_CMD_SET_STATE                   = 0x02,
+    PEV2_CMD_SET_AXIS_POSITION           = 0x03,
+    PEV2_CMD_SET_OUTPUTS                 = 0x04,
+    PEV2_CMD_REBOOT                      = 0x05,
+    PEV2_CMD_CONFIGURE_MISC              = 0x06,
+    PEV2_CMD_GET_STATUS2                 = 0x08,
+    PEV2_CMD_SETUP_SYNCED_PWM            = 0x0A,
+    PEV2_CMD_SETUP_SYNCED_DIGITAL        = 0x0B,
+
+    /* Axis operations */
+    PEV2_CMD_GET_AXIS_CONFIGURATION      = 0x10,
+    PEV2_CMD_SET_AXIS_CONFIGURATION      = 0x11,
+    PEV2_CMD_GET_INTERNAL_DRIVERS        = 0x18,
+    PEV2_CMD_SET_INTERNAL_DRIVERS        = 0x19,
+
+    /* Motion */
+    PEV2_CMD_MOVE                        = 0x20,
+    PEV2_CMD_START_HOMING                = 0x21,
+    PEV2_CMD_FINISH_HOMING               = 0x22,
+    PEV2_CMD_START_PROBING               = 0x23,
+    PEV2_CMD_FINISH_PROBING              = 0x24,
+    PEV2_CMD_MOVE_PV                     = 0x25,
+
+    /* Threading and trigger */
+    PEV2_CMD_PREPARE_TRIGGER             = 0x30,
+    PEV2_CMD_FORCE_TRIGGER_READY         = 0x31,
+    PEV2_CMD_ARM_TRIGGER                 = 0x32,
+    PEV2_CMD_RELEASE_TRIGGER             = 0x33,
+    PEV2_CMD_CANCEL_THREADING            = 0x34,
+    PEV2_CMD_GET_THREADING_STATUS        = 0x35,
+    PEV2_CMD_SET_THREADING_PARAMS        = 0x36,
+    PEV2_CMD_GET_ENCODER_TEST_RESULTS    = 0x37,
+
+    /* Backlash compensation */
+    PEV2_CMD_GET_BACKLASH_SETTINGS       = 0x40,
+    PEV2_CMD_SET_BACKLASH_SETTINGS       = 0x41,
+
+    /* Driver communication */
+    PEV2_CMD_SETUP_DRIVER_COMM           = 0x50,
+    PEV2_CMD_GET_DRIVER_STATUS           = 0x51,
+    PEV2_CMD_DRIVER_CURRENT_PARAMS       = 0x52,
+    PEV2_CMD_DRIVER_MODE_PARAMS          = 0x53,
+    PEV2_CMD_GET_DRIVER_VERSIONS         = 0x54,
+
+    /* Smart pulse generator */
+    PEV2_CMD_SMART_CFG_GET               = 0x90,
+    PEV2_CMD_SMART_CFG_SET               = 0x91,
+    PEV2_CMD_SMART_COUNTERS_RESET        = 0x92,
+    PEV2_CMD_SMART_STATUS                = 0x95,
+    PEV2_CMD_SMART_ENCODERS              = 0x96,
+
+    /* Buffer and raw transfer */
+    PEV2_CMD_CLEAR_BUFFER                = 0xF0,
+    PEV2_CMD_TRANSFER_RAW                = 0xE0,
+    PEV2_CMD_FILL_BUFFER_8BIT            = 0xFF,
+    PEV2_CMD_OUTPUT_ENABLE               = 0xFF
+} PEv2_command_t;
+
 typedef int (*pokeys_response_parser_t)(sPoKeysDevice *dev, const uint8_t *response);
 
 typedef struct {
