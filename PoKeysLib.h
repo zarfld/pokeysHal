@@ -1695,7 +1695,26 @@ int PK_COSMSettingsGetAsync(sPoKeysDevice* device, sPoKeysCOSMSettings* settings
 int PK_COSMSettingsSetAsync(sPoKeysDevice* device, const sPoKeysCOSMSettings* settings);
 
 // WS2812 commands
+/**
+ * Configure the WS2812 LED driver and optionally refresh the strip.
+ *
+ * @param device     Pointer to an initialized device structure.
+ * @param LEDcount   Total number of LEDs in the strip.
+ * @param updateFlag Non-zero to immediately update the LEDs.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_WS2812_Update(sPoKeysDevice* device, uint16_t LEDcount, uint8_t updateFlag);
+/**
+ * Send LED color values to the WS2812 strip.
+ *
+ * The helper automatically splits larger transfers into 18-LED blocks.
+ *
+ * @param device   Pointer to an initialized device structure.
+ * @param LEDdata  Array of 24-bit color values.
+ * @param startLED Index of the first LED to update.
+ * @param LEDcount Number of LEDs to update.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_WS2812_SendLEDdata(sPoKeysDevice* device, uint32_t * LEDdata, uint16_t startLED, uint8_t LEDcount);
 
 
