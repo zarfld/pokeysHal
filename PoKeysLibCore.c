@@ -26,6 +26,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "stdio.h"
 //#define PK_COM_DEBUG
 
+/**
+ * \brief Validate HID interface as PoKeys communication channel.
+ *
+ * The PoKeys USB devices expose multiple HID interfaces. Only the
+ * interface with index 1 carries the standard command protocol used by
+ * this library. This helper checks the passed HID interface information
+ * and reports whether it should be used for communication.
+ *
+ * \param devInfo  HID device information structure obtained from
+ *                 hid_enumerate().
+ * \return 1 when the interface number matches the communication
+ *         interface, otherwise 0.
+ */
 int32_t PKI_CheckInterface(struct hid_device_info * devInfo)
 {
     if (devInfo->interface_number == 1)
@@ -36,6 +49,17 @@ int32_t PKI_CheckInterface(struct hid_device_info * devInfo)
 
 #ifndef RTAPI
 // Connection specific commands
+/**
+ * \brief Enumerate PoKeys USB devices.
+ *
+ * Two product identifiers are scanned (0x1001 and 0x1002) under the
+ * PoLabs vendor ID 0x1DC3. Interfaces are filtered through
+ * PKI_CheckInterface() so that only the communication interface (index 1)
+ * is counted for devices using the standard HID protocol. For the older
+ * fast USB interface the interface number is -1.
+ *
+ * \return Number of PoKeys devices detected on the USB bus.
+ */
 int32_t PK_EnumerateUSBDevices()
 {
     int32_t numDevices = 0;
@@ -93,9 +117,20 @@ int32_t PK_EnumerateUSBDevices()
     return PK_OK;
 }
 #endif
+/**
+ * \brief Obtain the active connection type for a device.
+ *
+ * The field ::connectionType of the device structure holds the current
+ * transport that is used for communication. Possible values are defined
+ * by ::ePK_DeviceConnectionType (for example
+ * PK_DeviceType_USBDevice or PK_DeviceType_NetworkDevice).
+ *
+ * \param device Pointer to an initialised PoKeys device structure.
+ * \return The current connection type constant.
+ */
 int32_t PK_GetCurrentDeviceConnectionType(sPoKeysDevice* device)
 {
-	return device->connectionType;
+        return device->connectionType;
 }
 
 void InitializeNewDevice(sPoKeysDevice* device)
@@ -810,6 +845,22 @@ void PK_DisconnectDevice(sPoKeysDevice* device)
     }
 }
 
+/**
+ * \brief Compose a PoKeys request packet.
+ *
+ * The PoKeys protocol uses 64 byte packets. Bytes 1 to 5 hold the
+ * command identifier and up to four parameters. The header byte (0xBB),
+ * request ID and checksum are appended by SendRequest().
+ *
+ * \param request Pointer to a 64 byte buffer that will contain the
+ *                command.
+ * \param type    Command ID as defined by ::pokeys_command_t (PK_CMD_*).
+ * \param param1  First command parameter.
+ * \param param2  Second command parameter.
+ * \param param3  Third command parameter.
+ * \param param4  Fourth command parameter.
+ * \return PK_OK on success or PK_ERR_NOT_CONNECTED when request is NULL.
+ */
 int32_t CreateRequest(unsigned char * request, unsigned char type, unsigned char param1, unsigned char param2, unsigned char param3, unsigned char param4)
 {
     if (request == NULL) return PK_ERR_NOT_CONNECTED;
@@ -825,6 +876,22 @@ int32_t CreateRequest(unsigned char * request, unsigned char type, unsigned char
     return PK_OK;
 }
 
+/**
+ * \brief Send an arbitrary request to the connected device.
+ *
+ * The helper fills the device request buffer in the same format as
+ * CreateRequest() and immediately transmits it using SendRequest().
+ * It is mainly used for higher level functions that do not require
+ * dedicated API calls.
+ *
+ * \param device  Target device structure.
+ * \param type    Command ID (PK_CMD_* constant).
+ * \param param1  First command parameter.
+ * \param param2  Second command parameter.
+ * \param param3  Third command parameter.
+ * \param param4  Fourth command parameter.
+ * \return Result of SendRequest().
+ */
 int32_t PK_CustomRequest(sPoKeysDevice* device, unsigned char type, unsigned char param1, unsigned char param2, unsigned char param3, unsigned char param4)
 {
     device->request[1] = type;
@@ -853,6 +920,20 @@ int32_t LastWaitCount = 0;
 
 
 //#define PK_COM_DEBUG
+/**
+ * \brief Send a multipart data transfer.
+ *
+ * Large data blocks are transferred using the command
+ * ::PK_CMD_MULTIPART_PACKET. The function delegates the actual
+ * transmission to the network or fast USB helpers depending on the
+ * device connection type.
+ *
+ * The multipart buffer and packet headers must be prepared by the
+ * caller in \a device before invoking this function.
+ *
+ * \param device Target device instance.
+ * \return PK_OK on success or an error code on failure.
+ */
 int32_t SendRequest_multiPart(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_GENERIC;
@@ -875,6 +956,19 @@ int32_t SendRequest_multiPart(sPoKeysDevice* device)
 
 
 //#define PK_COM_DEBUG
+/**
+ * \brief Send a request and wait for the device response.
+ *
+ * The function finalises the 64&nbsp;byte request by prepending the
+ * packet header (0xBB), assigning a request ID and calculating the
+ * checksum (simple sum of bytes 0&ndash;6). The request is transmitted
+ * over the currently selected interface. After sending the packet the
+ * function waits for a reply with header 0xAA that carries the same
+ * request ID and a valid checksum.
+ *
+ * \param device Device that holds the prepared request buffer.
+ * \return PK_OK on success or PK_ERR_TRANSFER on failure.
+ */
 int32_t SendRequest(sPoKeysDevice* device)
 {
     // Initialize variables
@@ -977,6 +1071,18 @@ int32_t SendRequest(sPoKeysDevice* device)
 }
 
 //#define PK_COM_DEBUG
+/**
+ * \brief Send a request without waiting for any reply.
+ *
+ * The packet formatting is identical to SendRequest() but the function
+ * returns immediately after the HID write call. It is typically used
+ * with commands that acknowledge through other means (for example
+ * ::PK_CMD_REBOOT_SYSTEM).
+ *
+ * \param device Device that holds the prepared request buffer.
+ * \return PK_OK on successful USB transfer or PK_ERR_TRANSFER when the
+ *         packet could not be sent.
+ */
 int32_t SendRequest_NoResponse(sPoKeysDevice* device)
 {
     // Initialize variables

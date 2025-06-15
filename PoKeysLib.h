@@ -955,7 +955,15 @@ typedef struct
 } sPoKeysDevice;
 
 
-// Enumerate USB devices. Returns number of USB devices detected.
+/**
+ * Enumerate PoKeys USB devices using HIDAPI.
+ *
+ * The function scans vendor ID 0x1DC3 and product IDs 0x1001 and 0x1002
+ * and counts interfaces for which PKI_CheckInterface() reports a
+ * communication channel.
+ *
+ * @return Number of PoKeys HID devices detected.
+ */
 POKEYSDECL int32_t PK_EnumerateUSBDevices(void);
 POKEYSDECL int32_t PK_EnumerateFastUSBDevices(void);
 // Enumerate network devices. Return the number of ethernet devices detected and the list of detected devices (parameter devices) is filled with devices' data
@@ -977,13 +985,35 @@ POKEYSDECL sPoKeysDevice* PK_ConnectToPoKeysDevice(uint32_t serialNumber, uint32
 POKEYSDECL sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device);
 // Disconnect from a PoKeys device
 POKEYSDECL void PK_DisconnectDevice(sPoKeysDevice* device);
-// Returns connection type of the specified device
+/**
+ * Get the currently used connection type.
+ *
+ * The value returned corresponds to ::ePK_DeviceConnectionType and
+ * indicates whether communication is performed over USB, network or the
+ * fast USB interface.
+ *
+ * @param device Target device instance.
+ * @return Connection type constant.
+ */
 POKEYSDECL int32_t PK_GetCurrentDeviceConnectionType(sPoKeysDevice* device);
 // Save current configuration in the device
 POKEYSDECL int32_t PK_SaveConfiguration(sPoKeysDevice* device);
 // Clear configuration in device - sPoKeysDevice structure is not cleared, so it must be repopulated!
 POKEYSDECL int32_t PK_ClearConfiguration(sPoKeysDevice* device);
-// Exchange custom request
+/**
+ * Send a custom command to the device.
+ *
+ * The parameters are encoded into the request buffer as described for
+ * CreateRequest() and the command is executed immediately.
+ *
+ * @param device Target device structure.
+ * @param type   Command ID.
+ * @param param1 First parameter.
+ * @param param2 Second parameter.
+ * @param param3 Third parameter.
+ * @param param4 Fourth parameter.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_CustomRequest(sPoKeysDevice* device, unsigned char type, unsigned char param1, unsigned char param2, unsigned char param3, unsigned char param4);
 POKEYSDECL int32_t PK_GetDebugValues(sPoKeysDevice * device, int32_t * buffer);
 // Enable (1) or disable (0) fast USB interface in PoKeys56U/PoKeys57U devices
