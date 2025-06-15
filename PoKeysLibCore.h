@@ -30,10 +30,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 	void CleanDevice(sPoKeysDevice* device);
 	void PK_DisconnectNetworkDevice(sPoKeysDevice* device);
 
-	int32_t CreateRequest(uint8_t * request, uint8_t type, uint8_t param1, uint8_t param2, uint8_t param3, uint8_t param4);
-	uint8_t getChecksum(uint8_t * data);
-	int32_t SendRequest(sPoKeysDevice * device);
-	int32_t SendRequest_multiPart(sPoKeysDevice* device);
+        /**
+         * Compose a command packet.
+         *
+         * @param request 64 byte buffer to populate.
+         * @param type    Command ID (PK_CMD_* constant).
+         * @param param1  First parameter.
+         * @param param2  Second parameter.
+         * @param param3  Third parameter.
+         * @param param4  Fourth parameter.
+         * @return PK_OK on success or PK_ERR_NOT_CONNECTED when @p request is NULL.
+         */
+        int32_t CreateRequest(uint8_t * request, uint8_t type, uint8_t param1, uint8_t param2, uint8_t param3, uint8_t param4);
+        uint8_t getChecksum(uint8_t * data);
+        /** Send a prepared request and wait for the response. */
+        int32_t SendRequest(sPoKeysDevice * device);
+        /** Send a multipart (::PK_CMD_MULTIPART_PACKET) request. */
+        int32_t SendRequest_multiPart(sPoKeysDevice* device);
+        /** Send a request without waiting for a reply. */
     int32_t SendRequest_NoResponse(sPoKeysDevice* device);
 
 
