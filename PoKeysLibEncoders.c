@@ -23,6 +23,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibAsync.h"
 
 /**
+ * @file PoKeysLibEncoders.c
+ * @brief Functions for configuring and reading encoder channels.
+ */
+
+/**
  * @brief Retrieve encoder configuration from the device.
  *
  * This function downloads all encoder related settings such as basic encoder

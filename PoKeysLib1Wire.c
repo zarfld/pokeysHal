@@ -23,6 +23,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibAsync.h"
 
 /**
+ * @file PoKeysLib1Wire.c
+ * @brief Implementation of 1-wire bus operations (command 0xDC).
+ *
+ * Functions in this file control the 1-wire communication bus as
+ * defined in the PoKeys protocol specification. They cover
+ * activation, data transactions and bus scanning.
+ */
+
+/**
  * @brief Enable or disable the 1-wire bus.
  *
  * Issues command 0xDC with operation code 0x01 to enable or

@@ -22,9 +22,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
 
+/**
+ * @file PoKeysLibI2C.c
+ * @brief I\2C communication helpers (command 0xDB).
+ *
+ * These functions wrap the PoKeys I\2C command set and transfer data
+ * between the host and a connected PoKeys device.
+ */
+
 
 /**
- * @brief Enable or disable the I\2C interface.
+ * @brief Enable or disable the I\2C interface (command 0xDB/0x01).
  *
  * The PoKeys device keeps the I\2C engine enabled at all times.  This helper
  * only sends the activation flag for compatibility with older firmware.
@@ -42,7 +50,7 @@ int32_t PK_I2CSetStatus(sPoKeysDevice* device, uint8_t activated)
 }
 
 /**
- * @brief Query whether the I\2C bus is enabled.
+ * @brief Query whether the I\2C bus is enabled (command 0xDB/0x02).
  *
  * @param device     Handle to an opened PoKeys device.
  * @param activated  Pointer that receives the activation state.
@@ -61,7 +69,7 @@ int32_t PK_I2CGetStatus(sPoKeysDevice* device, uint8_t* activated)
 }
 
 /**
- * @brief Initiate an I\2C write transaction.
+ * @brief Initiate an I\2C write transaction (command 0xDB/0x10).
  *
  * Up to 32 bytes from @p buffer are copied and sent to the device using
  * ::PK_CMD_I2C_COMMUNICATION with subcommand @c 0x10.
@@ -89,7 +97,7 @@ int32_t PK_I2CWriteStart(sPoKeysDevice* device, uint8_t address, uint8_t* buffer
 }
 
 /**
- * @brief Write data and queue a subsequent read from the same address.
+ * @brief Write data and queue a subsequent read (command 0xDB/0x10).
  *
  * This combines a write and read phase.  Up to 32 bytes are written from
  * @p buffer and the device is instructed to read @p iDataLengthRead bytes
@@ -119,7 +127,7 @@ int32_t PK_I2CWriteAndReadStart(sPoKeysDevice* device, uint8_t address, uint8_t*
 }
 
 /**
- * @brief Retrieve the status of the last I\2C write operation.
+ * @brief Retrieve the status of the last I\2C write operation (command 0xDB/0x11).
  *
  * @param device Handle to an opened PoKeys device.
  * @param status Receives the result (see ::ePK_I2C_STATUS).
@@ -138,7 +146,7 @@ int32_t PK_I2CWriteStatusGet(sPoKeysDevice* device, uint8_t* status)
 }
 
 /**
- * @brief Initiate an I\2C read transaction.
+ * @brief Initiate an I\2C read transaction (command 0xDB/0x20).
  *
  * The device is commanded to read @p iDataLength bytes from the slave at
  * @p address.  The received data is later obtained with
@@ -161,7 +169,7 @@ int32_t PK_I2CReadStart(sPoKeysDevice* device, uint8_t address, uint8_t iDataLen
 }
 
 /**
- * @brief Obtain the result of an I\2C read command.
+ * @brief Obtain the result of an I\2C read command (command 0xDB/0x21).
  *
  * After a read has been started with PK_I2CReadStart() or
  * PK_I2CWriteAndReadStart(), this function polls the device for completion and
@@ -207,7 +215,7 @@ int32_t PK_I2CReadStatusGet(sPoKeysDevice* device, uint8_t* status, uint8_t* iRe
 }
 
 /**
- * @brief Begin scanning the I\2C bus for devices.
+ * @brief Begin scanning the I\2C bus for devices (command 0xDB/0x30).
  *
  * The device searches all 7-bit addresses. Completion is checked with
  * ::PK_I2CBusScanGetResults().
@@ -225,7 +233,7 @@ int32_t PK_I2CBusScanStart(sPoKeysDevice* device)
 }
 
 /**
- * @brief Obtain the results of an I\2C bus scan.
+ * @brief Obtain the results of an I\2C bus scan (command 0xDB/0x31).
  *
  * After PK_I2CBusScanStart() completes, this helper reads the scan bitmap and
  * stores device presence information into @p presentDevices.

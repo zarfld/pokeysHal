@@ -21,13 +21,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
+/**
+ * @file PoKeysLibSPI.c
+ * @brief SPI communication helpers (command 0xE5).
+ *
+ * Provides basic configuration and data transfer routines
+ * for the SPI interface on PoKeys devices.
+ */
 
 /**
- * @brief Configure the SPI interface of a PoKeys device.
+ * @brief Configure the SPI interface of a PoKeys device (command 0xE5/0x01).
  *
- * Issues the PK_CMD_SPI_COMMUNICATION command with the configuration
- * parameters. The function sets the SPI clock prescaler and frame format
- * for subsequent transfers on the device.
+ * Issues PK_CMD_SPI_COMMUNICATION with subcommand 0x01 to set
+ * the SPI clock prescaler and frame format.
  *
  * @param device      Pointer to an initialised device structure.
  * @param prescaler   SPI clock prescaler value sent to the device.
@@ -46,7 +52,7 @@ int32_t PK_SPIConfigure(sPoKeysDevice * device, uint8_t prescaler, uint8_t frame
 }
 
 /**
- * @brief Transmit data over the SPI interface.
+ * @brief Transmit data over the SPI interface (command 0xE5/0x10).
  *
  * Sends a block of up to 55 bytes to the selected chip on the PoKeys
  * device. The chip select line is asserted automatically by the device.
@@ -76,10 +82,10 @@ int32_t PK_SPIWrite(sPoKeysDevice * device, uint8_t * buffer, uint8_t iDataLengt
 }
 
 /**
- * @brief Receive data from the SPI interface.
+ * @brief Receive data from the SPI interface (command 0xE5/0x20).
  *
- * Issues a read operation for the specified number of bytes. The returned
- * values are copied into the provided buffer on success.
+ * Issues a read request for the specified number of bytes.
+ * The returned values are copied into the provided buffer on success.
  *
  * @param device      Pointer to an initialised PoKeys device structure.
  * @param buffer      Destination buffer for the received bytes.

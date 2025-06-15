@@ -3,6 +3,23 @@
 #include "PoKeysLibAsync.h"
 #include <string.h>
 
+/**
+ * @file PoKeysLibCOSM.c
+ * @brief COSM/HTTP reporting configuration (command 0xF7).
+ *
+ * Implements read and write operations for the COSM settings
+ * block as defined in the PoKeys protocol specification.
+ */
+
+/**
+ * @brief Read COSM settings from the device (command 0xF7).
+ *
+ * Performs operations 0..5 to retrieve basic parameters and the
+ * HTTP header pages into the @c device->COSM structure.
+ *
+ * @param device Pointer to an opened PoKeys device.
+ * @return PK_OK on success or PK_ERR_* on failure.
+ */
 int32_t PK_COSMSettingsGet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -28,6 +45,15 @@ int32_t PK_COSMSettingsGet(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * @brief Write COSM settings to the device (command 0xF7).
+ *
+ * Operations 10..15 are used to send the contents of the
+ * @c device->COSM structure back to the device.
+ *
+ * @param device Pointer to an opened PoKeys device.
+ * @return PK_OK on success or PK_ERR_* on failure.
+ */
 int32_t PK_COSMSettingsSet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;

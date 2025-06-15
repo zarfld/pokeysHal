@@ -21,6 +21,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
 
+/**
+ * @file PoKeysLibCAN.c
+ * @brief Implementation of CAN bus operations (command 0x86).
+ *
+ * This module provides functions for configuring and using the
+ * CAN interface of PoKeys devices via the PK_CMD_CAN_OPERATIONS
+ * command set.
+ */
+
+/**
+ * @brief Configure the CAN interface (subcommand 0x01).
+ *
+ * Sends PK_CMD_CAN_OPERATIONS with subcommand 0x01 to enable the
+ * CAN controller and set the desired bitrate.
+ *
+ * @param device  Pointer to an opened PoKeys device.
+ * @param bitrate CAN bus bitrate in bits per second.
+ * @return PK_OK on success or PK_ERR_* on failure.
+ */
 int32_t PK_CANConfigure(sPoKeysDevice* device, uint32_t bitrate)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -32,6 +51,17 @@ int32_t PK_CANConfigure(sPoKeysDevice* device, uint32_t bitrate)
     return PK_OK;
 }
 
+/**
+ * @brief Register a CAN filter (subcommand 0x10).
+ *
+ * The filter selects which CAN identifiers are received by the
+ * device.
+ *
+ * @param device Pointer to an opened PoKeys device.
+ * @param format Identifier format: 0 for standard, 1 for extended.
+ * @param CANid  Identifier value to filter for.
+ * @return PK_OK on success or PK_ERR_* on failure.
+ */
 int32_t PK_CANRegisterFilter(sPoKeysDevice* device, uint8_t format, uint32_t CANid)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -43,6 +73,15 @@ int32_t PK_CANRegisterFilter(sPoKeysDevice* device, uint8_t format, uint32_t CAN
     return PK_OK;
 }
 
+/**
+ * @brief Transmit a CAN message (subcommand 0x20).
+ *
+ * The message contents are taken from @p msg and sent to the device.
+ *
+ * @param device Pointer to an opened PoKeys device.
+ * @param msg    CAN message to send.
+ * @return PK_OK on success or PK_ERR_* on failure.
+ */
 int32_t PK_CANWrite(sPoKeysDevice* device, sPoKeysCANmsg * msg)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -54,6 +93,17 @@ int32_t PK_CANWrite(sPoKeysDevice* device, sPoKeysCANmsg * msg)
     return PK_OK;
 }
 
+/**
+ * @brief Receive one CAN message (subcommand 0x31).
+ *
+ * The returned status byte indicates message availability.
+ * When non-zero, the received message is stored in @p msg.
+ *
+ * @param device Pointer to an opened PoKeys device.
+ * @param msg    Buffer for the received message.
+ * @param status Receives 1 if a message was read.
+ * @return PK_OK on success or PK_ERR_* on failure.
+ */
 int32_t PK_CANRead(sPoKeysDevice* device, sPoKeysCANmsg * msg, uint8_t * status)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -69,6 +119,12 @@ int32_t PK_CANRead(sPoKeysDevice* device, sPoKeysCANmsg * msg, uint8_t * status)
 }
 
 
+/**
+ * @brief Flush the CAN receive queue (subcommand 0x32).
+ *
+ * @param device Pointer to an opened PoKeys device.
+ * @return PK_OK on success or PK_ERR_* on failure.
+ */
 int32_t PK_CANFlush(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;

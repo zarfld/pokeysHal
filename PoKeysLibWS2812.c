@@ -21,6 +21,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
 /**
+ * @file PoKeysLibWS2812.c
+ * @brief WS2812 LED strip control (command 0x4B).
+ *
+ * Implements configuration and data transfer routines for the
+ * on-board WS2812 LED driver.
+ */
+/**
  * Configure or trigger the WS2812 LED driver.
  *
  * @param device     Pointer to an initialized device structure.

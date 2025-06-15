@@ -21,6 +21,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
+/**
+ * @file PoKeysLibRTC.c
+ * @brief Real-time clock access helpers (command 0x83).
+ *
+ * Functions read and write the RTC registers via
+ * PK_CMD_RTC_SETTINGS.
+ */
+/**
+ * @brief Read the real-time clock values (command 0x83/0x00).
+ *
+ * Fills the RTC structure of @p device with the current date and time.
+ *
+ * @param device Pointer to an opened PoKeys device.
+ * @return PK_OK on success or a PK_ERR code on failure.
+ */
 
 int32_t PK_RTCGet(sPoKeysDevice* device)
 {
@@ -44,6 +59,15 @@ int32_t PK_RTCGet(sPoKeysDevice* device)
 }
 
 
+/**
+ * @brief Set the real-time clock (command 0x83/0x10).
+ *
+ * Writes the values from the device RTC structure to the
+ * PoKeys module.
+ *
+ * @param device Pointer to an opened PoKeys device.
+ * @return PK_OK on success or a PK_ERR code on failure.
+ */
 int32_t PK_RTCSet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;

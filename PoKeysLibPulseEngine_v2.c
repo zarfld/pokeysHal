@@ -22,6 +22,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
 
+/**
+ * @file PoKeysLibPulseEngine_v2.c
+ * @brief Pulse engine v2 control functions (command 0x85).
+ *
+ * Provides motion control, homing and threading operations
+ * via the PK_CMD_PULSE_ENGINE_V2 command set.
+ */
 
 void PK_PEv2_DecodeStatus(sPoKeysDevice * device)
 {

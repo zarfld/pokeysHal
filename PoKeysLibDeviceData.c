@@ -23,6 +23,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibCore.h"
 #include "stdio.h"
 
+/**
+ * @file PoKeysLibDeviceData.c
+ * @brief Device information and configuration helpers.
+ *
+ * Functions in this module implement commands from the protocol chapter
+ * "Device data" such as reading identification, activation and pin
+ * capability tables.
+ */
+
 
 #define MAX_PINS_COUNT 100
 #define MAX_CAPS_PER_PIN 20
@@ -275,6 +284,16 @@ const sPoKeys_PinCapabilities pinCaps[] = {
 
 
 
+/**
+ * @brief Compare a device name prefix.
+ *
+ * Utility used when parsing the identification string returned by the
+ * device. Checks if @p device starts with the contents of @p search.
+ *
+ * @param device Pointer to the device name buffer.
+ * @param search String to compare against.
+ * @return 0 when the prefix matches otherwise index of first mismatch.
+ */
 int32_t CompareName(int8_t *device, int8_t *search)
 {
     int32_t len = (int32_t)strlen(search);
@@ -287,6 +306,16 @@ int32_t CompareName(int8_t *device, int8_t *search)
     return 0;
 }
 
+/**
+ * @brief Read device identification and feature set.
+ *
+ * Executes command 0x05 which returns device series, type and capability
+ * information. The results are decoded into ::sPoKeysDevice_Info and
+ * ::sPoKeysDevice_Data within @p device.
+ *
+ * @param device Pointer to an initialised PoKeys device structure.
+ * @return PK_OK on success or an error code from SendRequest().
+ */
 int32_t PK_DeviceDataGet(sPoKeysDevice* device)
 {
     int32_t i;
@@ -1047,6 +1076,17 @@ int32_t PK_DeviceDataGet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Populate PWM pin ID table in the device structure.
+ *
+ * Depending on the connected device type the PWM outputs are mapped to
+ * different PoKeys pins. This helper fills ::sPoKeysPWM.PWMpinIDs using
+ * hard coded mappings.
+ *
+ * @param device Target device handle with populated info block.
+ * @return PK_OK on success or PK_ERR_NOT_SUPPORTED when PWM is not
+ *         available.
+ */
 int32_t PK_FillPWMPinNumbers(sPoKeysDevice * device)
 {
 	uint8_t PWM_PK_pins[] = { 22, 21, 20, 19, 18, 17 };
@@ -1064,6 +1104,15 @@ int32_t PK_FillPWMPinNumbers(sPoKeysDevice * device)
 	return PK_OK;
 }
 
+/**
+ * @brief Write the device name string (command 0x06/0x01).
+ *
+ * The first ten bytes of ::sPoKeysDevice_Data.DeviceName are sent to
+ * the device. They become visible in subsequent identification reads.
+ *
+ * @param device Target device handle.
+ * @return PK_OK on success or PK_ERR_TRANSFER on failure.
+ */
 int32_t PK_DeviceNameSet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -1082,6 +1131,15 @@ int32_t PK_DeviceNameSet(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * @brief Write Ethernet configuration block (command 0xE0/10).
+ *
+ * The network parameters from ::sPoKeysNetworkDevice are encoded and
+ * transmitted to the device.
+ *
+ * @param device Pointer to the PoKeys device with network data filled.
+ * @return PK_OK on success or PK_ERR_TRANSFER on failure.
+ */
 int32_t PK_NetworkConfigurationSet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -1108,6 +1166,16 @@ int32_t PK_NetworkConfigurationSet(sPoKeysDevice* device)
 }
 
 
+/**
+ * @brief Send activation code to the device (command 0x8F/0x01).
+ *
+ * Writes the 8 byte ActivationCode field to unlock optional features.
+ * The activated options byte from the response is stored back into the
+ * structure.
+ *
+ * @param device Target device handle.
+ * @return PK_OK on success or PK_ERR_TRANSFER otherwise.
+ */
 int32_t PK_DeviceActivation(sPoKeysDevice* device)
 {
 	if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -1122,6 +1190,14 @@ int32_t PK_DeviceActivation(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Clear activation settings (command 0x8F/0xFF).
+ *
+ * Resets all optional features on the device.
+ *
+ * @param device Device handle.
+ * @return PK_OK on success or PK_ERR_TRANSFER on communication error.
+ */
 int32_t PK_DeviceActivationClear(sPoKeysDevice* device)
 {
 	if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -1135,6 +1211,15 @@ int32_t PK_DeviceActivationClear(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Save current configuration to device flash (command 0x50).
+ *
+ * Writes the active settings from RAM to non-volatile memory so that
+ * they persist across resets.
+ *
+ * @param device PoKeys device handle.
+ * @return PK_OK on success or PK_ERR_TRANSFER on failure.
+ */
 int32_t PK_SaveConfiguration(sPoKeysDevice* device)
 {
 	if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -1145,6 +1230,15 @@ int32_t PK_SaveConfiguration(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Reset configuration in device flash (command 0x52).
+ *
+ * Erases stored settings, reverting the device to defaults on next
+ * reboot.
+ *
+ * @param device Device to operate on.
+ * @return PK_OK on success or PK_ERR_TRANSFER otherwise.
+ */
 int32_t PK_ClearConfiguration(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -1155,6 +1249,18 @@ int32_t PK_ClearConfiguration(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * @brief Determine if a device class supports a pin capability.
+ *
+ * Looks through the static capability table to check whether the given
+ * pin on any device matching @p deviceTypeMask implements capability
+ * @p cap.
+ *
+ * @param deviceTypeMask Combination of PK_DeviceMask_* bits.
+ * @param pin           Pin index (0 based).
+ * @param cap           Capability identifier.
+ * @return 1 if supported, otherwise 0.
+ */
 int32_t PK_CheckPinCapabilityByDevice(uint64_t deviceTypeMask, uint32_t pin, ePK_AllPinCap cap)
 {
     const sPoKeys_PinCapabilities * ptr;
@@ -1195,6 +1301,17 @@ int32_t PK_CheckPinCapabilityByDevice(uint64_t deviceTypeMask, uint32_t pin, ePK
     return 0;
 }
 
+/**
+ * @brief Check capability for a specific device type ID.
+ *
+ * Searches the capability tables for the given @p deviceID and reports
+ * if @p pin implements capability @p cap.
+ *
+ * @param deviceID Device type identifier (e.g. PK_DeviceID_57E).
+ * @param pin      Pin index (0 based).
+ * @param cap      Capability identifier.
+ * @return 1 if supported, otherwise 0.
+ */
 int32_t PK_CheckPinCapabilityByTypeID(uint64_t deviceID, uint32_t pin, ePK_AllPinCap cap)
 {
     const sPoKeys_PinCapabilities * ptr;
@@ -1315,6 +1432,14 @@ int32_t PK_CheckPinCapabilityByTypeID(uint64_t deviceID, uint32_t pin, ePK_AllPi
 
 
 
+/**
+ * @brief Wrapper for PK_CheckPinCapabilityByTypeID() using a device handle.
+ *
+ * @param device PoKeys device structure.
+ * @param pin    Pin index (0 based).
+ * @param cap    Capability identifier.
+ * @return 1 if supported, 0 otherwise or negative on error.
+ */
 int32_t PK_CheckPinCapability(sPoKeysDevice* device, unsigned int pin, ePK_AllPinCap cap)
 {
     //const sPoKeys_PinCapabilities * ptr;
@@ -1366,11 +1491,26 @@ int32_t PK_CheckPinCapability(sPoKeysDevice* device, unsigned int pin, ePK_AllPi
 }
 
 
+/**
+ * @brief Check if a capability is enabled on a specific pin.
+ *
+ * Currently a stub that always returns 0.
+ */
 int32_t PK_CheckPinEnabledCapability(sPoKeysDevice* device, uint32_t pin, ePK_AllPinCap cap)
 {
     return 0;
 }
 
+/**
+ * @brief Read internal debug registers (command 0xBB).
+ *
+ * Four consecutive requests are issued to retrieve 52 debug integers
+ * which are stored into @p buffer.
+ *
+ * @param device Device handle.
+ * @param buffer Destination array of at least 52 int32_t.
+ * @return PK_OK on success or PK_ERR_TRANSFER when communication fails.
+ */
 int32_t PK_GetDebugValues(sPoKeysDevice * device, int32_t * buffer)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -1395,6 +1535,13 @@ int32_t PK_GetDebugValues(sPoKeysDevice * device, int32_t * buffer)
 
 }
 
+/**
+ * @brief Enable or disable the fast USB interface (command 0x07).
+ *
+ * @param device    Device handle.
+ * @param newState  1 to enable, 0 to disable.
+ * @return PK_OK on success or PK_ERR_TRANSFER on failure.
+ */
 int32_t PK_SetFastUSBEnableStatus(sPoKeysDevice * device, uint32_t newState)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -1405,6 +1552,13 @@ int32_t PK_SetFastUSBEnableStatus(sPoKeysDevice * device, uint32_t newState)
 	return PK_OK;
 }
 
+/**
+ * @brief Query fast USB interface status (command 0x07/10).
+ *
+ * @param device Device handle.
+ * @param state  Receives 1 if enabled.
+ * @return PK_OK on success or PK_ERR_TRANSFER on failure.
+ */
 int32_t PK_GetFastUSBEnableStatus(sPoKeysDevice * device, uint32_t * state)
 {
 	if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -1416,6 +1570,14 @@ int32_t PK_GetFastUSBEnableStatus(sPoKeysDevice * device, uint32_t * state)
 	return PK_OK;
 }
 
+/**
+ * @brief Retrieve entries from the device event log (command 0x84).
+ *
+ * @param device     Device handle.
+ * @param logBuffer  Buffer for up to 27 log words.
+ * @param logEntries Receives number of valid entries returned.
+ * @return PK_OK on success or PK_ERR_TRANSFER otherwise.
+ */
 int32_t PK_ReadDeviceLog(sPoKeysDevice * device, uint16_t * logBuffer, int32_t * logEntries)
 {
     int32_t i;
