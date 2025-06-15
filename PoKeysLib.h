@@ -1047,9 +1047,24 @@ POKEYSDECL int32_t PK_ReadDeviceLog(sPoKeysDevice * device, uint16_t * logBuffer
 // Configure network device - uses structure device->netDeviceData
 POKEYSDECL int32_t PK_NetworkConfigurationSet(sPoKeysDevice* device);
 
-// Retrieve pin configuration from the device
+/**
+ * Retrieve pin configuration from the device.
+ *
+ * Populates the ::sPoKeysDevice structure with the current pin setup.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_PinConfigurationGet(sPoKeysDevice* device);
-// Send pin configuration to device
+/**
+ * Send pin configuration to the device.
+ *
+ * The pin configuration is taken from the ::sPoKeysDevice structure and
+ * written back to the connected PoKeys device.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_PinConfigurationSet(sPoKeysDevice* device);
 
 // Retrieve encoder configuration from the device
@@ -1061,39 +1076,135 @@ POKEYSDECL int32_t PK_EncoderValuesGet(sPoKeysDevice* device);
 // Send encoder values to device
 POKEYSDECL int32_t PK_EncoderValuesSet(sPoKeysDevice* device);
 
-// Set digital outputs values
+/**
+ * Set digital output values for all pins.
+ *
+ * The output values are read from the ::sPoKeysDevice structure and
+ * transferred to the device.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_DigitalIOSet(sPoKeysDevice* device);
-// Get digital inputs values
+/**
+ * Read digital input values from the device.
+ *
+ * Input states are stored in the ::sPoKeysDevice structure.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_DigitalIOGet(sPoKeysDevice* device);
-// Set digital outputs and get digital input values in one call
+/**
+ * Atomically set digital outputs and read digital inputs.
+ *
+ * This helper issues a single command that updates outputs and
+ * retrieves input states at the same time.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_DigitalIOSetGet(sPoKeysDevice* device);
-// Set single digital output
+/**
+ * Change the state of a single digital output pin.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param pinID  Pin number to modify.
+ * @param pinValue Desired output state (0 or 1).
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_DigitalIOSetSingle(sPoKeysDevice* device, uint8_t pinID, uint8_t pinValue);
-// Get single digital input value
+/**
+ * Read the state of a single digital input pin.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param pinID  Pin number to read.
+ * @param pinValue Pointer that receives the pin state.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_DigitalIOGetSingle(sPoKeysDevice* device, uint8_t pinID, uint8_t * pinValue);
 
-// Set PoExtBus outputs
+/**
+ * Write values to the PoExtBus expansion bus.
+ *
+ * The data bytes are taken from ::sPoKeysDevice::PoExtBusData.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_PoExtBusSet(sPoKeysDevice* device);
-// Get current PoExtBus outputs values
+/**
+ * Read current PoExtBus output values from the device.
+ *
+ * The values are stored into ::sPoKeysDevice::PoExtBusData.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_PoExtBusGet(sPoKeysDevice* device);
 
-// Get digital counter values
+/**
+ * Read digital counter values from the device.
+ *
+ * Counter values are placed in the ::sPoKeysDevice::Pins array.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_DigitalCounterGet(sPoKeysDevice* device);
-// Clear digital counter values
+/**
+ * Clear all digital counters on the device.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_DigitalCounterClear(sPoKeysDevice* device);
-// Check whether digital counter is available for the specified pin. Return True if digital counter is supported.
+/**
+ * Check whether a specific pin supports a digital counter.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param pinID  Pin number to query.
+ * @return Non-zero if a counter is available, zero otherwise.
+ */
 POKEYSDECL int32_t PK_IsCounterAvailable(sPoKeysDevice* device, uint8_t pinID);
-// Check digital counter availability by device, defined by device type mask (see ePK_DeviceTypeMask)
+/**
+ * Test counter availability for a device type mask.
+ *
+ * @param deviceTypeMask Device type mask (see ::ePK_DeviceTypeMask).
+ * @param pinID          Pin number to query.
+ * @return Non-zero if a counter is available, zero otherwise.
+ */
 POKEYSDECL int32_t PK_IsCounterAvailableByDevice(uint32_t deviceTypeMask, uint8_t pinID);
-// Check digital counter availability by device, defined by device ID (see ePK_DeviceTypeID)
+/**
+ * Test counter availability for a specific device ID.
+ *
+ * @param deviceTypeID Device type ID (see ::ePK_DeviceTypeID).
+ * @param pinID        Pin number to query.
+ * @return Non-zero if a counter is available, zero otherwise.
+ */
 POKEYSDECL int32_t PK_IsCounterAvailableByTypeID(uint32_t deviceTypeID, uint8_t pinID);
 
-// Get analog input values
+/**
+ * Retrieve analog input values from the device.
+ *
+ * Values are copied into the ::sPoKeysDevice::AnalogInput array.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_AnalogIOGet(sPoKeysDevice* device);
-// Get analog input values as an array
+/**
+ * Retrieve analog input values and store them in a user supplied buffer.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param buffer Destination array of at least seven elements.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_AnalogIOGetAsArray(sPoKeysDevice* device, uint32_t * buffer);
 
+/** Get current RC filter constant for analog inputs. */
 POKEYSDECL int32_t PK_AnalogRCFilterGet(sPoKeysDevice* device);
+/** Set RC filter constant for analog inputs. */
 POKEYSDECL int32_t PK_AnalogRCFilterSet(sPoKeysDevice* device);
 
 // Get matrix keyboard configuration
@@ -1103,15 +1214,47 @@ POKEYSDECL int32_t PK_MatrixKBConfigurationSet(sPoKeysDevice* device);
 // Get matrix keyboard current key states
 POKEYSDECL int32_t PK_MatrixKBStatusGet(sPoKeysDevice* device);
 
-// Set PWM outputs configuration
+/**
+ * Send PWM channel configuration to the device.
+ *
+ * Enabled channels, duty cycles and period are taken from
+ * the ::sPoKeysDevice::PWM structure.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_PWMConfigurationSet(sPoKeysDevice* device);
-// Update PWM output duty cycles (PWM period is left unchanged)
+/**
+ * Update PWM duty cycles without changing the period.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_PWMUpdate(sPoKeysDevice* device);
-// Retrieve PWM configuration
+/**
+ * Read current PWM configuration from the device.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_PWMConfigurationGet(sPoKeysDevice* device);
 
-
+/**
+ * Convenience helper that sets PWM configuration directly.
+ *
+ * @param device        Pointer to an initialized device structure.
+ * @param PWMperiod     PWM period in clock ticks.
+ * @param enabledChannels Array of six flags indicating enabled channels.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_PWMConfigurationSetDirectly(sPoKeysDevice * device, uint32_t PWMperiod, uint8_t * enabledChannels);
+/**
+ * Update duty cycles using the provided array of values.
+ *
+ * @param device     Pointer to an initialized device structure.
+ * @param dutyCycles Array of six duty cycle values.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_PWMUpdateDirectly(sPoKeysDevice * device, uint32_t * dutyCycles);
 
 // Get LCD configuration
@@ -1475,8 +1618,32 @@ POKEYSDECL uint32_t PK_SL_EncoderValueGet(sPoKeysDevice* device, uint8_t index);
 POKEYSDECL int32_t PK_SL_EasySensorValueGet(sPoKeysDevice* device, uint8_t index);
 
 POKEYSDECL uint32_t PK_SL_PWMConfig(sPoKeysDevice* device, uint8_t index);
+/**
+ * Set PWM period using the simple layer API.
+ *
+ * @param device    Pointer to an initialized device structure.
+ * @param PWMperiod Desired PWM period in clock ticks.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_SL_PWM_SetPeriod(sPoKeysDevice* device, uint32_t PWMperiod);
+/**
+ * Enable or disable a PWM channel in the simple layer API.
+ *
+ * @param device       Pointer to an initialized device structure.
+ * @param channel      Channel index (0–5).
+ * @param enabled      Non-zero to enable the channel.
+ * @param defaultDuty  Duty cycle written when enabling the channel.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_SL_PWM_SetChannelEnabled(sPoKeysDevice* device, uint8_t channel, uint8_t enabled, uint32_t defaultDuty);
+/**
+ * Update duty cycle of a PWM channel in the simple layer API.
+ *
+ * @param device  Pointer to an initialized device structure.
+ * @param channel Channel index (0–5).
+ * @param duty    New duty cycle value.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_SL_PWM_SetDuty(sPoKeysDevice* device, uint8_t channel, uint32_t duty);
 
 POKEYSDECL int32_t PK_OEM_Martelli_SetMode(sPoKeysDevice* device, uint8_t mode);
