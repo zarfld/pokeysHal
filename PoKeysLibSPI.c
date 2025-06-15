@@ -22,6 +22,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
 
+/**
+ * @brief Configure the SPI interface of a PoKeys device.
+ *
+ * Issues the PK_CMD_SPI_COMMUNICATION command with the configuration
+ * parameters. The function sets the SPI clock prescaler and frame format
+ * for subsequent transfers on the device.
+ *
+ * @param device      Pointer to an initialised device structure.
+ * @param prescaler   SPI clock prescaler value sent to the device.
+ * @param frameFormat Frame configuration (mode, bit length etc.).
+ *
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_SPIConfigure(sPoKeysDevice * device, uint8_t prescaler, uint8_t frameFormat)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -32,6 +45,19 @@ int32_t PK_SPIConfigure(sPoKeysDevice * device, uint8_t prescaler, uint8_t frame
     return PK_OK;
 }
 
+/**
+ * @brief Transmit data over the SPI interface.
+ *
+ * Sends a block of up to 55 bytes to the selected chip on the PoKeys
+ * device. The chip select line is asserted automatically by the device.
+ *
+ * @param device       Pointer to an initialised PoKeys device structure.
+ * @param buffer       Data buffer containing bytes to transmit.
+ * @param iDataLength  Number of bytes to send (max 55).
+ * @param pinCS        Chip select pin identifier on the PoKeys device.
+ *
+ * @return ::PK_OK on success or a negative ::PK_ERR code when the transfer fails.
+ */
 int32_t PK_SPIWrite(sPoKeysDevice * device, uint8_t * buffer, uint8_t iDataLength, uint8_t pinCS)
 {
     uint8_t i;
@@ -49,6 +75,19 @@ int32_t PK_SPIWrite(sPoKeysDevice * device, uint8_t * buffer, uint8_t iDataLengt
     if (device->response[3] == 1) return PK_OK; else return PK_ERR_GENERIC;
 }
 
+/**
+ * @brief Receive data from the SPI interface.
+ *
+ * Issues a read operation for the specified number of bytes. The returned
+ * values are copied into the provided buffer on success.
+ *
+ * @param device      Pointer to an initialised PoKeys device structure.
+ * @param buffer      Destination buffer for the received bytes.
+ * @param iDataLength Number of bytes to read (maximum 55).
+ *
+ * @return ::PK_OK if the data was read successfully, otherwise a negative
+ *         ::PK_ERR code.
+ */
 int32_t PK_SPIRead(sPoKeysDevice * device, uint8_t * buffer, uint8_t iDataLength)
 {
     uint8_t i;
