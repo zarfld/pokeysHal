@@ -22,6 +22,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
 
+/**
+ * @brief Retrieve encoder configuration from the device.
+ *
+ * This function downloads all encoder related settings such as basic encoder
+ * options, channel mappings and key mapping configuration. Fast and ultra fast
+ * encoder options are also retrieved when supported. Obtained values are stored
+ * into the provided ::sPoKeysDevice structure.
+ *
+ * @param device Pointer to an initialised PoKeys device structure.
+ * @return ::PK_OK on success or a negative error code on failure.
+ */
 int32_t PK_EncoderConfigurationGet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -104,6 +115,17 @@ int32_t PK_EncoderConfigurationGet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Send encoder configuration to the PoKeys device.
+ *
+ * All encoder related parameters stored inside the supplied ::sPoKeysDevice
+ * structure are transmitted to the device. This includes basic encoder
+ * options, channel assignments, optional key mappings and fast or ultra fast
+ * encoder settings.
+ *
+ * @param device Pointer to a configured PoKeys device structure.
+ * @return ::PK_OK on success or a negative error code on failure.
+ */
 int32_t PK_EncoderConfigurationSet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -170,6 +192,17 @@ int32_t PK_EncoderConfigurationSet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Read current encoder values from the PoKeys device.
+ *
+ * Depending on the available encoder count, this function issues one or more
+ * read commands to obtain the encoder counters. The received values are stored
+ * in the respective encoderValue pointers within the ::sPoKeysDevice structure.
+ * When ultra fast encoders are present, test mode values are fetched as well.
+ *
+ * @param device Pointer to the PoKeys device structure.
+ * @return ::PK_OK on success or a negative error code on failure.
+ */
 int32_t PK_EncoderValuesGet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -244,6 +277,16 @@ int32_t PK_EncoderValuesGet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Write encoder values to the PoKeys device.
+ *
+ * The encoderValue fields of the ::sPoKeysDevice structure are packaged and
+ * transmitted to the device, allowing encoder counters to be preset. Only
+ * encoders supported by the connected hardware are updated.
+ *
+ * @param device Pointer to the PoKeys device structure.
+ * @return ::PK_OK on success or a negative error code on failure.
+ */
 int32_t PK_EncoderValuesSet(sPoKeysDevice* device)
 {
     uint32_t i;
