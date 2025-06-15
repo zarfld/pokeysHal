@@ -22,6 +22,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
 
+/**
+ * @brief Retrieve LCD configuration from the device.
+ *
+ * Sends ::PK_CMD_LCD_CONFIGURATION with parameter 1 and
+ * stores returned parameters in the device's LCD structure.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDConfigurationGet(sPoKeysDevice* device)
 {	
 	// Get LCD configuration
@@ -39,6 +48,15 @@ int32_t PK_LCDConfigurationGet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Write LCD configuration to the device.
+ *
+ * Transfers mode and size parameters stored in the LCD fields and
+ * performs initialisation and screen clear afterwards.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDConfigurationSet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -57,9 +75,18 @@ int32_t PK_LCDConfigurationSet(sPoKeysDevice* device)
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
 
-	return PK_OK;
+        return PK_OK;
 }
 
+/**
+ * @brief Update LCD display using buffered lines.
+ *
+ * Only lines flagged in ::sPoKeysLCD::RowRefreshFlags are transferred
+ * to the device with command ::PK_CMD_LCD_OPERATION opcode 0x85.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDUpdate(sPoKeysDevice* device)
 {
     uint8_t * lines[4];
@@ -90,6 +117,16 @@ int32_t PK_LCDUpdate(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Upload custom character patterns to the LCD.
+ *
+ * Transfers the eight custom character bitmaps stored in
+ * ::sPoKeysLCD::customCharacters using the command
+ * ::PK_CMD_LCD_OPERATION with opcode 0x40.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDSetCustomCharacters(sPoKeysDevice* device)
 {
     int32_t i, n;
@@ -112,6 +149,16 @@ int32_t PK_LCDSetCustomCharacters(sPoKeysDevice* device)
 }
 
 
+/**
+ * @brief Switch LCD operating mode.
+ *
+ * Allows toggling between ::PK_LCD_MODE_DIRECT and ::PK_LCD_MODE_BUFFERED
+ * by issuing command ::PK_CMD_LCD_OPERATION with opcode 0x80.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param mode   Desired mode constant.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDChangeMode(sPoKeysDevice* device, uint8_t mode)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -124,6 +171,16 @@ int32_t PK_LCDChangeMode(sPoKeysDevice* device, uint8_t mode)
 
 
 // The following functions can be used in direct mode only
+/**
+ * @brief Initialise the LCD controller.
+ *
+ * Only valid when operating in ::PK_LCD_MODE_DIRECT mode.
+ * Issues command ::PK_CMD_LCD_OPERATION with opcode 0 to reset
+ * the display.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDInit(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -134,6 +191,15 @@ int32_t PK_LCDInit(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * @brief Clear the LCD display.
+ *
+ * Uses command ::PK_CMD_LCD_OPERATION with opcode 0x10 to erase
+ * the entire screen. Valid only in direct mode.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDClear(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -144,6 +210,17 @@ int32_t PK_LCDClear(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * @brief Move the LCD cursor to a specific position.
+ *
+ * Sends command ::PK_CMD_LCD_OPERATION with opcode 0x20 where
+ * param1 is the column and param2 the row.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param row    Target row number (starting from 0).
+ * @param column Target column number (starting from 0).
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDMoveCursor(sPoKeysDevice* device, uint8_t row, uint8_t column)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -154,6 +231,18 @@ int32_t PK_LCDMoveCursor(sPoKeysDevice* device, uint8_t row, uint8_t column)
     return PK_OK;
 }
 
+/**
+ * @brief Print a string on the LCD.
+ *
+ * In direct mode the text is transmitted using command
+ * ::PK_CMD_LCD_OPERATION with opcode 0x30. The string length
+ * is limited to 20 characters.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param text    Buffer containing the characters to display.
+ * @param textLen Number of characters in @p text.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDPrint(sPoKeysDevice* device, uint8_t * text, uint8_t textLen)
 {
     int32_t i;
@@ -172,6 +261,16 @@ int32_t PK_LCDPrint(sPoKeysDevice* device, uint8_t * text, uint8_t textLen)
     return PK_OK;
 }
 
+/**
+ * @brief Output a single character on the LCD.
+ *
+ * Uses command ::PK_CMD_LCD_OPERATION with opcode 0x31.
+ * Only valid in direct mode.
+ *
+ * @param device   Pointer to an initialized device structure.
+ * @param character Character to display.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDPutChar(sPoKeysDevice* device, uint8_t character)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -183,6 +282,17 @@ int32_t PK_LCDPutChar(sPoKeysDevice* device, uint8_t character)
     return PK_OK;
 }
 
+/**
+ * @brief Configure the LCD entry mode register.
+ *
+ * Uses command ::PK_CMD_LCD_OPERATION with opcode 0x50 to set
+ * cursor movement direction and display shifting.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param cursorMoveDirection 1 for increment, 0 for decrement.
+ * @param displayShift        Non-zero to shift display.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDEntryModeSet(sPoKeysDevice* device, uint8_t cursorMoveDirection, uint8_t displayShift)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -195,6 +305,18 @@ int32_t PK_LCDEntryModeSet(sPoKeysDevice* device, uint8_t cursorMoveDirection, u
     return PK_OK;
 }
 
+/**
+ * @brief Control LCD display, cursor and blinking.
+ *
+ * Command ::PK_CMD_LCD_OPERATION with opcode 0x60 configures
+ * the display on/off, cursor visibility and blinking options.
+ *
+ * @param device         Pointer to an initialized device structure.
+ * @param displayOnOff   Non-zero to enable the display.
+ * @param cursorOnOff    Non-zero to show the cursor.
+ * @param cursorBlinking Non-zero to enable blinking cursor.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_LCDDisplayOnOffControl(sPoKeysDevice* device, uint8_t displayOnOff, uint8_t cursorOnOff, uint8_t cursorBlinking)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
