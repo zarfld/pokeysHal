@@ -40,6 +40,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "string.h"
 #include "stdio.h"
 
+/**
+ * @file PoKeysLibDevicePoKeys57Industrial.c
+ * @brief Support for the PoKeys57Industrial device.
+ *
+ * Contains helper routines for discovery, connection and full I/O
+ * exchange using command set 0x3F as defined in the protocol
+ * specification.
+ */
+
 #ifdef DEBUG_PoKeysLibSockets
     #define debug_printf printf
 #else

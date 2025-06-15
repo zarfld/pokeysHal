@@ -1,6 +1,10 @@
 /**
- * @file PoKeysLibCoreAsync_USB.c
- * @brief Async-safe USB enumeration logic for PoKeysLib.
+ * @file PoKeysLibCoreAsync.c
+ * @brief Asynchronous variants of core communication helpers.
+ *
+ * This file provides non-blocking versions of the USB enumeration and
+ * request sending routines. They adhere to the same packet format as the
+ * synchronous functions defined in PoKeysLibCore.c.
  */
 #include <stdlib.h>
 //#include "PoKeysLibCoreAsync_USB.h"
@@ -22,6 +26,18 @@ typedef struct {
     PK_EnumStage state;
 } PKUSBEnumerator;
 
+/**
+ * @brief Begin or continue asynchronous USB enumeration.
+ *
+ * The enumeration context maintains its own state machine. Calling this
+ * function repeatedly will progress through device discovery according to
+ * the PoKeys protocol. When enumeration completes the function returns the
+ * number of detected USB devices.
+ *
+ * @param ctx Enumeration context structure. Pass NULL to abort.
+ * @return -2 while enumeration is in progress, a non-negative device
+ *         count on completion or -1 on invalid parameters.
+ */
 int32_t PK_EnumerateUSBDevicesAsync(PKUSBEnumerator *ctx)
 {
     if (!ctx) return -1;
@@ -472,6 +488,14 @@ sPoKeysDevice *PK_ConnectToDeviceWSerial_Async(uint32_t serial, uint32_t timeout
     return NULL; // still connecting
 }
 
+/**
+ * @brief Enumerate PoKeys USB devices (blocking helper).
+ *
+ * This function performs the same enumeration as
+ * PK_EnumerateUSBDevicesAsync() but in a blocking manner.
+ *
+ * @return Number of detected devices.
+ */
 int32_t PK_EnumerateUSBDevices()
 {
     int32_t numDevices = 0;
@@ -507,6 +531,15 @@ int32_t PK_EnumerateUSBDevices()
     return numDevices;
 }
 
+/**
+ * @brief Return the currently used connection type.
+ *
+ * This is an inline helper used by async routines to determine whether
+ * communication is performed over USB, network or fast USB.
+ *
+ * @param device PoKeys device handle.
+ * @return Connection type constant from ::ePK_DeviceConnectionType.
+ */
 int32_t PK_GetCurrentDeviceConnectionType(sPoKeysDevice* device)
 {
     return device->connectionType;
@@ -1028,6 +1061,20 @@ void PK_DisconnectDevice(sPoKeysDevice* device)
     }
 }
 
+/**
+ * @brief Fill a request buffer with a PoKeys command.
+ *
+ * This helper mirrors the synchronous CreateRequest() implementation
+ * and prepares a 64 byte packet header according to the protocol.
+ *
+ * @param request Buffer that will receive the command bytes.
+ * @param type    Command ID (PK_CMD_* constant).
+ * @param param1  Parameter 1.
+ * @param param2  Parameter 2.
+ * @param param3  Parameter 3.
+ * @param param4  Parameter 4.
+ * @return PK_OK on success or PK_ERR_NOT_CONNECTED when @p request is NULL.
+ */
 int32_t CreateRequest(unsigned char * request, unsigned char type, unsigned char param1, unsigned char param2, unsigned char param3, unsigned char param4)
 {
     if (request == NULL) return PK_ERR_NOT_CONNECTED;
@@ -1043,6 +1090,20 @@ int32_t CreateRequest(unsigned char * request, unsigned char type, unsigned char
     return PK_OK;
 }
 
+/**
+ * @brief Send a command composed from the provided parameters.
+ *
+ * A convenience wrapper that fills @p device->request using
+ * CreateRequest() semantics and then calls SendRequest().
+ *
+ * @param device Target device instance.
+ * @param type   Command ID.
+ * @param param1 Parameter 1.
+ * @param param2 Parameter 2.
+ * @param param3 Parameter 3.
+ * @param param4 Parameter 4.
+ * @return Result of SendRequest().
+ */
 int32_t PK_CustomRequest(sPoKeysDevice* device, unsigned char type, unsigned char param1, unsigned char param2, unsigned char param3, unsigned char param4)
 {
     device->request[1] = type;
@@ -1069,6 +1130,16 @@ uint8_t getChecksum(uint8_t * data)
 int32_t LastRetryCount = 0;
 int32_t LastWaitCount = 0;
 
+/**
+ * @brief Send a multi-part request buffer.
+ *
+ * For large data transfers the packet is split into 8 blocks and
+ * transmitted using network or fast USB helpers. Behaviour matches the
+ * synchronous SendRequest_multiPart() routine.
+ *
+ * @param device Device handle containing prepared multipart data.
+ * @return PK_OK on success or PK_ERR_TRANSFER on failure.
+ */
 int32_t SendRequest_multiPart(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_GENERIC;
@@ -1087,6 +1158,16 @@ int32_t SendRequest_multiPart(sPoKeysDevice* device)
 #endif
 }
 
+/**
+ * @brief Send a request and wait for a response (async context).
+ *
+ * Formats the current request buffer, transmits it over the selected
+ * interface and waits for the reply in a blocking loop. Functionally
+ * identical to the synchronous version.
+ *
+ * @param device Target device instance.
+ * @return PK_OK on success or PK_ERR_TRANSFER on failure.
+ */
 int32_t SendRequest(sPoKeysDevice* device)
 {
     uint32_t waits = 0;
@@ -1151,6 +1232,16 @@ int32_t SendRequest(sPoKeysDevice* device)
     return PK_ERR_TRANSFER;
 }
 
+/**
+ * @brief Transmit a request without reading any reply.
+ *
+ * The request buffer is formatted the same as in SendRequest() but the
+ * function returns immediately after sending the packet. Used for
+ * commands that do not generate a direct response.
+ *
+ * @param device Target device instance.
+ * @return PK_OK on success or PK_ERR_TRANSFER on failure.
+ */
 int32_t SendRequest_NoResponse(sPoKeysDevice* device)
 {
     uint32_t waits = 0;

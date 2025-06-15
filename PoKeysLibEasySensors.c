@@ -21,6 +21,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
 
+/**
+ * @file PoKeysLibEasySensors.c
+ * @brief Access helper for EasySensors block (command 0x76/0x77).
+ */
+
+/**
+ * @brief Read EasySensors configuration for all channels (command 0x76).
+ *
+ * @param device Target device.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_EasySensorsSetupGet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -51,6 +62,12 @@ int32_t PK_EasySensorsSetupGet(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * @brief Write EasySensors configuration (command 0x76 write).
+ *
+ * @param device Device containing updated EasySensors structure.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_EasySensorsSetupSet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -80,6 +97,12 @@ int32_t PK_EasySensorsSetupSet(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * @brief Read all EasySensor values (command 0x77).
+ *
+ * @param device Target device.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_EasySensorsValueGetAll(sPoKeysDevice* device)
 {
     uint32_t i, t, readNum;
@@ -120,6 +143,13 @@ int32_t PK_EasySensorsValueGetAll(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * @brief Return cached sensor value.
+ *
+ * @param device Device handle.
+ * @param index  Sensor index.
+ * @return Last value read for the sensor or 0 on error.
+ */
 int32_t PK_SL_EasySensorValueGet(sPoKeysDevice* device, uint8_t index)
 {
     if (device == NULL) return 0;

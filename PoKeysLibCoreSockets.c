@@ -41,6 +41,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <sys/stat.h>
 #include "PoKeysLibHal.h"
 
+/**
+ * @file PoKeysLibCoreSockets.c
+ * @brief Network transport helpers for PoKeys devices.
+ *
+ * Implements discovery and packet transfer over UDP/TCP as described in
+ * the PoKeys protocol specification.
+ */
+
 //#define DEBUG_PoKeysLibSockets
 
 #ifdef DEBUG_PoKeysLibSockets
