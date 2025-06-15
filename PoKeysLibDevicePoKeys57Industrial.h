@@ -70,8 +70,11 @@
 #endif
         } sPoKeys57Industrial;
 
+        /** Connect to a PoKeys57Industrial device (network or USB). */
         POKEYSDECL sPoKeys57Industrial* PK57i_Connect(void);
+        /** Disconnect and release the PoKeys57Industrial handle. */
         POKEYSDECL void PK57i_Disconnect(sPoKeys57Industrial * device);
+        /** Exchange I/O states using command 0x3F. */
         POKEYSDECL int32_t PK57i_Update(sPoKeys57Industrial* device, uint8_t resetFaults);
 
     #ifdef __cplusplus
