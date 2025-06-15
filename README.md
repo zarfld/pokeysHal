@@ -63,3 +63,44 @@ The library now supports PoKeys security management:
 - No dynamic memory allocation inside realtime threads.
 
 ---
+## Async Core Routines
+
+- **PK_EnumerateUSBDevicesAsync**
+  - Non-blocking enumeration of USB devices.
+  - Call repeatedly with a persistent `PKUSBEnumerator` until the return value
+    is non-negative. `-2` indicates enumeration is still in progress; `-1`
+    reports an error.
+  - When finished the function returns the number of detected devices.
+
+- **PK_EnumerateUSBDevices**
+  - Blocking enumeration variant that scans all USB interfaces in one call.
+  - Returns the number of PoKeys devices found.
+
+- **PK_GetCurrentDeviceConnectionType**
+  - `device` pointer describing the PoKeys instance.
+  - Returns the currently active connection type constant
+    (USB, FastUSB or Network).
+
+- **CreateRequest**
+  - Formats a 64‑byte request buffer with the command ID and four optional
+    parameters. No I/O is performed.
+  - Parameters `type`, `param1..param4` occupy bytes 1‑5 of the buffer.
+
+- **PK_CustomRequest**
+  - Convenience helper which fills `device->request` using `CreateRequest` and
+    immediately invokes `SendRequest`.
+  - Parameters mirror those of `CreateRequest`.
+
+- **SendRequest_multiPart**
+  - Transmits a prepared `PK_CMD_MULTIPART_PACKET` using either UDP or FastUSB
+    depending on the device connection type.
+  - Expects the multipart payload to be prepared in `device` beforehand.
+
+- **SendRequest**
+  - Finalises the current request buffer (header, request ID, checksum), sends it
+    and waits for the matching reply. The call blocks until a response is
+    received or a timeout occurs.
+
+- **SendRequest_NoResponse**
+  - Sends the formatted packet and returns immediately without waiting for any
+    reply. Useful for commands that acknowledge by other means.
