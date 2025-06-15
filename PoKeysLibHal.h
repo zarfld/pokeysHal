@@ -1528,18 +1528,71 @@ POKEYSDECL int32_t PK_SPIWrite(sPoKeysDevice * device, uint8_t * buffer, uint8_t
 POKEYSDECL int32_t PK_SPIRead(sPoKeysDevice * device, uint8_t * buffer, uint8_t iDataLength);
 
 // PoIL commands
+/**
+ * Retrieve PoIL interpreter state from the device.
+ *
+ * Sends a PK_CMD_POIL_OPERATIONS request with subcommand 0 and updates the
+ * ::sPoIL structure of @p device with the returned data.
+ */
 POKEYSDECL int32_t PK_PoILGetState(sPoKeysDevice* device);
+/**
+ * Change the interpreter core state.
+ *
+ * The @p state parameter selects the desired run state of the interpreter.
+ */
 POKEYSDECL int32_t PK_PoILSetCoreState(sPoKeysDevice* device, uint16_t state);
+/**
+ * Enable or disable interpreter execution.
+ *
+ * When @p masterEnable is zero the interpreter is halted; any other value
+ * resumes normal execution.
+ */
 POKEYSDECL int32_t PK_PoILSetMasterEnable(sPoKeysDevice* device, uint8_t masterEnable);
+/**
+ * Reset the interpreter core.
+ */
 POKEYSDECL int32_t PK_PoILResetCore(sPoKeysDevice* device);
+/**
+ * Configure debug mode and optional breakpoint.
+ */
 POKEYSDECL int32_t PK_PoILSetDebugMode(sPoKeysDevice* device, uint8_t debugMode, uint16_t breakpoint);
+/**
+ * Read interpreter memory.
+ *
+ * Reads @p size bytes from memory type @p memoryType starting at
+ * @p address into @p dest.
+ */
 POKEYSDECL int32_t PK_PoILReadMemory(sPoKeysDevice* device, uint8_t memoryType, uint16_t address, uint16_t size, uint8_t * dest);
+/**
+ * Write interpreter memory.
+ *
+ * Writes @p size bytes to memory type @p memoryType starting at
+ * @p address from @p src.
+ */
 POKEYSDECL int32_t PK_PoILWriteMemory(sPoKeysDevice* device, uint8_t memoryType, uint16_t address, uint16_t size, uint8_t * src);
+/**
+ * Erase the selected interpreter memory.
+ */
 POKEYSDECL int32_t PK_PoILEraseMemory(sPoKeysDevice* device, uint8_t memoryType);
+/**
+ * Read preconfigured memory monitor chunks.
+ */
 POKEYSDECL int32_t PK_PoILChunkReadMemory(sPoKeysDevice * device, uint8_t * dest);
+/**
+ * Read monitor chunks using internal addresses.
+ */
 POKEYSDECL int32_t PK_PoILChunkReadMemoryInternalAddress(sPoKeysDevice * device, uint8_t * dest);
+/**
+ * Read interpreter shared variable slots.
+ */
 POKEYSDECL int32_t PK_PoILReadSharedSlot(sPoKeysDevice* device, uint16_t firstSlotID, uint16_t slotsNum, int32_t * dest);
+/**
+ * Write interpreter shared variable slots.
+ */
 POKEYSDECL int32_t PK_PoILWriteSharedSlot(sPoKeysDevice* device, uint16_t firstSlotID, uint16_t slotsNum, int32_t * src);
+/**
+ * Retrieve status information for all interpreter tasks.
+ */
 POKEYSDECL int32_t PK_PoILTaskStatus(sPoKeysDevice * device);
 
 // RTC commands (real-time clock)
