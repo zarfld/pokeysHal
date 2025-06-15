@@ -21,6 +21,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
 
+/**
+ * @file PoKeysLibIO.c
+ * @brief Digital and analog I/O management (commands 0xC0-0xCC).
+ *
+ * Functions in this module configure pins, read/write digital and
+ * analog values and control PWM outputs according to the protocol
+ * specification.
+ */
+
+/**
+ * @brief Read pin configuration from the device (command 0xC0).
+ *
+ * Populates each element of @p device->Pins with the current pin
+ * function setting and related options.
+ *
+ * @param device Pointer to an opened device structure.
+ * @return ::PK_OK on success or a ::PK_ERR code otherwise.
+ */
 int32_t PK_PinConfigurationGet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -163,6 +181,15 @@ int32_t PK_PinConfigurationGet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Write pin configuration to the device (command 0xC0).
+ *
+ * Sends the content of @p device->Pins to update functions, counters and
+ * mapping options.
+ *
+ * @param device Pointer to an opened device structure.
+ * @return ::PK_OK on success or a ::PK_ERR value on failure.
+ */
 int32_t PK_PinConfigurationSet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -290,6 +317,16 @@ int32_t PK_PinConfigurationSet(sPoKeysDevice* device)
 
 
 
+/**
+ * @brief Check if a pin supports a counter (command 0xC0/0x01).
+ *
+ * Queries device capabilities to determine if the specified pin
+ * can operate as a digital counter input.
+ *
+ * @param device Pointer to an opened device structure.
+ * @param pinID  Index of the pin to test.
+ * @return Non-zero if the counter is supported, zero otherwise.
+ */
 int32_t PK_IsCounterAvailable(sPoKeysDevice* device, uint8_t pinID)
 {
     if (device == NULL) return 0;
@@ -312,6 +349,13 @@ int32_t PK_IsCounterAvailable(sPoKeysDevice* device, uint8_t pinID)
     */
 }
 
+/**
+ * @brief Check counter support for a device type.
+ *
+ * @param deviceTypeMask Device type identifier.
+ * @param pinID          Pin index to check.
+ * @return Non-zero if a counter can be used.
+ */
 int32_t PK_IsCounterAvailableByDevice(uint32_t deviceTypeMask, uint8_t pinID)
 {
     //                        1   2   3   4   5   6   7   8   9   10
@@ -354,6 +398,13 @@ int32_t PK_IsCounterAvailableByDevice(uint32_t deviceTypeMask, uint8_t pinID)
     }
 }
 
+/**
+ * @brief Check counter availability by device ID.
+ *
+ * @param deviceTypeID Firmware device identifier.
+ * @param pinID        Pin index to check.
+ * @return Non-zero if a counter can be used.
+ */
 int32_t PK_IsCounterAvailableByTypeID(uint32_t deviceTypeID, uint8_t pinID)
 {
     //                        1   2   3   4   5   6   7   8   9   10
@@ -408,6 +459,15 @@ int32_t PK_IsCounterAvailableByTypeID(uint32_t deviceTypeID, uint8_t pinID)
     return 0;
 }
 
+/**
+ * @brief Set digital output states (command 0xCC/1).
+ *
+ * Prepares a bit mask from @p device->Pins and writes new output levels
+ * to the device.
+ *
+ * @param device Pointer to an opened device structure.
+ * @return ::PK_OK on success or a ::PK_ERR value on failure.
+ */
 int32_t PK_DigitalIOSet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -430,6 +490,15 @@ int32_t PK_DigitalIOSet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Read digital input states (command 0xCC/0).
+ *
+ * Fills @p device->Pins with the current logic levels from the
+ * device's digital pins.
+ *
+ * @param device Pointer to an opened device structure.
+ * @return ::PK_OK on success or a ::PK_ERR code.
+ */
 int32_t PK_DigitalIOGet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -448,6 +517,15 @@ int32_t PK_DigitalIOGet(sPoKeysDevice* device)
 	return PK_OK;
 }              
 
+/**
+ * @brief Atomically set digital outputs and read inputs (command 0xCC).
+ *
+ * Writes output states using subcommand 1 and returns the input
+ * bitmap in the response.
+ *
+ * @param device Pointer to an opened device.
+ * @return ::PK_OK on success or a ::PK_ERR code.
+ */
 int32_t PK_DigitalIOSetGet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -476,6 +554,14 @@ int32_t PK_DigitalIOSetGet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Set a single digital output (command 0x40).
+ *
+ * @param device Pointer to an opened device.
+ * @param pinID  Pin index to modify.
+ * @param pinValue 1 to set high, 0 to set low.
+ * @return ::PK_OK on success or a ::PK_ERR code.
+ */
 int32_t PK_DigitalIOSetSingle(sPoKeysDevice* device, uint8_t pinID, uint8_t pinValue)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -489,6 +575,14 @@ int32_t PK_DigitalIOSetSingle(sPoKeysDevice* device, uint8_t pinID, uint8_t pinV
 	return PK_OK;
 }
 
+/**
+ * @brief Read a single digital pin state (command 0x30).
+ *
+ * @param device   Pointer to an opened device.
+ * @param pinID    Pin index to read.
+ * @param pinValue Receives the logic level.
+ * @return ::PK_OK on success or a ::PK_ERR code.
+ */
 int32_t PK_DigitalIOGetSingle(sPoKeysDevice* device, uint8_t pinID, uint8_t* pinValue)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -504,6 +598,15 @@ int32_t PK_DigitalIOGetSingle(sPoKeysDevice* device, uint8_t pinID, uint8_t* pin
 	return PK_OK;
 }
 
+/**
+ * @brief Read all analog input channels (command 0x3A/1).
+ *
+ * Updates the values in @p device->AnalogInput and the corresponding
+ * pin structures.
+ *
+ * @param device Pointer to an opened device.
+ * @return ::PK_OK on success or a ::PK_ERR code.
+ */
 int32_t PK_AnalogIOGet(sPoKeysDevice* device)
 {
     uint32_t i;
@@ -525,6 +628,16 @@ int32_t PK_AnalogIOGet(sPoKeysDevice* device)
 	return PK_OK;
 }              
 
+/**
+ * @brief Retrieve analog inputs into an array.
+ *
+ * Wrapper around PK_AnalogIOGet() that copies the values into
+ * @p buffer when the read succeeds.
+ *
+ * @param device Pointer to an opened device.
+ * @param buffer Destination array with at least seven elements.
+ * @return ::PK_OK on success or a ::PK_ERR code.
+ */
 int32_t PK_AnalogIOGetAsArray(sPoKeysDevice* device, uint32_t * buffer)
 {
     uint32_t result;
@@ -545,6 +658,12 @@ int32_t PK_AnalogIOGetAsArray(sPoKeysDevice* device, uint32_t * buffer)
     return result;
 }
 
+/**
+ * @brief Read the analog RC filter setting (command 0x38/0).
+ *
+ * @param device Pointer to an opened device.
+ * @return ::PK_OK on success or a ::PK_ERR code.
+ */
 int32_t PK_AnalogRCFilterGet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -565,6 +684,12 @@ int32_t PK_AnalogRCFilterGet(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * @brief Configure the analog RC filter (command 0x39/0).
+ *
+ * @param device Pointer to an opened device.
+ * @return ::PK_OK on success or a ::PK_ERR code.
+ */
 int32_t PK_AnalogRCFilterSet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -587,6 +712,15 @@ int32_t PK_AnalogRCFilterSet(sPoKeysDevice* device)
 }
 
 
+/**
+ * @brief Read values of all digital counters (command 0xD8).
+ *
+ * Transfers up to 13 counter readings at a time and stores them in
+ * the pin structures.
+ *
+ * @param device Pointer to an opened device.
+ * @return ::PK_OK on success or a ::PK_ERR code.
+ */
 int32_t PK_DigitalCounterGet(sPoKeysDevice* device)
 {
     // Get digital counter values
@@ -646,6 +780,12 @@ int32_t PK_DigitalCounterGet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Reset all digital counters (command 0x1D).
+ *
+ * @param device Pointer to an opened device.
+ * @return ::PK_OK on success or a ::PK_ERR code.
+ */
 int32_t PK_DigitalCounterClear(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;

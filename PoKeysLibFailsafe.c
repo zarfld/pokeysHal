@@ -22,6 +22,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibCore.h"
 
 
+/**
+ * @file PoKeysLibFailsafe.c
+ * @brief Failsafe configuration helpers (command 0x81).
+ *
+ * The routines in this file read and write the failsafe settings
+ * as defined in the PoKeys protocol specification.  They map the
+ * device state to the ::sPK_FailsafeSettings structure.
+ */
+
+
+/**
+ * @brief Read failsafe configuration from the device (command 0x81).
+ *
+ * Populates ::sPK_FailsafeSettings in @p device with the timeout and
+ * peripheral states defined by the PoKeys failsafe command.
+ *
+ * @param device Pointer to an opened device structure.
+ * @return ::PK_OK on success or a ::PK_ERR code on failure.
+ */
 int32_t PK_FailsafeSettingsGet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -41,6 +60,16 @@ int32_t PK_FailsafeSettingsGet(sPoKeysDevice* device)
 }
 
 
+/**
+ * @brief Write failsafe configuration to the device (command 0x81).
+ *
+ * The function sends the content of ::sPK_FailsafeSettings stored in
+ * @p device to the PoKeys unit using operation code 0x01.
+ *
+ * @param device Pointer to an opened device structure.
+ * @return Result of SendRequest() or ::PK_ERR_NOT_CONNECTED when
+ *         @p device is NULL.
+ */
 int32_t PK_FailsafeSettingsSet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
