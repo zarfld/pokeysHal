@@ -29,6 +29,8 @@ add_library(PoKeys SHARED
             PoKeysLibCANAsync.c
             PoKeysLibSecurity.c
             PoKeysLibSecurityAsync.c
+            PoKeysLibCOSM.c
+            PoKeysLibCOSMAsync.c
             PoKeysLibUART.c
             PoKeysLibWS2812.c)
 
