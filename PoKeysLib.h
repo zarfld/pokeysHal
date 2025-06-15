@@ -1308,11 +1308,37 @@ POKEYSDECL int32_t PK_LCDEntryModeSet(sPoKeysDevice* device, uint8_t cursorMoveD
 // Change LCD display on/off control register
 POKEYSDECL int32_t PK_LCDDisplayOnOffControl(sPoKeysDevice* device, uint8_t displayOnOff, uint8_t cursorOnOff, uint8_t cursorBlinking);
 
-// Set matrix LED configuration
+/**
+ * Write the matrix LED configuration to the device.
+ *
+ * Enabled displays as well as their row and column counts are taken from
+ * the ::sPoKeysDevice::MatrixLED array and encoded into a
+ * `PK_CMD_MATRIX_LED_CONFIGURATION` request.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_MatrixLEDConfigurationSet(sPoKeysDevice* device);
-// Get matrix LED configuration
+/**
+ * Read matrix LED configuration from the device.
+ *
+ * Populates the ::sPoKeysDevice::MatrixLED fields for each available
+ * display using `PK_CMD_MATRIX_LED_CONFIGURATION` with subcommand `1`.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_MatrixLEDConfigurationGet(sPoKeysDevice* device);
-// Update matrix LED (only the displays with refresh flag set)
+/**
+ * Update matrix LED contents on the device.
+ *
+ * For every display that has ::sPoKeysMatrixLED::RefreshFlag set, the
+ * pixel buffer from ::sPoKeysMatrixLED::data is transmitted via
+ * `PK_CMD_MATRIX_LED_UPDATE`.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_MatrixLEDUpdate(sPoKeysDevice* device);
 
 // Pulse engine v2 commands

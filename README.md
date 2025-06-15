@@ -158,6 +158,15 @@ The library now supports PoKeys security management:
 - **PK_MatrixKBStatusGet**
   - Updates `device->matrixKB.matrixKBvalues` with the currently pressed keys.
 
+## Matrix LED Functions
+
+- **PK_MatrixLEDConfigurationSet**
+  - Sends the enable flags and geometry from `device->MatrixLED` to the device.
+- **PK_MatrixLEDConfigurationGet**
+  - Reads back the display configuration into `device->MatrixLED`.
+- **PK_MatrixLEDUpdate**
+  - Transfers pixel data for displays where `RefreshFlag` is set.
+
 ## Asynchronous IO Wrappers
 
 - **PK_PinConfigurationGetAsync**
