@@ -20,7 +20,26 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
+/**
+ * @file PoKeysLibUART.c
+ * @brief UART communication helpers (command 0xDE).
+ *
+ * Functions configure and exchange data via the UART
+ * interfaces of a PoKeys device.
+ */
 
+/**
+ * @brief Configure a UART interface (command 0xDE/0x10).
+ *
+ * Sets baud rate and frame format for the selected UART
+ * interface on the device.
+ *
+ * @param device       Opened PoKeys device.
+ * @param baudrate     Desired baud rate.
+ * @param format       Frame format bits.
+ * @param interfaceID  UART interface ID.
+ * @return PK_OK on success or PK_ERR_* on failure.
+ */
 int32_t PK_UARTConfigure(sPoKeysDevice* device, uint32_t baudrate, uint8_t format, uint8_t interfaceID)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -32,6 +51,18 @@ int32_t PK_UARTConfigure(sPoKeysDevice* device, uint32_t baudrate, uint8_t forma
     return PK_OK;
 }
 
+/**
+ * @brief Write data to the UART interface (command 0xDE/0x20).
+ *
+ * Splits the data into 55 byte chunks and sends them to the
+ * specified UART interface.
+ *
+ * @param device      Opened PoKeys device.
+ * @param interfaceID Target UART interface.
+ * @param dataPtr     Pointer to buffer with bytes to send.
+ * @param dataWriteLen Number of bytes to transmit.
+ * @return PK_OK on success or PK_ERR_* on failure.
+ */
 int32_t PK_UARTWrite(sPoKeysDevice* device, uint8_t interfaceID, uint8_t *dataPtr, uint32_t dataWriteLen)
 {
     uint32_t totalLen = dataWriteLen;
@@ -71,6 +102,18 @@ int32_t PK_UARTWrite(sPoKeysDevice* device, uint8_t interfaceID, uint8_t *dataPt
     return PK_OK;
 }
 
+/**
+ * @brief Read data from a UART interface (command 0xDE/0x30).
+ *
+ * Requests a block of up to 55 bytes from the specified UART
+ * channel. The received byte count is returned via @p dataReadLen.
+ *
+ * @param device       Opened PoKeys device.
+ * @param interfaceID  UART interface ID.
+ * @param dataPtr      Destination buffer for received bytes.
+ * @param dataReadLen  Pointer where the byte count is stored.
+ * @return PK_OK on success or PK_ERR_* on failure.
+ */
 int32_t PK_UARTRead(sPoKeysDevice* device, uint8_t interfaceID, uint8_t *dataPtr, uint8_t *dataReadLen)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
