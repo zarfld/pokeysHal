@@ -46,9 +46,38 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
     #define debug_printf (void)
 #endif
 
+
+/**
+ * @brief Search the network for a PoKeys57Industrial board.
+ *
+ * A broadcast UDP packet is sent to port 20055 and the function waits for a
+ * reply.  When a PoKeys57Industrial responds, its network parameters and
+ * firmware information are stored into @p device.
+ *
+ * The discovery mechanism is described in the "Device discovery" section of the
+ * PoKeys protocol specification.
+ *
+ * @param device  Structure that receives the discovered device details.
+ * @param timeout Timeout in milliseconds to wait for a response.
+ * @return Number of detected boards.
+ */
 int32_t PK57i_SearchDevice(sPoKeysNetworkDeviceSummary* device, uint32_t timeout);
 
 
+/**
+ * @brief Establish communication with a PoKeys57Industrial device.
+ *
+ * The helper first performs a UDP discovery (@ref PK57i_SearchDevice). If a
+ * board replies, ::PK_ConnectToNetworkDevice is used to open a network
+ * connection.  Should that fail, the function falls back to USB enumeration and
+ * connects to the first device reporting hardware ID ``45``.
+ *
+ * On success a newly allocated ::sPoKeys57Industrial handle is returned.  The
+ * internal @c deviceStructure field points to the underlying ::sPoKeysDevice
+ * instance.
+ *
+ * @return Pointer to the device structure or @c NULL when no device was found.
+ */
 sPoKeys57Industrial* PK57i_Connect(void)
 {
     sPoKeysDevice* devPtr = NULL;
@@ -97,6 +126,14 @@ sPoKeys57Industrial* PK57i_Connect(void)
     return devPtr57i;
 }
 
+/**
+ * @brief Close the connection opened by PK57i_Connect().
+ *
+ * The underlying ::sPoKeysDevice is released using ::PK_DisconnectDevice and
+ * the memory allocated for the ::sPoKeys57Industrial handle is freed.
+ *
+ * @param device Handle previously returned by PK57i_Connect().
+ */
 void PK57i_Disconnect(sPoKeys57Industrial * device)
 {
     if (device == NULL) return;
@@ -107,6 +144,20 @@ void PK57i_Disconnect(sPoKeys57Industrial * device)
 }
 
 
+/**
+ * @brief Exchange I/O data with the PoKeys57Industrial device.
+ *
+ * This function builds the *Full I/O* command (ID `0x3F`) and transmits it to
+ * the device.  Digital and analog outputs from the structure are encoded into
+ * the request while input values and fault flags are parsed from the reply.
+ *
+ * The protocol format of command `0x3F` is documented in the PoKeys protocol
+ * specification, see section "Full I/O command (device specific)".
+ *
+ * @param device      Handle returned by PK57i_Connect().
+ * @param resetFaults Set to 1 to clear latched fault flags on the device.
+ * @return PK_OK on success or an error code from SendRequest().
+ */
 int32_t PK57i_Update(sPoKeys57Industrial* device, uint8_t resetFaults)
 {
     uint32_t i;
@@ -161,6 +212,17 @@ int32_t PK57i_Update(sPoKeys57Industrial* device, uint8_t resetFaults)
     return PK_OK;
 }
 
+/**
+ * @brief Perform UDP discovery for a PoKeys57Industrial device.
+ *
+ * An empty broadcast packet is sent to port 20055 and responses are parsed
+ * according to the "Discovery packet format" described in the PoKeys protocol
+ * specification. Only devices reporting hardware ID 45 are accepted.
+ *
+ * @param device  Structure that receives the discovered device details.
+ * @param timeout Timeout in milliseconds to wait for replies.
+ * @return Number of detected boards.
+ */
 int32_t PK57i_SearchDevice(sPoKeysNetworkDeviceSummary* device, uint32_t timeout)
 {
     //Broadcast the message
