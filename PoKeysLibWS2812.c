@@ -20,6 +20,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
 #include "PoKeysLibAsync.h"
+/**
+ * Configure or trigger the WS2812 LED driver.
+ *
+ * @param device     Pointer to an initialized device structure.
+ * @param LEDcount   Total number of LEDs in the strip.
+ * @param updateFlag Non-zero to immediately refresh the LED strip.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 
 int32_t PK_WS2812_Update(sPoKeysDevice* device, uint16_t LEDcount, uint8_t updateFlag)
 {
@@ -30,6 +38,16 @@ int32_t PK_WS2812_Update(sPoKeysDevice* device, uint16_t LEDcount, uint8_t updat
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }
+/**
+ * Internal helper that sends up to 18 LED color values.
+ *
+ * @param device    Pointer to an initialized device structure.
+ * @param LEDdata   Array of 24-bit color values.
+ * @param LEDoffset Starting offset in the LEDdata array.
+ * @param startLED  Index of the first LED to update.
+ * @param LEDcount  Number of LEDs to send (max 18).
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 
 int32_t PK_WS2812_SendLEDdataEx(sPoKeysDevice* device, uint32_t * LEDdata, uint16_t LEDoffset, uint16_t startLED, uint8_t LEDcount)
 {
@@ -54,6 +72,19 @@ int32_t PK_WS2812_SendLEDdataEx(sPoKeysDevice* device, uint32_t * LEDdata, uint1
     if (SendRequest_NoResponse(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }
+
+
+/**
+ * Send LED data to the WS2812 strip.
+ *
+ * Splits the transfer into 18-LED chunks using ::PK_WS2812_SendLEDdataEx.
+ *
+ * @param device   Pointer to an initialized device structure.
+ * @param LEDdata  Array of 24-bit color values.
+ * @param startLED Index of the first LED to update.
+ * @param LEDcount Number of LEDs to update.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 
 int32_t PK_WS2812_SendLEDdata(sPoKeysDevice* device, uint32_t * LEDdata, uint16_t startLED, uint8_t LEDcount)
 {
