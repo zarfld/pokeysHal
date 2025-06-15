@@ -69,6 +69,17 @@ void PK_PEv2_DecodeStatus(sPoKeysDevice * device)
     device->PEv2.MiscInputStatus = ans[62];
 }
 
+/**
+ * @brief Retrieve pulse engine status.
+ *
+ * Sends command `PEV2_CMD_GET_STATUS` (0x00) under
+ * `PK_CMD_PULSE_ENGINE_V2`. `param1` is used as a handshake
+ * value and the response updates the @ref sPoKeysPEv2 status
+ * structure with axis states, current position and engine info.
+ *
+ * @param device Pointer to the PoKeys device.
+ * @return PK_OK when successful, error code otherwise.
+ */
 int32_t PK_PEv2_StatusGet(sPoKeysDevice * device)
 {
     // Do some 'random' magic with numbers
@@ -98,6 +109,17 @@ int32_t PK_PEv2_StatusGet(sPoKeysDevice * device)
 
 
 
+/**
+ * @brief Obtain extended status information.
+ *
+ * Executes command `PEV2_CMD_GET_STATUS2` (0x08) of
+ * `PK_CMD_PULSE_ENGINE_V2`. The response provides the count
+ * of dedicated limit and home inputs which is stored in
+ * `sPoKeysPEv2`.
+ *
+ * @param device Target device.
+ * @return PK_OK on success or an error code from communication.
+ */
 int32_t PK_PEv2_Status2Get(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -112,7 +134,16 @@ int32_t PK_PEv2_Status2Get(sPoKeysDevice * device)
 	return PK_OK;
 }
 
-// Configure (setup) the pulse engine
+/**
+ * @brief Configure the pulse engine parameters.
+ *
+ * Uses command `PEV2_CMD_SETUP` (0x01). The request payload
+ * contains enable flags, buffer size and emergency switch polarity
+ * in bytes 8-13.
+ *
+ * @param device Pointer to the PoKeys device.
+ * @return PK_OK on success or an error code on failure.
+ */
 int32_t PK_PEv2_PulseEngineSetup(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -133,7 +164,16 @@ int32_t PK_PEv2_PulseEngineSetup(sPoKeysDevice * device)
 
 
 
-// Read additional parameters
+/**
+ * @brief Read miscellaneous pulse engine parameters.
+ *
+ * Executes `PEV2_CMD_CONFIGURE_MISC` (0x06) with `param3=1`.
+ * The emergency input pin is returned in byte 8 of the response
+ * and stored in `PEv2.EmergencyInputPin`.
+ *
+ * @param device Target device.
+ * @return PK_OK on success or communication error code.
+ */
 int32_t PK_PEv2_AdditionalParametersGet(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -147,7 +187,15 @@ int32_t PK_PEv2_AdditionalParametersGet(sPoKeysDevice * device)
     return PK_OK;
 }
 
-// Set additional parameters
+/**
+ * @brief Configure miscellaneous pulse engine options.
+ *
+ * Uses command `PEV2_CMD_CONFIGURE_MISC` (0x06) with `param1=1`.
+ * Byte 8 of the request carries the emergency input pin number.
+ *
+ * @param device Target device.
+ * @return PK_OK on success, otherwise error code.
+ */
 int32_t PK_PEv2_AdditionalParametersSet(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -161,7 +209,17 @@ int32_t PK_PEv2_AdditionalParametersSet(sPoKeysDevice * device)
 }
 
 
-// Retrieve single axis parameters. Axis ID is in param1
+/**
+ * @brief Retrieve configuration for one axis.
+ *
+ * Issues `PEV2_CMD_GET_AXIS_CONFIGURATION` (0x10). `param1`
+ * selects the axis and the response returns a 44 byte block
+ * describing limits, speeds and filter options which is copied
+ * into the `PEv2` structure.
+ *
+ * @param device PoKeys device instance (uses `PEv2.param1`).
+ * @return PK_OK on success or error code on failure.
+ */
 int32_t PK_PEv2_AxisConfigurationGet(sPoKeysDevice * device)
 {
     sPoKeysPEv2 * pe;
@@ -215,7 +273,17 @@ int32_t PK_PEv2_AxisConfigurationGet(sPoKeysDevice * device)
     return PK_OK;
 }
 
-// Set single axis parameters. Axis ID is in param1
+/**
+ * @brief Send configuration data for one axis.
+ *
+ * Command `PEV2_CMD_SET_AXIS_CONFIGURATION` (0x11) writes the
+ * same structure returned by @ref PK_PEv2_AxisConfigurationGet.
+ * `param1` selects the axis and bytes 8 onward contain the
+ * configuration fields such as limits and motion parameters.
+ *
+ * @param device PoKeys device instance.
+ * @return PK_OK on success or error code on failure.
+ */
 int32_t PK_PEv2_AxisConfigurationSet(sPoKeysDevice * device)
 {
     sPoKeysPEv2 * pe;
@@ -269,7 +337,18 @@ int32_t PK_PEv2_AxisConfigurationSet(sPoKeysDevice * device)
     return SendRequest(device);
 }
 
-// Set positions - param2 is used for bit-mapped axis selection
+/**
+ * @brief Set current axis positions.
+ *
+ * Command `PEV2_CMD_SET_AXIS_POSITION` (0x03) updates the
+ * internal position registers. `param2` is a bit mask selecting
+ * which axes are affected and bytes 8-39 carry the new 32-bit
+ * positions for all axes.
+ *
+ * @param device Device containing the new positions in
+ *               `PEv2.PositionSetup`.
+ * @return PK_OK on success or error code on failure.
+ */
 int32_t PK_PEv2_PositionSet(sPoKeysDevice * device)
 {
     int i;
@@ -289,7 +368,17 @@ int32_t PK_PEv2_PositionSet(sPoKeysDevice * device)
     return SendRequest(device);
 }
 
-// Set pulse engine state
+/**
+ * @brief Change the operating state of the pulse engine.
+ *
+ * Sends `PEV2_CMD_SET_STATE` (0x02). Parameters specify the
+ * desired engine state, limit override flag and axis enable mask
+ * which are placed in `param1`, `param2` and `param3`.
+ *
+ * @param device Pointer to a PoKeys device with setup values
+ *               stored in the `PEv2` structure.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_PEv2_PulseEngineStateSet(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -301,7 +390,16 @@ int32_t PK_PEv2_PulseEngineStateSet(sPoKeysDevice * device)
     return SendRequest(device);
 }
 
-// Execute the move. Position or speed is specified by the ReferencePositionSpeed
+/**
+ * @brief Execute a move using reference positions or speeds.
+ *
+ * Command `PEV2_CMD_MOVE` (0x20) accepts eight 32-bit position
+ * or speed values located in bytes 8-39 of the request.
+ * The values are taken from `PEv2.ReferencePositionSpeed`.
+ *
+ * @param device Active PoKeys device.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_PulseEngineMove(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -323,7 +421,17 @@ int32_t PK_PEv2_PulseEngineMove(sPoKeysDevice * device)
 }
 
 
-// Execute the move. Position or speed is specified by the ReferencePositionSpeed
+/**
+ * @brief Perform a move in position/velocity mode.
+ *
+ * Uses command `PEV2_CMD_MOVE_PV` (0x25). In addition to the
+ * 32-bit reference positions, bytes 40-55 of the request include
+ * 16-bit velocity ratios derived from `ReferenceVelocityPV`.
+ * `param2` carries the enable mask.
+ *
+ * @param device Active PoKeys device.
+ * @return PK_OK or error from SendRequest.
+ */
 int32_t PK_PEv2_PulseEngineMovePV(sPoKeysDevice * device)
 {
     int i;
@@ -352,7 +460,17 @@ int32_t PK_PEv2_PulseEngineMovePV(sPoKeysDevice * device)
     return SendRequest(device);
 }
 
-// Read external outputs state - save them to ExternalRelayOutputs and ExternalOCOutputs
+/**
+ * @brief Read the state of external outputs.
+ *
+ * Using `PEV2_CMD_SET_OUTPUTS` (0x04) with `param3=1` the device
+ * returns relay and open-collector output states in bytes 3 and 4
+ * of the response which are stored in the PEv2 structure.
+ *
+ * @param device Target device.
+ * @return PK_OK when data is read successfully, otherwise error
+ *         code from SendRequest.
+ */
 int32_t PK_PEv2_ExternalOutputsGet(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -367,7 +485,16 @@ int32_t PK_PEv2_ExternalOutputsGet(sPoKeysDevice * device)
     return PK_OK;
 }
 
-// Set external outputs state (from ExternalRelayOutputs and ExternalOCOutputs)
+/**
+ * @brief Update relay and open-collector outputs.
+ *
+ * Command `PEV2_CMD_SET_OUTPUTS` (0x04) uses `param1` for relay
+ * outputs and `param2` for open-collector outputs.
+ *
+ * @param device Device with desired output states stored in the
+ *               PEv2 structure.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_ExternalOutputsSet(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -378,9 +505,18 @@ int32_t PK_PEv2_ExternalOutputsSet(sPoKeysDevice * device)
     return SendRequest(device);
 }
 
-// Transfer motion buffer to device. The number of new entries (newMotionBufferEntries) must be specified
-// The number of accepted entries is saved to motionBufferEntriesAccepted.
-// In addition, pulse engine state is read (PEv2_GetStatus)
+/**
+ * @brief Send a portion of the motion buffer (8-bit variant).
+ *
+ * Uses command `PEV2_CMD_FILL_BUFFER_8BIT` (0xFF). `param1` holds
+ * the number of entries to copy and `param2` carries the enable
+ * mask. Up to 56 bytes of motion data are placed in bytes 8-63.
+ * The response returns the number of accepted entries in byte 2
+ * and refreshes engine status via @ref PK_PEv2_DecodeStatus.
+ *
+ * @param device PoKeys device containing the new buffer.
+ * @return PK_OK when successful or a communication error.
+ */
 int32_t PK_PEv2_BufferFill(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -402,9 +538,16 @@ int32_t PK_PEv2_BufferFill(sPoKeysDevice * device)
     return PK_OK;
 }
 
-// Transfer motion buffer to device. The number of new entries (newMotionBufferEntries) must be specified
-// The number of accepted entries is saved to motionBufferEntriesAccepted.
-// In addition, pulse engine state is read (PEv2_GetStatus)
+/**
+ * @brief Send 16-bit motion buffer entries.
+ *
+ * Identical to @ref PK_PEv2_BufferFill but uses the 16-bit buffer
+ * command ID `0xFE`. Payload layout and response are the same as
+ * in the 8-bit version.
+ *
+ * @param device PoKeys device containing the new data.
+ * @return PK_OK on success or a transfer error.
+ */
 int32_t PK_PEv2_BufferFill_16(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -426,6 +569,17 @@ int32_t PK_PEv2_BufferFill_16(sPoKeysDevice * device)
     return PK_OK;
 }
 
+/**
+ * @brief Transfer a large block of 8-bit motion data.
+ *
+ * Uses the multipart packet command `PK_CMD_MULTIPART_PACKET`
+ * with subcommand `0xFF`. `param2` specifies entry count and
+ * `param3` the axis enable mask. The payload contains 448 bytes
+ * of buffer data stored in `multiPartData`.
+ *
+ * @param device Target device.
+ * @return PK_OK on success or error code from transfer.
+ */
 int32_t PK_PEv2_BufferFillLarge(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;	
@@ -447,6 +601,15 @@ int32_t PK_PEv2_BufferFillLarge(sPoKeysDevice * device)
     return PK_OK;
 }
 
+/**
+ * @brief Large transfer of 16-bit motion data.
+ *
+ * Same as @ref PK_PEv2_BufferFillLarge but using subcommand
+ * `0xFE` for 16-bit entries.
+ *
+ * @param device Target device.
+ * @return PK_OK on success or communication error.
+ */
 int32_t PK_PEv2_BufferFillLarge_16(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;	
@@ -468,7 +631,15 @@ int32_t PK_PEv2_BufferFillLarge_16(sPoKeysDevice * device)
     return PK_OK;
 }
 
-// Clear motion buffer in device
+/**
+ * @brief Clear the motion buffer in the device.
+ *
+ * Command `PEV2_CMD_CLEAR_BUFFER` (0xF0) resets the internal
+ * motion queue.
+ *
+ * @param device Target device.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_BufferClear(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -479,7 +650,14 @@ int32_t PK_PEv2_BufferClear(sPoKeysDevice * device)
     return SendRequest(device);
 }
 
-// Reboot pulse engine v2
+/**
+ * @brief Reboot the pulse engine firmware.
+ *
+ * Issues `PEV2_CMD_REBOOT` (0x05).
+ *
+ * @param device Target device.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_PulseEngineReboot(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -490,8 +668,16 @@ int32_t PK_PEv2_PulseEngineReboot(sPoKeysDevice * device)
     return SendRequest(device);
 }
 
-// Start the homing procedure. Home offsets must be provided in the HomeOffsets
-// Axes to home are selected as bit-mapped HomingStartMaskSetup value
+/**
+ * @brief Begin the homing sequence.
+ *
+ * Command `PEV2_CMD_START_HOMING` (0x21). `param1` holds the axis
+ * mask and bytes 8-39 carry home offset values for each axis.
+ *
+ * @param device Target device with offsets stored in
+ *               `PEv2.HomeOffsets`.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_HomingStart(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -511,7 +697,16 @@ int32_t PK_PEv2_HomingStart(sPoKeysDevice * device)
     return SendRequest(device);
 }
 
-// Finish the homing procedure
+/**
+ * @brief Finish the homing procedure.
+ *
+ * Sends `PEV2_CMD_FINISH_HOMING` (0x22). `param1` sets the new
+ * engine state after homing and `param2` should be 1 as required
+ * by the protocol.
+ *
+ * @param device PoKeys device instance.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_HomingFinish(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -527,6 +722,17 @@ int32_t PK_PEv2_HomingFinish(sPoKeysDevice * device)
 // ProbeSpeed defines the probing speed (1 = max speed)
 // ProbeInput defines the extenal input (values 1-8) or PoKeys pin (0-based Pin ID + 9)
 // ProbeInputPolarity defines the polarity of the probe signal
+/**
+ * @brief Start a probing move.
+ *
+ * Command `PEV2_CMD_START_PROBING` (0x23) uses `param1` as axis
+ * selection mask. Bytes 8-39 hold maximum probe positions, byte
+ * 40 holds probe speed and bytes 44-45 define probe input and
+ * polarity.
+ *
+ * @param device Device configured with probe parameters.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_ProbingStart(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -551,6 +757,16 @@ int32_t PK_PEv2_ProbingStart(sPoKeysDevice * device)
     return SendRequest(device);
 }
 
+/**
+ * @brief Start probing with an external controller.
+ *
+ * Uses `PEV2_CMD_START_PROBING` with `param2=1` for the hybrid
+ * probing mode. Only the probe input number and polarity are
+ * sent in bytes 44-45.
+ *
+ * @param device Device configured for probing.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_ProbingHybridStart(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -565,7 +781,16 @@ int32_t PK_PEv2_ProbingHybridStart(sPoKeysDevice * device)
     return SendRequest(device);
 }
 
-// Finish the probing procedure. Probe position and status are saved to ProbePosition and ProbeStatus
+/**
+ * @brief Complete the probing cycle and read the result.
+ *
+ * Command `PEV2_CMD_FINISH_PROBING` (0x24) returns the probe
+ * position in bytes 8-39 and status bits in byte 40. The engine
+ * state is also reset to STOPPED.
+ *
+ * @param device Device receiving the probe result.
+ * @return PK_OK when the response is valid or an error code.
+ */
 int32_t PK_PEv2_ProbingFinish(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -590,7 +815,16 @@ int32_t PK_PEv2_ProbingFinish(sPoKeysDevice * device)
 
     return PK_OK;
 }
-// Finish the probing procedure. Probe position and status are saved to ProbePosition and ProbeStatus
+/**
+ * @brief Finish probing without changing engine state.
+ *
+ * Uses `PEV2_CMD_FINISH_PROBING` (0x24) with `param1=1`.
+ * The probe result is returned like in @ref PK_PEv2_ProbingFinish
+ * but the engine state is not reset.
+ *
+ * @param device Device receiving the result.
+ * @return PK_OK if successful or error code.
+ */
 int32_t PK_PEv2_ProbingFinishSimple(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -613,6 +847,15 @@ int32_t PK_PEv2_ProbingFinishSimple(sPoKeysDevice * device)
     return PK_OK;
 }
 
+/**
+ * @brief Prepare the spindle threading trigger.
+ *
+ * Executes `PEV2_CMD_PREPARE_TRIGGER` (0x30) which readies the
+ * device for the next threading operation.
+ *
+ * @param device Target device.
+ * @return PK_OK on success or error code from communication.
+ */
 int32_t PK_PEv2_ThreadingPrepareForTrigger(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -626,6 +869,15 @@ int32_t PK_PEv2_ThreadingPrepareForTrigger(sPoKeysDevice * device)
 	return PK_OK;
 }
 
+/**
+ * @brief Force trigger ready state.
+ *
+ * Command `PEV2_CMD_FORCE_TRIGGER_READY` (0x31) immediately
+ * sets the trigger as ready for threading.
+ *
+ * @param device PoKeys device.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_PEv2_ThreadingForceTriggerReady(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -639,6 +891,15 @@ int32_t PK_PEv2_ThreadingForceTriggerReady(sPoKeysDevice * device)
 	return PK_OK;
 }
 
+/**
+ * @brief Arm the threading trigger.
+ *
+ * Executes `PEV2_CMD_ARM_TRIGGER` (0x32) which waits for the
+ * configured spindle index before executing motion.
+ *
+ * @param device Target device.
+ * @return PK_OK if the command is sent successfully.
+ */
 int32_t PK_PEv2_ThreadingTrigger(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -652,6 +913,15 @@ int32_t PK_PEv2_ThreadingTrigger(sPoKeysDevice * device)
 	return PK_OK;
 }
 
+/**
+ * @brief Release the threading trigger.
+ *
+ * Sends `PEV2_CMD_RELEASE_TRIGGER` (0x33) which aborts waiting
+ * for the spindle index.
+ *
+ * @param device Target device.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_ThreadingRelease(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -665,6 +935,15 @@ int32_t PK_PEv2_ThreadingRelease(sPoKeysDevice * device)
 	return PK_OK;
 }
 
+/**
+ * @brief Cancel a prepared threading operation.
+ *
+ * Command `PEV2_CMD_CANCEL_THREADING` (0x34) clears any
+ * pending trigger preparation.
+ *
+ * @param device PoKeys device.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_ThreadingCancel(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -678,6 +957,16 @@ int32_t PK_PEv2_ThreadingCancel(sPoKeysDevice * device)
 	return PK_OK;
 }
 
+/**
+ * @brief Query the status of a threading operation.
+ *
+ * Sends `PEV2_CMD_GET_THREADING_STATUS` (0x35) which returns
+ * various trigger flags along with spindle diagnostic data in
+ * the response bytes 8-63.
+ *
+ * @param device Target device.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_PEv2_ThreadingStatusGet(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -711,6 +1000,21 @@ int32_t PK_PEv2_ThreadingStatusGet(sPoKeysDevice * device)
 
 }
 
+/**
+ * @brief Configure spindle threading parameters.
+ *
+ * Uses `PEV2_CMD_SET_THREADING_PARAMS` (0x36). The request
+ * provides sensor mode and filter settings in the payload while
+ * `TriggerIngnoredAxisMask` is stored in byte 20.
+ *
+ * @param device Target device.
+ * @param sensorMode Sensor mode selector.
+ * @param ticksPerRevolution Encoder ticks per spindle revolution.
+ * @param tagetSpindleRPM Desired spindle speed.
+ * @param filterGainSpeed Speed filter gain.
+ * @param filterGainPosition Position filter gain.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_PEv2_ThreadingSetup(sPoKeysDevice * device, uint8_t sensorMode, uint16_t ticksPerRevolution, uint16_t tagetSpindleRPM, uint16_t filterGainSpeed, uint16_t filterGainPosition)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -731,6 +1035,16 @@ int32_t PK_PEv2_ThreadingSetup(sPoKeysDevice * device, uint8_t sensorMode, uint1
 	return PK_OK;
 }
 
+/**
+ * @brief Retrieve backlash compensation parameters.
+ *
+ * Sends `PEV2_CMD_GET_BACKLASH_SETTINGS` (0x40) and parses the
+ * backlash width, acceleration and register values for each axis
+ * from the response bytes.
+ *
+ * @param device Target device.
+ * @return PK_OK on success or communication error.
+ */
 int32_t PK_PEv2_BacklashCompensationSettings_Get(sPoKeysDevice * device)
 {
 	int32_t i;
@@ -754,6 +1068,17 @@ int32_t PK_PEv2_BacklashCompensationSettings_Get(sPoKeysDevice * device)
 	return PK_OK;
 }
 
+/**
+ * @brief Write backlash compensation parameters.
+ *
+ * Command `PEV2_CMD_SET_BACKLASH_SETTINGS` (0x41) sends the
+ * same structure as returned by the getter to configure
+ * backlash for each axis.
+ *
+ * @param device Target device with values stored in the
+ *               PEv2 structure.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_PEv2_BacklashCompensationSettings_Set(sPoKeysDevice * device)
 {
 	int32_t i;
@@ -775,6 +1100,19 @@ int32_t PK_PEv2_BacklashCompensationSettings_Set(sPoKeysDevice * device)
 }
 
 
+/**
+ * @brief Configure synchronized PWM output.
+ *
+ * Command `PEV2_CMD_SETUP_SYNCED_PWM` (0x0A). The request
+ * enables or disables synchronized PWM generation based on
+ * an axis position.
+ *
+ * @param device Target device.
+ * @param enabled Non-zero to enable feature.
+ * @param srcAxis Source axis index (0-based).
+ * @param dstPWMChannel PWM output channel.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_PEv2_SyncedPWMSetup(sPoKeysDevice * device, uint8_t enabled, uint8_t srcAxis, uint8_t dstPWMChannel)
 {    
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -788,6 +1126,17 @@ int32_t PK_PEv2_SyncedPWMSetup(sPoKeysDevice * device, uint8_t enabled, uint8_t 
     return PK_OK;
 }
 
+/**
+ * @brief Configure synchronized digital outputs.
+ *
+ * Command `PEV2_CMD_SETUP_SYNCED_DIGITAL` (0x0B) maps a group of
+ * outputs to follow the position of an axis.
+ *
+ * @param device Device with mapping information stored in
+ *               `SyncFastOutputsMapping` and axis ID in
+ *               `SyncFastOutputsAxisID`.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_PEv2_SyncOutputsSetup(sPoKeysDevice * device)
 {
 	if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -802,6 +1151,15 @@ int32_t PK_PEv2_SyncOutputsSetup(sPoKeysDevice * device)
 	return PK_OK;
 }
 
+/**
+ * @brief Get configuration for external PoStep drivers.
+ *
+ * Command `PEV2_CMD_SETUP_DRIVER_COMM` (0x50) retrieves driver
+ * type, I2C address and update flags for each axis.
+ *
+ * @param device Target device.
+ * @return PK_OK on success or communication error.
+ */
 int32_t PK_PoStep_ConfigurationGet(sPoKeysDevice * device)
 {
 	int32_t i;
@@ -825,6 +1183,16 @@ int32_t PK_PoStep_ConfigurationGet(sPoKeysDevice * device)
 	return PK_OK;
 }
 
+/**
+ * @brief Configure external PoStep drivers.
+ *
+ * Sends `PEV2_CMD_SETUP_DRIVER_COMM` (0x50) with `param1=0x10`
+ * followed by driver type, address and update flags for each
+ * axis.
+ *
+ * @param device Device holding configuration in `PoSteps`.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_PoStep_ConfigurationSet(sPoKeysDevice * device)
 {
 	int32_t i;
@@ -857,6 +1225,15 @@ int32_t PK_PoStep_ConfigurationSet(sPoKeysDevice * device)
 }
 
 
+/**
+ * @brief Read status information from PoStep drivers.
+ *
+ * Executes `PEV2_CMD_GET_DRIVER_STATUS` (0x51) which returns
+ * voltage, temperature and diagnostic bits for each driver.
+ *
+ * @param device Target device.
+ * @return PK_OK or error code.
+ */
 int32_t PK_PoStep_StatusGet(sPoKeysDevice * device)
 {
 	int32_t i;
@@ -883,6 +1260,16 @@ int32_t PK_PoStep_StatusGet(sPoKeysDevice * device)
 }
 
 
+/**
+ * @brief Read PoStep driver current and mode settings.
+ *
+ * Uses commands `PEV2_CMD_DRIVER_CURRENT_PARAMS` (0x52) and
+ * `PEV2_CMD_DRIVER_MODE_PARAMS` (0x53) to obtain current limits,
+ * driver mode, microstepping and temperature limits.
+ *
+ * @param device Target device.
+ * @return PK_OK on success or communication error.
+ */
 int32_t PK_PoStep_DriverConfigurationGet(sPoKeysDevice * device)
 {
 	int32_t i;
@@ -922,6 +1309,16 @@ int32_t PK_PoStep_DriverConfigurationGet(sPoKeysDevice * device)
 }
 
 
+/**
+ * @brief Write PoStep driver current and mode parameters.
+ *
+ * Sends `PEV2_CMD_DRIVER_CURRENT_PARAMS` and
+ * `PEV2_CMD_DRIVER_MODE_PARAMS` with `param1=0x10` to update
+ * driver settings for all axes.
+ *
+ * @param device Device containing new driver parameters.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_PoStep_DriverConfigurationSet(sPoKeysDevice * device)
 {
 	int32_t i;
@@ -979,7 +1376,15 @@ int32_t PK_PoStep_DriverConfigurationSet(sPoKeysDevice * device)
 	return PK_OK;
 }
 
-// Retrieve internal motor drivers parameters
+/**
+ * @brief Read configuration of internal motor drivers.
+ *
+ * Command `PEV2_CMD_GET_INTERNAL_DRIVERS` (0x18) returns step
+ * mode and current settings for four integrated drivers.
+ *
+ * @param device Target device.
+ * @return PK_OK on success or error code.
+ */
 int32_t PK_PEv2_InternalDriversConfigurationGet(sPoKeysDevice * device)
 {
     sPoKeysPEv2 * pe;
@@ -999,7 +1404,16 @@ int32_t PK_PEv2_InternalDriversConfigurationGet(sPoKeysDevice * device)
     return PK_OK;
 }
 
-// Set internal motor drivers parameters
+/**
+ * @brief Set configuration of internal motor drivers.
+ *
+ * Uses `PEV2_CMD_SET_INTERNAL_DRIVERS` (0x19) with step and
+ * current settings for the four integrated drivers placed in the
+ * request payload.
+ *
+ * @param device Device providing new settings via `PEv2` fields.
+ * @return Result of SendRequest.
+ */
 int32_t PK_PEv2_InternalDriversConfigurationSet(sPoKeysDevice * device)
 {
     sPoKeysPEv2 * pe;
