@@ -1620,8 +1620,47 @@ POKEYSDECL int PK_RTCGetAsync(sPoKeysDevice* device);
 POKEYSDECL int export_rtc_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 
 // UART commands
+/**
+ * Configure a UART interface.
+ *
+ * Issues command ::PK_CMD_UART_COMMUNICATION with subcommand
+ * `0x10`.  Parameter @p interfaceID selects the UART port while
+ * @p format contains the serial frame format bits.  The desired
+ * baud rate value is placed in the request payload.
+ *
+ * @param device      Target device handle.
+ * @param baudrate    Serial baud rate in bits per second.
+ * @param format      Frame format and options.
+ * @param interfaceID UART interface index.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_UARTConfigure(sPoKeysDevice* device, uint32_t baudrate, uint8_t format, uint8_t interfaceID);
+/**
+ * Send bytes via the selected UART.
+ *
+ * Subcommand `0x20` transmits up to 55 bytes per request and
+ * returns the number of bytes written in the response.  The helper
+ * loops until the full buffer has been sent.
+ *
+ * @param device      Target device handle.
+ * @param interfaceID UART interface index.
+ * @param dataPtr     Pointer to the data to transmit.
+ * @param dataWriteLen Number of bytes to send.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_UARTWrite(sPoKeysDevice* device, uint8_t interfaceID, uint8_t *dataPtr, uint32_t dataWriteLen);
+/**
+ * Receive bytes from the selected UART.
+ *
+ * Using subcommand `0x30` the device returns the number of
+ * available bytes followed by the data itself.
+ *
+ * @param device      Target device handle.
+ * @param interfaceID UART interface index.
+ * @param dataPtr     Destination buffer.
+ * @param dataReadLen Storage for the returned byte count.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_UARTRead(sPoKeysDevice* device, uint8_t interfaceID, uint8_t *dataPtr, uint8_t *dataReadLen);
 
 // CAN commands
