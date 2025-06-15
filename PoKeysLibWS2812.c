@@ -44,6 +44,13 @@ int32_t PK_WS2812_SendLEDdataEx(sPoKeysDevice* device, uint32_t * LEDdata, uint1
         memcpy(device->request + 8 + i*3, &LEDdata[i+LEDoffset], 3);
     }
 
+    // Second checksum covers LED data only (bytes 8-62)
+    device->request[63] = 0;
+    for (i = 8; i < 63; i++)
+    {
+        device->request[63] += device->request[i];
+    }
+    // SendRequest_NoResponse will append packet header and first checksum (bytes 0-6)
     if (SendRequest_NoResponse(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }
