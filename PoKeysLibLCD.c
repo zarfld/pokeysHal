@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
+#include "PoKeysLibAsync.h"
 
 int32_t PK_LCDConfigurationGet(sPoKeysDevice* device)
 {	
@@ -27,7 +28,7 @@ int32_t PK_LCDConfigurationGet(sPoKeysDevice* device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 	if (device->info.iLCD == 0) return PK_ERR_NOT_SUPPORTED;
 
-    CreateRequest(device->request, 0xD0, 1, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_LCD_CONFIGURATION, 1, 0, 0, 0);
 	if (SendRequest(device) == PK_OK)
     {
 		device->LCD.Configuration = device->response[3];
@@ -44,15 +45,15 @@ int32_t PK_LCDConfigurationSet(sPoKeysDevice* device)
 	if (device->info.iLCD == 0) return PK_ERR_NOT_SUPPORTED;
 
     // Set LCD configuration
-    CreateRequest(device->request, 0xD0, 0, device->LCD.Configuration, device->LCD.Rows, device->LCD.Columns);
+    CreateRequest(device->request, PK_CMD_LCD_CONFIGURATION, 0, device->LCD.Configuration, device->LCD.Rows, device->LCD.Columns);
 	if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     // Initialize LCD
-    CreateRequest(device->request, 0xD1, 0, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     // Clear LCD
-    CreateRequest(device->request, 0xD1, 0x10, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0x10, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
 
@@ -77,7 +78,7 @@ int32_t PK_LCDUpdate(sPoKeysDevice* device)
 	{
 		if (device->LCD.RowRefreshFlags & (1<<n))
 		{
-			CreateRequest(device->request, 0xD1, 0x85, n + 1, 0, 0);
+                    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0x85, n + 1, 0, 0);
 			for (i = 0; i < 20; i++)
 			{
                 device->request[8 + i] = lines[n][i];
@@ -99,7 +100,7 @@ int32_t PK_LCDSetCustomCharacters(sPoKeysDevice* device)
     // Update LCD custom characters
     for (n = 0; n < 8; n++)
     {
-        CreateRequest(device->request, 0xD1, 0x40, 0, 0, 0);
+        CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0x40, 0, 0, 0);
         device->request[8] = n;
         for (i = 0; i < 8; i++)
         {
@@ -116,7 +117,7 @@ int32_t PK_LCDChangeMode(sPoKeysDevice* device, uint8_t mode)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 	if (device->info.iLCD == 0) return PK_ERR_NOT_SUPPORTED;
 
-    CreateRequest(device->request, 0xD1, 0x80, mode, 0, 0);
+    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0x80, mode, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }
@@ -128,7 +129,7 @@ int32_t PK_LCDInit(sPoKeysDevice* device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 	if (device->info.iLCD == 0) return PK_ERR_NOT_SUPPORTED;
 
-    CreateRequest(device->request, 0xD1, 0, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }
@@ -138,7 +139,7 @@ int32_t PK_LCDClear(sPoKeysDevice* device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 	if (device->info.iLCD == 0) return PK_ERR_NOT_SUPPORTED;
 
-    CreateRequest(device->request, 0xD1, 0x10, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0x10, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }
@@ -148,7 +149,7 @@ int32_t PK_LCDMoveCursor(sPoKeysDevice* device, uint8_t row, uint8_t column)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 	if (device->info.iLCD == 0) return PK_ERR_NOT_SUPPORTED;
 
-    CreateRequest(device->request, 0xD1, 0x20, column, row, 0);
+    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0x20, column, row, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }
@@ -161,7 +162,7 @@ int32_t PK_LCDPrint(sPoKeysDevice* device, uint8_t * text, uint8_t textLen)
 
     if (textLen > 20) textLen = 20;
 
-    CreateRequest(device->request, 0xD1, 0x30, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0x30, 0, 0, 0);
     for (i = 0; i < textLen; i++)
     {
         device->request[8 + i] = text[i];
@@ -176,7 +177,7 @@ int32_t PK_LCDPutChar(sPoKeysDevice* device, uint8_t character)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 	if (device->info.iLCD == 0) return PK_ERR_NOT_SUPPORTED;
 
-    CreateRequest(device->request, 0xD1, 0x31, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0x31, 0, 0, 0);
     device->request[8] = character;
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
@@ -187,7 +188,7 @@ int32_t PK_LCDEntryModeSet(sPoKeysDevice* device, uint8_t cursorMoveDirection, u
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 	if (device->info.iLCD == 0) return PK_ERR_NOT_SUPPORTED;
 
-    CreateRequest(device->request, 0xD1, 0x50, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0x50, 0, 0, 0);
     device->request[8] = cursorMoveDirection;
     device->request[9] = displayShift;
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -199,7 +200,7 @@ int32_t PK_LCDDisplayOnOffControl(sPoKeysDevice* device, uint8_t displayOnOff, u
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 	if (device->info.iLCD == 0) return PK_ERR_NOT_SUPPORTED;
 
-    CreateRequest(device->request, 0xD1, 0x60, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_LCD_OPERATION, 0x60, 0, 0, 0);
     device->request[8] = displayOnOff;
     device->request[9] = cursorOnOff;
     device->request[10] = cursorBlinking;

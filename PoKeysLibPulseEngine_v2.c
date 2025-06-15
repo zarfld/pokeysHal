@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
+#include "PoKeysLibAsync.h"
 
 
 void PK_PEv2_DecodeStatus(sPoKeysDevice * device)
@@ -77,7 +78,7 @@ int32_t PK_PEv2_StatusGet(sPoKeysDevice * device)
     tstB = (0x10 + device->requestID) % 199;
 
     // Send request
-    CreateRequest(device->request, 0x85, 0x00, tstB, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_GET_STATUS, tstB, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     // Check if response is valid
@@ -102,7 +103,7 @@ int32_t PK_PEv2_Status2Get(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Send request
-    CreateRequest(device->request, 0x85, 0x08, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_GET_STATUS2, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
 	device->PEv2.DedicatedLimitNInputs = device->response[8];
@@ -116,7 +117,7 @@ int32_t PK_PEv2_PulseEngineSetup(sPoKeysDevice * device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    CreateRequest(device->request, 0x85, 0x01, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SETUP, 0, 0, 0);
 
     // Fill the information
     device->request[8] = device->PEv2.PulseEngineEnabled;
@@ -138,7 +139,7 @@ int32_t PK_PEv2_AdditionalParametersGet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Send request
-    CreateRequest(device->request, 0x85, 0x06, 0, 0, 1);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_CONFIGURE_MISC, 0, 0, 1);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
 	device->PEv2.EmergencyInputPin = device->response[8];    
@@ -152,7 +153,7 @@ int32_t PK_PEv2_AdditionalParametersSet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x06, 1, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_CONFIGURE_MISC, 1, 0, 0);
 	device->request[8] = device->PEv2.EmergencyInputPin;
 
     // Send request
@@ -169,7 +170,7 @@ int32_t PK_PEv2_AxisConfigurationGet(sPoKeysDevice * device)
     if (device->PEv2.param1 >= 8) return PK_ERR_PARAMETER;
 
     // Send request
-    CreateRequest(device->request, 0x85, 0x10, device->PEv2.param1, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_GET_AXIS_CONFIGURATION, device->PEv2.param1, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     // Pointer to PEv2 structure for better code readability
@@ -223,7 +224,7 @@ int32_t PK_PEv2_AxisConfigurationSet(sPoKeysDevice * device)
     if (device->PEv2.param1 >= 8) return PK_ERR_PARAMETER;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x11, device->PEv2.param1, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SET_AXIS_CONFIGURATION, device->PEv2.param1, 0, 0);
 
     // Pointer to PEv2 structure for better code readability
     pe = &device->PEv2;
@@ -277,7 +278,7 @@ int32_t PK_PEv2_PositionSet(sPoKeysDevice * device)
     if (device->PEv2.param2 == 0) return PK_ERR_PARAMETER;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x03, device->PEv2.param2, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SET_AXIS_POSITION, device->PEv2.param2, 0, 0);
 
     for (i = 0; i < 8; i++)
     {
@@ -294,7 +295,7 @@ int32_t PK_PEv2_PulseEngineStateSet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-	CreateRequest(device->request, 0x85, 0x02, device->PEv2.PulseEngineStateSetup, device->PEv2.LimitOverrideSetup, device->PEv2.AxisEnabledMask);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SET_STATE, device->PEv2.PulseEngineStateSetup, device->PEv2.LimitOverrideSetup, device->PEv2.AxisEnabledMask);
 
     // Send request
     return SendRequest(device);
@@ -306,7 +307,7 @@ int32_t PK_PEv2_PulseEngineMove(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x20, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_MOVE, 0, 0, 0);
 
     //memcpy(&device->request[8], device->PEv2.ReferencePositionSpeed, 8*4);
     for (int i = 0; i < 8; i++) {
@@ -331,7 +332,7 @@ int32_t PK_PEv2_PulseEngineMovePV(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x25, device->PEv2.param2, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_MOVE_PV, device->PEv2.param2, 0, 0);
 
     //memcpy(&device->request[8], device->PEv2.ReferencePositionSpeed, 8*4);
     for (int i = 0; i < 8; i++) {
@@ -357,7 +358,7 @@ int32_t PK_PEv2_ExternalOutputsGet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Send request
-    CreateRequest(device->request, 0x85, 0x04, 0, 0, 1);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SET_OUTPUTS, 0, 0, 1);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     device->PEv2.ExternalRelayOutputs = device->response[3];
@@ -372,7 +373,7 @@ int32_t PK_PEv2_ExternalOutputsSet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x04, device->PEv2.ExternalRelayOutputs, device->PEv2.ExternalOCOutputs, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SET_OUTPUTS, device->PEv2.ExternalRelayOutputs, device->PEv2.ExternalOCOutputs, 0);
     // Send request
     return SendRequest(device);
 }
@@ -385,7 +386,7 @@ int32_t PK_PEv2_BufferFill(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0xFF, device->PEv2.newMotionBufferEntries, device->PEv2.PulseEngineEnabled & 0x0F, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_FILL_BUFFER_8BIT, device->PEv2.newMotionBufferEntries, device->PEv2.PulseEngineEnabled & 0x0F, 0);
 
     // Copy buffer
     memcpy(&device->request[8], device->PEv2.MotionBuffer, 56);
@@ -409,7 +410,7 @@ int32_t PK_PEv2_BufferFill_16(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0xFE, device->PEv2.newMotionBufferEntries, device->PEv2.PulseEngineEnabled & 0x0F, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, 0xFE, device->PEv2.newMotionBufferEntries, device->PEv2.PulseEngineEnabled & 0x0F, 0);
 
     // Copy buffer
     memcpy(&device->request[8], device->PEv2.MotionBuffer, 56);
@@ -473,7 +474,7 @@ int32_t PK_PEv2_BufferClear(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0xF0, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_CLEAR_BUFFER, 0, 0, 0);
     // Send request
     return SendRequest(device);
 }
@@ -484,7 +485,7 @@ int32_t PK_PEv2_PulseEngineReboot(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x05, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_REBOOT, 0, 0, 0);
     // Send request
     return SendRequest(device);
 }
@@ -496,7 +497,7 @@ int32_t PK_PEv2_HomingStart(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x21, device->PEv2.HomingStartMaskSetup, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_START_HOMING, device->PEv2.HomingStartMaskSetup, 0, 0);
 
     //memcpy(&device->request[8], device->PEv2.HomeOffsets, 8 * 4);
     for (int i = 0; i < 8; i++) {
@@ -516,7 +517,7 @@ int32_t PK_PEv2_HomingFinish(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-	CreateRequest(device->request, 0x85, 0x22, device->PEv2.PulseEngineStateSetup, 1, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_FINISH_HOMING, device->PEv2.PulseEngineStateSetup, 1, 0);
     // Send request
     return SendRequest(device);
 }
@@ -531,7 +532,7 @@ int32_t PK_PEv2_ProbingStart(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x23, device->PEv2.ProbeStartMaskSetup, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_START_PROBING, device->PEv2.ProbeStartMaskSetup, 0, 0);
 
     //memcpy(&device->request[8], device->PEv2.ProbeMaxPosition, 8 * 4);
     for (int i = 0; i < 8; i++) {
@@ -555,7 +556,7 @@ int32_t PK_PEv2_ProbingHybridStart(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x23, 0, 1, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_START_PROBING, 0, 1, 0);
 
     device->request[44] = device->PEv2.ProbeInput;
     device->request[45] = device->PEv2.ProbeInputPolarity;
@@ -570,7 +571,7 @@ int32_t PK_PEv2_ProbingFinish(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x24, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_FINISH_PROBING, 0, 0, 0);
 
     // Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -595,7 +596,7 @@ int32_t PK_PEv2_ProbingFinishSimple(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x24, 1, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_FINISH_PROBING, 1, 0, 0);
 
     // Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -617,7 +618,7 @@ int32_t PK_PEv2_ThreadingPrepareForTrigger(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x30, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_PREPARE_TRIGGER, 0, 0, 0);
 
     // Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -630,7 +631,7 @@ int32_t PK_PEv2_ThreadingForceTriggerReady(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x31, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_FORCE_TRIGGER_READY, 0, 0, 0);
 
     // Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -643,7 +644,7 @@ int32_t PK_PEv2_ThreadingTrigger(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x32, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_ARM_TRIGGER, 0, 0, 0);
 
     // Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -656,7 +657,7 @@ int32_t PK_PEv2_ThreadingRelease(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x33, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_RELEASE_TRIGGER, 0, 0, 0);
 
     // Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -669,7 +670,7 @@ int32_t PK_PEv2_ThreadingCancel(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x34, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_CANCEL_THREADING, 0, 0, 0);
 
     // Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -682,7 +683,7 @@ int32_t PK_PEv2_ThreadingStatusGet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x35, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_GET_THREADING_STATUS, 0, 0, 0);
 
     // Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -715,7 +716,7 @@ int32_t PK_PEv2_ThreadingSetup(sPoKeysDevice * device, uint8_t sensorMode, uint1
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x36, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SET_THREADING_PARAMS, 0, 0, 0);
 
 	device->request[8] = sensorMode;
 	*(uint16_t*)(device->request + 12) = ticksPerRevolution;
@@ -736,7 +737,7 @@ int32_t PK_PEv2_BacklashCompensationSettings_Get(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x40, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_GET_BACKLASH_SETTINGS, 0, 0, 0);
 
 	// Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -759,7 +760,7 @@ int32_t PK_PEv2_BacklashCompensationSettings_Set(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
 	// Create request
-	CreateRequest(device->request, 0x85, 0x41, device->PEv2.BacklashCompensationEnabled, device->PEv2.BacklashCompensationMaxSpeed, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SET_BACKLASH_SETTINGS, device->PEv2.BacklashCompensationEnabled, device->PEv2.BacklashCompensationMaxSpeed, 0);
 
 	for (i = 0; i < 8; i++)
 	{
@@ -779,7 +780,7 @@ int32_t PK_PEv2_SyncedPWMSetup(sPoKeysDevice * device, uint8_t enabled, uint8_t 
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x0A, enabled, srcAxis, dstPWMChannel);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SETUP_SYNCED_PWM, enabled, srcAxis, dstPWMChannel);
 
     // Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -792,7 +793,7 @@ int32_t PK_PEv2_SyncOutputsSetup(sPoKeysDevice * device)
 	if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
 	// Create request
-	CreateRequest(device->request, 0x85, 0x0B, device->PEv2.SyncFastOutputsAxisID > 0, device->PEv2.SyncFastOutputsAxisID - 1, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SETUP_SYNCED_DIGITAL, device->PEv2.SyncFastOutputsAxisID > 0, device->PEv2.SyncFastOutputsAxisID - 1, 0);
 	memcpy(device->request + 8, device->PEv2.SyncFastOutputsMapping, 8);
 
 	// Send request
@@ -807,7 +808,7 @@ int32_t PK_PoStep_ConfigurationGet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x50, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SETUP_DRIVER_COMM, 0, 0, 0);
 
 	// Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -830,7 +831,7 @@ int32_t PK_PoStep_ConfigurationSet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
 	// Create request
-	CreateRequest(device->request, 0x85, 0x50, 0x10, device->PoSteps.EnablePoStepCommunication, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SETUP_DRIVER_COMM, 0x10, device->PoSteps.EnablePoStepCommunication, 0);
 
 	// Insert settings for each axis
 	for (i = 0; i < 8; i++)
@@ -862,7 +863,7 @@ int32_t PK_PoStep_StatusGet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x51, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_GET_DRIVER_STATUS, 0, 0, 0);
 
 	// Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -889,7 +890,7 @@ int32_t PK_PoStep_DriverConfigurationGet(sPoKeysDevice * device)
 
 	// Current settings
     // Create request
-    CreateRequest(device->request, 0x85, 0x52, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_DRIVER_CURRENT_PARAMS, 0, 0, 0);
 
 	// Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -904,7 +905,7 @@ int32_t PK_PoStep_DriverConfigurationGet(sPoKeysDevice * device)
 
 	// Mode settings
     // Create request
-    CreateRequest(device->request, 0x85, 0x53, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_DRIVER_MODE_PARAMS, 0, 0, 0);
 
 	// Send request
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -928,7 +929,7 @@ int32_t PK_PoStep_DriverConfigurationSet(sPoKeysDevice * device)
 
 	// Current
 	// Create request
-	CreateRequest(device->request, 0x85, 0x52, 0x10, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_DRIVER_CURRENT_PARAMS, 0x10, 0, 0);
 
 	// Insert settings for each axis
 	for (i = 0; i < 8; i++)
@@ -951,7 +952,7 @@ int32_t PK_PoStep_DriverConfigurationSet(sPoKeysDevice * device)
 
 	// Modes
 	// Create request
-	CreateRequest(device->request, 0x85, 0x53, 0x10, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_DRIVER_MODE_PARAMS, 0x10, 0, 0);
 
 	// Insert settings for each axis
 	for (i = 0; i < 8; i++)
@@ -985,7 +986,7 @@ int32_t PK_PEv2_InternalDriversConfigurationGet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Send request
-    CreateRequest(device->request, 0x85, 0x18, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_GET_INTERNAL_DRIVERS, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     // Pointer to PEv2 structure for better code readability
@@ -1005,7 +1006,7 @@ int32_t PK_PEv2_InternalDriversConfigurationSet(sPoKeysDevice * device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Create request
-    CreateRequest(device->request, 0x85, 0x19, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_SET_INTERNAL_DRIVERS, 0, 0, 0);
 
     // Pointer to PEv2 structure for better code readability
     pe = &device->PEv2;

@@ -20,12 +20,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
+#include "PoKeysLibAsync.h"
 
 int32_t PK_RTCGet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    CreateRequest(device->request, 0x83, 0x00, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_RTC_SETTINGS, 0x00, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     *device->RTC.SEC = device->response[8];
@@ -47,7 +48,7 @@ int32_t PK_RTCSet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    CreateRequest(device->request, 0x83, 0x10, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_RTC_SETTINGS, 0x10, 0, 0, 0);
     device->request[8]  = (uint8_t)(*device->RTC.SEC);
     device->request[9]  = (uint8_t)(*device->RTC.MIN);
     device->request[10] = (uint8_t)(*device->RTC.HOUR);

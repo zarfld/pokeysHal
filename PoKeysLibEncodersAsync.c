@@ -495,9 +495,9 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
  
              // Read UltraFast encoder extra values
              uint8_t params_ultrafast[] = {0x37}; // Sub-command for test mode
-             CreateRequestAsync(device, 0x85, params_ultrafast, 1,
-                 NULL, 0,
-                 PK_EncoderValuesGetAsync_ProcessUltraFast);
+            CreateRequestAsync(device, PK_CMD_PULSE_ENGINE_V2, params_ultrafast, 1,
+                NULL, 0,
+                PK_EncoderValuesGetAsync_ProcessUltraFast);
          }
          else
          {

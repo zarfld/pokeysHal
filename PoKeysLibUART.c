@@ -19,13 +19,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
+#include "PoKeysLibAsync.h"
 
 int32_t PK_UARTConfigure(sPoKeysDevice* device, uint32_t baudrate, uint8_t format, uint8_t interfaceID)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Configure UART
-    CreateRequest(device->request, 0xDE, 0x10, interfaceID, format & 0x7F, 0);
+    CreateRequest(device->request, PK_CMD_UART_COMMUNICATION, 0x10, interfaceID, format & 0x7F, 0);
     *(uint32_t*)(device->request + 8) = baudrate;
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
@@ -47,7 +48,7 @@ int32_t PK_UARTWrite(sPoKeysDevice* device, uint8_t interfaceID, uint8_t *dataPt
     {
         if (len > 55) len = 55;
 
-        CreateRequest(device->request, 0xDE, 0x20, interfaceID, len, 0);
+        CreateRequest(device->request, PK_CMD_UART_COMMUNICATION, 0x20, interfaceID, len, 0);
 
         memcpy(device->request + 8, dataPtr + writePtr, len);
         if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
@@ -74,7 +75,7 @@ int32_t PK_UARTRead(sPoKeysDevice* device, uint8_t interfaceID, uint8_t *dataPtr
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    CreateRequest(device->request, 0xDE, 0x30, interfaceID, 0, 0);
+    CreateRequest(device->request, PK_CMD_UART_COMMUNICATION, 0x30, interfaceID, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     *dataReadLen = device->response[3];

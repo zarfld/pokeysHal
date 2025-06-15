@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
+#include "PoKeysLibAsync.h"
 
 int32_t PK_EncoderConfigurationGet(sPoKeysDevice* device)
 {
@@ -227,7 +228,7 @@ int32_t PK_EncoderValuesGet(sPoKeysDevice* device)
 		} else return PK_ERR_TRANSFER;
 		
 		// Read the test mode values for the ultra-fast encoder
-		CreateRequest(device->request, 0x85, 0x37, 0, 0, 0);
+                CreateRequest(device->request, PK_CMD_PULSE_ENGINE_V2, PEV2_CMD_GET_ENCODER_TEST_RESULTS, 0, 0, 0);
 		if (SendRequest(device) == PK_OK)
 		{
 			device->PEv2.EncoderIndexCount = *((uint32_t*)&device->response[12]);

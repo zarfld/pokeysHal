@@ -21,12 +21,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
+#include "PoKeysLibAsync.h"
 
 int32_t PK_PoNETGetPoNETStatus(sPoKeysDevice* device)
 {
   if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-  CreateRequest(device->request, 0xDD, 0x00, 0, 0, 0);
+  CreateRequest(device->request, PK_CMD_POI2C_COMMUNICATION, PONET_OP_GET_STATUS, 0, 0, 0);
   if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
   device->PoNETmodule.PoNETstatus = device->response[8];
@@ -38,7 +39,7 @@ int32_t PK_PoNETGetModuleSettings(sPoKeysDevice* device)
 {
   if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-  CreateRequest(device->request, 0xDD, 0x10, device->PoNETmodule.moduleID, 0, 0);
+  CreateRequest(device->request, PK_CMD_POI2C_COMMUNICATION, PONET_OP_GET_MODULE_SETTINGS, device->PoNETmodule.moduleID, 0, 0);
   if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
   device->PoNETmodule.i2cAddress = device->response[8];
@@ -55,7 +56,7 @@ int32_t PK_PoNETGetModuleStatusRequest(sPoKeysDevice* device)
 {
   if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-  CreateRequest(device->request, 0xDD, 0x50, 0x10, device->PoNETmodule.moduleID, 0);
+  CreateRequest(device->request, PK_CMD_POI2C_COMMUNICATION, PONET_OP_GET_MODULE_DATA, 0x10, device->PoNETmodule.moduleID, 0);
   if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
   
   return PK_OK;
@@ -65,7 +66,7 @@ int32_t PK_PoNETGetModuleStatus(sPoKeysDevice* device)
 {
   if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-  CreateRequest(device->request, 0xDD, 0x50, 0x30, 0, 0);
+  CreateRequest(device->request, PK_CMD_POI2C_COMMUNICATION, PONET_OP_GET_MODULE_DATA, 0x30, 0, 0);
   if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
   if (device->response[3] != 1) return PK_ERR_GENERIC;
@@ -83,7 +84,7 @@ int32_t PK_PoNETSetModuleStatus(sPoKeysDevice* device)
 
   if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-  CreateRequest(device->request, 0xDD, 0x55, device->PoNETmodule.moduleID, 0, 0);
+  CreateRequest(device->request, PK_CMD_POI2C_COMMUNICATION, PONET_OP_SET_MODULE_DATA, device->PoNETmodule.moduleID, 0, 0);
   for (i = 0; i < 16; i++)
   {
     device->request[8 + i] = device->PoNETmodule.statusOut[i];
@@ -99,7 +100,7 @@ int32_t PK_PoNETSetModulePWM(sPoKeysDevice* device)
 {
   if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-  CreateRequest(device->request, 0xDD, 0x70, device->PoNETmodule.moduleID, device->PoNETmodule.PWMduty, 0);
+  CreateRequest(device->request, PK_CMD_POI2C_COMMUNICATION, PONET_OP_SET_PWM_VALUE, device->PoNETmodule.moduleID, device->PoNETmodule.PWMduty, 0);
   
   if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
   return PK_OK;
@@ -109,7 +110,7 @@ int32_t PK_PoNETGetModuleLightRequest(sPoKeysDevice* device)
 {
   if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-  CreateRequest(device->request, 0xDD, 0x60, 0x10, device->PoNETmodule.moduleID, 0);
+  CreateRequest(device->request, PK_CMD_POI2C_COMMUNICATION, PONET_OP_GET_LIGHT_SENSOR, 0x10, device->PoNETmodule.moduleID, 0);
   
   if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
   return PK_OK;
@@ -119,7 +120,7 @@ int32_t PK_PoNETGetModuleLight(sPoKeysDevice* device)
 {
   if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-  CreateRequest(device->request, 0xDD, 0x60, 0x30, device->PoNETmodule.moduleID, 0);
+  CreateRequest(device->request, PK_CMD_POI2C_COMMUNICATION, PONET_OP_GET_LIGHT_SENSOR, 0x30, device->PoNETmodule.moduleID, 0);
   
   if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
   if (device->response[8] != 0) return PK_ERR_GENERIC;
