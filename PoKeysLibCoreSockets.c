@@ -208,14 +208,42 @@ static uint32 * GetBroadcastAddresses()
 #endif
 
 
+/**
+ * @brief Convenience wrapper for discovering all network attached PoKeys devices.
+ *
+ * Calls ::PK_SearchNetworkDevices() with @p serialNumberToFind set to 0 so that
+ * all responding PoKeys boards are reported.
+ *
+ * @param devices Pointer to an array of ::sPoKeysNetworkDeviceSummary where
+ *                discovered devices will be stored.
+ * @param timeout Discovery timeout in milliseconds.
+ *
+ * @return Number of detected devices.
+ */
 int32_t PK_EnumerateNetworkDevices(sPoKeysNetworkDeviceSummary * devices, uint32_t timeout)
 {
     return PK_SearchNetworkDevices(devices, timeout, 0);
 }
 
+/**
+ * @brief Broadcasts a discovery request and collects responses from PoKeys devices.
+ *
+ * A UDP packet is sent to every broadcast address returned by
+ * GetBroadcastAddresses(). Responses are gathered for up to @p timeout
+ * milliseconds and stored into the provided @p devices array (maximum 16
+ * entries). If @p serialNumberToFind is non-zero the function stops early when a
+ * matching device is found.
+ *
+ * @param devices            Array of ::sPoKeysNetworkDeviceSummary structures
+ *                            for storing discovered devices.
+ * @param timeout            Discovery timeout in milliseconds.
+ * @param serialNumberToFind Optional serial number to look for (0 = any).
+ *
+ * @return Number of discovered devices.
+ */
 int32_t PK_SearchNetworkDevices(sPoKeysNetworkDeviceSummary * devices, uint32_t timeout, uint32_t serialNumberToFind)
 {
-    //Broadcast the message
+    // Broadcast the message
     int32_t t; // 100 ms timeout
 #ifdef WIN32
     struct sockaddr_in remoteEP;
@@ -582,8 +610,19 @@ void PK_DisconnectNetworkDevice(sPoKeysDevice* device)
 }
 
 
+/**
+ * @brief Sends a single request packet and waits for its 64 byte response.
+ *
+ * The packet contained in @c device->request is transmitted using either UDP or
+ * TCP depending on the connection parameters. The function blocks using
+ * select()/recv() until a valid response is received or retries are exhausted.
+ *
+ * @param device Pointer to an initialized network ::sPoKeysDevice.
+ *
+ * @return PK_OK on success or PK_ERR_TRANSFER on communication failure.
+ */
 int32_t SendEthRequest(sPoKeysDevice* device)
-{    
+{
     uint32_t retries1 = 0;
     uint32_t retries2 = 0;
     int result;
@@ -723,8 +762,18 @@ int32_t SendEthRequest(sPoKeysDevice* device)
 
 }
 
+/**
+ * @brief Sends a request packet without waiting for a reply.
+ *
+ * Only the transmit part of ::SendEthRequest() is executed. The function returns
+ * once the packet is successfully sent or the send retries are exhausted.
+ *
+ * @param device Pointer to the target ::sPoKeysDevice.
+ *
+ * @return PK_OK on success or PK_ERR_TRANSFER on failure.
+ */
 int32_t SendEthRequest_NoResponse(sPoKeysDevice* device)
-{    
+{
     uint32_t retries1 = 0;
     uint32_t retries2 = 0;
     //int result;
@@ -780,6 +829,20 @@ int32_t SendEthRequest_NoResponse(sPoKeysDevice* device)
 
 }
 
+/**
+ * @brief Sends a multi-part request stored in @c device->multiPartData.
+ *
+ * The data is split into eight packets (64 bytes each) and transmitted
+ * sequentially. After sending all parts the function waits for a single
+ * response packet. This is used when a request payload exceeds the standard
+ * 64 byte size.
+ *
+ * @param device Pointer to a connected ::sPoKeysDevice with a valid
+ *               multi-part buffer.
+ *
+ * @return PK_OK on success or PK_ERR_TRANSFER on timeout or communication
+ *         errors.
+ */
 int32_t SendEthRequestBig(sPoKeysDevice* device)
 {
     uint32_t retries1 = 0;
