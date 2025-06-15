@@ -21,6 +21,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
 
+/**
+ * @brief Write matrix LED configuration to the PoKeys device.
+ *
+ * Encodes the enabled state, row count and column count for both
+ * matrix LED displays from the @p device structure and transmits
+ * them using a `PK_CMD_MATRIX_LED_CONFIGURATION` request.
+ *
+ * @param device Pointer to an opened device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_MatrixLEDConfigurationSet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -37,6 +47,16 @@ int32_t PK_MatrixLEDConfigurationSet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Query matrix LED configuration from the device.
+ *
+ * Issues a `PK_CMD_MATRIX_LED_CONFIGURATION` request with subcommand 1
+ * and decodes the returned enable flags and geometry into
+ * ::sPoKeysDevice::MatrixLED.
+ *
+ * @param device Pointer to an opened device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_MatrixLEDConfigurationGet(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -58,6 +78,17 @@ int32_t PK_MatrixLEDConfigurationGet(sPoKeysDevice* device)
 	return PK_OK;
 }
 
+/**
+ * @brief Transfer matrix LED pixel data to the device.
+ *
+ * Loops over every configured display and, if
+ * ::sPoKeysMatrixLED::RefreshFlag is set, sends a
+ * `PK_CMD_MATRIX_LED_UPDATE` packet containing eight bytes of pixel
+ * data from ::sPoKeysMatrixLED::data.
+ *
+ * @param device Pointer to an opened device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 int32_t PK_MatrixLEDUpdate(sPoKeysDevice* device)
 {
     uint32_t i, j;
