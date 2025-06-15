@@ -1348,11 +1348,37 @@ POKEYSDECL int32_t PK_1WireBusScanStop(sPoKeysDevice* device);
 
 
 
-// Get the configuration of EasySensors
+/**
+ * Retrieve EasySensors configuration from the device.
+ *
+ * Each EasySensor present on the device is queried and the information is
+ * stored in the ::sPoKeysDevice structure. Sensor type, reading ID, refresh
+ * period, failsafe configuration and the unique sensor identifier are
+ * updated for every entry in the EasySensors array.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_EasySensorsSetupGet(sPoKeysDevice* device);
-// Set the configuration of EasySensors
+/**
+ * Send EasySensors configuration to the device.
+ *
+ * The function iterates through the EasySensors array of the provided device
+ * structure and writes each sensor's configuration back to the device.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_EasySensorsSetupSet(sPoKeysDevice* device);
-// Get all EasySensors values
+/**
+ * Read values of all EasySensors from the device.
+ *
+ * Sensor values are read in batches and stored together with status flags in
+ * the EasySensors array of the target device.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_EasySensorsValueGetAll(sPoKeysDevice* device);
 
 // Failsafe settings
@@ -1501,6 +1527,16 @@ POKEYSDECL uint8_t PK_SL_DigitalInputGet(sPoKeysDevice* device, uint8_t pin);
 POKEYSDECL uint32_t PK_SL_AnalogInputGet(sPoKeysDevice* device, uint8_t pin);
 
 POKEYSDECL uint32_t PK_SL_EncoderValueGet(sPoKeysDevice* device, uint8_t index);
+/**
+ * Return the last acquired value of the selected EasySensor.
+ *
+ * This helper performs no communication with the device and simply returns the
+ * cached value stored in the ::sPoKeysDevice structure.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param index  Zero-based EasySensor index.
+ * @return Current sensor value or 0 if the parameters are invalid.
+ */
 POKEYSDECL int32_t PK_SL_EasySensorValueGet(sPoKeysDevice* device, uint8_t index);
 
 POKEYSDECL uint32_t PK_SL_PWMConfig(sPoKeysDevice* device, uint8_t index);
