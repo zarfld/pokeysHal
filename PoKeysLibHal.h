@@ -1518,8 +1518,26 @@ POKEYSDECL int32_t PK_EasySensorsSetupSet(sPoKeysDevice* device);
  */
 POKEYSDECL int32_t PK_EasySensorsValueGetAll(sPoKeysDevice* device);
 
-// Failsafe settings
+/**
+ * Retrieve failsafe configuration from the device.
+ *
+ * Populates the ::sPoKeysFailsafeSettings structure of @p device with the
+ * current timeout and output values that will be applied when the connection
+ * watchdog expires.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_FailsafeSettingsGet(sPoKeysDevice* device);
+/**
+ * Send failsafe configuration to the device.
+ *
+ * Writes the failsafe configuration stored in the ::sPoKeysDevice structure
+ * back to the connected PoKeys device.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_FailsafeSettingsSet(sPoKeysDevice* device);
 
 // SPI operations
