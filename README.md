@@ -25,6 +25,20 @@ This project provides an optimized PoKeysLib UDP/Ethernet communication layer fo
 - Fast, safe, and predictable response handling
 - Clear separation of send and receive flow
 
+## Security Commands
+
+The library now supports PoKeys security management:
+
+- **PK_SecurityStatusGet** (command `0xE1`)
+  - Request: no parameters.
+  - Response: byte 9 contains the current security level, bytes 10–41 contain a 32-byte seed used when hashing the password.
+- **PK_UserAuthorise** (command `0xE2`)
+  - Request: param1 is desired security level; payload is 20-byte SHA‑1 password hash.
+  - Response: byte 9 is the unlock status (`0xAA` if successful).
+- **PK_UserPasswordSet** (command `0xE3`)
+  - Request: param1 is default security level; payload is the password in plain text (32 bytes).
+  - Response: header only (no additional data).
+
 ## Flowchart
 
 ```plaintext

@@ -1288,6 +1288,14 @@ int PK_CANWriteAsync(sPoKeysDevice* device, sPoKeysCANmsg * msg);
 int PK_CANReadAsync(sPoKeysDevice* device, sPoKeysCANmsg * msg, uint8_t * status);
 int PK_CANFlushAsync(sPoKeysDevice* device);
 
+// Security commands
+POKEYSDECL int32_t PK_SecurityStatusGet(sPoKeysDevice* device, uint8_t* level, uint8_t* seed32);
+POKEYSDECL int32_t PK_UserAuthorise(sPoKeysDevice* device, uint8_t level, const uint8_t* hash20, uint8_t* status);
+POKEYSDECL int32_t PK_UserPasswordSet(sPoKeysDevice* device, uint8_t defaultLevel, const uint8_t* password32);
+int PK_SecurityStatusGetAsync(sPoKeysDevice* device, uint8_t* level, uint8_t* seed32);
+int PK_UserAuthoriseAsync(sPoKeysDevice* device, uint8_t level, const uint8_t* hash20, uint8_t* status);
+int PK_UserPasswordSetAsync(sPoKeysDevice* device, uint8_t defaultLevel, const uint8_t* password32);
+
 // WS2812 commands
 POKEYSDECL int32_t PK_WS2812_Update(sPoKeysDevice* device, uint16_t LEDcount, uint8_t updateFlag);
 POKEYSDECL int32_t PK_WS2812_SendLEDdata(sPoKeysDevice* device, uint32_t * LEDdata, uint16_t startLED, uint8_t LEDcount);
