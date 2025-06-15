@@ -236,6 +236,7 @@ jobs:
         else
           echo "No changes to sync."
         fi
+      continue-on-error: true
 
     - name: Get Git version info
       run: git version
