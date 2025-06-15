@@ -1207,11 +1207,35 @@ POKEYSDECL int32_t PK_AnalogRCFilterGet(sPoKeysDevice* device);
 /** Set RC filter constant for analog inputs. */
 POKEYSDECL int32_t PK_AnalogRCFilterSet(sPoKeysDevice* device);
 
-// Get matrix keyboard configuration
+/**
+ * Read the matrix keyboard configuration and key mapping.
+ *
+ * Fields in ::sMatrixKeyboard within the provided device structure are
+ * populated by issuing subcommands of `PK_CMD_MATRIX_KEYBOARD_CFG`.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_MatrixKBConfigurationGet(sPoKeysDevice* device);
-// Set matrix keyboard configuration
+/**
+ * Write the current matrix keyboard configuration and key mapping.
+ *
+ * Values are taken from the ::sMatrixKeyboard fields of `device` and sent
+ * using subcommands of `PK_CMD_MATRIX_KEYBOARD_CFG`.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_MatrixKBConfigurationSet(sPoKeysDevice* device);
-// Get matrix keyboard current key states
+/**
+ * Retrieve the matrix keyboard key state bitmap.
+ *
+ * Updates ::sMatrixKeyboard::matrixKBvalues with the currently pressed keys
+ * using subcommand `20` of `PK_CMD_MATRIX_KEYBOARD_CFG`.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_MatrixKBStatusGet(sPoKeysDevice* device);
 
 /**
