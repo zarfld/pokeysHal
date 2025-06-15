@@ -1689,8 +1689,43 @@ int PK_CANReadAsync(sPoKeysDevice* device, sPoKeysCANmsg * msg, uint8_t * status
 int PK_CANFlushAsync(sPoKeysDevice* device);
 
 // Security commands
+/**
+ * Retrieve the current security level and password seed.
+ *
+ * Executes command 0xE1 and stores the level in @p level and a
+ * 32-byte seed used for password hashing in @p seed32.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param level  Optional storage for the security level.
+ * @param seed32 Buffer for the 32-byte seed (may be NULL).
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_SecurityStatusGet(sPoKeysDevice* device, uint8_t* level, uint8_t* seed32);
+/**
+ * Attempt to authorise the user for a selected security level.
+ *
+ * Sends command 0xE2 with @p level and a 20-byte SHA-1 password hash
+ * calculated using the seed from PK_SecurityStatusGet().  The returned
+ * status byte equals 0xAA on success.
+ *
+ * @param device Pointer to an initialized device structure.
+ * @param level  Desired security level.
+ * @param hash20 Pointer to the 20-byte password hash.
+ * @param status Optional pointer receiving the unlock status.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_UserAuthorise(sPoKeysDevice* device, uint8_t level, const uint8_t* hash20, uint8_t* status);
+/**
+ * Store a new user password on the device.
+ *
+ * Param1 sets the default security level while @p password32 contains
+ * the plain text password (32 bytes) sent with command 0xE3.
+ *
+ * @param device       Pointer to an initialized device structure.
+ * @param defaultLevel Default security level for the password.
+ * @param password32   Pointer to a 32-byte plain text password.
+ * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
+ */
 POKEYSDECL int32_t PK_UserPasswordSet(sPoKeysDevice* device, uint8_t defaultLevel, const uint8_t* password32);
 int PK_SecurityStatusGetAsync(sPoKeysDevice* device, uint8_t* level, uint8_t* seed32);
 int PK_UserAuthoriseAsync(sPoKeysDevice* device, uint8_t level, const uint8_t* hash20, uint8_t* status);
