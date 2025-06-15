@@ -20,13 +20,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
+#include "PoKeysLibAsync.h"
 
 int32_t PK_SPIConfigure(sPoKeysDevice * device, uint8_t prescaler, uint8_t frameFormat)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Configure SPI
-    CreateRequest(device->request, 0xE5, 0x01, prescaler, frameFormat, 0);
+    CreateRequest(device->request, PK_CMD_SPI_COMMUNICATION, 0x01, prescaler, frameFormat, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }
@@ -38,7 +39,7 @@ int32_t PK_SPIWrite(sPoKeysDevice * device, uint8_t * buffer, uint8_t iDataLengt
 
     if (iDataLength > 55) iDataLength = 55;
 
-    CreateRequest(device->request, 0xE5, 0x10, iDataLength, pinCS, 0);
+    CreateRequest(device->request, PK_CMD_SPI_COMMUNICATION, 0x10, iDataLength, pinCS, 0);
     for (i = 0; i < iDataLength; i++)
     {
         device->request[8+i] = buffer[i];
@@ -55,7 +56,7 @@ int32_t PK_SPIRead(sPoKeysDevice * device, uint8_t * buffer, uint8_t iDataLength
 
     if (iDataLength > 55) iDataLength = 55;
 
-    CreateRequest(device->request, 0xE5, 0x20, iDataLength, 0, 0);
+    CreateRequest(device->request, PK_CMD_SPI_COMMUNICATION, 0x20, iDataLength, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     if (device->response[3] == 1)

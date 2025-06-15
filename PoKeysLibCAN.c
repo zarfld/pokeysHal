@@ -19,13 +19,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
+#include "PoKeysLibAsync.h"
 
 int32_t PK_CANConfigure(sPoKeysDevice* device, uint32_t bitrate)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Configure UART
-    CreateRequest(device->request, 0x86, 0x01, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_CAN_OPERATIONS, POCAN_CMD_ENABLE, 0, 0, 0);
     *(uint32_t*)(device->request + 8) = bitrate;
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
@@ -36,7 +37,7 @@ int32_t PK_CANRegisterFilter(sPoKeysDevice* device, uint8_t format, uint32_t CAN
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Configure UART
-    CreateRequest(device->request, 0x86, 0x10, format, 0, 0);
+    CreateRequest(device->request, PK_CMD_CAN_OPERATIONS, 0x10, format, 0, 0);
     *(uint32_t*)(device->request + 8) = CANid;
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
@@ -47,7 +48,7 @@ int32_t PK_CANWrite(sPoKeysDevice* device, sPoKeysCANmsg * msg)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Configure UART
-    CreateRequest(device->request, 0x86, 0x20, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_CAN_OPERATIONS, 0x20, 0, 0, 0);
     memcpy(device->request + 8, msg, sizeof(sPoKeysCANmsg));
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
@@ -58,7 +59,7 @@ int32_t PK_CANRead(sPoKeysDevice* device, sPoKeysCANmsg * msg, uint8_t * status)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Configure UART
-    CreateRequest(device->request, 0x86, 0x31, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_CAN_OPERATIONS, 0x31, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     *status = device->response[3];
@@ -73,7 +74,7 @@ int32_t PK_CANFlush(sPoKeysDevice* device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Configure UART
-    CreateRequest(device->request, 0x86, 0x32, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_CAN_OPERATIONS, 0x32, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }

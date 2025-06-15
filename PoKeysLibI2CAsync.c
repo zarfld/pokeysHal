@@ -66,7 +66,7 @@ int PK_I2CSetStatusAsync(sPoKeysDevice* device, uint8_t activated)
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t params[1] = { activated };
-    int req = CreateRequestAsync(device, 0xDB, params, 1, NULL, 0, NULL);
+    int req = CreateRequestAsync(device, PK_CMD_I2C_COMMUNICATION, params, 1, NULL, 0, NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
 }
@@ -75,7 +75,7 @@ int PK_I2CGetStatusAsync(sPoKeysDevice* device, uint8_t* activated)
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t params[1] = { 0x02 };
-    int req = CreateRequestAsync(device, 0xDB, params, 1, NULL, 0, PK_I2C_StatusParse);
+    int req = CreateRequestAsync(device, PK_CMD_I2C_COMMUNICATION, params, 1, NULL, 0, PK_I2C_StatusParse);
     if (req < 0) return req;
     i2c_ctx[req].status_ptr = activated;
     i2c_ctx[req].used = 1;
@@ -87,7 +87,7 @@ int PK_I2CWriteStartAsync(sPoKeysDevice* device, uint8_t address, uint8_t* buffe
     if (!device) return PK_ERR_NOT_CONNECTED;
     if (iDataLength > 32) iDataLength = 32;
     uint8_t params[3] = { 0x10, address, iDataLength };
-    int req = CreateRequestAsyncWithPayload(device, 0xDB, params, 3, buffer, iDataLength, NULL);
+    int req = CreateRequestAsyncWithPayload(device, PK_CMD_I2C_COMMUNICATION, params, 3, buffer, iDataLength, NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
 }
@@ -97,7 +97,7 @@ int PK_I2CWriteAndReadStartAsync(sPoKeysDevice* device, uint8_t address, uint8_t
     if (!device) return PK_ERR_NOT_CONNECTED;
     if (iDataLengthWrite > 32) iDataLengthWrite = 32;
     uint8_t params[4] = { 0x10, address, iDataLengthWrite, iDataLengthRead };
-    int req = CreateRequestAsyncWithPayload(device, 0xDB, params, 4, buffer, iDataLengthWrite, NULL);
+    int req = CreateRequestAsyncWithPayload(device, PK_CMD_I2C_COMMUNICATION, params, 4, buffer, iDataLengthWrite, NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
 }
@@ -106,7 +106,7 @@ int PK_I2CWriteStatusGetAsync(sPoKeysDevice* device, uint8_t* status)
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t params[1] = { 0x11 };
-    int req = CreateRequestAsync(device, 0xDB, params, 1, NULL, 0, PK_I2C_StatusParse);
+    int req = CreateRequestAsync(device, PK_CMD_I2C_COMMUNICATION, params, 1, NULL, 0, PK_I2C_StatusParse);
     if (req < 0) return req;
     i2c_ctx[req].status_ptr = status;
     i2c_ctx[req].used = 1;
@@ -118,7 +118,7 @@ int PK_I2CReadStartAsync(sPoKeysDevice* device, uint8_t address, uint8_t iDataLe
     if (!device) return PK_ERR_NOT_CONNECTED;
     if (iDataLength > 32) iDataLength = 32;
     uint8_t params[3] = { 0x20, address, iDataLength };
-    int req = CreateRequestAsync(device, 0xDB, params, 3, NULL, 0, NULL);
+    int req = CreateRequestAsync(device, PK_CMD_I2C_COMMUNICATION, params, 3, NULL, 0, NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
 }
@@ -127,7 +127,7 @@ int PK_I2CReadStatusGetAsync(sPoKeysDevice* device, uint8_t* status, uint8_t* iR
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t params[1] = { 0x21 };
-    int req = CreateRequestAsync(device, 0xDB, params, 1, NULL, 0, PK_I2C_ReadStatusParse);
+    int req = CreateRequestAsync(device, PK_CMD_I2C_COMMUNICATION, params, 1, NULL, 0, PK_I2C_ReadStatusParse);
     if (req < 0) return req;
     i2c_ctx[req].status_ptr = status;
     i2c_ctx[req].read_bytes_ptr = iReadBytes;
@@ -141,7 +141,7 @@ int PK_I2CBusScanStartAsync(sPoKeysDevice* device)
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t params[1] = { 0x30 };
-    int req = CreateRequestAsync(device, 0xDB, params, 1, NULL, 0, NULL);
+    int req = CreateRequestAsync(device, PK_CMD_I2C_COMMUNICATION, params, 1, NULL, 0, NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
 }
@@ -151,7 +151,7 @@ int PK_I2CBusScanGetResultsAsync(sPoKeysDevice* device, uint8_t* status, uint8_t
     if (!device) return PK_ERR_NOT_CONNECTED;
     if (iMaxDevices > 128) iMaxDevices = 128;
     uint8_t params[1] = { 0x31 };
-    int req = CreateRequestAsync(device, 0xDB, params, 1, NULL, 0, PK_I2C_BusScanParse);
+    int req = CreateRequestAsync(device, PK_CMD_I2C_COMMUNICATION, params, 1, NULL, 0, PK_I2C_BusScanParse);
     if (req < 0) return req;
     i2c_ctx[req].status_ptr = status;
     i2c_ctx[req].scan_results_ptr = presentDevices;

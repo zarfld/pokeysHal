@@ -19,13 +19,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
+#include "PoKeysLibAsync.h"
 
 int32_t PK_WS2812_Update(sPoKeysDevice* device, uint16_t LEDcount, uint8_t updateFlag)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Configure WS2812 driver
-    CreateRequest(device->request, 0x4B, 0x00, LEDcount & 0xFF, LEDcount >> 8, updateFlag);    
+    CreateRequest(device->request, PK_CMD_WS2812_CONTROL, 0x00, LEDcount & 0xFF, LEDcount >> 8, updateFlag);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }
@@ -37,7 +38,7 @@ int32_t PK_WS2812_SendLEDdataEx(sPoKeysDevice* device, uint32_t * LEDdata, uint1
     if (LEDcount > 18) return PK_ERR_PARAMETER;
 
     // Pack LED data
-    CreateRequest(device->request, 0x4B, 0x10, startLED & 0xFF, startLED >> 8, LEDcount);
+    CreateRequest(device->request, PK_CMD_WS2812_CONTROL, 0x10, startLED & 0xFF, startLED >> 8, LEDcount);
     for (i = 0; i < LEDcount; i++)
     {
         memcpy(device->request + 8 + i*3, &LEDdata[i+LEDoffset], 3);

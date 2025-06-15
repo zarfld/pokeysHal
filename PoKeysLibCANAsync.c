@@ -40,7 +40,7 @@ int PK_CANConfigureAsync(sPoKeysDevice* device, uint32_t bitrate)
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t params[1] = { 0x01 };
-    int req = CreateRequestAsyncWithPayload(device, 0x86, params, 1,
+    int req = CreateRequestAsyncWithPayload(device, PK_CMD_CAN_OPERATIONS, params, 1,
                                             &bitrate, sizeof(uint32_t), NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
@@ -50,7 +50,7 @@ int PK_CANRegisterFilterAsync(sPoKeysDevice* device, uint8_t format, uint32_t CA
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t params[2] = { 0x10, format };
-    int req = CreateRequestAsyncWithPayload(device, 0x86, params, 2,
+    int req = CreateRequestAsyncWithPayload(device, PK_CMD_CAN_OPERATIONS, params, 2,
                                             &CANid, sizeof(uint32_t), NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
@@ -60,7 +60,7 @@ int PK_CANWriteAsync(sPoKeysDevice* device, sPoKeysCANmsg *msg)
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t params[1] = { 0x20 };
-    int req = CreateRequestAsyncWithPayload(device, 0x86, params, 1,
+    int req = CreateRequestAsyncWithPayload(device, PK_CMD_CAN_OPERATIONS, params, 1,
                                             msg, sizeof(sPoKeysCANmsg), NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
@@ -70,7 +70,7 @@ int PK_CANReadAsync(sPoKeysDevice* device, sPoKeysCANmsg *msg, uint8_t *status)
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t params[1] = { 0x31 };
-    int req = CreateRequestAsync(device, 0x86, params, 1,
+    int req = CreateRequestAsync(device, PK_CMD_CAN_OPERATIONS, params, 1,
                                  NULL, 0, PK_CANRead_Parse);
     if (req < 0) return req;
     can_ctx[req].status_ptr = status;
@@ -83,7 +83,7 @@ int PK_CANFlushAsync(sPoKeysDevice* device)
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t params[1] = { 0x32 };
-    int req = CreateRequestAsync(device, 0x86, params, 1, NULL, 0, NULL);
+    int req = CreateRequestAsync(device, PK_CMD_CAN_OPERATIONS, params, 1, NULL, 0, NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
 }

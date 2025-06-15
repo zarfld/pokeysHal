@@ -134,7 +134,7 @@
      uint8_t params[1] = { 0x00 }; // Only param1 used
  
      // Important: Target is NOT device->RTC directly, but temporary response buffer
-     uint8_t req_id = CreateRequestAsync(device, 0x83, params, 1,
+    uint8_t req_id = CreateRequestAsync(device, PK_CMD_RTC_SETTINGS, params, 1,
                                         NULL, 0,
                                 PK_RTCGetAsync_Process); // Set parser function!
     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync: req_id=%d\n", __FILE__, __FUNCTION__, req_id);

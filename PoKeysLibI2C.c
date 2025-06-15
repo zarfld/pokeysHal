@@ -20,13 +20,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
+#include "PoKeysLibAsync.h"
 
 
 int32_t PK_I2CSetStatus(sPoKeysDevice* device, uint8_t activated)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    CreateRequest(device->request, 0xDB, activated, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_I2C_COMMUNICATION, activated, 0, 0, 0);
     return SendRequest(device);
 }
 
@@ -34,7 +35,7 @@ int32_t PK_I2CGetStatus(sPoKeysDevice* device, uint8_t* activated) // Retrieves 
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    CreateRequest(device->request, 0xDB, 0x02, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_I2C_COMMUNICATION, 0x02, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     *activated = device->response[3];
@@ -48,7 +49,7 @@ int32_t PK_I2CWriteStart(sPoKeysDevice* device, uint8_t address, uint8_t* buffer
 
     if (iDataLength > 32) iDataLength = 32;
 
-    CreateRequest(device->request, 0xDB, 0x10, address, iDataLength, 0);
+    CreateRequest(device->request, PK_CMD_I2C_COMMUNICATION, 0x10, address, iDataLength, 0);
     for (i = 0; i < iDataLength; i++)
     {
         device->request[8+i] = buffer[i];
@@ -63,7 +64,7 @@ int32_t PK_I2CWriteAndReadStart(sPoKeysDevice* device, uint8_t address, uint8_t*
 
     if (iDataLengthWrite > 32) iDataLengthWrite = 32;
 
-    CreateRequest(device->request, 0xDB, 0x10, address, iDataLengthWrite, iDataLengthRead);
+    CreateRequest(device->request, PK_CMD_I2C_COMMUNICATION, 0x10, address, iDataLengthWrite, iDataLengthRead);
     for (i = 0; i < iDataLengthWrite; i++)
     {
         device->request[8+i] = buffer[i];
@@ -75,7 +76,7 @@ int32_t PK_I2CWriteStatusGet(sPoKeysDevice* device, uint8_t* status)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    CreateRequest(device->request, 0xDB, 0x11, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_I2C_COMMUNICATION, 0x11, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     *status = device->response[3];
@@ -88,7 +89,7 @@ int32_t PK_I2CReadStart(sPoKeysDevice* device, uint8_t address, uint8_t iDataLen
 
     if (iDataLength > 32) iDataLength = 32;
 
-    CreateRequest(device->request, 0xDB, 0x20, address, iDataLength, 0);
+    CreateRequest(device->request, PK_CMD_I2C_COMMUNICATION, 0x20, address, iDataLength, 0);
     return SendRequest(device);
 }
 
@@ -98,7 +99,7 @@ int32_t PK_I2CReadStatusGet(sPoKeysDevice* device, uint8_t* status, uint8_t* iRe
 
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    CreateRequest(device->request, 0xDB, 0x21, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_I2C_COMMUNICATION, 0x21, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     *status = device->response[3];
@@ -126,7 +127,7 @@ int32_t PK_I2CBusScanStart(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    CreateRequest(device->request, 0xDB, 0x30, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_I2C_COMMUNICATION, 0x30, 0, 0, 0);
     return SendRequest(device);
 }
 
@@ -138,7 +139,7 @@ int32_t PK_I2CBusScanGetResults(sPoKeysDevice* device, uint8_t* status, uint8_t*
 
     if (iMaxDevices > 128) iMaxDevices = 128;
 
-    CreateRequest(device->request, 0xDB, 0x31, 0, 0, 0);
+    CreateRequest(device->request, PK_CMD_I2C_COMMUNICATION, 0x31, 0, 0, 0);
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
 
     *status = device->response[3];
