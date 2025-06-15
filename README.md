@@ -149,6 +149,15 @@ The library now supports PoKeys security management:
 - **PK_RTCSet**
   - Sends the values from `device->RTC` to update the device's internal clock.
 
+## Matrix Keyboard Functions
+
+- **PK_MatrixKBConfigurationGet**
+  - Reads matrix keyboard configuration and key mapping into `device->matrixKB`.
+- **PK_MatrixKBConfigurationSet**
+  - Writes configuration and key mapping from `device->matrixKB` back to the device.
+- **PK_MatrixKBStatusGet**
+  - Updates `device->matrixKB.matrixKBvalues` with the currently pressed keys.
+
 ## Asynchronous IO Wrappers
 
 - **PK_PinConfigurationGetAsync**

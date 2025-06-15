@@ -1261,11 +1261,24 @@ int PK_PWMUpdateAsync(sPoKeysDevice* device);
 int PK_PoExtBusSetAsync(sPoKeysDevice* device);
 int PK_PoExtBusGetAsync(sPoKeysDevice* device);
 
-// Get matrix keyboard configuration
+/**
+ * Read the matrix keyboard configuration and key mapping.
+ *
+ * Populates ::sMatrixKeyboard fields in the device structure using
+ * `PK_CMD_MATRIX_KEYBOARD_CFG` subcommands.
+ */
 POKEYSDECL int32_t PK_MatrixKBConfigurationGet(sPoKeysDevice* device);
-// Set matrix keyboard configuration
+/**
+ * Write the matrix keyboard configuration held in ::sMatrixKeyboard.
+ *
+ * All configuration data is sent using `PK_CMD_MATRIX_KEYBOARD_CFG`
+ * subcommands.
+ */
 POKEYSDECL int32_t PK_MatrixKBConfigurationSet(sPoKeysDevice* device);
-// Get matrix keyboard current key states
+/**
+ * Refresh the matrix keyboard state bitmap stored in
+ * ::sMatrixKeyboard::matrixKBvalues.
+ */
 POKEYSDECL int32_t PK_MatrixKBStatusGet(sPoKeysDevice* device);
 
 /**
