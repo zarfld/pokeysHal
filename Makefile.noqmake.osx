@@ -15,8 +15,10 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-mac.c PoKeysLibFastUSB.c \
         PoKeysLibCANAsync.c \
         PoKeysLibSecurity.c \
         PoKeysLibSecurityAsync.c \
+        PoKeysLibCOSM.c \
+        PoKeysLibCOSMAsync.c \
         PoKeysLibFailsafe.c \
-        PoKeysLibWS2812.c        
+        PoKeysLibWS2812.c
 
 OBJECTS=$(SOURCES:.c=.o)
 

@@ -861,6 +861,18 @@ typedef struct
     uint32_t AnalogRCFilter;
 } sPoKeysOtherPeripherals;
 
+// COSM/HTTP reporting settings
+typedef struct
+{
+    uint16_t updateRate;                            // Report update rate
+    uint8_t  serverIP[4];                           // Server IP address
+    uint16_t serverPort;                            // Server port number
+    uint8_t  requestType;                           // Request type / protocol bits
+    uint16_t lastStatusCode;                        // Last HTTP status code
+    uint8_t  protocolDescription[46];               // Protocol description bytes
+    uint8_t  requestHeaders[5][50];                 // HTTP header in 5 pages
+} sPoKeysCOSMSettings;
+
 
 // Failsafe settings
 typedef struct
@@ -913,6 +925,7 @@ typedef struct
 
     sPoKeysOtherPeripherals   otherPeripherals;
     sPoKeysFailsafeSettings   failsafeSettings;
+    sPoKeysCOSMSettings       COSM;
     ALIGN_TEST(3)
 
     uint8_t                   FastEncodersConfiguration;     // Fast encoders configuration, invert settings and 4x sampling (see protocol specification for details)
@@ -1295,6 +1308,12 @@ POKEYSDECL int32_t PK_UserPasswordSet(sPoKeysDevice* device, uint8_t defaultLeve
 int PK_SecurityStatusGetAsync(sPoKeysDevice* device, uint8_t* level, uint8_t* seed32);
 int PK_UserAuthoriseAsync(sPoKeysDevice* device, uint8_t level, const uint8_t* hash20, uint8_t* status);
 int PK_UserPasswordSetAsync(sPoKeysDevice* device, uint8_t defaultLevel, const uint8_t* password32);
+
+// COSM / HTTP reporting
+POKEYSDECL int32_t PK_COSMSettingsGet(sPoKeysDevice* device);
+POKEYSDECL int32_t PK_COSMSettingsSet(sPoKeysDevice* device);
+int PK_COSMSettingsGetAsync(sPoKeysDevice* device, sPoKeysCOSMSettings* settings);
+int PK_COSMSettingsSetAsync(sPoKeysDevice* device, const sPoKeysCOSMSettings* settings);
 
 // WS2812 commands
 POKEYSDECL int32_t PK_WS2812_Update(sPoKeysDevice* device, uint16_t LEDcount, uint8_t updateFlag);
