@@ -1391,10 +1391,61 @@ POKEYSDECL int32_t PK_UARTWrite(sPoKeysDevice* device, uint8_t interfaceID, uint
 POKEYSDECL int32_t PK_UARTRead(sPoKeysDevice* device, uint8_t interfaceID, uint8_t *dataPtr, uint8_t *dataReadLen);
 
 // CAN commands
+/**
+ * Configure PoCAN bitrate.
+ *
+ * Sends a PK_CMD_CAN_OPERATIONS request with subcommand 0x01
+ * and the requested bitrate as payload.
+ *
+ * @param device Target device handle.
+ * @param bitrate CAN bus bitrate in bits per second.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_CANConfigure(sPoKeysDevice* device, uint32_t bitrate);
+
+/**
+ * Register a CAN filter entry.
+ *
+ * Uses PK_CMD_CAN_OPERATIONS subcommand 0x10.  Parameter
+ * @p format selects the identifier format while @p CANid is the
+ * identifier value.
+ *
+ * @param device Target device handle.
+ * @param format Identifier format (0 = standard, 1 = extended).
+ * @param CANid  CAN identifier to match.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_CANRegisterFilter(sPoKeysDevice* device, uint8_t format, uint32_t CANid);
+
+/**
+ * Transmit a CAN message using subcommand 0x20.
+ *
+ * @param device Target device handle.
+ * @param msg    Pointer to ::sPoKeysCANmsg describing the frame.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_CANWrite(sPoKeysDevice* device, sPoKeysCANmsg * msg);
+
+/**
+ * Read a CAN message from the device.
+ *
+ * The command uses subcommand 0x31 and returns a status byte
+ * indicating message availability.  When non‑zero the message
+ * is copied into @p msg.
+ *
+ * @param device Target device handle.
+ * @param msg    Buffer for received data.
+ * @param status Pointer to availability status byte.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_CANRead(sPoKeysDevice* device, sPoKeysCANmsg * msg, uint8_t * status);
+
+/**
+ * Flush pending CAN messages (subcommand 0x32).
+ *
+ * @param device Target device handle.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_CANFlush(sPoKeysDevice* device);
 // Asynchronous CAN API
 int PK_CANConfigureAsync(sPoKeysDevice* device, uint32_t bitrate);
