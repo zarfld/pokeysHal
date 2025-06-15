@@ -142,6 +142,13 @@ The library now supports PoKeys security management:
 - **PK_ReadDeviceLog**
   - Fetches the device's internal log entries.
 
+## Real-Time Clock Functions
+
+- **PK_RTCGet**
+  - Reads the current time from the device and stores it in the `device->RTC` structure fields.
+- **PK_RTCSet**
+  - Sends the values from `device->RTC` to update the device's internal clock.
+
 ## Asynchronous IO Wrappers
 
 - **PK_PinConfigurationGetAsync**
