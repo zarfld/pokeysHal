@@ -141,3 +141,17 @@ The library now supports PoKeys security management:
   - Reads back the FastUSB enable flag.
 - **PK_ReadDeviceLog**
   - Fetches the device's internal log entries.
+
+## Asynchronous IO Wrappers
+
+- **PK_PinConfigurationGetAsync**
+  - Asynchronous counterpart to `PK_PinConfigurationGet`.
+  - Queues the same requests using `CreateRequestAsync` and returns immediately.
+
+- **PK_PinConfigurationSetAsync**
+  - Asynchronous version of `PK_PinConfigurationSet`.
+  - Builds the configuration packets and schedules them without waiting.
+
+- **PK_DigitalIOSetAsync**
+  - Non-blocking wrapper around `PK_DigitalIOSet`.
+  - Prepares the digital output payload and enqueues it via `CreateRequestAsync`.
