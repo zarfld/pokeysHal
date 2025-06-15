@@ -104,3 +104,40 @@ The library now supports PoKeys security management:
 - **SendRequest_NoResponse**
   - Sends the formatted packet and returns immediately without waiting for any
     reply. Useful for commands that acknowledge by other means.
+
+## Device Information Routines
+
+- **CompareName**
+  - Utility to test whether a device name begins with a given prefix.
+- **PK_DeviceDataGet**
+  - Reads firmware and hardware identifiers, populating `device->DeviceData` and `device->info`.
+- **PK_FillPWMPinNumbers**
+  - Populates `device->PWM.PWMpinIDs` with the PWM-capable pins for the current model.
+- **PK_DeviceNameSet**
+  - Sends the name stored in `device->DeviceData.DeviceName` to the device.
+- **PK_NetworkConfigurationSet**
+  - Writes IP address, subnet and gateway fields from `device->netDeviceData`.
+- **PK_DeviceActivation**
+  - Uploads the activation code and stores the resulting option mask.
+- **PK_DeviceActivationClear**
+  - Clears any stored activation information on the device.
+- **PK_SaveConfiguration**
+  - Persists the current configuration in device flash.
+- **PK_ClearConfiguration**
+  - Resets configuration to defaults without clearing the host structure.
+- **PK_CheckPinCapabilityByDevice**
+  - Checks whether a pin supports a capability for a given device type mask.
+- **PK_CheckPinCapabilityByTypeID**
+  - Same as above but uses an exact device type ID.
+- **PK_CheckPinCapability**
+  - Convenience wrapper for the connected device instance.
+- **PK_CheckPinEnabledCapability**
+  - Placeholder to query if a capability is actually enabled (currently returns `0`).
+- **PK_GetDebugValues**
+  - Retrieves a table of diagnostic counters into the provided buffer.
+- **PK_SetFastUSBEnableStatus**
+  - Enables or disables the FastUSB interface.
+- **PK_GetFastUSBEnableStatus**
+  - Reads back the FastUSB enable flag.
+- **PK_ReadDeviceLog**
+  - Fetches the device's internal log entries.
