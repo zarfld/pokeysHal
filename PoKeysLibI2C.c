@@ -23,6 +23,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibAsync.h"
 
 
+/**
+ * @brief Enable or disable the I\2C interface.
+ *
+ * The PoKeys device keeps the I\2C engine enabled at all times.  This helper
+ * only sends the activation flag for compatibility with older firmware.
+ *
+ * @param device     Handle to an opened PoKeys device.
+ * @param activated  Non-zero to enable the bus, zero to disable it.
+ * @return ::PK_OK on success or ::PK_ERR_NOT_CONNECTED if @p device is NULL.
+ */
 int32_t PK_I2CSetStatus(sPoKeysDevice* device, uint8_t activated)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -31,7 +41,15 @@ int32_t PK_I2CSetStatus(sPoKeysDevice* device, uint8_t activated)
     return SendRequest(device);
 }
 
-int32_t PK_I2CGetStatus(sPoKeysDevice* device, uint8_t* activated) // Retrieves I2C bus activation status
+/**
+ * @brief Query whether the I\2C bus is enabled.
+ *
+ * @param device     Handle to an opened PoKeys device.
+ * @param activated  Pointer that receives the activation state.
+ * @return ::PK_OK on success, ::PK_ERR_NOT_CONNECTED if @p device is NULL or
+ *         ::PK_ERR_TRANSFER on communication failure.
+ */
+int32_t PK_I2CGetStatus(sPoKeysDevice* device, uint8_t* activated)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
@@ -42,6 +60,19 @@ int32_t PK_I2CGetStatus(sPoKeysDevice* device, uint8_t* activated) // Retrieves 
     return PK_OK;
 }
 
+/**
+ * @brief Initiate an I\2C write transaction.
+ *
+ * Up to 32 bytes from @p buffer are copied and sent to the device using
+ * ::PK_CMD_I2C_COMMUNICATION with subcommand @c 0x10.
+ *
+ * @param device      Handle to an opened PoKeys device.
+ * @param address     7-bit I\2C slave address.
+ * @param buffer      Data to transmit.
+ * @param iDataLength Number of bytes to send (0–32).
+ * @return ::PK_OK on command acceptance or ::PK_ERR_NOT_CONNECTED when
+ *         @p device is NULL.
+ */
 int32_t PK_I2CWriteStart(sPoKeysDevice* device, uint8_t address, uint8_t* buffer, uint8_t iDataLength)
 {
     uint32_t i;
@@ -57,6 +88,21 @@ int32_t PK_I2CWriteStart(sPoKeysDevice* device, uint8_t address, uint8_t* buffer
     return SendRequest(device);
 }
 
+/**
+ * @brief Write data and queue a subsequent read from the same address.
+ *
+ * This combines a write and read phase.  Up to 32 bytes are written from
+ * @p buffer and the device is instructed to read @p iDataLengthRead bytes
+ * afterwards. The read data is obtained later with ::PK_I2CReadStatusGet().
+ *
+ * @param device            Handle to an opened PoKeys device.
+ * @param address           I\2C slave address.
+ * @param buffer            Data to write.
+ * @param iDataLengthWrite  Number of bytes to write (0–32).
+ * @param iDataLengthRead   Number of bytes expected to be read back.
+ * @return ::PK_OK on command acceptance or ::PK_ERR_NOT_CONNECTED when
+ *         @p device is NULL.
+ */
 int32_t PK_I2CWriteAndReadStart(sPoKeysDevice* device, uint8_t address, uint8_t* buffer, uint8_t iDataLengthWrite, uint8_t iDataLengthRead)
 {
     uint32_t i;
@@ -72,6 +118,14 @@ int32_t PK_I2CWriteAndReadStart(sPoKeysDevice* device, uint8_t address, uint8_t*
     return SendRequest(device);
 }
 
+/**
+ * @brief Retrieve the status of the last I\2C write operation.
+ *
+ * @param device Handle to an opened PoKeys device.
+ * @param status Receives the result (see ::ePK_I2C_STATUS).
+ * @return ::PK_OK on success, ::PK_ERR_NOT_CONNECTED if @p device is NULL or
+ *         ::PK_ERR_TRANSFER on communication failure.
+ */
 int32_t PK_I2CWriteStatusGet(sPoKeysDevice* device, uint8_t* status)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -83,6 +137,19 @@ int32_t PK_I2CWriteStatusGet(sPoKeysDevice* device, uint8_t* status)
     return PK_OK;
 }
 
+/**
+ * @brief Initiate an I\2C read transaction.
+ *
+ * The device is commanded to read @p iDataLength bytes from the slave at
+ * @p address.  The received data is later obtained with
+ * ::PK_I2CReadStatusGet().
+ *
+ * @param device      Handle to an opened PoKeys device.
+ * @param address     I\2C slave address.
+ * @param iDataLength Number of bytes to read (0–32).
+ * @return ::PK_OK on command acceptance or ::PK_ERR_NOT_CONNECTED when
+ *         @p device is NULL.
+ */
 int32_t PK_I2CReadStart(sPoKeysDevice* device, uint8_t address, uint8_t iDataLength)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -93,6 +160,22 @@ int32_t PK_I2CReadStart(sPoKeysDevice* device, uint8_t address, uint8_t iDataLen
     return SendRequest(device);
 }
 
+/**
+ * @brief Obtain the result of an I\2C read command.
+ *
+ * After a read has been started with PK_I2CReadStart() or
+ * PK_I2CWriteAndReadStart(), this function polls the device for completion and
+ * copies the returned bytes into @p buffer.
+ *
+ * @param device           Handle to an opened PoKeys device.
+ * @param status           Receives the operation status (see ::ePK_I2C_STATUS).
+ * @param iReadBytes       Number of bytes actually read on success.
+ * @param buffer           Destination buffer for the received data.
+ * @param iMaxBufferLength Size of @p buffer in bytes.
+ * @return ::PK_OK on success, ::PK_ERR_NOT_CONNECTED if @p device is NULL,
+ *         ::PK_ERR_TRANSFER on communication failure or ::PK_ERR_GENERIC when
+ *         the device reports more data than fits into 32 bytes.
+ */
 int32_t PK_I2CReadStatusGet(sPoKeysDevice* device, uint8_t* status, uint8_t* iReadBytes, uint8_t* buffer, uint8_t iMaxBufferLength)
 {
     uint32_t i;
@@ -123,6 +206,16 @@ int32_t PK_I2CReadStatusGet(sPoKeysDevice* device, uint8_t* status, uint8_t* iRe
     return PK_OK;
 }
 
+/**
+ * @brief Begin scanning the I\2C bus for devices.
+ *
+ * The device searches all 7-bit addresses. Completion is checked with
+ * ::PK_I2CBusScanGetResults().
+ *
+ * @param device Handle to an opened PoKeys device.
+ * @return ::PK_OK on command acceptance or ::PK_ERR_NOT_CONNECTED when
+ *         @p device is NULL.
+ */
 int32_t PK_I2CBusScanStart(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -131,6 +224,20 @@ int32_t PK_I2CBusScanStart(sPoKeysDevice* device)
     return SendRequest(device);
 }
 
+/**
+ * @brief Obtain the results of an I\2C bus scan.
+ *
+ * After PK_I2CBusScanStart() completes, this helper reads the scan bitmap and
+ * stores device presence information into @p presentDevices.
+ *
+ * @param device         Handle to an opened PoKeys device.
+ * @param status         Receives the scan status (see ::ePK_I2C_STATUS).
+ * @param presentDevices Array that receives one byte per address indicating
+ *                       whether a device acknowledged.
+ * @param iMaxDevices    Maximum number of addresses to report (up to 128).
+ * @return ::PK_OK on success, ::PK_ERR_NOT_CONNECTED if @p device is NULL or
+ *         ::PK_ERR_TRANSFER on communication failure.
+ */
 int32_t PK_I2CBusScanGetResults(sPoKeysDevice* device, uint8_t* status, uint8_t* presentDevices, uint8_t iMaxDevices)
 {
     uint32_t i;
