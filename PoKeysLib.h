@@ -1398,7 +1398,26 @@ int PK_UserAuthoriseAsync(sPoKeysDevice* device, uint8_t level, const uint8_t* h
 int PK_UserPasswordSetAsync(sPoKeysDevice* device, uint8_t defaultLevel, const uint8_t* password32);
 
 // COSM / HTTP reporting
+/**
+ * Retrieve COSM/HTTP reporting settings from the device.
+ *
+ * Uses PK_CMD_COSM_SETTINGS operations 0..5 to read basic parameters
+ * and header pages into the device COSM structure.
+ *
+ * @param device Target device handle.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_COSMSettingsGet(sPoKeysDevice* device);
+
+/**
+ * Write COSM/HTTP reporting settings to the device.
+ *
+ * Uses PK_CMD_COSM_SETTINGS operations 10..15, sending the data from
+ * the device COSM structure.
+ *
+ * @param device Target device handle.
+ * @return Result code from SendRequest().
+ */
 POKEYSDECL int32_t PK_COSMSettingsSet(sPoKeysDevice* device);
 int PK_COSMSettingsGetAsync(sPoKeysDevice* device, sPoKeysCOSMSettings* settings);
 int PK_COSMSettingsSetAsync(sPoKeysDevice* device, const sPoKeysCOSMSettings* settings);
