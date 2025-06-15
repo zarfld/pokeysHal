@@ -21,6 +21,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibHal.h"
 #include "PoKeysLibCore.h"
 
+/**
+ * Decode interpreter state response into the device structure.
+ *
+ * The function expects that @p device->response already holds data
+ * returned by the PK_CMD_POIL_OPERATIONS command.  It parses the
+ * contents and updates the ::sPoKeysDevice::PoIL fields accordingly.
+ *
+ * @param device Pointer to an initialized device structure that
+ *               received the response.
+ */
 void PK_ParsePoILStateResponse(sPoKeysDevice* device)
 {
     if (device == NULL) return;
@@ -52,6 +62,9 @@ void PK_ParsePoILStateResponse(sPoKeysDevice* device)
     device->PoIL.taskCount = device->response[60];
 }
 
+/**
+ * Query interpreter status from the device.
+ */
 int32_t PK_PoILGetState(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -67,6 +80,9 @@ int32_t PK_PoILGetState(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * Request a change of interpreter core state.
+ */
 int32_t PK_PoILSetCoreState(sPoKeysDevice* device, uint16_t state)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -79,6 +95,9 @@ int32_t PK_PoILSetCoreState(sPoKeysDevice* device, uint16_t state)
     return PK_OK;
 }
 
+/**
+ * Enable or disable the interpreter execution engine.
+ */
 int32_t PK_PoILSetMasterEnable(sPoKeysDevice* device, uint8_t masterEnable)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -91,6 +110,9 @@ int32_t PK_PoILSetMasterEnable(sPoKeysDevice* device, uint8_t masterEnable)
     return PK_OK;
 }
 
+/**
+ * Reset the interpreter core on the device.
+ */
 int32_t PK_PoILResetCore(sPoKeysDevice* device)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -103,6 +125,9 @@ int32_t PK_PoILResetCore(sPoKeysDevice* device)
     return PK_OK;
 }
 
+/**
+ * Configure interpreter debug mode and breakpoint.
+ */
 int32_t PK_PoILSetDebugMode(sPoKeysDevice* device, uint8_t debugMode, uint16_t breakpoint)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -115,6 +140,9 @@ int32_t PK_PoILSetDebugMode(sPoKeysDevice* device, uint8_t debugMode, uint16_t b
     return PK_OK;
 }
 
+/**
+ * Read a block of interpreter memory.
+ */
 int32_t PK_PoILReadMemory(sPoKeysDevice* device, uint8_t memoryType, uint16_t address, uint16_t size, uint8_t * dest)
 {
     uint32_t i;
@@ -144,6 +172,9 @@ int32_t PK_PoILReadMemory(sPoKeysDevice* device, uint8_t memoryType, uint16_t ad
 }
 
 
+/**
+ * Write a block of interpreter memory.
+ */
 int32_t PK_PoILWriteMemory(sPoKeysDevice* device, uint8_t memoryType, uint16_t address, uint16_t size, uint8_t * src)
 {
     uint32_t i;
@@ -191,6 +222,9 @@ int32_t PK_PoILWriteMemory(sPoKeysDevice* device, uint8_t memoryType, uint16_t a
     return PK_OK;
 }
 
+/**
+ * Read interpreter shared-slot variables.
+ */
 int32_t PK_PoILReadSharedSlot(sPoKeysDevice* device, uint16_t firstSlotID, uint16_t slotsNum, int * dest)
 {
     uint32_t i;
@@ -220,6 +254,9 @@ int32_t PK_PoILReadSharedSlot(sPoKeysDevice* device, uint16_t firstSlotID, uint1
 }
 
 
+/**
+ * Write interpreter shared-slot variables.
+ */
 int32_t PK_PoILWriteSharedSlot(sPoKeysDevice* device, uint16_t firstSlotID, uint16_t slotsNum, int32_t * src)
 {
     uint32_t i;
@@ -250,6 +287,9 @@ int32_t PK_PoILWriteSharedSlot(sPoKeysDevice* device, uint16_t firstSlotID, uint
     return PK_OK;
 }
 
+/**
+ * Erase a region of interpreter memory.
+ */
 int32_t PK_PoILEraseMemory(sPoKeysDevice* device, uint8_t memoryType)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
@@ -260,6 +300,9 @@ int32_t PK_PoILEraseMemory(sPoKeysDevice* device, uint8_t memoryType)
     return PK_OK;
 }
 
+/**
+ * Read a set of preconfigured memory chunks.
+ */
 int32_t PK_PoILChunkReadMemory(sPoKeysDevice * device, uint8_t * dest)
 {
     uint32_t i;
@@ -285,6 +328,9 @@ int32_t PK_PoILChunkReadMemory(sPoKeysDevice * device, uint8_t * dest)
 }
 
 
+/**
+ * Read memory monitor chunks using internal addresses.
+ */
 int32_t PK_PoILChunkReadMemoryInternalAddress(sPoKeysDevice * device, uint8_t * dest)
 {
     uint32_t i;
@@ -308,6 +354,9 @@ int32_t PK_PoILChunkReadMemoryInternalAddress(sPoKeysDevice * device, uint8_t * 
     return PK_OK;
 }
 
+/**
+ * Retrieve status information for all interpreter tasks.
+ */
 int32_t PK_PoILTaskStatus(sPoKeysDevice * device)
 {
     uint32_t i = 0, k = 0;
