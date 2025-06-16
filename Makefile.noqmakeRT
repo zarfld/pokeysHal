@@ -36,6 +36,8 @@ install_userspace: all
 install: static
 	cp libPoKeysHal.a /usr/lib
 	cp PoKeysLibHal.h /usr/include
+	cp PoKeysLibDevicePoKeys57Industrial.h /usr/include
+	cp hal-canon/hal_canon.h /usr/include
 
 all: $(SOURCES) libPoKeysHal.so
 
