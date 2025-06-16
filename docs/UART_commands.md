@@ -17,3 +17,17 @@ This document summarises the helper functions implemented in **PoKeysLibUART.c**
 * **Subcommand**: `0x30`
 * **Response fields**: byte count followed by the received data which is copied to `dataPtr`.
 
+
+## Asynchronous API
+
+For realtime applications the following wrappers perform the same UART
+operations without blocking the caller. Each function schedules a request
+using `CreateRequestAsync` and returns immediately while the transfer
+is completed by the background send/receive threads.
+
+- `PK_UARTConfigureAsync`
+- `PK_UARTWriteAsync`
+- `PK_UARTReadAsync`
+
+These are fully compatible with hard realtime threads because no network
+waits occur during the call.

@@ -183,3 +183,5 @@ The library now supports PoKeys security management:
 - **PK_LCDConfigurationGetAsync / SetAsync / UpdateAsync**
   - New helpers for the character LCD.
   - Use the same async request queue to avoid blocking the realtime thread.
+- **PK_UARTConfigureAsync / WriteAsync / ReadAsync**
+  - Non-blocking UART helpers using the same async queue.
