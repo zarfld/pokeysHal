@@ -6,7 +6,7 @@ LDFLAGS=-lusb-1.0 -lpthread
 SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-libusb.c PoKeysLibFastUSB.c \
         PoKeysLibDeviceData.c \
         PoKeysLibCoreSockets.c PoKeysLibCoreSocketsAsync.c \
-        PoKeysLibAsync.c 
+        PoKeysLibAsync.c \
         PoKeysLibIO.c PoKeysLibIOAsync.c \
         PoKeysLibEncoders.c PoKeysLibMatrixLED.c PoKeysLibMatrixKB.c \
         PoKeysLibPoNET.c PoKeysLibLCD.c PoKeysLibRTC.c \
