@@ -9,7 +9,6 @@
  */
 
 #include "PoKeysLibHal.h"
-#include "PoKeysLibDevicePoKeys57Industrial.h"
 #include "PoKeysLibAsync.h"
 #include "PoKeysLibCoreSocketsAsync.h"
 #include "hidapi.h"
