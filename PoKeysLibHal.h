@@ -1583,6 +1583,11 @@ POKEYSDECL int32_t PK_EasySensorsSetupSet(sPoKeysDevice* device);
  */
 POKEYSDECL int32_t PK_EasySensorsValueGetAll(sPoKeysDevice* device);
 
+// Asynchronous EasySensor API
+int PK_EasySensorsSetupGetAsync(sPoKeysDevice* device);
+int PK_EasySensorsSetupSetAsync(sPoKeysDevice* device);
+int PK_EasySensorsValueGetAllAsync(sPoKeysDevice* device);
+
 /**
  * Retrieve failsafe configuration from the device.
  *
