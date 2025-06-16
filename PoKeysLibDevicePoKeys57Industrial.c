@@ -310,8 +310,7 @@ int32_t PK57i_SearchDevice(sPoKeysNetworkDeviceSummary* device, uint32_t timeout
 #endif
         {
             debug_printf("Error sending discovery request to %s\n", inet_ntoa(remoteEP.sin_addr));
-            free(addrPtr);
-        }
+           // free(addrPtr);
 #ifdef WIN32
             closesocket(txSocket);
             WSACleanup();
