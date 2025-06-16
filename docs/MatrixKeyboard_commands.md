@@ -18,3 +18,17 @@ All operations issue subcommands of `PK_CMD_MATRIX_KEYBOARD_CFG` (`0xCA`).
 ### PK_MatrixKBStatusGet
 * **Subcommand**: `20`
 * **Response fields**: bytes 8‒23 contain a bit mask for the pressed keys which updates `matrixKBvalues`.
+
+## Asynchronous API
+
+For realtime tasks the following wrappers in `PoKeysLibMatrixKBAsync.c` perform
+the same configuration and polling steps without blocking. Each call schedules
+the UDP request using `CreateRequestAsync` so only negligible CPU time is spent
+in the caller:
+
+- `PK_MatrixKBConfigurationGetAsync`
+- `PK_MatrixKBConfigurationSetAsync`
+- `PK_MatrixKBStatusGetAsync`
+
+The background dispatcher updates the device structure when packets arrive,
+ensuring minimal latency and consistent non-blocking behaviour.

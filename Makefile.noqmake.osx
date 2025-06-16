@@ -7,6 +7,7 @@ LDFLAGS=-lusb-1.0 -framework IOKit -framework CoreFoundation -L/usr/lib/ -L/opt/
 SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-mac.c PoKeysLibFastUSB.c \
         PoKeysLibDeviceData.c PoKeysLibDeviceDataAsync.c \
         PoKeysLibIO.c PoKeysLibEncoders.c PoKeysLibMatrixLED.c PoKeysLibMatrixKB.c \
+        PoKeysLibMatrixKBAsync.c \
         PoKeysLibPoNET.c PoKeysLibLCD.c PoKeysLibRTC.c \
         PoKeysLibEasySensors.c PoKeysLibEasySensorsAsync.c PoKeysLibI2C.c PoKeysLib1Wire.c PoKeysLibSPI.c \
         PoKeysLibPulseEngine_v2.c \

@@ -17,6 +17,7 @@ add_library(PoKeys SHARED
             PoKeysLibEncoders.c
             PoKeysLibMatrixLED.c
             PoKeysLibMatrixKB.c
+            PoKeysLibMatrixKBAsync.c
             PoKeysLibPoNET.c
             PoKeysLibLCD.c
             PoKeysLibLCDAsync.c
