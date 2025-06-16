@@ -230,7 +230,7 @@ sPoKeys57Industrial* PK57i_ConnectAsync(void)
             }
             else
             {
-                connStage = C_IDLE; /* not found */
+                connStage = C_IDLE; 
             }
             break;
 */
