@@ -73,7 +73,7 @@ typedef unsigned long uint32;
     }
 #endif
 
-static uint32 * GetBroadcastAddresses()
+uint32 * GetBroadcastAddresses()
 {
     uint32 * list = hal_malloc(sizeof(uint32) * 100);
     uint32* ptr = list;
