@@ -55,6 +55,7 @@
 
 #include "hal.h" // Make sure to include LinuxCNC's hal.h first
 #include "hal_canon.h"
+#include "PoKeysLibDevicePoKeys57Industrial.h"
 
 //#define USE_ALIGN_TEST
 
