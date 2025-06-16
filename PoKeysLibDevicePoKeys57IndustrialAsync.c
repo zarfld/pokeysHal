@@ -26,7 +26,7 @@ typedef struct {
 extern int PK_SearchNetworkDevicesAsync_Start(sPoKeysNetworkDeviceSummary* devices, uint32_t timeout_ms, uint32_t serial);
 extern int PK_SearchNetworkDevicesAsync_Process(void);
 // extern int32_t PK_EnumerateUSBDevicesAsync(PKUSBEnumerator *ctx); no USB in RTAPI !!!
-extern sPoKeysDevice* PK_ConnectToDeviceAsync(uint32_t deviceIndex);
+//extern sPoKeysDevice* PK_ConnectToDeviceAsync(uint32_t deviceIndex);
 #include <string.h>
 
 /* ---------- Device discovery ---------- */
@@ -206,7 +206,7 @@ sPoKeys57Industrial* PK57i_ConnectAsync(void)
                 connStage = C_CONNECT_USB;
             }
             break;
-*/
+
         case C_CONNECT_USB:
             if (usbIdx < (uint32_t)usbEnum.numDevices)
             {
@@ -233,7 +233,7 @@ sPoKeys57Industrial* PK57i_ConnectAsync(void)
                 connStage = C_IDLE; /* not found */
             }
             break;
-
+*/
         case C_DONE:
             connStage = C_IDLE;
             return result;
