@@ -9,7 +9,7 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c PoKeysLibFastUSB.c \
         PoKeysLibPoNET.c PoKeysLibLCD.c PoKeysLibRTC.c \
         PoKeysLibEasySensors.c PoKeysLibEasySensorsAsync.c PoKeysLibI2C.c PoKeysLib1Wire.c PoKeysLibSPI.c \
         PoKeysLibPulseEngine_v2.c \
-        PoKeysLibUART.c \
+        PoKeysLibUART.c PoKeysLibUARTAsync.c \
         PoKeysLibCAN.c \
         PoKeysLibCANAsync.c \
         PoKeysLibSecurity.c \
