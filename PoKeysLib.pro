@@ -59,6 +59,7 @@ SOURCES += PoKeysLibCore.c \
     PoKeysLibCAN.c \
     PoKeysLibWS2812.c \
     PoKeysLibFailsafe.c \
+    PoKeysLibFailsafeAsync.c \
     PoKeysLibDevicePoKeys57Industrial.c \
     PoKeysLibDevicePoKeys57IndustrialAsync.c
 

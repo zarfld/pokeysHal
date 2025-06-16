@@ -31,11 +31,13 @@ add_library(PoKeys SHARED
             PoKeysLibCANAsync.c
             PoKeysLibSecurity.c
             PoKeysLibSecurityAsync.c
-            PoKeysLibCOSM.c
-            PoKeysLibCOSMAsync.c
-            PoKeysLibUART.c
-            PoKeysLibWS2812.c
-            PoKeysLibWS2812Async.c)
+             PoKeysLibCOSM.c
+             PoKeysLibCOSMAsync.c
+             PoKeysLibFailsafe.c
+             PoKeysLibFailsafeAsync.c
+             PoKeysLibUART.c
+             PoKeysLibWS2812.c
+             PoKeysLibWS2812Async.c)
 
 install(FILES PoKeysLib.h DESTINATION include)
 install(TARGETS PoKeys DESTINATION lib)

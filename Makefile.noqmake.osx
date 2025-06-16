@@ -18,7 +18,7 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-mac.c PoKeysLibFastUSB.c \
         PoKeysLibSecurityAsync.c \
         PoKeysLibCOSM.c \
         PoKeysLibCOSMAsync.c \
-        PoKeysLibFailsafe.c \
+        PoKeysLibFailsafe.c PoKeysLibFailsafeAsync.c \
         PoKeysLibLCDAsync.c \
         PoKeysLibWS2812.c PoKeysLibWS2812Async.c
 
