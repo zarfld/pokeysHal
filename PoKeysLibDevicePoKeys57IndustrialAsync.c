@@ -25,7 +25,7 @@ typedef struct {
 
 extern int PK_SearchNetworkDevicesAsync_Start(sPoKeysNetworkDeviceSummary* devices, uint32_t timeout_ms, uint32_t serial);
 extern int PK_SearchNetworkDevicesAsync_Process(void);
-extern int32_t PK_EnumerateUSBDevicesAsync(PKUSBEnumerator *ctx);
+// extern int32_t PK_EnumerateUSBDevicesAsync(PKUSBEnumerator *ctx); no USB in RTAPI !!!
 extern sPoKeysDevice* PK_ConnectToDeviceAsync(uint32_t deviceIndex);
 #include <string.h>
 
@@ -193,7 +193,7 @@ sPoKeys57Industrial* PK57i_ConnectAsync(void)
                 connStage = C_DONE;
             }
             break;
-
+/* no USB in RTAPI !!!
         case C_ENUM_START:
             memset(&usbEnum,0,sizeof(usbEnum));
             connStage = C_ENUM_WAIT;
@@ -206,7 +206,7 @@ sPoKeys57Industrial* PK57i_ConnectAsync(void)
                 connStage = C_CONNECT_USB;
             }
             break;
-
+*/
         case C_CONNECT_USB:
             if (usbIdx < (uint32_t)usbEnum.numDevices)
             {
