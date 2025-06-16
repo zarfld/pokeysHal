@@ -4,7 +4,7 @@ AR = ar
 CFLAGS=-fPIC -DULAPI -I/usr/include/linuxcnc -Ihal-canon
 LDFLAGS=-lusb-1.0 -lpthread
 SOURCES=PoKeysLibCore.c hid-libusb.c PoKeysLibFastUSB.c \
-        PoKeysLibDeviceData.c \
+        PoKeysLibDeviceData.c PoKeysLibDeviceDataAsync.c \
         PoKeysLibCoreSockets.c PoKeysLibCoreSocketsAsync.c \
         PoKeysLibAsync.c \
         PoKeysLibIO.c PoKeysLibIOAsync.c \
