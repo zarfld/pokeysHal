@@ -40,8 +40,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "PoKeysLibCoreSockets.h"
 #include "string.h"
 #include "stdio.h"
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include <sys/stat.h>
+
 /**
  * @file PoKeysLibDevicePoKeys57Industrial.c
  * @brief Support for the PoKeys57Industrial device.
@@ -322,7 +322,7 @@ int32_t PK57i_SearchDevice(sPoKeysNetworkDeviceSummary* device, uint32_t timeout
         }
         addr++;
     }
-    free(addrPtr);
+   // free(addrPtr);
 
 #ifdef WIN32
 
