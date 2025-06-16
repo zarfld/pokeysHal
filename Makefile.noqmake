@@ -24,7 +24,6 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-libusb.c PoKeysLibFastUSB.c \
         PoKeysLibEncodersAsync.c \
         PoKeysLibRTCAsync.c \
         PoKeysLibIOAsync.c \
-
         hal-canon/hal_digital.c \
         hal-canon/hal_analog.c \
         hal-canon/hal_encoder.c
