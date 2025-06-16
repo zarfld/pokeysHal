@@ -9,6 +9,7 @@ SOURCES=PoKeysLibCore.c hid-libusb.c PoKeysLibFastUSB.c \
         PoKeysLibAsync.c \
         PoKeysLibIO.c PoKeysLibIOAsync.c \
         PoKeysLibEncoders.c PoKeysLibMatrixLED.c PoKeysLibMatrixKB.c \
+        PoKeysLibMatrixKBAsync.c \
         PoKeysLibPoNET.c PoKeysLibLCD.c PoKeysLibRTC.c \
         PoKeysLibEasySensors.c PoKeysLibEasySensorsAsync.c PoKeysLibI2C.c PoKeysLib1Wire.c PoKeysLibSPI.c \
         PoKeysLibPulseEngine_v2.c \
