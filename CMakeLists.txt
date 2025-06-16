@@ -19,6 +19,7 @@ add_library(PoKeys SHARED
             PoKeysLibMatrixKB.c
             PoKeysLibPoNET.c
             PoKeysLibLCD.c
+            PoKeysLibLCDAsync.c
             PoKeysLibRTC.c
             PoKeysLibEasySensors.c
             PoKeysLibI2C.c

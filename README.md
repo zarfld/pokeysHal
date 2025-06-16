@@ -180,3 +180,6 @@ The library now supports PoKeys security management:
 - **PK_DigitalIOSetAsync**
   - Non-blocking wrapper around `PK_DigitalIOSet`.
   - Prepares the digital output payload and enqueues it via `CreateRequestAsync`.
+- **PK_LCDConfigurationGetAsync / SetAsync / UpdateAsync**
+  - New helpers for the character LCD.
+  - Use the same async request queue to avoid blocking the realtime thread.

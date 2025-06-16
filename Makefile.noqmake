@@ -24,6 +24,7 @@ SOURCES=PoKeysLibCore.c hid-libusb.c PoKeysLibFastUSB.c \
         PoKeysLibI2CAsync.c PoKeysLib1WireAsync.c \
         PoKeysLibWS2812.c \
         PoKeysLibEncodersAsync.c \
+        PoKeysLibLCDAsync.c \
         PoKeysLibRTCAsync.c \
         hal-canon/hal_digital.c \
         hal-canon/hal_analog.c \
