@@ -59,7 +59,8 @@ SOURCES += PoKeysLibCore.c \
     PoKeysLibCAN.c \
     PoKeysLibWS2812.c \
     PoKeysLibFailsafe.c \
-    PoKeysLibDevicePoKeys57Industrial.c
+    PoKeysLibDevicePoKeys57Industrial.c \
+    PoKeysLibDevicePoKeys57IndustrialAsync.c
 
 win32: SOURCES += hid.c
 

@@ -55,6 +55,7 @@
 
 #include "hal.h" // Make sure to include LinuxCNC's hal.h first
 #include "hal_canon.h"
+#include "PoKeysLibDevicePoKeys57Industrial.h"
 
 //#define USE_ALIGN_TEST
 
@@ -72,9 +73,9 @@
 #pragma warning(disable:4996)
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
+
 // Pin capabilities / configuration
 enum ePK_PinCap
 {
@@ -1726,6 +1727,13 @@ int PK_CANRegisterFilterAsync(sPoKeysDevice* device, uint8_t format, uint32_t CA
 int PK_CANWriteAsync(sPoKeysDevice* device, sPoKeysCANmsg * msg);
 int PK_CANReadAsync(sPoKeysDevice* device, sPoKeysCANmsg * msg, uint8_t * status);
 int PK_CANFlushAsync(sPoKeysDevice* device);
+
+/* Async helpers for the PoKeys57Industrial board */
+int PK57i_SearchDeviceAsync_Start(uint32_t timeout_ms);
+int PK57i_SearchDeviceAsync_Process(sPoKeysNetworkDeviceSummary* device);
+sPoKeys57Industrial* PK57i_ConnectAsync(void);
+void PK57i_DisconnectAsync(sPoKeys57Industrial* device);
+int PK57i_UpdateAsync(sPoKeys57Industrial* device, uint8_t resetFaults);
 
 // Security commands
 /**
