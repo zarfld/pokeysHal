@@ -1507,6 +1507,8 @@ POKEYSDECL int32_t PK_EasySensorsValueGetAll(sPoKeysDevice* device);
 // Failsafe settings
 POKEYSDECL int32_t PK_FailsafeSettingsGet(sPoKeysDevice* device);
 POKEYSDECL int32_t PK_FailsafeSettingsSet(sPoKeysDevice* device);
+int PK_FailsafeSettingsGetAsync(sPoKeysDevice* device);
+int PK_FailsafeSettingsSetAsync(sPoKeysDevice* device);
 
 // SPI operations
 POKEYSDECL int32_t PK_SPIConfigure(sPoKeysDevice * device, uint8_t prescaler, uint8_t frameFormat);

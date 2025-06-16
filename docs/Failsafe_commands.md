@@ -11,3 +11,12 @@ This document summarises the helper functions implemented in **PoKeysLibFailsafe
 ### PK_FailsafeSettingsSet
 * **Subcommand**: `1`
 * **Request payload**: settings from `sPoKeysFailsafeSettings` are written back to the device.
+
+## Asynchronous API
+
+For realtime tasks the following wrappers in `PoKeysLibFailsafeAsync.c` perform
+the same operations without waiting for network I/O. Each call schedules the
+request with `CreateRequestAsync` and returns immediately.
+
+- `PK_FailsafeSettingsGetAsync`
+- `PK_FailsafeSettingsSetAsync`

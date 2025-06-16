@@ -1609,6 +1609,8 @@ POKEYSDECL int32_t PK_FailsafeSettingsGet(sPoKeysDevice* device);
  * @return ::PK_OK on success or a negative ::PK_ERR code on failure.
  */
 POKEYSDECL int32_t PK_FailsafeSettingsSet(sPoKeysDevice* device);
+int PK_FailsafeSettingsGetAsync(sPoKeysDevice* device);
+int PK_FailsafeSettingsSetAsync(sPoKeysDevice* device);
 
 // SPI operations
 POKEYSDECL int32_t PK_SPIConfigure(sPoKeysDevice * device, uint8_t prescaler, uint8_t frameFormat);
