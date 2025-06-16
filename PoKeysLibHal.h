@@ -1512,6 +1512,16 @@ POKEYSDECL int32_t PK_PoNETSetModulePWM(sPoKeysDevice* device);
 POKEYSDECL int32_t PK_PoNETGetModuleLightRequest(sPoKeysDevice* device);
 POKEYSDECL int32_t PK_PoNETGetModuleLight(sPoKeysDevice* device);
 
+// Asynchronous PoNET API
+int PK_PoNETGetPoNETStatusAsync(sPoKeysDevice* device);
+int PK_PoNETGetModuleSettingsAsync(sPoKeysDevice* device);
+int PK_PoNETGetModuleStatusRequestAsync(sPoKeysDevice* device);
+int PK_PoNETGetModuleStatusAsync(sPoKeysDevice* device);
+int PK_PoNETSetModuleStatusAsync(sPoKeysDevice* device);
+int PK_PoNETSetModulePWMAsync(sPoKeysDevice* device);
+int PK_PoNETGetModuleLightRequestAsync(sPoKeysDevice* device);
+int PK_PoNETGetModuleLightAsync(sPoKeysDevice* device);
+
 // 1-wire operations
 // Set 1-wire activation status
 POKEYSDECL int32_t PK_1WireStatusSet(sPoKeysDevice* device, uint8_t activated);
