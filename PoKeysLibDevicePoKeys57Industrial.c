@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
     #include <net/if.h>
     #include <sys/ioctl.h>
 #endif
-#include "PoKeysLibDevicePoKeys57Industrial.h"
+//#include "PoKeysLibDevicePoKeys57Industrial.h"
 #include "PoKeysLibCoreSockets.h"
 #include "string.h"
 #include "stdio.h"
