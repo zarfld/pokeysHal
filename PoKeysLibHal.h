@@ -1410,6 +1410,13 @@ POKEYSDECL int32_t PK_PEv2_PulseEngineSetup(sPoKeysDevice * device);
 POKEYSDECL int32_t PK_PEv2_AdditionalParametersGet(sPoKeysDevice * device);
 // Set additional parameters
 POKEYSDECL int32_t PK_PEv2_AdditionalParametersSet(sPoKeysDevice * device);
+int PK_PEv2_StatusGetAsync(sPoKeysDevice * device);
+int PK_PEv2_Status2GetAsync(sPoKeysDevice * device);
+int PK_PEv2_PulseEngineSetupAsync(sPoKeysDevice * device);
+int PK_PEv2_AdditionalParametersGetAsync(sPoKeysDevice * device);
+int PK_PEv2_AdditionalParametersSetAsync(sPoKeysDevice * device);
+int PK_PEv2_AxisConfigurationGetAsync(sPoKeysDevice * device);
+int PK_PEv2_AxisConfigurationSetAsync(sPoKeysDevice * device);
 // Retrieve single axis parameters. Axis ID is in param1
 POKEYSDECL int32_t PK_PEv2_AxisConfigurationGet(sPoKeysDevice * device);
 // Set single axis parameters. Axis ID is in param1
