@@ -4,7 +4,7 @@ AR = ar
 CFLAGS=-fPIC -DRTAPI -I/usr/include/linuxcnc
 LDFLAGS=-lpthread
 SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c PoKeysLibFastUSB.c \
-        PoKeysLibDeviceData.c \
+        PoKeysLibDeviceData.c PoKeysLibDeviceDataAsync.c \
         PoKeysLibIO.c PoKeysLibEncoders.c PoKeysLibMatrixLED.c PoKeysLibMatrixKB.c \
         PoKeysLibPoNET.c PoKeysLibLCD.c PoKeysLibRTC.c \
         PoKeysLibEasySensors.c PoKeysLibI2C.c PoKeysLib1Wire.c PoKeysLibSPI.c \

@@ -1112,6 +1112,11 @@ POKEYSDECL void PK_ReleaseDeviceStructure(sPoKeysDevice* device);
 
 // Retrieve device-specific information (this also gets automatically called when the connection with the device is established)
 POKEYSDECL int32_t PK_DeviceDataGet(sPoKeysDevice * device);
+// Asynchronous variant of PK_DeviceDataGet. This queues multiple
+// non-blocking requests using the async transaction framework and
+// returns immediately. Parsed values are written into the provided
+// device structure once responses are received.
+int PK_DeviceDataGetAsync(sPoKeysDevice* device);
 // Start device activation with the activation code, specified in the device structure
 POKEYSDECL int32_t PK_DeviceActivation(sPoKeysDevice * device);
 // Clear activated options in the device
