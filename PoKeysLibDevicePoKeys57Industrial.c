@@ -303,8 +303,15 @@ int32_t PK57i_SearchDevice(sPoKeysNetworkDeviceSummary* device, uint32_t timeout
         remoteEP.sin_port = htons(20055);
         remoteEP.sin_addr.s_addr = a; // inet_addr("255.255.255.255");
 
-        if (sendto(txSocket, SendBuf, BufLen, 0, (SOCKADDR *)&remoteEP, sizeof(remoteEP)) == -1)
+#ifdef WIN32
+            if (sendto(txSocket, SendBuf, BufLen, 0, (SOCKADDR *)&remoteEP, sizeof(remoteEP)) == -1)
+#else
+            if (sendto(txSocket, SendBuf, BufLen, 0, (struct sockaddr *)&remoteEP, sizeof(remoteEP)) == -1)
+#endif
         {
+            debug_printf("Error sending discovery request to %s\n", inet_ntoa(remoteEP.sin_addr));
+            free(addrPtr);
+        }
 #ifdef WIN32
             closesocket(txSocket);
             WSACleanup();
