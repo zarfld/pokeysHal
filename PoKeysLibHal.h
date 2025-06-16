@@ -1016,6 +1016,47 @@ typedef struct
  
 } sPoKeysDevice;
 
+  typedef struct
+        {
+            // Device info section
+            uint32_t SerialNumber;                                   // Serial number
+            uint8_t  FirmwareVersionMajor;                           // Firmware version - major
+            uint8_t  FirmwareVersionMinor;                           // Firmware version - minor
+            uint8_t  UserID;                                         // User ID
+            uint8_t  HWtype;                                         // HW type, reported by device
+
+            uint8_t  IPaddress[4];                                   // IP address of the device
+            uint8_t  reserved[4];
+
+            // I/O related structures
+            uint32_t digitalInputs[8];
+
+            uint32_t digitalOutputs[8];
+            uint32_t digitalOutputsEnable[8];
+            uint32_t digitalOutputsFault[8];
+
+            uint32_t analogInputs[8];
+
+            uint32_t analogOutputs[8];
+            uint32_t analogOutputsFault[8];
+
+            // Device structure
+            void*    deviceStructure;
+#if INTPTR_MAX == INT64_MAX
+    // 64-bit
+#elif INTPTR_MAX == INT32_MAX
+    // 32-bit - pad the structure with 4 bytes
+            uint32_t pointerPad;
+
+#endif
+        } sPoKeys57Industrial;
+
+        /** Connect to a PoKeys57Industrial device (network or USB). */
+        POKEYSDECL sPoKeys57Industrial* PK57i_Connect(void);
+        /** Disconnect and release the PoKeys57Industrial handle. */
+        POKEYSDECL void PK57i_Disconnect(sPoKeys57Industrial * device);
+        /** Exchange I/O states using command 0x3F. */
+        POKEYSDECL int32_t PK57i_Update(sPoKeys57Industrial* device, uint8_t resetFaults);
 
 // Enumerate USB devices. Returns number of USB devices detected.
 #ifndef RTAPI
