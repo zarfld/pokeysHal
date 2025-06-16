@@ -1063,6 +1063,7 @@ typedef struct
 POKEYSDECL int32_t PK_EnumerateUSBDevices(void);
 POKEYSDECL int32_t PK_EnumerateFastUSBDevices(void);
 #endif
+int32_t PK_EnumerateUSBDevicesAsync(PKUSBEnumerator *ctx);
 // Enumerate network devices. Return the number of ethernet devices detected and the list of detected devices (parameter devices) is filled with devices' data
 POKEYSDECL int32_t PK_EnumerateNetworkDevices(sPoKeysNetworkDeviceSummary * devices, uint32_t timeout);
 POKEYSDECL int32_t PK_SearchNetworkDevices(sPoKeysNetworkDeviceSummary * devices, uint32_t timeout, uint32_t serialNumberToFind);
@@ -1076,7 +1077,7 @@ POKEYSDECL sPoKeysDevice* PK_ConnectToDeviceWSerial(uint32_t serialNumber, uint3
 POKEYSDECL sPoKeysDevice* PK_ConnectToDeviceWSerial_UDP(uint32_t serialNumber, uint32_t checkForNetworkDevicesAndTimeout);
 // And a bit more low-level version with additional flags possible
 POKEYSDECL sPoKeysDevice* PK_ConnectToPoKeysDevice(uint32_t serialNumber, uint32_t checkForNetworkDevicesAndTimeout, uint32_t flags);
-
+POKEYSDECL sPoKeysDevice* PK_ConnectToDeviceAsync(uint32_t deviceIndex);
 
 // Connect to a network PoKeys device. Returns NULL if the connection is not successfull
 POKEYSDECL sPoKeysDevice* PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary * device);
