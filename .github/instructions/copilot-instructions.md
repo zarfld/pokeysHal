@@ -3,6 +3,8 @@ Do not use functions like sleep, usleep, or blocking I/O in any code compiled fo
 
 No Dynamic Memory Allocation in RT Threads:
 Only use hal_malloc for memory allocation in RT code. Do not use malloc, calloc, or free in RT components.
+hal_malloc should be used for allocating memory in RT code,even that is allowed only before the RT thread starts.
+
 
 No Mutexes or Semaphores in RT Code:
 Avoid using locking primitives in RT code. Use lock-free or atomic operations if synchronization is needed.
