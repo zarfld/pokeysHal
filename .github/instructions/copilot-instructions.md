@@ -44,3 +44,21 @@ Document any RT-specific constraints or assumptions in code comments, especially
 
 Testing:
 When possible, provide or update tests to verify RT code does not introduce blocking, excessive latency, or nondeterministic behavior.
+
+Remembereing Tasks and ToDo Lists:
+Use the "ToDo" comment tag to mark tasks or reminders in the code. This helps
+Maintain docs\ToDo.md to track ongoing work and future improvements.
+if issues rise and further necessary steps have emerged, these should be documeted in seperate files in docs/open
+Ongoing work status should be documented in docs/in-work, with each task having its own file, reporting the progress and any issues encountered.
+Complete tasks should be moved to docs/closed, with a summary of the work done and any relevant notes. While the completed tasks descriptions houle be moved to docs/archive
+
+How to Specify a Task
+- **Be specific** – Describe clearly *what* the function/component should do.
+- **Add context** – Mention libraries, inputs, outputs, dependencies, edge cases.
+- **Use docstrings or comments** – Define the intent and constraints inside the function.
+- **Define "done"** – Include completion criteria:
+  - ✅ Input/output examples or test cases
+  - ✅ Error handling requirements
+  - ✅ Side effects (e.g., file written, DB updated)
+  - ✅ Preconditions and postconditions
+  - ✅ Optional: Checklist or TODO block
