@@ -1,64 +1,57 @@
-Avoid Blocking Calls in RT Code:
-Do not use functions like sleep, usleep, or blocking I/O in any code compiled for realtime operation.
+## PoKeysHal AI Coding Agent Instructions
 
-No Dynamic Memory Allocation in RT Threads:
-Only use hal_malloc for memory allocation in RT code. Do not use malloc, calloc, or free in RT components.
-hal_malloc should be used for allocating memory in RT code,even that is allowed only before the RT thread starts.
+### Big Picture Architecture
+- The project implements a LinuxCNC HAL-compatible driver for PoKeys devices, supporting both userspace and realtime (RT) operation.
+- Core architecture uses an asynchronous request/response mailbox system for non-blocking communication. See `Pokeys Async Overview.md` and `README.md` for design rationale and workflow diagrams.
+- Major components:
+  - `experimental/`: RT HAL components and async logic
+  - `pokeyslib/`: User-space reference implementation (feature parity required)
+  - `hal-canon/`: Canonical HAL helpers for analog/digital/encoder
+  - Protocol details in `PoKeys - protocol specification.pdf`
 
+### Critical Developer Workflows
+- **Build RT HAL component:**
+  - Use VSCode task "4 - Build RT HAL component (Submakefile.rt)" or run:
+    `rm -rf experimental/build && mkdir -p experimental/build && cp Makefile.noqmakeRT *.h *.c experimental/pokeys_async.c experimental/Submakefile.rt experimental/build/ && cp hal-canon/*.c hal-canon/*.h experimental/build/ && cd experimental/build && make -f Submakefile.rt all && sudo make -f Submakefile.rt install`
+- **Build userspace HAL component:**
+  - Use VSCode task "3 - Build HAL userspace component" or run:
+    `sudo halcompile --install --userspace --extra-link-args='-L/usr/lib -lPoKeysHal' experimental/pokeys_async.c && sudo halcompile --preprocess experimental/pokeys_async2.comp`
+- **Run HAL components:**
+  - Use VSCode tasks "5" and "6" for userspace and RT execution via `halrun`.
+- **Install dependencies:**
+  - Use "1 - Install apt dependencies" task to install required packages from `prerequisites.txt`.
+- **Testing:**
+  - Manual and automated tests should verify async, non-blocking, and deterministic behavior. See `docs/Todo.md` for compliance and ToDo tracking.
 
-No Mutexes or Semaphores in RT Code:
-Avoid using locking primitives in RT code. Use lock-free or atomic operations if synchronization is needed.
+### Project-Specific Conventions & Patterns
+- All RT code must use async APIs (e.g., `PK_*Async`), avoid blocking, and only allocate memory before thread start with `hal_malloc`.
+- Use `#ifdef RTAPI` for RT-specific code sections.
+- Logging in RT code must use `rtapi_print_msg`.
+- Protocol implementation must match `PoKeys - protocol specification.pdf`.
+- Feature parity between RT and userspace code is required; extend userspace code as needed.
+- Use "ToDo" comments and maintain `docs/Todo.md` for ongoing work. Track open/in-work/closed tasks in `docs/open`, `docs/in-work`, and `docs/closed`.
 
-Use Async APIs for Device Communication:
-Prefer async versions of library functions (e.g., PoKeysLibUARTAsync.c) in RT code to avoid blocking.
+### Integration Points & External Dependencies
+- Integrates with LinuxCNC HAL (RTAPI, halcompile, etc.).
+- Depends on libusb for device communication (see `PoKeysLib.pro`).
+- Submodule `pokeyslib` provides user-space reference and binaries.
+- Build and CI workflows are defined in `.github/workflows/build.yml` and `deb-package.yml`.
 
-Conditional Compilation for RT:
-Use #ifdef RTAPI to separate RT-specific code from userspace code.
+### Examples
+- See `experimental/pokeys_async.c` and `pokeys_async2.c` for async RT code patterns.
+- See `Pokeys Async Overview.md` for mailbox, send/receive, and timeout logic.
+- See `README.md` for architecture, flowcharts, and key features.
 
-Deterministic Execution:
-Avoid unpredictable control flow, excessive branching, or unbounded loops in RT code.
+### Task Specification
+- Use docstrings and comments to clarify intent, constraints, and completion criteria.
+- Example ToDo block:
+  ```c
+  // ToDo: Implement PK_UARTWriteAsync for RT thread, ensure non-blocking and deterministic behavior.
+  ```
 
-RT-safe Logging:
-Use rtapi_print_msg for logging in RT code, and avoid standard I/O functions.
-
-Build System:
-Ensure RT components are built with the correct flags (-DRTAPI, etc.) and linked against LinuxCNC RT libraries.
-
-Protocol specifications:
-"PoKeys - protocol specification.pdf" shoukld be used as information source for implementing communication protocols in RT code.
-
-UserSpace Reference code:
-submodule pokeyslib should be used as a reference for implementing user-space communication protocols. Feature parity with the RT code is required, extending the user-space code with additional features is allowed.
-
-Interrupt Safety:
-Avoid using global/static variables in RT code unless they are protected or designed for concurrent access. Prefer local variables or RT-safe data structures.
-
-Time Measurement:
-Use RT-safe timing functions (e.g., those provided by RTAPI) for measuring time intervals in RT code. Avoid standard library timing functions.
-
-Error Handling:
-Ensure all error paths in RT code are deterministic and do not result in blocking, waiting, or unpredictable behavior.
-
-Code Documentation:
-Document any RT-specific constraints or assumptions in code comments, especially around timing, concurrency, or hardware access.
-
-Testing:
-When possible, provide or update tests to verify RT code does not introduce blocking, excessive latency, or nondeterministic behavior.
-
-Remembereing Tasks and ToDo Lists:
-Use the "ToDo" comment tag to mark tasks or reminders in the code. This helps
-Maintain docs\ToDo.md to track ongoing work and future improvements.
-if issues rise and further necessary steps have emerged, these should be documeted in seperate files in docs/open
-Ongoing work status should be documented in docs/in-work, with each task having its own file, reporting the progress and any issues encountered.
-Complete tasks should be moved to docs/closed, with a summary of the work done and any relevant notes. While the completed tasks descriptions houle be moved to docs/archive
-
-How to Specify a Task
-- **Be specific** – Describe clearly *what* the function/component should do.
-- **Add context** – Mention libraries, inputs, outputs, dependencies, edge cases.
-- **Use docstrings or comments** – Define the intent and constraints inside the function.
-- **Define "done"** – Include completion criteria:
-  - ✅ Input/output examples or test cases
-  - ✅ Error handling requirements
-  - ✅ Side effects (e.g., file written, DB updated)
-  - ✅ Preconditions and postconditions
-  - ✅ Optional: Checklist or TODO block
+### Completion Criteria
+- All new code must:
+  - Use async APIs for device communication
+  - Avoid blocking, nondeterministic, or unsafe operations
+  - Document tasks and progress in the appropriate docs folder
+  - Pass manual/automated tests for RT compliance
