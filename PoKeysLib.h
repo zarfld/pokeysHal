@@ -581,34 +581,7 @@ typedef struct
 } sPoKeysDevice_Data;
 
 // Device load and performance status
-typedef struct 
-{
-    uint8_t  CPUload;                          // CPU load percentage (0-100)
-    uint8_t  USBload;                          // USB load percentage (0-100)
-    uint8_t  NetworkLoad;                      // Network load percentage (0-100)
-    int16_t  Temperature;                      // Device temperature in degrees Celsius
-    uint8_t  reserved[4];
-} sPoKeysDevice_LoadStatus;
 
-// Device error and diagnostic status
-typedef struct
-{
-    uint8_t  errorFlags;                       // Error flags bitmask
-    uint16_t communicationErrors;              // Count of communication errors
-    uint8_t  lastError;                        // Last error code
-    uint16_t errorCount;                       // Total error count
-    uint8_t  reserved[3];
-} sPoKeysDevice_ErrorStatus;
-
-// Device connection monitoring
-typedef struct
-{
-    uint32_t lastAliveTime;                    // Timestamp of last successful communication
-    uint8_t  connectionAlive;                  // 1 if device is responsive
-    uint8_t  consecutiveFailures;              // Count of consecutive communication failures
-    uint8_t  connectionQuality;                // Connection quality percentage (0-100)
-    uint8_t  reserved[5];
-} sPoKeysDevice_ConnectionStatus;
 
 // Pin-specific data
 typedef struct
@@ -929,9 +902,6 @@ typedef struct
 
     sPoKeysDevice_Info        info;                          // PoKeys device info
     sPoKeysDevice_Data        DeviceData;                    // PoKeys device-specific data
-    sPoKeysDevice_LoadStatus  deviceLoadStatus;             // Device load and performance status
-    sPoKeysDevice_ErrorStatus deviceErrorStatus;            // Device error and diagnostic status
-    sPoKeysDevice_ConnectionStatus connectionStatus;        // Device connection monitoring
     sPoKeysNetworkDeviceInfo* netDeviceData;
 
     sPoKeysPinData*           Pins;                          // PoKeys pins
