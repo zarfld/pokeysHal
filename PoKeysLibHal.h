@@ -1164,6 +1164,10 @@ POKEYSDECL int PK_EncoderValuesGetAsync(sPoKeysDevice* device);
 POKEYSDECL int PK_EncoderValuesSetAsync(sPoKeysDevice* device);
 POKEYSDECL int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 
+// Forward declaration for internal component state structure
+struct __comp_state;
+POKEYSDECL int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id);
+
 /**
  * Set digital output values for all pins.
  *

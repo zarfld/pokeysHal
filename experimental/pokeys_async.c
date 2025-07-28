@@ -390,7 +390,7 @@ static device_status_cache_t device_cache = {0};
 
 // Threading control
 static bool async_thread_running = false;
-static rtapi_task_t async_thread_id;
+static int async_thread_id;
 
 // Async command queue functions
 static bool enqueue_async_command(const async_command_t *cmd) {
@@ -435,8 +435,15 @@ static bool queue_homing_start_command(uint8_t axis_mask) {
     return enqueue_async_command(&cmd);
 }
 
+// Forward declarations for RT processing functions
+static void rt_read_command_pins(struct __comp_state *inst);
+static void rt_update_motion_commands(struct __comp_state *inst);
+static void rt_read_device_cache(struct __comp_state *inst);
+static void rt_handle_homing_commands(struct __comp_state *inst);
+static void rt_update_external_outputs(struct __comp_state *inst);
+
 // PEv2 HAL pin export function
-static int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
+int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
     int r = 0;
     
     rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: Exporting PEv2 HAL pins with prefix %s\n", prefix);
