@@ -1030,17 +1030,25 @@ typedef struct
  struct {
      uint32_t lastAliveTime;
      uint8_t connectionState;
+     uint8_t connectionAlive;            // 1 if device is responsive
+     uint8_t consecutiveFailures;        // Count of consecutive communication failures
+     uint8_t connectionQuality;          // Connection quality percentage (0-100)
      uint8_t reserved[3];
  } connectionStatus;
  
  struct {
      uint8_t CPUload;
+     uint8_t USBload;                    // USB load percentage (0-100)
+     uint8_t NetworkLoad;                // Network load percentage (0-100)
+     int16_t Temperature;                // Device temperature in degrees Celsius
      uint32_t bufferLoad;
      uint8_t reserved[3];
  } deviceLoadStatus;
  
  struct {
      uint32_t errorFlags;
+     uint16_t communicationErrors;       // Count of communication errors
+     uint16_t errorCount;                // Total error count
      uint8_t lastError;
      uint8_t reserved[3];
  } deviceErrorStatus;

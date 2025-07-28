@@ -366,6 +366,7 @@ int PK_DeviceErrorStatusAsync(sPoKeysDevice* device);
 int PK_DeviceErrorResetAsync(sPoKeysDevice* device);
 int PK_DeviceStatusFullAsync(sPoKeysDevice* device);
 int PK_DeviceConnectionQualityAsync(sPoKeysDevice* device, uint8_t* quality);
+int PK_DeviceConnectionFailureAsync(sPoKeysDevice* device);
 
 // PWM (Pulse Width Modulation) Async Functions
 int PK_PWMConfigurationGetAsync(sPoKeysDevice* device);
