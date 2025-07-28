@@ -27,8 +27,7 @@ static int PK_Parse_DeviceAlive(sPoKeysDevice *dev, const uint8_t *resp)
     
     // Simple ping response indicates device is alive
     dev->connectionStatus.lastAliveTime = PK_GetTimeMs();
-    dev->connectionStatus.connectionAlive = 1;
-    dev->connectionStatus.consecutiveFailures = 0;
+    dev->connectionStatus.connectionState = 1;  // Device is responsive
     
     return PK_OK;
 }
@@ -38,9 +37,7 @@ static int PK_Parse_LoadStatus(sPoKeysDevice *dev, const uint8_t *resp)
     if (!dev || !resp) return PK_ERR_GENERIC;
     
     dev->deviceLoadStatus.CPUload = resp[8];
-    dev->deviceLoadStatus.USBload = resp[9];
-    dev->deviceLoadStatus.NetworkLoad = resp[10];
-    dev->deviceLoadStatus.Temperature = (int16_t)(resp[11] | (resp[12] << 8));
+    dev->deviceLoadStatus.bufferLoad = (uint32_t)(resp[9] | (resp[10] << 8) | (resp[11] << 16) | (resp[12] << 24));
     
     return PK_OK;
 }
@@ -49,10 +46,8 @@ static int PK_Parse_ErrorStatus(sPoKeysDevice *dev, const uint8_t *resp)
 {
     if (!dev || !resp) return PK_ERR_GENERIC;
     
-    dev->deviceErrorStatus.errorFlags = resp[8];
-    dev->deviceErrorStatus.communicationErrors = (uint16_t)(resp[9] | (resp[10] << 8));
-    dev->deviceErrorStatus.lastError = resp[11];
-    dev->deviceErrorStatus.errorCount = (uint16_t)(resp[12] | (resp[13] << 8));
+    dev->deviceErrorStatus.errorFlags = (uint32_t)(resp[8] | (resp[9] << 8) | (resp[10] << 16) | (resp[11] << 24));
+    dev->deviceErrorStatus.lastError = resp[12];
     
     return PK_OK;
 }
@@ -81,7 +76,7 @@ int PK_DeviceAliveCheckAsync(sPoKeysDevice* device)
 /**
  * @brief Get device load status (async)
  * 
- * Retrieves CPU load, USB load, network load, and temperature.
+ * Retrieves CPU load and buffer load status.
  * Important for monitoring device performance in real-time applications.
  * 
  * @param device Target device handle
@@ -200,14 +195,12 @@ int PK_DeviceConnectionQualityAsync(sPoKeysDevice* device, uint8_t* quality)
         *quality = 0;
     }
     
-    // Reduce quality based on consecutive failures
-    if (device->connectionStatus.consecutiveFailures > 0) {
-        *quality = (*quality * (10 - device->connectionStatus.consecutiveFailures)) / 10;
-        if (*quality < 0) *quality = 0;
+    // Store the calculated quality (note: stored in connectionState for simplicity)
+    if (*quality > 50) {
+        device->connectionStatus.connectionState = 1;
+    } else {
+        device->connectionStatus.connectionState = 0;
     }
-    
-    // Store the calculated quality
-    device->connectionStatus.connectionQuality = *quality;
     
     return PK_OK;
 }
