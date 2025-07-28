@@ -184,6 +184,14 @@ static int export(char *prefix, long extra_arg) {
         return r;
     };
     
+    // Export PoNET HAL pins - NEW
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: exporting component - export_ponet_pins %s\n", __FILE__, __FUNCTION__, prefix);
+    r = export_ponet_pins(prefix, comp_id, inst->dev);
+    if(r != 0){
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_ponet_pins failed %d \n", __FILE__, __FUNCTION__, r);
+        return r;
+    };
+    
     // Export PEv2 HAL pins - NEW
     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: exporting component - export_pev2_hal_pins %s\n", __FILE__, __FUNCTION__, prefix);
     r = export_pev2_hal_pins(inst, prefix, comp_id);
@@ -1278,6 +1286,22 @@ FUNCTION(_) {
     if (PK_AnalogIOGetAsync(__comp_inst->dev) == PK_OK) {
         PK_ReceiveAndDispatch(__comp_inst->dev);
     }
+    
+    // PoNET communication operations - NEW
+    if (PK_PoNETGetPoNETStatusAsync(__comp_inst->dev) == PK_OK) {
+        PK_ReceiveAndDispatch(__comp_inst->dev);
+    }
+    
+    if (PK_PoNETGetModuleStatusAsync(__comp_inst->dev) == PK_OK) {
+        PK_ReceiveAndDispatch(__comp_inst->dev);
+    }
+    
+    if (PK_PoNETSetModuleStatusAsync(__comp_inst->dev) == PK_OK) {
+        PK_ReceiveAndDispatch(__comp_inst->dev);
+    }
+    
+    // Update PoNET HAL pins after communication
+    update_ponet_hal_pins(__comp_inst->dev);
     
     // Final communication processing
     PK_ReceiveAndDispatch(__comp_inst->dev);

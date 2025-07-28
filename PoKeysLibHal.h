@@ -726,8 +726,8 @@ typedef struct
 // PoNET module data
 typedef struct
 {
- uint8_t statusIn[16];
- uint8_t statusOut[16];
+ uint8_t statusIn[16];              // Raw data from hardware
+ uint8_t statusOut[16];             // Raw data to hardware
  uint8_t moduleID;
  uint8_t i2cAddress;
  uint8_t moduleType;
@@ -736,6 +736,19 @@ typedef struct
  uint8_t PWMduty;
  uint8_t lightValue;
  uint8_t PoNETstatus;
+ 
+ // HAL pin pointers for statusIn array (hardware to HAL)
+ hal_u32_t *statusIn_pins[16];
+ 
+ // HAL pin pointers for statusOut array (HAL to hardware)  
+ hal_u32_t *statusOut_pins[16];
+ 
+ // HAL pin pointers for single values
+ hal_u32_t *PoNETstatus_pin;
+ hal_u32_t *moduleType_pin;
+ hal_u32_t *moduleID_pin;
+ hal_u32_t *lightValue_pin;
+ hal_u32_t *PWMduty_pin;
 } sPoNETmodule;
 
 
@@ -1694,6 +1707,10 @@ POKEYSDECL int32_t PK_RTCGet(sPoKeysDevice* device);
 POKEYSDECL int32_t PK_RTCSet(sPoKeysDevice* device);
 POKEYSDECL int PK_RTCGetAsync(sPoKeysDevice* device);
 POKEYSDECL int export_rtc_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
+
+// PoNET HAL interface functions  
+POKEYSDECL int export_ponet_pins(const char *prefix, int comp_id, sPoKeysDevice *device);
+POKEYSDECL void update_ponet_hal_pins(sPoKeysDevice *device);
 
 // UART commands
 /**
