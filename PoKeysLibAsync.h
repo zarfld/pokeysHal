@@ -396,4 +396,21 @@ int PK_DigitalCounterClearAsync(sPoKeysDevice* device);
 int PK_PinConfigurationGetAsync(sPoKeysDevice* device);
 int PK_PinConfigurationSetAsync(sPoKeysDevice* device);
 
+// Advanced RT-Compatible Async Functions for LinuxCNC
+// Digital IO Advanced Functions
+int PK_DigitalOutputSetMultipleAsync(sPoKeysDevice* device, const uint8_t* pinList, 
+                                     const uint8_t* valueList, uint8_t count);
+int PK_DigitalCounterGetSelectedAsync(sPoKeysDevice* device, const uint8_t* pinList, uint8_t count);
+
+// PWM Advanced Functions  
+int PK_PWMUpdateSelectedChannelsAsync(sPoKeysDevice* device, uint8_t channelMask, const uint32_t* dutyCycles);
+
+// System Monitoring Functions
+int PK_SystemStatusGetAllAsync(sPoKeysDevice* device);
+
+// RT-Safe Batch Operations
+int PK_IOUpdateCycleAsync(sPoKeysDevice* device);
+int PK_EmergencyStopAllAsync(sPoKeysDevice* device);
+int PK_CommunicationTestAsync(sPoKeysDevice* device, uint8_t testCount);
+
 #endif // POKEYSLIB_ASYNC_H
