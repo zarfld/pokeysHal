@@ -392,6 +392,9 @@ int PK_DigitalIOSetGetAsync(sPoKeysDevice* device);
 int PK_DigitalCounterGetAsync(sPoKeysDevice* device);
 int PK_DigitalCounterClearAsync(sPoKeysDevice* device);
 
+// Parser functions for async responses
+int PK_DigitalCounterParse(sPoKeysDevice* device, const uint8_t* response);
+
 // Pin Configuration Async Functions (already implemented)
 int PK_PinConfigurationGetAsync(sPoKeysDevice* device);
 int PK_PinConfigurationSetAsync(sPoKeysDevice* device);

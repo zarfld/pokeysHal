@@ -64,7 +64,7 @@ int PK_DigitalCounterGetSelectedAsync(sPoKeysDevice* device, const uint8_t* pinL
     }
 
     return CreateRequestAsync(device, PK_CMD_DIGITAL_COUNTERS_VALUES,
-                              NULL, 0, pinList, count, PK_DigitalCounterParse);
+                              NULL, 0, (void*)pinList, count, PK_DigitalCounterParse);
 }
 
 /* Advanced PWM Functions ------------------------------------------------------ */
