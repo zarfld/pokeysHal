@@ -126,9 +126,20 @@ void PK_InitializeNewDeviceAsync(void *device_ptr)
     PK_DeviceDataGet(device);
 
     device->Pins = (sPoKeysPinData*)hal_malloc(sizeof(sPoKeysPinData) * device->info.iPinCount);
+    if (!device->Pins) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Failed to allocate memory for Pins\n", __FILE__, __FUNCTION__);
+        return;
+    }
     memset(device->Pins, 0, sizeof(sPoKeysPinData) * device->info.iPinCount);
-//sPoKeysAnalogData
+
+    // Allocate analog input array for 7 channels (standard PoKeys)
     device->AnalogInput = (sPoKeysAnalogData*)hal_malloc(sizeof(sPoKeysAnalogData) * 7);
+    if (!device->AnalogInput) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Failed to allocate memory for AnalogInput\n", __FILE__, __FUNCTION__);
+        return;
+    }
+    memset(device->AnalogInput, 0, sizeof(sPoKeysAnalogData) * 7);
+
     for (i = 0; i < device->info.iPinCount; i++) {
         device->Pins[i].DigitalCounterAvailable = PK_IsCounterAvailable(device, i) ? 1 : 0;
     }

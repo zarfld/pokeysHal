@@ -130,6 +130,8 @@ typedef enum {
     PK_CMD_MATRIX_KEYBOARD_CFG           = 0xCA,
     PK_CMD_PWM_CONFIGURATION             = 0xCB,
     PK_CMD_DEVICE_STATUS_GET             = 0xCC,
+    PK_CMD_DEVICE_LOAD_STATUS            = 0x86,
+    PK_CMD_DEVICE_ERROR_STATUS           = 0x87,
     PK_CMD_ENCODER_LONG_RAW_VALUES_GET   = 0xCD,
     PK_CMD_FAST_ENCODERS_SET             = 0xCE,
     PK_CMD_TICK_COUNTER_GET              = 0xCF,
@@ -344,5 +346,25 @@ int PK_PEv2_AxisConfigurationSetAsync(sPoKeysDevice *device);
 int PK_PEv2_PulseEngineMovePVAsync(sPoKeysDevice *device);
 int PK_PEv2_HomingStartAsync(sPoKeysDevice *device);
 int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device);
+
+// Encoder Reset Functions - Critical for LinuxCNC compatibility
+int PK_EncoderRawValueResetAsync(sPoKeysDevice* device, uint32_t encoderMask);
+int PK_EncoderSingleResetAsync(sPoKeysDevice* device, uint8_t encoderIndex);
+int PK_EncoderAllResetAsync(sPoKeysDevice* device);
+
+// SPI Communication Async Functions
+int PK_SPIConfigureAsync(sPoKeysDevice* device, uint8_t prescaler, uint8_t frameFormat);
+int PK_SPIWriteAsync(sPoKeysDevice* device, const uint8_t* buffer, uint8_t dataLength, uint8_t pinCS);
+int PK_SPIReadAsync(sPoKeysDevice* device, uint8_t* buffer, uint8_t dataLength);
+int PK_SPITransferAsync(sPoKeysDevice* device, const uint8_t* txBuffer, uint8_t* rxBuffer, 
+                        uint8_t dataLength, uint8_t pinCS);
+
+// Device Status and Connection Monitoring Async Functions
+int PK_DeviceAliveCheckAsync(sPoKeysDevice* device);
+int PK_DeviceLoadStatusAsync(sPoKeysDevice* device);
+int PK_DeviceErrorStatusAsync(sPoKeysDevice* device);
+int PK_DeviceErrorResetAsync(sPoKeysDevice* device);
+int PK_DeviceStatusFullAsync(sPoKeysDevice* device);
+int PK_DeviceConnectionQualityAsync(sPoKeysDevice* device, uint8_t* quality);
 
 #endif // POKEYSLIB_ASYNC_H

@@ -300,37 +300,81 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
 }
 
 /**
- * @brief Periodically checks for request timeouts and retries if necessary.
+ * @brief Enhanced timeout and retry check with exponential backoff and error recovery.
+ *
+ * This implementation provides:
+ * - Exponential backoff for retries
+ * - Better error tracking and recovery
+ * - RT-safe operation with minimal overhead
  *
  * @param dev Pointer to the PoKeys device structure.
- * @param timeout_us Timeout threshold in microseconds per attempt.
+ * @param timeout_us Base timeout threshold in microseconds per attempt.
  */
 void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
 {
     uint64_t now = get_current_time_us();
+    static uint32_t consecutive_errors = 0;
+    static uint64_t last_error_time = 0;
+    
+    // Implement circuit breaker pattern - if too many consecutive errors,
+    // temporarily back off to avoid overwhelming the device
+    const uint32_t MAX_CONSECUTIVE_ERRORS = 10;
+    const uint64_t ERROR_BACKOFF_TIME_US = 1000000; // 1 second backoff
+    
+    if (consecutive_errors >= MAX_CONSECUTIVE_ERRORS) {
+        if ((now - last_error_time) < ERROR_BACKOFF_TIME_US) {
+            return; // Still in backoff period
+        } else {
+            consecutive_errors = 0; // Reset after backoff period
+        }
+    }
 
     for (int i = 0; i < MAX_TRANSACTIONS; i++) {
         async_transaction_t *t = &pk_transactions[i];
 
         if (t->status == TRANSACTION_PENDING) {
-            if ((now - t->timestamp_sent) > timeout_us) {
+            // Calculate dynamic timeout with exponential backoff
+            uint32_t retry_multiplier = (3 - t->retries_left); // 0, 1, 2 for retries
+            uint64_t effective_timeout = timeout_us * (1 << retry_multiplier); // 1x, 2x, 4x
+            
+            if ((now - t->timestamp_sent) > effective_timeout) {
                 if (t->retries_left > 0) {
-                    // Retry sending
+                    // Attempt retry with improved error handling
                     ssize_t sent = sendto(*(int*)dev->devHandle,
                                           t->request_buffer, sizeof(t->request_buffer), 0,
-                                          (struct sockaddr *)&dev->devHandle2, sizeof(struct sockaddr_in));
+                                          (struct sockaddr *)dev->devHandle2, sizeof(struct sockaddr_in));
                     if (sent >= 0) {
-                        t->timestamp_sent = now; // Update timestamp after successful resend
+                        t->timestamp_sent = now;
                         t->retries_left--;
-                        // Optionally you could log retries here
+                        // Reset consecutive error counter on successful send
+                        if (consecutive_errors > 0) consecutive_errors--;
+                        
+                        #ifdef DEBUG_ASYNC_RETRIES
+                        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: Retry %d for request ID %d, cmd=0x%02X\n", 
+                                       (3 - t->retries_left), t->request_id, t->command_sent);
+                        #endif
                     } else {
-                        // (Optional) If sendto failed, maybe log or increment error counter
+                        // Send failed - increment error counter and log
+                        consecutive_errors++;
+                        last_error_time = now;
+                        
+                        rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: Retry send failed for request ID %d, errno=%d\n", 
+                                       t->request_id, errno);
+                        
+                        // Mark as failed if this was the last retry attempt
+                        if (t->retries_left == 1) {
+                            t->status = TRANSACTION_FAILED;
+                            t->retries_left = 0;
+                        }
                     }
                 } else {
                     // No retries left: mark timeout
                     t->status = TRANSACTION_TIMEOUT;
-                    // Optionally clear or free transaction here
-                    // transaction_free(t); // if immediate cleanup desired
+                    consecutive_errors++;
+                    last_error_time = now;
+                    
+                    rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: Request ID %d timed out after all retries, cmd=0x%02X\n", 
+                                   t->request_id, t->command_sent);
                 }
             }
         }

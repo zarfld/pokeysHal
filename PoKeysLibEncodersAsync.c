@@ -559,4 +559,71 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
  
      return PK_OK;
  }
+
+/**
+ * @brief Reset encoder raw values asynchronously (command 0x1A).
+ * 
+ * This function implements the missing encoder reset functionality that exists
+ * in the PoKeys protocol but was not previously implemented. This is critical
+ * for LinuxCNC compatibility where encoder reset is commonly needed.
+ *
+ * @param device Pointer to PoKeys device structure
+ * @param encoderMask Bitmask specifying which encoders to reset (bit 0 = encoder 0, etc.)
+ * @return PK_OK on success, error code on failure
+ */
+int PK_EncoderRawValueResetAsync(sPoKeysDevice* device, uint32_t encoderMask)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    
+    // Protocol: PK_CMD_ENCODER_RAW_VALUE_RESET (0x1A)
+    // Parameters: 4-byte encoder mask in little-endian format
+    uint8_t params[4] = {
+        (encoderMask >> 0) & 0xFF,   // LSB
+        (encoderMask >> 8) & 0xFF,
+        (encoderMask >> 16) & 0xFF,
+        (encoderMask >> 24) & 0xFF   // MSB
+    };
+    
+    return CreateRequestAsync(device, PK_CMD_ENCODER_RAW_VALUE_RESET,
+                              params, 4, NULL, 0, NULL);
+}
+
+/**
+ * @brief Reset a single encoder's raw value asynchronously.
+ * 
+ * Convenience wrapper for resetting a single encoder.
+ *
+ * @param device Pointer to PoKeys device structure  
+ * @param encoderIndex Index of encoder to reset (0-based)
+ * @return PK_OK on success, error code on failure
+ */
+int PK_EncoderSingleResetAsync(sPoKeysDevice* device, uint8_t encoderIndex)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    if (encoderIndex >= device->info.iEncodersCount) return PK_ERR_GENERIC;
+    
+    uint32_t mask = 1U << encoderIndex;
+    return PK_EncoderRawValueResetAsync(device, mask);
+}
+
+/**
+ * @brief Reset all encoders' raw values asynchronously.
+ * 
+ * Convenience wrapper for resetting all available encoders.
+ *
+ * @param device Pointer to PoKeys device structure
+ * @return PK_OK on success, error code on failure  
+ */
+int PK_EncoderAllResetAsync(sPoKeysDevice* device)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    
+    // Create mask for all available encoders
+    uint32_t mask = 0;
+    for (int i = 0; i < device->info.iEncodersCount; i++) {
+        mask |= (1U << i);
+    }
+    
+    return PK_EncoderRawValueResetAsync(device, mask);
+}
  
