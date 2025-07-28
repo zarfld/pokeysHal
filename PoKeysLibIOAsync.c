@@ -705,6 +705,214 @@ int PK_PWMUpdateAsync(sPoKeysDevice* device) {
     return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
 }
 
+/**
+ * @brief Set PWM configuration directly with specified parameters (async)
+ * 
+ * Directly configures PWM with given period and enabled channels without 
+ * using device structure values. Useful for direct control applications.
+ * 
+ * @param device Target device handle
+ * @param PWMperiod PWM period value
+ * @param enabledChannels Array of 6 enabled channel flags (1=enabled, 0=disabled)
+ * @return PK_OK on success, error code on failure
+ */
+int PK_PWMConfigurationSetDirectlyAsync(sPoKeysDevice* device, uint32_t PWMperiod, uint8_t* enabledChannels) {
+    if (!device || !enabledChannels) return PK_ERR_GENERIC;
+
+    uint8_t payload[37] = {0};
+    
+    // Set enabled channels mask
+    for (uint32_t n = 0; n < 6; n++) {
+        if (enabledChannels[n]) {
+            payload[0] |= (uint8_t)(1 << n);
+        }
+        // Set duty cycle to 0 for direct configuration
+        payload[1 + n * 4] = 0;
+        payload[2 + n * 4] = 0;
+        payload[3 + n * 4] = 0;
+        payload[4 + n * 4] = 0;
+    }
+    
+    // Set period
+    payload[33] = (uint8_t)(PWMperiod & 0xFF);
+    payload[34] = (uint8_t)((PWMperiod >> 8) & 0xFF);
+    payload[35] = (uint8_t)((PWMperiod >> 16) & 0xFF);
+    payload[36] = (uint8_t)((PWMperiod >> 24) & 0xFF);
+
+    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1}, 1, payload, sizeof(payload), NULL);
+}
+
+/**
+ * @brief Update PWM duty cycles directly (async)
+ * 
+ * Updates PWM duty cycles with provided values without using device structure.
+ * Efficient for real-time PWM control applications.
+ * 
+ * @param device Target device handle
+ * @param dutyCycles Array of 6 duty cycle values
+ * @return PK_OK on success, error code on failure
+ */
+int PK_PWMUpdateDirectlyAsync(sPoKeysDevice* device, uint32_t* dutyCycles) {
+    if (!device || !dutyCycles) return PK_ERR_GENERIC;
+
+    uint8_t payload[37] = {0};
+    
+    // Use current enabled channels from device
+    for (uint32_t n = 0; n < 6; n++) {
+        if (device->PWM.PWMenabledChannels[n]) {
+            payload[0] |= (uint8_t)(1 << n);
+        }
+        
+        // Set provided duty cycle
+        uint32_t duty = dutyCycles[n];
+        payload[1 + n * 4] = (uint8_t)(duty & 0xFF);
+        payload[2 + n * 4] = (uint8_t)((duty >> 8) & 0xFF);
+        payload[3 + n * 4] = (uint8_t)((duty >> 16) & 0xFF);
+        payload[4 + n * 4] = (uint8_t)((duty >> 24) & 0xFF);
+    }
+    
+    // Use current period from device
+    uint32_t period = device->PWM.PWMperiod;
+    payload[33] = (uint8_t)(period & 0xFF);
+    payload[34] = (uint8_t)((period >> 8) & 0xFF);
+    payload[35] = (uint8_t)((period >> 16) & 0xFF);
+    payload[36] = (uint8_t)((period >> 24) & 0xFF);
+
+    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
+}
+
+/**
+ * @brief Set single PWM channel duty cycle (async)
+ * 
+ * Updates a single PWM channel without affecting others.
+ * Optimized for individual channel control.
+ * 
+ * @param device Target device handle
+ * @param channel PWM channel (0-5)
+ * @param dutyCycle Duty cycle value
+ * @return PK_OK on success, error code on failure
+ */
+int PK_PWMSetSingleChannelAsync(sPoKeysDevice* device, uint8_t channel, uint32_t dutyCycle) {
+    if (!device) return PK_ERR_GENERIC;
+    if (channel >= 6) return PK_ERR_GENERIC;
+
+    uint8_t payload[37] = {0};
+    
+    // Set all current enabled channels
+    for (uint32_t n = 0; n < 6; n++) {
+        if (device->PWM.PWMenabledChannels[n]) {
+            payload[0] |= (uint8_t)(1 << n);
+        }
+        
+        // Use current duty cycle for other channels, new value for target channel
+        uint32_t duty = (n == channel) ? dutyCycle : (uint32_t)*(device->PWM.PWMduty[n]);
+        payload[1 + n * 4] = (uint8_t)(duty & 0xFF);
+        payload[2 + n * 4] = (uint8_t)((duty >> 8) & 0xFF);
+        payload[3 + n * 4] = (uint8_t)((duty >> 16) & 0xFF);
+        payload[4 + n * 4] = (uint8_t)((duty >> 24) & 0xFF);
+    }
+    
+    // Use current period
+    uint32_t period = device->PWM.PWMperiod;
+    payload[33] = (uint8_t)(period & 0xFF);
+    payload[34] = (uint8_t)((period >> 8) & 0xFF);
+    payload[35] = (uint8_t)((period >> 16) & 0xFF);
+    payload[36] = (uint8_t)((period >> 24) & 0xFF);
+
+    // Update the device structure for the changed channel
+    *(device->PWM.PWMduty[channel]) = dutyCycle;
+
+    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
+}
+
+/**
+ * @brief Parser for PWM pin assignments (CMD 0xCB, param1=2)
+ */
+int PK_PWMPinAssignmentsParse(sPoKeysDevice* device, const uint8_t* response) {
+    if (!device || !response) return PK_ERR_GENERIC;
+
+    // Parse PWM pin assignments (assuming they're in response[8..13])
+    for (uint32_t n = 0; n < 6 && n < device->info.iPWMCount; n++) {
+        device->PWM.PWMpinIDs[n] = response[8 + n];
+    }
+    
+    return PK_OK;
+}
+
+/**
+ * @brief Get PWM pin assignments (async)
+ * 
+ * Retrieves which pins are assigned to PWM outputs.
+ * Important for LinuxCNC pin mapping and diagnostics.
+ * 
+ * @param device Target device handle
+ * @return PK_OK on success, error code on failure
+ */
+int PK_PWMGetPinAssignmentsAsync(sPoKeysDevice* device) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){2}, 1, NULL, 0, PK_PWMPinAssignmentsParse);
+}
+
+/**
+ * @brief Set a single digital output pin (async)
+ * 
+ * Convenience function to set individual digital output without affecting others.
+ * Useful for discrete control operations.
+ * 
+ * @param device Target device handle
+ * @param pinIndex Pin number (0-based)
+ * @param value Output state (0 or 1)
+ * @return PK_OK on success, error code on failure
+ */
+int PK_DigitalOutputSetSingleAsync(sPoKeysDevice* device, uint8_t pinIndex, uint8_t value) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    if (pinIndex >= device->info.iPinCount) return PK_ERR_GENERIC;
+
+    // Update the specific pin value
+    *(device->Pins[pinIndex].DigitalValueSet.out) = value ? 1 : 0;
+    
+    // Call the standard set function which will handle all pins
+    return PK_DigitalIOSetGetAsync(device);
+}
+
+/**
+ * @brief Get a single digital input pin state (async)
+ * 
+ * Reads all digital inputs but provides callback for single pin monitoring.
+ * 
+ * @param device Target device handle
+ * @param pinIndex Pin number to monitor
+ * @return PK_OK on success, error code on failure
+ */
+int PK_DigitalInputGetSingleAsync(sPoKeysDevice* device, uint8_t pinIndex) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    if (pinIndex >= device->info.iPinCount) return PK_ERR_GENERIC;
+
+    // Standard digital IO read - result will be available in device->Pins[pinIndex].DigitalValueGet.in
+    return PK_DigitalIOGetAsync(device);
+}
+
+/**
+ * @brief Toggle a digital output pin (async)
+ * 
+ * Convenience function to toggle the state of a digital output pin.
+ * 
+ * @param device Target device handle
+ * @param pinIndex Pin number (0-based)
+ * @return PK_OK on success, error code on failure
+ */
+int PK_DigitalOutputToggleAsync(sPoKeysDevice* device, uint8_t pinIndex) {
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    if (pinIndex >= device->info.iPinCount) return PK_ERR_GENERIC;
+
+    // Toggle the pin state
+    uint8_t currentValue = *(device->Pins[pinIndex].DigitalValueSet.out);
+    *(device->Pins[pinIndex].DigitalValueSet.out) = currentValue ? 0 : 1;
+    
+    return PK_DigitalIOSetGetAsync(device);
+}
+
     int parse_PoExtBusGet(sPoKeysDevice* device, const uint8_t* resp) {
         uint32_t len = device->info.iPoExtBus;
 

@@ -367,4 +367,33 @@ int PK_DeviceErrorResetAsync(sPoKeysDevice* device);
 int PK_DeviceStatusFullAsync(sPoKeysDevice* device);
 int PK_DeviceConnectionQualityAsync(sPoKeysDevice* device, uint8_t* quality);
 
+// PWM (Pulse Width Modulation) Async Functions
+int PK_PWMConfigurationGetAsync(sPoKeysDevice* device);
+int PK_PWMConfigurationSetAsync(sPoKeysDevice* device);
+int PK_PWMUpdateAsync(sPoKeysDevice* device);
+int PK_PWMConfigurationSetDirectlyAsync(sPoKeysDevice* device, uint32_t PWMperiod, uint8_t* enabledChannels);
+int PK_PWMUpdateDirectlyAsync(sPoKeysDevice* device, uint32_t* dutyCycles);
+int PK_PWMSetSingleChannelAsync(sPoKeysDevice* device, uint8_t channel, uint32_t dutyCycle);
+int PK_PWMGetPinAssignmentsAsync(sPoKeysDevice* device);
+
+// Digital IO Extended Async Functions  
+int PK_DigitalOutputSetSingleAsync(sPoKeysDevice* device, uint8_t pinIndex, uint8_t value);
+int PK_DigitalInputGetSingleAsync(sPoKeysDevice* device, uint8_t pinIndex);
+int PK_DigitalOutputToggleAsync(sPoKeysDevice* device, uint8_t pinIndex);
+
+// Analog IO Async Functions (already implemented)
+int PK_AnalogIOGetAsync(sPoKeysDevice* device);
+int PK_AnalogRCFilterGetAsync(sPoKeysDevice* device);
+int PK_AnalogRCFilterSetAsync(sPoKeysDevice* device);
+
+// Digital IO Core Async Functions (already implemented)
+int PK_DigitalIOGetAsync(sPoKeysDevice* device);
+int PK_DigitalIOSetGetAsync(sPoKeysDevice* device);
+int PK_DigitalCounterGetAsync(sPoKeysDevice* device);
+int PK_DigitalCounterClearAsync(sPoKeysDevice* device);
+
+// Pin Configuration Async Functions (already implemented)
+int PK_PinConfigurationGetAsync(sPoKeysDevice* device);
+int PK_PinConfigurationSetAsync(sPoKeysDevice* device);
+
 #endif // POKEYSLIB_ASYNC_H
