@@ -33,7 +33,7 @@ static int comp_id;
 
 
 #ifdef MODULE_INFO
-MODULE_INFO(linuxcnc, "component:pokeys:PoKeys HAL driver with PulseEngine v2 support");
+MODULE_INFO(linuxcnc, "component:pokeys_async:PoKeys HAL driver with PulseEngine v2 support");
 MODULE_INFO(linuxcnc, "pin:in-#:bit:55:out::None:None");
 MODULE_INFO(linuxcnc, "pin:ain-#:u32:3:out::None:None");
 MODULE_INFO(linuxcnc, "pin:err:bit:0:out::None:None");
