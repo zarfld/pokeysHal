@@ -1308,7 +1308,7 @@ static void update_device_cache(struct __comp_state *inst) {
         device_cache.reconnect_attempts++;
         
         // Try to reconnect (simplified check)
-        if (inst->dev && inst->dev->connectionType != PK_DeviceType_NotConnected) {
+        if (inst->dev) {
             rtapi_print_msg(RTAPI_MSG_INFO, "PoKeys: Attempting to restore communication\n");
             device_cache.communication_ok = true;
             device_cache.error_count = 0; // Reset error count on reconnect
@@ -1336,7 +1336,7 @@ static void update_device_cache(struct __comp_state *inst) {
         last_status_update = current_time;
         
         // Validate device connection
-        if (!inst->dev || inst->dev->connectionType == PK_DeviceType_NotConnected) {
+        if (!inst->dev) {
             device_cache.communication_ok = false;
             device_cache.device_connected = false;
             rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: Device disconnected\n");
