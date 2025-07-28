@@ -1,6 +1,9 @@
 #include "PoKeysLibHal.h"
 #include "PoKeysLibAsync.h"
 
+// Forward declaration for transaction_find function
+async_transaction_t* transaction_find(uint8_t request_id);
+
 /*
  * Asynchronous helpers for Pulse Engine v2 configuration and status.
  * These mirror their blocking counterparts in PoKeysLibPulseEngine_v2.c
@@ -251,7 +254,7 @@ int PK_PEv2_HomingStartAsync(sPoKeysDevice *device)
     if (!device) return PK_ERR_NOT_CONNECTED;
     uint8_t axis_mask = device->PEv2.param2;
     int req = CreateRequestAsyncWithPayload(device, PK_CMD_PULSE_ENGINE_V2,
-                                            (const uint8_t[]){PEV2_CMD_HOMING_START}, 1,
+                                            (const uint8_t[]){PEV2_CMD_START_HOMING}, 1,
                                             &axis_mask, 1, NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
@@ -265,7 +268,7 @@ int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device)
         device->PEv2.ExternalOCOutputs
     };
     int req = CreateRequestAsyncWithPayload(device, PK_CMD_PULSE_ENGINE_V2,
-                                            (const uint8_t[]){PEV2_CMD_SET_EXTERNAL_OUTPUTS}, 1,
+                                            (const uint8_t[]){PEV2_CMD_SET_OUTPUTS}, 1,
                                             payload, sizeof(payload), NULL);
     if (req < 0) return req;
     return SendRequestAsync(device, req);
