@@ -9,7 +9,7 @@
 #include "stdio.h"
 #include "rtapi_math64.h"
 #include "PoKeysLibHal.h"
-#include "PoKeysLibAsync.h"
+#include "../PoKeysLibAsync.h"
 
 static int comp_id;
 
