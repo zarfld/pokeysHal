@@ -13,6 +13,11 @@
 // Include math.h for fabs() function
 #include <math.h>
 
+// Define M_PI if not available
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // Userspace includes - only for userspace version
 #ifndef RTAPI
 #include <unistd.h>
@@ -95,6 +100,20 @@ struct __comp_state {
         hal_bit_t *PEv2_digout_ExternalOC_out[4];    // pokeys.0.PEv2.digout.ExternalOC-0.out
         hal_u32_t *PEv2_ExternalRelayOutputs;        // pokeys.0.PEv2.ExternalRelayOutputs
         hal_u32_t *PEv2_ExternalOCOutputs;           // pokeys.0.PEv2.ExternalOCOutputs
+        
+        // Phase 4: Debug and diagnostics pins
+        hal_bit_t *PEv2_debug_test_enable;     // pokeys.0.PEv2.debug.test-enable
+        hal_u32_t *PEv2_debug_cycle_time;     // pokeys.0.PEv2.debug.cycle-time-ns
+        hal_u32_t *PEv2_debug_error_count;    // pokeys.0.PEv2.debug.error-count
+        hal_u32_t *PEv2_debug_cmd_sent;       // pokeys.0.PEv2.debug.commands-sent
+        hal_u32_t *PEv2_debug_cmd_failed;     // pokeys.0.PEv2.debug.commands-failed
+        hal_bit_t *PEv2_debug_comm_ok;        // pokeys.0.PEv2.debug.communication-ok
+        hal_float_t *PEv2_debug_test_freq;    // pokeys.0.PEv2.debug.test-frequency
+        
+        // Phase 4: Performance monitoring
+        hal_u32_t *PEv2_perf_rt_min_cycle;    // pokeys.0.PEv2.perf.rt-min-cycle-ns
+        hal_u32_t *PEv2_perf_rt_max_cycle;    // pokeys.0.PEv2.perf.rt-max-cycle-ns
+        hal_u32_t *PEv2_perf_rt_avg_cycle;    // pokeys.0.PEv2.perf.rt-avg-cycle-ns
         
         // Probing pins
         hal_u32_t *PEv2_ProbePosition[8];       // pokeys.0.PEv2.0.ProbePosition
@@ -401,6 +420,13 @@ typedef struct {
     volatile uint32_t failed_commands;
     volatile bool device_connected;
     volatile bool emergency_stop_active;
+    
+    // Phase 4: Performance monitoring
+    volatile uint32_t rt_cycle_min_ns;
+    volatile uint32_t rt_cycle_max_ns;
+    volatile uint32_t rt_cycle_total_ns;
+    volatile uint32_t rt_cycle_count;
+    volatile uint32_t last_cycle_time_ns;
 } device_status_cache_t;
 
 // Global data structures
@@ -460,6 +486,10 @@ static void rt_update_motion_commands(struct __comp_state *inst);
 static void rt_read_device_cache(struct __comp_state *inst);
 static void rt_handle_homing_commands(struct __comp_state *inst);
 static void rt_update_external_outputs(struct __comp_state *inst);
+
+// Phase 4: Performance monitoring and test mode functions
+static void rt_update_performance_monitoring(struct __comp_state *inst, int64_t start_time);
+static void rt_handle_test_mode(struct __comp_state *inst);
 
 // PEv2 HAL pin export function
 int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
@@ -570,6 +600,30 @@ int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
     r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_ExternalOCOutputs, comp_id,
                          "%s.PEv2.ExternalOCOutputs", prefix);
     
+    // Phase 4: Debug and diagnostics pins
+    r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_debug_test_enable, comp_id,
+                         "%s.PEv2.debug.test-enable", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_debug_cycle_time, comp_id,
+                         "%s.PEv2.debug.cycle-time-ns", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_debug_error_count, comp_id,
+                         "%s.PEv2.debug.error-count", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_debug_cmd_sent, comp_id,
+                         "%s.PEv2.debug.commands-sent", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_debug_cmd_failed, comp_id,
+                         "%s.PEv2.debug.commands-failed", prefix);
+    r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_debug_comm_ok, comp_id,
+                         "%s.PEv2.debug.communication-ok", prefix);
+    r |= hal_pin_float_newf(HAL_IN, &inst->pev2_data.PEv2_debug_test_freq, comp_id,
+                         "%s.PEv2.debug.test-frequency", prefix);
+    
+    // Phase 4: Performance monitoring pins  
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_perf_rt_min_cycle, comp_id,
+                         "%s.PEv2.perf.rt-min-cycle-ns", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_perf_rt_max_cycle, comp_id,
+                         "%s.PEv2.perf.rt-max-cycle-ns", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_perf_rt_avg_cycle, comp_id,
+                         "%s.PEv2.perf.rt-avg-cycle-ns", prefix);
+    
     // Probing pins
     for (int i = 0; i < 8; i++) {
         r |= hal_pin_u32_newf(HAL_IO, &inst->pev2_data.PEv2_ProbePosition[i], comp_id,
@@ -605,6 +659,19 @@ int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
         inst->pev2_data.PEv2_PositionScale[i] = 1000;
         inst->pev2_data.PEv2_PositionOffset[i] = 0;
     }
+    
+    // Phase 4: Initialize debug and performance monitoring pins
+    *(inst->pev2_data.PEv2_debug_test_enable) = false;
+    *(inst->pev2_data.PEv2_debug_cycle_time) = 0;
+    *(inst->pev2_data.PEv2_debug_error_count) = 0;
+    *(inst->pev2_data.PEv2_debug_cmd_sent) = 0;
+    *(inst->pev2_data.PEv2_debug_cmd_failed) = 0;
+    *(inst->pev2_data.PEv2_debug_comm_ok) = false;
+    *(inst->pev2_data.PEv2_debug_test_freq) = 1.0; // Default test frequency 1 Hz
+    
+    *(inst->pev2_data.PEv2_perf_rt_min_cycle) = 0;
+    *(inst->pev2_data.PEv2_perf_rt_max_cycle) = 0;
+    *(inst->pev2_data.PEv2_perf_rt_avg_cycle) = 0;
     
     rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: PEv2 HAL pins exported successfully\n");
     return 0;
@@ -1089,6 +1156,70 @@ static void rt_update_external_outputs(struct __comp_state *inst) {
 static void process_async_commands(struct __comp_state *inst);
 static void update_device_cache(struct __comp_state *inst);
 
+// Phase 4: Performance monitoring function
+static void rt_update_performance_monitoring(struct __comp_state *inst, int64_t start_time) {
+    int64_t current_time = rtapi_get_time();
+    uint32_t cycle_time = (uint32_t)(current_time - start_time);
+    
+    // Update performance statistics atomically
+    device_cache.last_cycle_time_ns = cycle_time;
+    device_cache.rt_cycle_count++;
+    device_cache.rt_cycle_total_ns += cycle_time;
+    
+    // Update min/max cycle times
+    if (cycle_time < device_cache.rt_cycle_min_ns || device_cache.rt_cycle_min_ns == 0) {
+        device_cache.rt_cycle_min_ns = cycle_time;
+    }
+    if (cycle_time > device_cache.rt_cycle_max_ns) {
+        device_cache.rt_cycle_max_ns = cycle_time;
+    }
+    
+    // Update HAL pins with current performance data
+    *(inst->pev2_data.PEv2_debug_cycle_time) = cycle_time;
+    *(inst->pev2_data.PEv2_debug_error_count) = device_cache.error_count;
+    *(inst->pev2_data.PEv2_debug_cmd_sent) = device_cache.total_commands_sent;
+    *(inst->pev2_data.PEv2_debug_cmd_failed) = device_cache.failed_commands;
+    *(inst->pev2_data.PEv2_debug_comm_ok) = device_cache.communication_ok;
+    
+    *(inst->pev2_data.PEv2_perf_rt_min_cycle) = device_cache.rt_cycle_min_ns;
+    *(inst->pev2_data.PEv2_perf_rt_max_cycle) = device_cache.rt_cycle_max_ns;
+    
+    // Calculate moving average (every 100 cycles to reduce RT overhead)
+    if (device_cache.rt_cycle_count % 100 == 0 && device_cache.rt_cycle_count > 0) {
+        *(inst->pev2_data.PEv2_perf_rt_avg_cycle) = device_cache.rt_cycle_total_ns / device_cache.rt_cycle_count;
+    }
+}
+
+// Phase 4: Test mode handler
+static void rt_handle_test_mode(struct __comp_state *inst) {
+    if (!*(inst->pev2_data.PEv2_debug_test_enable)) {
+        return; // Test mode disabled
+    }
+    
+    // Simple sine wave test pattern for axis 0
+    static uint32_t test_counter = 0;
+    float test_freq = *(inst->pev2_data.PEv2_debug_test_freq);
+    if (test_freq <= 0.0) test_freq = 1.0; // Default 1 Hz
+    
+    test_counter++;
+    
+    // Generate test position command (sine wave) at specified frequency
+    // Assuming 1000 Hz RT thread, calculate sine wave position
+    float time_sec = test_counter / 1000.0f;
+    float amplitude = 10000.0f; // 10000 encoder counts amplitude
+    int32_t test_position = (int32_t)(amplitude * sin(2.0 * M_PI * test_freq * time_sec));
+    
+    // Update test position command for axis 0
+    if (inst->pev2_data.PEv2_position_cmd && inst->pev2_data.PEv2_position_cmd[0]) {
+        *(inst->pev2_data.PEv2_position_cmd[0]) = test_position;
+    }
+    
+    // Enable axis 0 during test mode
+    if (inst->pev2_data.PEv2_AxesConfig && inst->pev2_data.PEv2_AxesConfig[0]) {
+        *(inst->pev2_data.PEv2_AxesConfig[0]) |= 0x01; // Set enable bit
+    }
+}
+
 FUNCTION(_) {
     if (__comp_inst == 0) return;
     
@@ -1151,6 +1282,10 @@ FUNCTION(_) {
     // Final communication processing
     PK_ReceiveAndDispatch(__comp_inst->dev);
     PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000);
+    
+    // Phase 4: Performance monitoring and test mode
+    rt_update_performance_monitoring(__comp_inst, start_time);
+    rt_handle_test_mode(__comp_inst);
     
     int64_t end_time = rtapi_get_time();
     if ((end_time - start_time) > 5000000) { // Only log if > 5ms
