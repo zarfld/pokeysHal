@@ -36,7 +36,7 @@
  *
  * @param device Pointer to sPoKeysDevice structure
  */
-void update_ponet_hal_pins(sPoKeysDevice *device)
+POKEYSDECL void update_ponet_hal_pins(sPoKeysDevice *device)
 {
     if (!device) return;
     
@@ -90,7 +90,7 @@ void update_ponet_hal_pins(sPoKeysDevice *device)
  * @param device Pointer to sPoKeysDevice structure
  * @return 0 on success, negative HAL error code on failure
  */
-int export_ponet_basic_pins(const char *prefix, int comp_id, sPoKeysDevice *device)
+POKEYSDECL int export_ponet_basic_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 {
     int r = 0;
     
@@ -145,7 +145,7 @@ int export_ponet_basic_pins(const char *prefix, int comp_id, sPoKeysDevice *devi
  * @param device Pointer to sPoKeysDevice structure
  * @return 0 on success, negative HAL error code on failure
  */
-int export_ponet_status_pins(const char *prefix, int comp_id, sPoKeysDevice *device)
+POKEYSDECL int export_ponet_status_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 {
     int r = 0;
     
@@ -217,7 +217,7 @@ int export_ponet_status_pins(const char *prefix, int comp_id, sPoKeysDevice *dev
  * @param device Pointer to sPoKeysDevice structure
  * @return 0 on success, negative HAL error code on failure
  */
-int export_ponet_pins(const char *prefix, int comp_id, sPoKeysDevice *device)
+POKEYSDECL int export_ponet_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
 {
     int r = 0;
     

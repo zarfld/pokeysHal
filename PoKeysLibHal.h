@@ -1709,7 +1709,7 @@ POKEYSDECL int PK_RTCGetAsync(sPoKeysDevice* device);
 POKEYSDECL int export_rtc_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 
 // PoNET HAL interface functions  
-POKEYSDECL int export_ponet_pins(const char *prefix, int comp_id, sPoKeysDevice *device);
+POKEYSDECL int export_ponet_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 POKEYSDECL void update_ponet_hal_pins(sPoKeysDevice *device);
 
 // UART commands

@@ -7,7 +7,7 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c PoKeysLibFastUSB.c \
         PoKeysLibDeviceData.c PoKeysLibDeviceDataAsync.c \
         PoKeysLibIO.c PoKeysLibEncoders.c PoKeysLibMatrixLED.c PoKeysLibMatrixKB.c \
         PoKeysLibMatrixKBAsync.c PoKeysLibMatrixLEDAsync.c \
-        PoKeysLibPoNET.c PoKeysLibLCD.c PoKeysLibRTC.c \
+        PoKeysLibPoNET.c PoKeysLibPoNETAsync.c PoKeysLibPoNETHal.c PoKeysLibLCD.c PoKeysLibRTC.c \
         PoKeysLibEasySensors.c PoKeysLibEasySensorsAsync.c PoKeysLibI2C.c PoKeysLib1Wire.c PoKeysLibSPI.c \
         PoKeysLibPulseEngine_v2.c \
         PoKeysLibUART.c PoKeysLibUARTAsync.c \
