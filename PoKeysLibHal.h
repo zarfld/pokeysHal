@@ -1026,6 +1026,25 @@ typedef struct
  // extended for Async
  uint8_t rtc_response_buffer[64]; // in sPoKeysDevice
 
+ // Device status structures for async monitoring
+ struct {
+     uint32_t lastAliveTime;
+     uint8_t connectionState;
+     uint8_t reserved[3];
+ } connectionStatus;
+ 
+ struct {
+     uint8_t CPUload;
+     uint32_t bufferLoad;
+     uint8_t reserved[3];
+ } deviceLoadStatus;
+ 
+ struct {
+     uint32_t errorFlags;
+     uint8_t lastError;
+     uint8_t reserved[3];
+ } deviceErrorStatus;
+
  
 } sPoKeysDevice;
 
