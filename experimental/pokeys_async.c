@@ -1210,13 +1210,13 @@ static void rt_handle_test_mode(struct __comp_state *inst) {
     int32_t test_position = (int32_t)(amplitude * sin(2.0 * M_PI * test_freq * time_sec));
     
     // Update test position command for axis 0
-    if (inst->pev2_data.PEv2_position_cmd && inst->pev2_data.PEv2_position_cmd[0]) {
-        *(inst->pev2_data.PEv2_position_cmd[0]) = test_position;
+    if (inst->pev2_data.joint_pos_cmd && inst->pev2_data.joint_pos_cmd[0]) {
+        *(inst->pev2_data.joint_pos_cmd[0]) = test_position;
     }
     
     // Enable axis 0 during test mode
-    if (inst->pev2_data.PEv2_AxesConfig && inst->pev2_data.PEv2_AxesConfig[0]) {
-        *(inst->pev2_data.PEv2_AxesConfig[0]) |= 0x01; // Set enable bit
+    if (inst->pev2_data.PEv2_AxesCommand && inst->pev2_data.PEv2_AxesCommand[0]) {
+        *(inst->pev2_data.PEv2_AxesCommand[0]) |= 0x01; // Set enable bit
     }
 }
 
