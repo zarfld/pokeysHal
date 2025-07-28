@@ -9,7 +9,12 @@
 #include "stdio.h"
 #include "rtapi_math64.h"
 #include "PoKeysLibHal.h"
-#include "../PoKeysLibAsync.h"
+
+// Forward declarations for PEv2 async functions we use
+int PK_PEv2_PulseEngineMovePVAsync(sPoKeysDevice *device);
+int PK_PEv2_HomingStartAsync(sPoKeysDevice *device);
+int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device);
+int PK_PEv2_StatusGetAsync(sPoKeysDevice *device);
 
 static int comp_id;
 
