@@ -11,12 +11,19 @@ EXTRA_LINK_ARGS = -Wl,--whole-archive -llinuxcnchal -Wl,--no-whole-archive
 # Source and object files
 SOURCES = pokeys_async.c
 OBJECTS = \
-  PoKeysLibCore.o PoKeysLibCoreSockets.o PoKeysLibFastUSB.o PoKeysLibDeviceData.o PoKeysLibIO.o \
-  PoKeysLibEncoders.o PoKeysLibMatrixLED.o PoKeysLibMatrixKB.o PoKeysLibPoNET.o PoKeysLibLCD.o \
-  PoKeysLibRTC.o PoKeysLibEasySensors.o PoKeysLibI2C.o PoKeysLib1Wire.o PoKeysLibSPI.o \
-  PoKeysLibPulseEngine_v2.o PoKeysLibUART.o PoKeysLibCAN.o PoKeysLibFailsafe.o PoKeysLibWS2812.o \
-  PoKeysLibEncodersAsync.o PoKeysLibRTCAsync.o PoKeysLibAsync.o PoKeysLibCoreSocketsAsync.o \
-  pokeys_async.o PoKeysLibIOAsync.o hal_digital.o hal_analog.o hal_encoder.o
+  PoKeysLibCore.o PoKeysLibCoreSockets.o PoKeysLibFastUSB.o PoKeysLibDeviceData.o PoKeysLibDeviceDataAsync.o \
+  PoKeysLibIO.o PoKeysLibIOAsync.o PoKeysLibEncoders.o PoKeysLibEncodersAsync.o \
+  PoKeysLibMatrixLED.o PoKeysLibMatrixLEDAsync.o PoKeysLibMatrixKB.o PoKeysLibMatrixKBAsync.o \
+  PoKeysLibPoNET.o PoKeysLibPoNETAsync.o PoKeysLibPoNETHal.o PoKeysLibLCD.o PoKeysLibLCDAsync.o \
+  PoKeysLibRTC.o PoKeysLibRTCAsync.o PoKeysLibEasySensors.o PoKeysLibEasySensorsAsync.o \
+  PoKeysLibI2C.o PoKeysLibI2CAsync.o PoKeysLib1Wire.o PoKeysLib1WireAsync.o \
+  PoKeysLibSPI.o PoKeysLibSPIAsync.o PoKeysLibPulseEngine_v2.o PoKeysLibPulseEngine_v2Async.o \
+  PoKeysLibUART.o PoKeysLibUARTAsync.o PoKeysLibCAN.o PoKeysLibCANAsync.o \
+  PoKeysLibSecurity.o PoKeysLibSecurityAsync.o PoKeysLibCOSM.o PoKeysLibCOSMAsync.o \
+  PoKeysLibFailsafe.o PoKeysLibFailsafeAsync.o PoKeysLibWS2812.o PoKeysLibWS2812Async.o \
+  PoKeysLibDevicePoKeys57IndustrialAsync.o PoKeysLibAdvancedRTAsync.o PoKeysLibPoNETAsyncEnhanced.o \
+  PoKeysLibAsync.o PoKeysLibCoreSocketsAsync.o pokeys_async.o \
+  hal_digital.o hal_analog.o hal_encoder.o
 
 # Default target
 all: $(COMPONENTS).so
