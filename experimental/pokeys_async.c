@@ -10,8 +10,13 @@
 #include "rtapi_math64.h"
 #include "PoKeysLibHal.h"
 
-// Userspace includes - needed for usleep() and other POSIX functions
+// Include math.h for fabs() function
+#include <math.h>
+
+// Userspace includes - only for userspace version
+#ifndef RTAPI
 #include <unistd.h>
+#endif
 
 // Forward declarations for PEv2 async functions we use
 int PK_PEv2_PulseEngineMovePVAsync(sPoKeysDevice *device);
@@ -887,7 +892,9 @@ void user_mainloop(void)
             PK_TimeoutAndRetryCheck(__comp_inst->dev, 6000); // checks for timeout and retry
 
             alive=0;
-            usleep(100);  // 100 microseconds delay 
+#ifndef RTAPI
+            usleep(100);  // 100 microseconds delay (userspace only)
+#endif 
         
         }
     }
@@ -1043,6 +1050,10 @@ static void rt_update_external_outputs(struct __comp_state *inst) {
     *(inst->pev2_data.PEv2_ExternalOCOutputs) = oc_mask;
 }
 
+// Forward declarations for Phase 2 async functions
+static void process_async_commands(struct __comp_state *inst);
+static void update_device_cache(struct __comp_state *inst);
+
 FUNCTION(_) {
     if (__comp_inst == 0) return;
     
@@ -1117,9 +1128,7 @@ FUNCTION(_) {
 static int __comp_get_data_size(void) { return 0; }
 
 
-// Forward declarations for Phase 2 functions
-static void process_async_commands(struct __comp_state *inst);
-static void update_device_cache(struct __comp_state *inst);  
+// Forward declarations for remaining Phase 2 functions
 static int start_async_processing(struct __comp_state *inst);
 static void stop_async_processing(void);
 
