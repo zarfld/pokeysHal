@@ -216,3 +216,58 @@ int PK_PEv2_AxisConfigurationSetAsync(sPoKeysDevice *device)
     return SendRequestAsync(device, req);
 }
 
+int PK_PEv2_PulseEngineMovePVAsync(sPoKeysDevice *device)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    
+    // Prepare MovePV payload with position and velocity data
+    uint8_t payload[56]; // 32 bytes pos + 16 bytes vel + 8 bytes header
+    
+    // Copy position commands (32 bytes)
+    for (int i = 0; i < 8; i++) {
+        int32_t pos = device->PEv2.ReferencePositionSpeed[i];
+        payload[i*4+0] = (uint8_t)(pos & 0xFF);
+        payload[i*4+1] = (uint8_t)((pos >> 8) & 0xFF);
+        payload[i*4+2] = (uint8_t)((pos >> 16) & 0xFF);
+        payload[i*4+3] = (uint8_t)((pos >> 24) & 0xFF);
+    }
+    
+    // Copy velocity ratios (16 bytes)
+    for (int i = 0; i < 8; i++) {
+        uint16_t vel = (uint16_t)(device->PEv2.ReferenceVelocityPV[i] * 65535);
+        payload[32 + i*2+0] = (uint8_t)(vel & 0xFF);
+        payload[32 + i*2+1] = (uint8_t)((vel >> 8) & 0xFF);
+    }
+    
+    int req = CreateRequestAsyncWithPayload(device, PK_CMD_PULSE_ENGINE_V2,
+                                            (const uint8_t[]){PEV2_CMD_MOVE_PV, device->PEv2.param2}, 2,
+                                            payload, 48, NULL);  // 32 + 16 bytes
+    if (req < 0) return req;
+    return SendRequestAsync(device, req);
+}
+
+int PK_PEv2_HomingStartAsync(sPoKeysDevice *device)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    uint8_t axis_mask = device->PEv2.param2;
+    int req = CreateRequestAsyncWithPayload(device, PK_CMD_PULSE_ENGINE_V2,
+                                            (const uint8_t[]){PEV2_CMD_HOMING_START}, 1,
+                                            &axis_mask, 1, NULL);
+    if (req < 0) return req;
+    return SendRequestAsync(device, req);
+}
+
+int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    uint8_t payload[2] = {
+        device->PEv2.ExternalRelayOutputs,
+        device->PEv2.ExternalOCOutputs
+    };
+    int req = CreateRequestAsyncWithPayload(device, PK_CMD_PULSE_ENGINE_V2,
+                                            (const uint8_t[]){PEV2_CMD_SET_EXTERNAL_OUTPUTS}, 1,
+                                            payload, sizeof(payload), NULL);
+    if (req < 0) return req;
+    return SendRequestAsync(device, req);
+}
+

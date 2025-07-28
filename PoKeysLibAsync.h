@@ -333,4 +333,16 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev);
 
 void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us);
 
+// PulseEngine v2 Async Functions
+int PK_PEv2_StatusGetAsync(sPoKeysDevice *device);
+int PK_PEv2_Status2GetAsync(sPoKeysDevice *device);
+int PK_PEv2_PulseEngineSetupAsync(sPoKeysDevice *device);
+int PK_PEv2_AdditionalParametersGetAsync(sPoKeysDevice *device);
+int PK_PEv2_AdditionalParametersSetAsync(sPoKeysDevice *device);
+int PK_PEv2_AxisConfigurationGetAsync(sPoKeysDevice *device);
+int PK_PEv2_AxisConfigurationSetAsync(sPoKeysDevice *device);
+int PK_PEv2_PulseEngineMovePVAsync(sPoKeysDevice *device);
+int PK_PEv2_HomingStartAsync(sPoKeysDevice *device);
+int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device);
+
 #endif // POKEYSLIB_ASYNC_H

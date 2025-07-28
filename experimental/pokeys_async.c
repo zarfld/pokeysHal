@@ -14,7 +14,7 @@ static int comp_id;
 
 
 #ifdef MODULE_INFO
-MODULE_INFO(linuxcnc, "component:pokeys_async:PoKeys IO driver, by Mit Zot");
+MODULE_INFO(linuxcnc, "component:pokeys:PoKeys HAL driver with PulseEngine v2 support");
 MODULE_INFO(linuxcnc, "pin:in-#:bit:55:out::None:None");
 MODULE_INFO(linuxcnc, "pin:ain-#:u32:3:out::None:None");
 MODULE_INFO(linuxcnc, "pin:err:bit:0:out::None:None");
@@ -35,6 +35,71 @@ struct __comp_state {
     hal_bit_t *alive;
 
     sPoKeysDevice *dev;
+    
+    // PulseEngine v2 HAL interface - exact userspace compatibility
+    struct {
+        // Motion control pins - CRITICAL for LinuxCNC
+        hal_float_t *joint_pos_cmd[8];     // pokeys.0.PEv2.0.joint-pos-cmd
+        hal_float_t *joint_vel_cmd[8];     // pokeys.0.PEv2.0.joint-vel-cmd  
+        hal_float_t *joint_pos_fb[8];      // pokeys.0.PEv2.0.joint-pos-fb
+        hal_bit_t *joint_in_position[8];   // pokeys.0.PEv2.0.joint-in-position
+        
+        // PEv2 state pins - exact userspace match
+        hal_u32_t *PEv2_AxesState[8];      // pokeys.0.PEv2.0.AxesState
+        hal_u32_t *PEv2_AxesCommand[8];    // pokeys.0.PEv2.0.AxesCommand
+        hal_s32_t *PEv2_CurrentPosition[8]; // pokeys.0.PEv2.0.CurrentPosition
+        
+        // Device info pins
+        hal_u32_t *PEv2_nrOfAxes;          // pokeys.0.PEv2.nrOfAxes
+        hal_u32_t *PEv2_maxPulseFrequency; // pokeys.0.PEv2.maxPulseFrequency
+        hal_u32_t *PEv2_bufferDepth;       // pokeys.0.PEv2.bufferDepth
+        hal_u32_t *PEv2_slotTiming;        // pokeys.0.PEv2.slotTiming
+        
+        // Engine state pins
+        hal_u32_t *PEv2_PulseEngineActivated; // pokeys.0.PEv2.PulseEngineActivated
+        hal_u32_t *PEv2_PulseEngineState;     // pokeys.0.PEv2.PulseEngineState
+        
+        // Emergency and safety pins
+        hal_bit_t *PEv2_digin_Emergency_in;     // pokeys.0.PEv2.digin.Emergency.in
+        hal_bit_t *PEv2_digin_Emergency_in_not; // pokeys.0.PEv2.digin.Emergency.in-not
+        hal_bit_t *PEv2_digout_Emergency_out;   // pokeys.0.PEv2.digout.Emergency.out
+        
+        // Limit switch pins per axis
+        hal_bit_t *PEv2_digin_LimitN_in[8];     // pokeys.0.PEv2.0.digin.LimitN.in
+        hal_bit_t *PEv2_digin_LimitN_in_not[8]; // pokeys.0.PEv2.0.digin.LimitN.in-not
+        hal_bit_t *PEv2_digin_LimitP_in[8];     // pokeys.0.PEv2.0.digin.LimitP.in
+        hal_bit_t *PEv2_digin_LimitP_in_not[8]; // pokeys.0.PEv2.0.digin.LimitP.in-not
+        hal_bit_t *PEv2_digin_Home_in[8];       // pokeys.0.PEv2.0.digin.Home.in
+        hal_bit_t *PEv2_digin_Home_in_not[8];   // pokeys.0.PEv2.0.digin.Home.in-not
+        
+        // Homing pins
+        hal_u32_t *PEv2_HomingStatus[8];        // pokeys.0.PEv2.0.HomingStatus
+        hal_bit_t *PEv2_index_enable[8];        // pokeys.0.PEv2.0.index-enable
+        
+        // External outputs
+        hal_bit_t *PEv2_digout_ExternalRelay_out[4]; // pokeys.0.PEv2.digout.ExternalRelay-0.out
+        hal_bit_t *PEv2_digout_ExternalOC_out[4];    // pokeys.0.PEv2.digout.ExternalOC-0.out
+        hal_u32_t *PEv2_ExternalRelayOutputs;        // pokeys.0.PEv2.ExternalRelayOutputs
+        hal_u32_t *PEv2_ExternalOCOutputs;           // pokeys.0.PEv2.ExternalOCOutputs
+        
+        // Probing pins
+        hal_u32_t *PEv2_ProbePosition[8];       // pokeys.0.PEv2.0.ProbePosition
+        hal_u32_t *PEv2_ProbeMaxPosition[8];    // pokeys.0.PEv2.0.ProbeMaxPosition
+        hal_u32_t *PEv2_ProbeStatus;            // pokeys.0.PEv2.ProbeStatus
+        hal_bit_t *PEv2_digin_Probed_in;        // pokeys.0.PEv2.digin.Probed.in
+        
+        // MPG jogging pins
+        hal_bit_t *PEv2_joint_kb_jog_active[8];     // pokeys.0.PEv2.0.joint-kb-jog-active
+        hal_bit_t *PEv2_joint_wheel_jog_active[8];  // pokeys.0.PEv2.0.joint-wheel-jog-active
+        
+        // Parameters (not HAL pins, stored directly)
+        hal_float_t PEv2_MaxSpeed[8];
+        hal_float_t PEv2_MaxAcceleration[8];
+        hal_s32_t PEv2_home_sequence[8];
+        hal_float_t PEv2_stepgen_STEP_SCALE[8];
+        hal_s32_t PEv2_PositionScale[8];
+        hal_s32_t PEv2_PositionOffset[8];
+    } pev2_data;
 };
 
 #include <stdlib.h>
@@ -83,6 +148,14 @@ static int export(char *prefix, long extra_arg) {
     r=export_IO_pins(prefix, comp_id, inst->dev); // Export IO pins
     if(r != 0){
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_IO_pins failed %d \n", __FILE__, __FUNCTION__, prefix, r);
+        return r;
+    };
+    
+    // Export PEv2 HAL pins - NEW
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: exporting component - export_pev2_hal_pins %s\n", __FILE__, __FUNCTION__, prefix);
+    r = export_pev2_hal_pins(inst, prefix, comp_id);
+    if(r != 0){
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_pev2_hal_pins failed %d \n", __FILE__, __FUNCTION__, r);
         return r;
     };
 
@@ -257,6 +330,259 @@ int main(int argc_, char **argv_) {
 
 
 #include <unistd.h>   /* UNIX standard function definitions */
+
+// RT-safe motion data structures
+typedef struct {
+    volatile float pos_cmd[8];
+    volatile float vel_cmd[8];
+    volatile bool pos_cmd_changed[8];
+    volatile bool vel_cmd_changed[8];
+    
+    // Cached feedback from device
+    volatile float pos_fb[8];
+    volatile bool in_position[8];
+    volatile uint32_t axis_state[8];
+    volatile int32_t current_position[8];
+} rt_motion_data_t;
+
+// Async command queue system
+typedef enum {
+    CMD_MOVE_PV,
+    CMD_HOME_START,
+    CMD_PROBE_START,
+    CMD_EMERGENCY_STOP,
+    CMD_EXTERNAL_OUTPUT_SET
+} async_cmd_type_t;
+
+typedef struct {
+    async_cmd_type_t type;
+    uint8_t axis_mask;
+    float pos_values[8];
+    float vel_values[8];
+    uint32_t misc_data;
+    bool processed;
+} async_command_t;
+
+#define MAX_ASYNC_COMMANDS 32
+typedef struct {
+    async_command_t commands[MAX_ASYNC_COMMANDS];
+    volatile int head, tail;
+    volatile int count;
+} async_command_queue_t;
+
+// Device status cache for RT-safe access
+typedef struct {
+    volatile uint32_t pulse_engine_state;
+    volatile uint32_t axes_state[8];
+    volatile int32_t current_position[8];
+    volatile uint8_t limit_status_p;
+    volatile uint8_t limit_status_n;
+    volatile uint8_t home_status;
+    volatile bool emergency_active;
+    volatile uint32_t last_update_time;
+    volatile bool communication_ok;
+} device_status_cache_t;
+
+// Global data structures
+static rt_motion_data_t motion_data;
+static async_command_queue_t cmd_queue = {0};
+static device_status_cache_t device_cache = {0};
+
+// Threading control
+static bool async_thread_running = false;
+static rtapi_task_t async_thread_id;
+
+// Async command queue functions
+static bool enqueue_async_command(const async_command_t *cmd) {
+    if (cmd_queue.count >= MAX_ASYNC_COMMANDS) {
+        rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: Async command queue full\n");
+        return false;
+    }
+    
+    cmd_queue.commands[cmd_queue.head] = *cmd;
+    cmd_queue.commands[cmd_queue.head].processed = false;
+    cmd_queue.head = (cmd_queue.head + 1) % MAX_ASYNC_COMMANDS;
+    __atomic_fetch_add(&cmd_queue.count, 1, __ATOMIC_SEQ_CST);
+    return true;
+}
+
+static bool dequeue_async_command(async_command_t *cmd) {
+    if (cmd_queue.count <= 0) return false;
+    
+    *cmd = cmd_queue.commands[cmd_queue.tail];
+    cmd_queue.tail = (cmd_queue.tail + 1) % MAX_ASYNC_COMMANDS;
+    __atomic_fetch_sub(&cmd_queue.count, 1, __ATOMIC_SEQ_CST);
+    return true;
+}
+
+static bool queue_move_pv_command(uint8_t axis_mask, const float *positions, const float *velocities) {
+    async_command_t cmd = {
+        .type = CMD_MOVE_PV,
+        .axis_mask = axis_mask
+    };
+    for (int i = 0; i < 8; i++) {
+        cmd.pos_values[i] = positions[i];
+        cmd.vel_values[i] = velocities[i];
+    }
+    return enqueue_async_command(&cmd);
+}
+
+static bool queue_homing_start_command(uint8_t axis_mask) {
+    async_command_t cmd = {
+        .type = CMD_HOME_START,
+        .axis_mask = axis_mask
+    };
+    return enqueue_async_command(&cmd);
+}
+
+// PEv2 HAL pin export function
+static int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
+    int r = 0;
+    
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: Exporting PEv2 HAL pins with prefix %s\n", prefix);
+    
+    // Motion control pins - CRITICAL for LinuxCNC compatibility
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_float_newf(HAL_IN, &inst->pev2_data.joint_pos_cmd[i], comp_id, 
+                               "%s.PEv2.%01d.joint-pos-cmd", prefix, i);
+        r |= hal_pin_float_newf(HAL_IN, &inst->pev2_data.joint_vel_cmd[i], comp_id, 
+                               "%s.PEv2.%01d.joint-vel-cmd", prefix, i);
+        r |= hal_pin_float_newf(HAL_OUT, &inst->pev2_data.joint_pos_fb[i], comp_id, 
+                               "%s.PEv2.%01d.joint-pos-fb", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.joint_in_position[i], comp_id, 
+                             "%s.PEv2.%01d.joint-in-position", prefix, i);
+        
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export motion pins for axis %d\n", i);
+            return r;
+        }
+    }
+    
+    // State and command pins
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_AxesState[i], comp_id,
+                             "%s.PEv2.%01d.AxesState", prefix, i);
+        r |= hal_pin_u32_newf(HAL_IN, &inst->pev2_data.PEv2_AxesCommand[i], comp_id,
+                             "%s.PEv2.%01d.AxesCommand", prefix, i);
+        r |= hal_pin_s32_newf(HAL_OUT, &inst->pev2_data.PEv2_CurrentPosition[i], comp_id,
+                             "%s.PEv2.%01d.CurrentPosition", prefix, i);
+        
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export state pins for axis %d\n", i);
+            return r;
+        }
+    }
+    
+    // Device info pins
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_nrOfAxes, comp_id,
+                         "%s.PEv2.nrOfAxes", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_maxPulseFrequency, comp_id,
+                         "%s.PEv2.maxPulseFrequency", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_bufferDepth, comp_id,
+                         "%s.PEv2.bufferDepth", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_slotTiming, comp_id,
+                         "%s.PEv2.slotTiming", prefix);
+    
+    // Engine state pins
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_PulseEngineActivated, comp_id,
+                         "%s.PEv2.PulseEngineActivated", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_PulseEngineState, comp_id,
+                         "%s.PEv2.PulseEngineState", prefix);
+    
+    // Emergency and safety pins
+    r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_Emergency_in, comp_id,
+                         "%s.PEv2.digin.Emergency.in", prefix);
+    r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_Emergency_in_not, comp_id,
+                         "%s.PEv2.digin.Emergency.in-not", prefix);
+    r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_digout_Emergency_out, comp_id,
+                         "%s.PEv2.digout.Emergency.out", prefix);
+    
+    // Limit switch pins per axis
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_LimitN_in[i], comp_id,
+                             "%s.PEv2.%01d.digin.LimitN.in", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_LimitN_in_not[i], comp_id,
+                             "%s.PEv2.%01d.digin.LimitN.in-not", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_LimitP_in[i], comp_id,
+                             "%s.PEv2.%01d.digin.LimitP.in", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_LimitP_in_not[i], comp_id,
+                             "%s.PEv2.%01d.digin.LimitP.in-not", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_Home_in[i], comp_id,
+                             "%s.PEv2.%01d.digin.Home.in", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_Home_in_not[i], comp_id,
+                             "%s.PEv2.%01d.digin.Home.in-not", prefix, i);
+        
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export limit/home pins for axis %d\n", i);
+            return r;
+        }
+    }
+    
+    // Homing pins
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_u32_newf(HAL_IO, &inst->pev2_data.PEv2_HomingStatus[i], comp_id,
+                             "%s.PEv2.%01d.HomingStatus", prefix, i);
+        r |= hal_pin_bit_newf(HAL_IO, &inst->pev2_data.PEv2_index_enable[i], comp_id,
+                             "%s.PEv2.%01d.index-enable", prefix, i);
+        
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export homing pins for axis %d\n", i);
+            return r;
+        }
+    }
+    
+    // External outputs
+    for (int i = 0; i < 4; i++) {
+        r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_digout_ExternalRelay_out[i], comp_id,
+                             "%s.PEv2.digout.ExternalRelay-%01d.out", prefix, i);
+        r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_digout_ExternalOC_out[i], comp_id,
+                             "%s.PEv2.digout.ExternalOC-%01d.out", prefix, i);
+    }
+    
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_ExternalRelayOutputs, comp_id,
+                         "%s.PEv2.ExternalRelayOutputs", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_ExternalOCOutputs, comp_id,
+                         "%s.PEv2.ExternalOCOutputs", prefix);
+    
+    // Probing pins
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_u32_newf(HAL_IO, &inst->pev2_data.PEv2_ProbePosition[i], comp_id,
+                             "%s.PEv2.%01d.ProbePosition", prefix, i);
+        r |= hal_pin_u32_newf(HAL_IO, &inst->pev2_data.PEv2_ProbeMaxPosition[i], comp_id,
+                             "%s.PEv2.%01d.ProbeMaxPosition", prefix, i);
+    }
+    
+    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_ProbeStatus, comp_id,
+                         "%s.PEv2.ProbeStatus", prefix);
+    r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_Probed_in, comp_id,
+                         "%s.PEv2.digin.Probed.in", prefix);
+    
+    // MPG jogging pins
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_joint_kb_jog_active[i], comp_id,
+                             "%s.PEv2.%01d.joint-kb-jog-active", prefix, i);
+        r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_joint_wheel_jog_active[i], comp_id,
+                             "%s.PEv2.%01d.joint-wheel-jog-active", prefix, i);
+    }
+    
+    if (r != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export PEv2 HAL pins\n");
+        return r;
+    }
+    
+    // Initialize parameters with defaults
+    for (int i = 0; i < 8; i++) {
+        inst->pev2_data.PEv2_MaxSpeed[i] = 1000.0;
+        inst->pev2_data.PEv2_MaxAcceleration[i] = 100.0;
+        inst->pev2_data.PEv2_home_sequence[i] = -1;  // No homing by default
+        inst->pev2_data.PEv2_stepgen_STEP_SCALE[i] = 1000.0;  // 1000 steps per unit
+        inst->pev2_data.PEv2_PositionScale[i] = 1000;
+        inst->pev2_data.PEv2_PositionOffset[i] = 0;
+    }
+    
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: PEv2 HAL pins exported successfully\n");
+    return 0;
+}
 
 
 sPoKeysDevice * dev=0;
@@ -559,73 +885,209 @@ void user_mainloop(void)
 #endif
 
 #ifdef RTAPI
+// RT-safe motion command processing functions
+static void rt_read_command_pins(struct __comp_state *inst) {
+    for (int i = 0; i < 8; i++) {
+        float new_pos = *(inst->pev2_data.joint_pos_cmd[i]);
+        float new_vel = *(inst->pev2_data.joint_vel_cmd[i]);
+        
+        // Check for command changes
+        if (new_pos != motion_data.pos_cmd[i] || new_vel != motion_data.vel_cmd[i]) {
+            motion_data.pos_cmd[i] = new_pos;
+            motion_data.vel_cmd[i] = new_vel;
+            motion_data.pos_cmd_changed[i] = true;
+        }
+    }
+}
+
+static void rt_update_motion_commands(struct __comp_state *inst) {
+    uint8_t changed_axis_mask = 0;
+    float positions[8], velocities[8];
+    
+    for (int i = 0; i < 8; i++) {
+        if (motion_data.pos_cmd_changed[i]) {
+            changed_axis_mask |= (1 << i);
+            // Convert to device units using scale
+            positions[i] = motion_data.pos_cmd[i] * inst->pev2_data.PEv2_stepgen_STEP_SCALE[i];
+            velocities[i] = motion_data.vel_cmd[i] / inst->pev2_data.PEv2_MaxSpeed[i];
+            motion_data.pos_cmd_changed[i] = false;
+        }
+    }
+    
+    // Queue MovePV command for changed axes
+    if (changed_axis_mask != 0) {
+        queue_move_pv_command(changed_axis_mask, positions, velocities);
+    }
+}
+
+static void rt_read_device_cache(struct __comp_state *inst) {
+    // Update feedback from cached device data (populated by async thread)
+    for (int i = 0; i < 8; i++) {
+        // Position feedback with scaling
+        float pos_fb = (float)device_cache.current_position[i] / inst->pev2_data.PEv2_stepgen_STEP_SCALE[i];
+        *(inst->pev2_data.joint_pos_fb[i]) = pos_fb;
+        motion_data.pos_fb[i] = pos_fb;
+        
+        // In-position status (within deadband)
+        float pos_error = fabs(motion_data.pos_cmd[i] - pos_fb);
+        bool in_position = (pos_error < 0.01); // 0.01 unit deadband
+        *(inst->pev2_data.joint_in_position[i]) = in_position;
+        motion_data.in_position[i] = in_position;
+        
+        // Update axis state
+        *(inst->pev2_data.PEv2_AxesState[i]) = device_cache.axes_state[i];
+        *(inst->pev2_data.PEv2_CurrentPosition[i]) = device_cache.current_position[i];
+    }
+    
+    // Update device info
+    *(inst->pev2_data.PEv2_PulseEngineState) = device_cache.pulse_engine_state;
+    
+    // Update limit switches
+    for (int i = 0; i < 8; i++) {
+        bool limit_n = (device_cache.limit_status_n & (1 << i)) != 0;
+        bool limit_p = (device_cache.limit_status_p & (1 << i)) != 0;
+        bool home = (device_cache.home_status & (1 << i)) != 0;
+        
+        *(inst->pev2_data.PEv2_digin_LimitN_in[i]) = limit_n;
+        *(inst->pev2_data.PEv2_digin_LimitN_in_not[i]) = !limit_n;
+        *(inst->pev2_data.PEv2_digin_LimitP_in[i]) = limit_p;
+        *(inst->pev2_data.PEv2_digin_LimitP_in_not[i]) = !limit_p;
+        *(inst->pev2_data.PEv2_digin_Home_in[i]) = home;
+        *(inst->pev2_data.PEv2_digin_Home_in_not[i]) = !home;
+    }
+    
+    // Update emergency status
+    *(inst->pev2_data.PEv2_digin_Emergency_in) = device_cache.emergency_active;
+    *(inst->pev2_data.PEv2_digin_Emergency_in_not) = !device_cache.emergency_active;
+}
+
+static void rt_handle_homing_commands(struct __comp_state *inst) {
+    // Check for homing sequence requests
+    static uint32_t last_homing_status[8] = {0};
+    uint32_t homing_mask = 0;
+    
+    for (int i = 0; i < 8; i++) {
+        uint32_t current_status = *(inst->pev2_data.PEv2_HomingStatus[i]);
+        
+        // Detect homing start request (rising edge)
+        if (current_status != 0 && last_homing_status[i] == 0) {
+            homing_mask |= (1 << i);
+        }
+        last_homing_status[i] = current_status;
+    }
+    
+    if (homing_mask != 0) {
+        queue_homing_start_command(homing_mask);
+    }
+}
+
+static void rt_update_external_outputs(struct __comp_state *inst) {
+    // Check for external output changes
+    static bool last_relay_outputs[4] = {false};
+    static bool last_oc_outputs[4] = {false};
+    bool outputs_changed = false;
+    
+    uint8_t relay_mask = 0, oc_mask = 0;
+    
+    for (int i = 0; i < 4; i++) {
+        bool relay_out = *(inst->pev2_data.PEv2_digout_ExternalRelay_out[i]);
+        bool oc_out = *(inst->pev2_data.PEv2_digout_ExternalOC_out[i]);
+        
+        if (relay_out != last_relay_outputs[i]) {
+            outputs_changed = true;
+            last_relay_outputs[i] = relay_out;
+        }
+        
+        if (oc_out != last_oc_outputs[i]) {
+            outputs_changed = true;
+            last_oc_outputs[i] = oc_out;
+        }
+        
+        if (relay_out) relay_mask |= (1 << i);
+        if (oc_out) oc_mask |= (1 << i);
+    }
+    
+    if (outputs_changed) {
+        // Update device structure for async thread
+        inst->dev->PEv2.ExternalRelayOutputs = relay_mask;
+        inst->dev->PEv2.ExternalOCOutputs = oc_mask;
+        
+        // Queue async command
+        async_command_t cmd = {
+            .type = CMD_EXTERNAL_OUTPUT_SET,
+            .axis_mask = 0,
+            .misc_data = (relay_mask << 8) | oc_mask
+        };
+        enqueue_async_command(&cmd);
+    }
+    
+    // Update feedback pins
+    *(inst->pev2_data.PEv2_ExternalRelayOutputs) = relay_mask;
+    *(inst->pev2_data.PEv2_ExternalOCOutputs) = oc_mask;
+}
+
 FUNCTION(_) {
-   rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d\n", __FILE__, __FUNCTION__,period);
-    int64_t act_time = rtapi_get_time();
-    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d act_time:%d\n", __FILE__, __FUNCTION__,period,act_time);
-            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
-            PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000); // checks for timeout and retry
-
-            if (PK_RTCGetAsync(__comp_inst->dev)==0){
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync OK\n", __FILE__, __FUNCTION__);
-                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
-                }
-                else{
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet FAILED\n", __FILE__, __FUNCTION__);
-                }
-
-                if(PK_EncoderValuesGetAsync(__comp_inst->dev) == PK_OK) {
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync OK\n", __FILE__, __FUNCTION__);
-                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
-                } else {
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync FAILED\n", __FILE__, __FUNCTION__);
-                }
-
-                if (PK_DigitalIOSetGetAsync(__comp_inst->dev)==0){
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOSetGetAsync OK\n", __FILE__, __FUNCTION__);
-                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
-                }
-                else{
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOSetGet FAILED\n", __FILE__, __FUNCTION__);
-                }
-
-            if (PK_DigitalIOGetAsync(__comp_inst->dev)==0){
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOGetAsync OK\n", __FILE__, __FUNCTION__);
-                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
-                }
-                else{
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOGetAsync FAILED\n", __FILE__, __FUNCTION__);
-                }
-//PK_DigitalIOSetAsync
-            if (PK_DigitalIOSetAsync(__comp_inst->dev)==0){
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOSetAsync OK\n", __FILE__, __FUNCTION__);
-                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
-                }
-                else{
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_DigitalIOSetAsync FAILED\n", __FILE__, __FUNCTION__);
-                }
-            if (PK_PWMUpdateAsync(__comp_inst->dev)==0){
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_PWMUpdateAsync OK\n", __FILE__, __FUNCTION__);
-                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
-                }
-                else{
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_PWMUpdateAsync FAILED\n", __FILE__, __FUNCTION__);
-                }
-
-                if (PK_AnalogIOGetAsync(__comp_inst->dev)==0){
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_AnalogIOGetAsync OK\n", __FILE__, __FUNCTION__);
-                    PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
-                }
-                else{
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_AnalogIOGetAsync FAILED\n", __FILE__, __FUNCTION__);
-                }
-
-
-            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for received answer
-            PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000); // checks for timeout and retry
-
-            int64_t  end_time = rtapi_get_time();
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: period:%d start_time:%lld end_time:%lld\n", __FILE__, __FUNCTION__,period,act_time,end_time);
+    if (__comp_inst == 0) return;
+    
+    int64_t start_time = rtapi_get_time();
+    
+    // Process communication with device
+    PK_ReceiveAndDispatch(__comp_inst->dev);
+    PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000);
+    
+    // 1. Read HAL command pins and detect changes
+    rt_read_command_pins(__comp_inst);
+    
+    // 2. Update cached device data from async responses
+    rt_read_device_cache(__comp_inst);
+    
+    // 3. Process motion commands and queue async operations
+    rt_update_motion_commands(__comp_inst);
+    
+    // 4. Handle homing sequence commands
+    rt_handle_homing_commands(__comp_inst);
+    
+    // 5. Update external outputs if changed
+    rt_update_external_outputs(__comp_inst);
+    
+    // Legacy IO operations (maintain existing behavior)
+    if (PK_RTCGetAsync(__comp_inst->dev) == PK_OK) {
+        PK_ReceiveAndDispatch(__comp_inst->dev);
+    }
+    
+    if (PK_EncoderValuesGetAsync(__comp_inst->dev) == PK_OK) {
+        PK_ReceiveAndDispatch(__comp_inst->dev);
+    }
+    
+    if (PK_DigitalIOSetGetAsync(__comp_inst->dev) == PK_OK) {
+        PK_ReceiveAndDispatch(__comp_inst->dev);
+    }
+    
+    if (PK_DigitalIOGetAsync(__comp_inst->dev) == PK_OK) {
+        PK_ReceiveAndDispatch(__comp_inst->dev);
+    }
+    
+    if (PK_DigitalIOSetAsync(__comp_inst->dev) == PK_OK) {
+        PK_ReceiveAndDispatch(__comp_inst->dev);
+    }
+    
+    if (PK_PWMUpdateAsync(__comp_inst->dev) == PK_OK) {
+        PK_ReceiveAndDispatch(__comp_inst->dev);
+    }
+    
+    if (PK_AnalogIOGetAsync(__comp_inst->dev) == PK_OK) {
+        PK_ReceiveAndDispatch(__comp_inst->dev);
+    }
+    
+    // Final communication processing
+    PK_ReceiveAndDispatch(__comp_inst->dev);
+    PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000);
+    
+    int64_t end_time = rtapi_get_time();
+    if ((end_time - start_time) > 5000000) { // Only log if > 5ms
+        rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys RT: Long cycle time: %lld ns\n", 
+                       end_time - start_time);
+    }
 }
 #endif
 
