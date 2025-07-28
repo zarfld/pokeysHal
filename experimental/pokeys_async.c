@@ -392,6 +392,15 @@ typedef struct {
     volatile bool emergency_active;
     volatile uint32_t last_update_time;
     volatile bool communication_ok;
+    
+    // Phase 3: Error tracking and statistics
+    volatile uint32_t error_count;
+    volatile uint32_t reconnect_attempts;
+    volatile uint32_t last_error_time;
+    volatile uint32_t total_commands_sent;
+    volatile uint32_t failed_commands;
+    volatile bool device_connected;
+    volatile bool emergency_stop_active;
 } device_status_cache_t;
 
 // Global data structures
@@ -920,6 +929,16 @@ static void rt_read_command_pins(struct __comp_state *inst) {
 }
 
 static void rt_update_motion_commands(struct __comp_state *inst) {
+    // Safety checks - don't send commands if device is not ready
+    if (!device_cache.communication_ok || device_cache.emergency_stop_active) {
+        // Clear all pending command changes during emergency or comm failure
+        for (int i = 0; i < 8; i++) {
+            motion_data.pos_cmd_changed[i] = false;
+            motion_data.vel_cmd_changed[i] = false;
+        }
+        return;
+    }
+    
     uint8_t changed_axis_mask = 0;
     float positions[8], velocities[8];
     
@@ -942,7 +961,21 @@ static void rt_update_motion_commands(struct __comp_state *inst) {
 static void rt_read_device_cache(struct __comp_state *inst) {
     // Only update if cache is valid and recent
     if (!device_cache.communication_ok) {
+        // Set error state on all feedback pins during communication loss
+        for (int i = 0; i < 8; i++) {
+            *(inst->pev2_data.joint_in_position[i]) = false;
+            *(inst->pev2_data.PEv2_AxesState[i]) = 0; // Stopped state
+        }
         return;
+    }
+    
+    // Emergency stop handling - disable motion immediately
+    if (device_cache.emergency_stop_active) {
+        for (int i = 0; i < 8; i++) {
+            *(inst->pev2_data.joint_in_position[i]) = false;
+            motion_data.pos_cmd_changed[i] = false; // Stop new commands
+            motion_data.vel_cmd_changed[i] = false;
+        }
     }
     
     // Update feedback from cached device data (populated by async thread)
@@ -952,11 +985,13 @@ static void rt_read_device_cache(struct __comp_state *inst) {
         *(inst->pev2_data.joint_pos_fb[i]) = pos_fb;
         motion_data.pos_fb[i] = pos_fb;
         
-        // In-position status (within deadband)
-        float pos_error = fabs(motion_data.pos_cmd[i] - pos_fb);
-        bool in_position = (pos_error < 0.01); // 0.01 unit deadband
-        *(inst->pev2_data.joint_in_position[i]) = in_position;
-        motion_data.in_position[i] = in_position;
+        // In-position status (within deadband) - only if not in emergency
+        if (!device_cache.emergency_stop_active) {
+            float pos_error = fabs(motion_data.pos_cmd[i] - pos_fb);
+            bool in_position = (pos_error < 0.01); // 0.01 unit deadband
+            *(inst->pev2_data.joint_in_position[i]) = in_position;
+            motion_data.in_position[i] = in_position;
+        }
         
         // Update axis state
         *(inst->pev2_data.PEv2_AxesState[i]) = device_cache.axes_state[i];
@@ -1190,9 +1225,17 @@ static void process_async_commands(struct __comp_state *inst) {
     int commands_processed = 0;
     const int MAX_COMMANDS_PER_CYCLE = 3; // Limit to prevent RT overrun
     
+    // Check device connection first
+    if (!device_cache.device_connected || !device_cache.communication_ok) {
+        return; // Skip processing if device is not available
+    }
+    
     // Process queued commands (limited per cycle)
     while (commands_processed < MAX_COMMANDS_PER_CYCLE && dequeue_async_command(&cmd)) {
         commands_processed++;
+        device_cache.total_commands_sent++;
+        
+        int result = PK_ERR_GENERIC;
         
         switch (cmd.type) {
             case CMD_MOVE_PV: {
@@ -1205,22 +1248,46 @@ static void process_async_commands(struct __comp_state *inst) {
                 }
                 inst->dev->PEv2.param2 = cmd.axis_mask;
                 
-                // Send MovePV command
-                PK_PEv2_PulseEngineMovePVAsync(inst->dev);
+                // Send MovePV command with error checking
+                result = PK_PEv2_PulseEngineMovePVAsync(inst->dev);
+                if (result != PK_OK) {
+                    device_cache.failed_commands++;
+                    rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: MovePV command failed, result=%d\n", result);
+                }
                 break;
             }
             
             case CMD_HOME_START: {
                 inst->dev->PEv2.param2 = cmd.axis_mask;
-                PK_PEv2_HomingStartAsync(inst->dev);
+                result = PK_PEv2_HomingStartAsync(inst->dev);
+                if (result != PK_OK) {
+                    device_cache.failed_commands++;
+                    rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: Homing start failed, result=%d\n", result);
+                }
                 break;
             }
             
             case CMD_EXTERNAL_OUTPUT_SET: {
                 inst->dev->PEv2.ExternalRelayOutputs = (cmd.misc_data >> 8) & 0xFF;
                 inst->dev->PEv2.ExternalOCOutputs = cmd.misc_data & 0xFF;
-                PK_PEv2_ExternalOutputsSetAsync(inst->dev);
+                result = PK_PEv2_ExternalOutputsSetAsync(inst->dev);
+                if (result != PK_OK) {
+                    device_cache.failed_commands++;
+                    rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: External output set failed, result=%d\n", result);
+                }
                 break;
+            }
+        }
+        
+        // Track communication errors
+        if (result != PK_OK) {
+            device_cache.error_count++;
+            device_cache.last_error_time = rtapi_get_time();
+            
+            // If too many errors, mark device as disconnected
+            if (device_cache.error_count > 10) {
+                device_cache.communication_ok = false;
+                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Too many communication errors, marking device as disconnected\n");
             }
         }
     }
@@ -1228,21 +1295,69 @@ static void process_async_commands(struct __comp_state *inst) {
 
 static void update_device_cache(struct __comp_state *inst) {
     static int64_t last_status_update = 0;
+    static int64_t last_reconnect_attempt = 0;
     int64_t current_time = rtapi_get_time();
     const int64_t STATUS_UPDATE_INTERVAL = 10000000LL; // 10ms in nanoseconds
+    const int64_t RECONNECT_INTERVAL = 1000000000LL;   // 1 second in nanoseconds
+    
+    // Check if we need to attempt reconnection
+    if (!device_cache.communication_ok && 
+        (current_time - last_reconnect_attempt) > RECONNECT_INTERVAL) {
+        
+        last_reconnect_attempt = current_time;
+        device_cache.reconnect_attempts++;
+        
+        // Try to reconnect (simplified check)
+        if (inst->dev && inst->dev->connectionType != PK_DeviceType_NotConnected) {
+            rtapi_print_msg(RTAPI_MSG_INFO, "PoKeys: Attempting to restore communication\n");
+            device_cache.communication_ok = true;
+            device_cache.error_count = 0; // Reset error count on reconnect
+        }
+    }
+    
+    // Only update if communication is OK
+    if (!device_cache.communication_ok) {
+        return;
+    }
     
     // Periodic device status updates
     if ((current_time - last_status_update) > STATUS_UPDATE_INTERVAL) {
-        // Request PEv2 status update
-        PK_PEv2_StatusGetAsync(inst->dev);
+        // Request PEv2 status update with error checking
+        int result = PK_PEv2_StatusGetAsync(inst->dev);
+        if (result != PK_OK) {
+            device_cache.error_count++;
+            device_cache.last_error_time = current_time;
+            rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: Status update failed, result=%d\n", result);
+            
+            // Don't update last_status_update on failure to retry sooner
+            return;
+        }
+        
         last_status_update = current_time;
         
-        // Update cache with current device data
+        // Validate device connection
+        if (!inst->dev || inst->dev->connectionType == PK_DeviceType_NotConnected) {
+            device_cache.communication_ok = false;
+            device_cache.device_connected = false;
+            rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: Device disconnected\n");
+            return;
+        }
+        
+        // Update cache with current device data (with validation)
         device_cache.pulse_engine_state = inst->dev->PEv2.PulseEngineState;
         device_cache.limit_status_p = inst->dev->PEv2.LimitStatusP;
         device_cache.limit_status_n = inst->dev->PEv2.LimitStatusN;
         device_cache.home_status = inst->dev->PEv2.HomeStatus;
-        device_cache.emergency_active = (inst->dev->PEv2.ErrorInputStatus & 0x01) != 0;
+        
+        // Emergency stop detection
+        bool emergency_now = (inst->dev->PEv2.ErrorInputStatus & 0x01) != 0;
+        if (emergency_now && !device_cache.emergency_active) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: EMERGENCY STOP ACTIVATED!\n");
+        } else if (!emergency_now && device_cache.emergency_active) {
+            rtapi_print_msg(RTAPI_MSG_INFO, "PoKeys: Emergency stop cleared\n");
+        }
+        device_cache.emergency_active = emergency_now;
+        device_cache.emergency_stop_active = emergency_now;
         
         for (int i = 0; i < 8; i++) {
             device_cache.axes_state[i] = inst->dev->PEv2.AxesState[i];
@@ -1257,9 +1372,16 @@ static void update_device_cache(struct __comp_state *inst) {
 
 // Processing control functions
 static int start_async_processing(struct __comp_state *inst) {
-    // Initialize device cache
+    // Initialize device cache and error tracking
     device_cache.communication_ok = false;
     device_cache.last_update_time = 0;
+    device_cache.error_count = 0;
+    device_cache.reconnect_attempts = 0;
+    device_cache.last_error_time = 0;
+    device_cache.total_commands_sent = 0;
+    device_cache.failed_commands = 0;
+    device_cache.device_connected = (inst->dev != NULL);
+    device_cache.emergency_stop_active = false;
     
     async_processing_enabled = true;
     
