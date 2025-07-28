@@ -21,7 +21,7 @@ OBJECTS = \
   PoKeysLibUART.o PoKeysLibUARTAsync.o PoKeysLibCAN.o PoKeysLibCANAsync.o \
   PoKeysLibSecurity.o PoKeysLibSecurityAsync.o PoKeysLibCOSM.o PoKeysLibCOSMAsync.o \
   PoKeysLibFailsafe.o PoKeysLibFailsafeAsync.o PoKeysLibWS2812.o PoKeysLibWS2812Async.o \
-  PoKeysLibDevicePoKeys57IndustrialAsync.o PoKeysLibAdvancedRTAsync.o PoKeysLibPoNETAsyncEnhanced.o \
+  PoKeysLibDevicePoKeys57IndustrialAsync.o PoKeysLibDeviceStatusAsync.o PoKeysLibAdvancedRTAsync.o PoKeysLibPoNETAsyncEnhanced.o \
   PoKeysLibAsync.o PoKeysLibCoreSocketsAsync.o pokeys_async.o \
   hal_digital.o hal_analog.o hal_encoder.o
 
