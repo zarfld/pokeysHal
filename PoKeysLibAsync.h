@@ -413,4 +413,21 @@ int PK_IOUpdateCycleAsync(sPoKeysDevice* device);
 int PK_EmergencyStopAllAsync(sPoKeysDevice* device);
 int PK_CommunicationTestAsync(sPoKeysDevice* device, uint8_t testCount);
 
+// PoNET Async Functions - for PoNET devices including kbd48CNC
+int PK_PoNETGetPoNETStatusAsync(sPoKeysDevice* device);
+int PK_PoNETGetModuleSettingsAsync(sPoKeysDevice* device);
+int PK_PoNETGetModuleStatusRequestAsync(sPoKeysDevice* device);
+int PK_PoNETGetModuleStatusAsync(sPoKeysDevice* device);
+int PK_PoNETSetModuleStatusAsync(sPoKeysDevice* device);
+int PK_PoNETSetModulePWMAsync(sPoKeysDevice* device);
+int PK_PoNETGetModuleLightRequestAsync(sPoKeysDevice* device);
+int PK_PoNETGetModuleLightAsync(sPoKeysDevice* device);
+
+// Enhanced PoNET functions for advanced kbd48CNC operations
+int PK_PoNETKbd48CNCUpdateCycleAsync(sPoKeysDevice* device);
+int PK_PoNETKbd48CNCLEDSetPatternAsync(sPoKeysDevice* device, uint8_t pattern[6]);
+int PK_PoNETKbd48CNCBrightnessSetAsync(sPoKeysDevice* device, uint8_t brightness);
+int PK_PoNETDeviceDiscoveryAsync(sPoKeysDevice* device);
+int PK_PoNETModuleReinitializeAsync(sPoKeysDevice* device, uint8_t moduleID);
+
 #endif // POKEYSLIB_ASYNC_H
