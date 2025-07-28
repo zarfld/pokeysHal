@@ -388,9 +388,8 @@ static rt_motion_data_t motion_data;
 static async_command_queue_t cmd_queue = {0};
 static device_status_cache_t device_cache = {0};
 
-// Threading control
-static bool async_thread_running = false;
-static int async_thread_id;
+// Thread control
+static bool async_processing_enabled = false;
 
 // Async command queue functions
 static bool enqueue_async_command(const async_command_t *cmd) {
@@ -928,10 +927,15 @@ static void rt_update_motion_commands(struct __comp_state *inst) {
 }
 
 static void rt_read_device_cache(struct __comp_state *inst) {
+    // Only update if cache is valid and recent
+    if (!device_cache.cache_valid) {
+        return;
+    }
+    
     // Update feedback from cached device data (populated by async thread)
     for (int i = 0; i < 8; i++) {
         // Position feedback with scaling
-        float pos_fb = (float)device_cache.current_position[i] / inst->pev2_data.PEv2_stepgen_STEP_SCALE[i];
+        float pos_fb = (float)device_cache.pev2.CurrentPosition[i] / inst->pev2_data.PEv2_stepgen_STEP_SCALE[i];
         *(inst->pev2_data.joint_pos_fb[i]) = pos_fb;
         motion_data.pos_fb[i] = pos_fb;
         
@@ -942,18 +946,18 @@ static void rt_read_device_cache(struct __comp_state *inst) {
         motion_data.in_position[i] = in_position;
         
         // Update axis state
-        *(inst->pev2_data.PEv2_AxesState[i]) = device_cache.axes_state[i];
-        *(inst->pev2_data.PEv2_CurrentPosition[i]) = device_cache.current_position[i];
+        *(inst->pev2_data.PEv2_AxesState[i]) = device_cache.pev2.AxesState[i];
+        *(inst->pev2_data.PEv2_CurrentPosition[i]) = device_cache.pev2.CurrentPosition[i];
     }
     
     // Update device info
-    *(inst->pev2_data.PEv2_PulseEngineState) = device_cache.pulse_engine_state;
+    *(inst->pev2_data.PEv2_PulseEngineState) = device_cache.pev2.PulseEngineState;
     
     // Update limit switches
     for (int i = 0; i < 8; i++) {
-        bool limit_n = (device_cache.limit_status_n & (1 << i)) != 0;
-        bool limit_p = (device_cache.limit_status_p & (1 << i)) != 0;
-        bool home = (device_cache.home_status & (1 << i)) != 0;
+        bool limit_n = (device_cache.pev2.LimitStatusN & (1 << i)) != 0;
+        bool limit_p = (device_cache.pev2.LimitStatusP & (1 << i)) != 0;
+        bool home = (device_cache.pev2.HomeStatus & (1 << i)) != 0;
         
         *(inst->pev2_data.PEv2_digin_LimitN_in[i]) = limit_n;
         *(inst->pev2_data.PEv2_digin_LimitN_in_not[i]) = !limit_n;
@@ -964,8 +968,9 @@ static void rt_read_device_cache(struct __comp_state *inst) {
     }
     
     // Update emergency status
-    *(inst->pev2_data.PEv2_digin_Emergency_in) = device_cache.emergency_active;
-    *(inst->pev2_data.PEv2_digin_Emergency_in_not) = !device_cache.emergency_active;
+    bool emergency_active = (device_cache.pev2.ErrorInputStatus & 0x01) != 0;
+    *(inst->pev2_data.PEv2_digin_Emergency_in) = emergency_active;
+    *(inst->pev2_data.PEv2_digin_Emergency_in_not) = !emergency_active;
 }
 
 static void rt_handle_homing_commands(struct __comp_state *inst) {
@@ -1057,6 +1062,12 @@ FUNCTION(_) {
     // 5. Update external outputs if changed
     rt_update_external_outputs(__comp_inst);
     
+    // 6. Process async commands (limited per cycle to maintain RT performance)
+    if (async_processing_enabled) {
+        process_async_commands(__comp_inst);
+        update_device_cache(__comp_inst);
+    }
+    
     // Legacy IO operations (maintain existing behavior)
     if (PK_RTCGetAsync(__comp_inst->dev) == PK_OK) {
         PK_ReceiveAndDispatch(__comp_inst->dev);
@@ -1135,11 +1146,146 @@ EXTRA_SETUP() {
 
     if (__comp_inst->dev == NULL) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: could not connect to device\n", __FILE__, __FUNCTION__);
+        return -1;
     }
+    
+    // Start async processing
+    if (start_async_processing(__comp_inst) != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: failed to start async processing\n", __FILE__, __FUNCTION__);
+        return -1;
+    }
+    
     //	PKEncoder_init(comp_id, dev);
     rtapi_print("");
     // devSerial = extra_arg;
     return 0;
+}
+
+// ========================================
+// PHASE 2: ASYNC COMMUNICATION THREAD
+// ========================================
+
+// Device status cache for RT-safe access
+static struct {
+    volatile bool cache_valid;
+    volatile int64_t last_update_time;
+    
+    // PEv2 status cache
+    struct {
+        uint8_t PulseEngineActivated;
+        uint8_t PulseEngineEnabled;
+        uint8_t PulseEngineState;
+        uint8_t AxesState[8];
+        int32_t CurrentPosition[8];
+        uint8_t LimitStatusP;
+        uint8_t LimitStatusN;
+        uint8_t HomeStatus;
+        uint8_t AxisEnabledStatesMask;
+        uint8_t SoftLimitStatus;
+        uint8_t ErrorInputStatus;
+        uint8_t MiscInputStatus;
+    } pev2;
+} device_cache;
+
+// Async processing function (called from RT thread periodically)
+static void process_async_commands(struct __comp_state *inst) {
+    async_command_t cmd;
+    int commands_processed = 0;
+    const int MAX_COMMANDS_PER_CYCLE = 3; // Limit to prevent RT overrun
+    
+    // Process queued commands (limited per cycle)
+    while (commands_processed < MAX_COMMANDS_PER_CYCLE && dequeue_async_command(&cmd)) {
+        commands_processed++;
+        
+        switch (cmd.type) {
+            case CMD_MOTION_UPDATE:
+            case CMD_MOVE_PV: {
+                // Update device structure with new position/velocity commands
+                for (int i = 0; i < 8; i++) {
+                    if (cmd.axis_mask & (1 << i)) {
+                        inst->dev->PEv2.ReferencePositionSpeed[i] = (int32_t)cmd.pos_values[i];
+                        inst->dev->PEv2.ReferenceVelocityPV[i] = cmd.vel_values[i];
+                    }
+                }
+                inst->dev->PEv2.param2 = cmd.axis_mask;
+                
+                // Send MovePV command
+                PK_PEv2_PulseEngineMovePVAsync(inst->dev);
+                break;
+            }
+            
+            case CMD_HOMING_START: {
+                inst->dev->PEv2.param2 = cmd.axis_mask;
+                PK_PEv2_HomingStartAsync(inst->dev);
+                break;
+            }
+            
+            case CMD_EXTERNAL_OUTPUT_SET: {
+                inst->dev->PEv2.ExternalRelayOutputs = (cmd.misc_data >> 8) & 0xFF;
+                inst->dev->PEv2.ExternalOCOutputs = cmd.misc_data & 0xFF;
+                PK_PEv2_ExternalOutputsSetAsync(inst->dev);
+                break;
+            }
+        }
+    }
+}
+
+static void update_device_cache(struct __comp_state *inst) {
+    static int64_t last_status_update = 0;
+    int64_t current_time = rtapi_get_time();
+    const int64_t STATUS_UPDATE_INTERVAL = 10000000LL; // 10ms in nanoseconds
+    
+    // Periodic device status updates
+    if ((current_time - last_status_update) > STATUS_UPDATE_INTERVAL) {
+        // Request PEv2 status update
+        PK_PEv2_StatusGetAsync(inst->dev);
+        last_status_update = current_time;
+        
+        // Update cache with current device data
+        device_cache.pev2.PulseEngineActivated = inst->dev->PEv2.PulseEngineActivated;
+        device_cache.pev2.PulseEngineEnabled = inst->dev->PEv2.PulseEngineEnabled;
+        device_cache.pev2.PulseEngineState = inst->dev->PEv2.PulseEngineState;
+        device_cache.pev2.AxisEnabledStatesMask = inst->dev->PEv2.AxisEnabledStatesMask;
+        device_cache.pev2.SoftLimitStatus = inst->dev->PEv2.SoftLimitStatus;
+        device_cache.pev2.LimitStatusP = inst->dev->PEv2.LimitStatusP;
+        device_cache.pev2.LimitStatusN = inst->dev->PEv2.LimitStatusN;
+        device_cache.pev2.HomeStatus = inst->dev->PEv2.HomeStatus;
+        device_cache.pev2.ErrorInputStatus = inst->dev->PEv2.ErrorInputStatus;
+        device_cache.pev2.MiscInputStatus = inst->dev->PEv2.MiscInputStatus;
+        
+        for (int i = 0; i < 8; i++) {
+            device_cache.pev2.AxesState[i] = inst->dev->PEv2.AxesState[i];
+            device_cache.pev2.CurrentPosition[i] = inst->dev->PEv2.CurrentPosition[i];
+        }
+        
+        // Mark cache as valid and updated
+        device_cache.last_update_time = current_time;
+        device_cache.cache_valid = true;
+    }
+}
+
+// Processing control functions
+static int start_async_processing(struct __comp_state *inst) {
+    // Initialize device cache
+    device_cache.cache_valid = false;
+    device_cache.last_update_time = 0;
+    
+    async_processing_enabled = true;
+    
+    rtapi_print_msg(RTAPI_MSG_INFO, "PoKeys: Async processing enabled\n");
+    return 0;
+}
+
+static void stop_async_processing(void) {
+    async_processing_enabled = false;
+    rtapi_print_msg(RTAPI_MSG_INFO, "PoKeys: Async processing disabled\n");
+}
+
+EXTRA_CLEANUP() {
+    // Stop the async processing
+    stop_async_processing();
+    
+    rtapi_print_msg(RTAPI_MSG_INFO, "PoKeys: Component cleanup completed\n");
 }
 
 #ifdef RTAPI
