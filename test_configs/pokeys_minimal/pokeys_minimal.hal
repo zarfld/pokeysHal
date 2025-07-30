@@ -1,0 +1,27 @@
+# PoKeys Minimal HAL Configuration - Simplified Test
+# Created: 2025-07-30
+# Purpose: Basic test of PoKeys component loading in LinuxCNC
+
+# Load the required components in correct order
+loadrt trivkins coordinates=[KINS]COORDINATES
+loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS
+loadrt pokeys_async
+loadrt pid names=pid.x,pid.y,pid.z
+
+# Create HAL threads
+addf motion-command-handler servo-thread
+addf motion-controller servo-thread
+addf pid.x.do-pid-calcs servo-thread
+addf pid.y.do-pid-calcs servo-thread
+addf pid.z.do-pid-calcs servo-thread
+addf pokeys-async.0 servo-thread
+
+# Basic machine enable
+net estop-ext <= iocontrol.0.user-enable-out
+net estop-ext => iocontrol.0.emc-enable-in
+
+# For initial testing, just create minimal connections
+net machine-enable <= pokeys-async.0.digin.0.in-not
+net machine-enable => pid.x.enable
+net machine-enable => pid.y.enable
+net machine-enable => pid.z.enable

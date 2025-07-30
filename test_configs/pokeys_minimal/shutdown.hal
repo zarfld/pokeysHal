@@ -1,0 +1,28 @@
+# PoKeys Shutdown HAL
+# Created: 2025-07-30
+# Purpose: Safe shutdown procedures
+
+# This file is executed when LinuxCNC shuts down
+# Use it to safely disable outputs and put system in safe state
+
+# Disable all PWM outputs
+setp pokeys-async.0.adcout.0.enable FALSE
+setp pokeys-async.0.adcout.1.enable FALSE
+setp pokeys-async.0.adcout.2.enable FALSE
+setp pokeys-async.0.adcout.3.enable FALSE
+setp pokeys-async.0.adcout.4.enable FALSE
+setp pokeys-async.0.adcout.5.enable FALSE
+
+# Turn off all relays
+setp pokeys-async.0.PEv2.digout.ExternalRelay-0.out FALSE
+setp pokeys-async.0.PEv2.digout.ExternalRelay-1.out FALSE
+setp pokeys-async.0.PEv2.digout.ExternalRelay-2.out FALSE
+setp pokeys-async.0.PEv2.digout.ExternalRelay-3.out FALSE
+
+# Set all analog outputs to zero
+setp pokeys-async.0.adcout.0.value 0.0
+setp pokeys-async.0.adcout.1.value 0.0
+setp pokeys-async.0.adcout.2.value 0.0
+setp pokeys-async.0.adcout.3.value 0.0
+setp pokeys-async.0.adcout.4.value 0.0
+setp pokeys-async.0.adcout.5.value 0.0

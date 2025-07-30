@@ -1,0 +1,13 @@
+# PoKeys Custom Post-GUI HAL
+# Created: 2025-07-30
+# Purpose: Additional HAL connections after GUI is loaded
+
+# This file is loaded after the GUI starts
+# Use for connections that need GUI pins
+
+# Connect some GUI indicators if needed
+# net jog-speed <= halui.jog-speed
+# net max-velocity <= halui.max-velocity.value
+
+# Add any custom GUI connections here
+# For basic testing, this file can remain minimal
