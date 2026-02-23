@@ -1,0 +1,93 @@
+name: "📊 Non-Functional Requirement (REQ-NF)"
+description: "Specify a quality attribute requirement — performance, reliability, safety, security (ISO/IEC/IEEE 29148:2018)"
+labels: ["non-functional-requirement", "phase-02"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Non-Functional Requirement
+        Describe a **quality attribute** the system must satisfy. Must include **measurable criteria**.
+        Trace to a parent Stakeholder Requirement.
+
+  - type: input
+    id: parent-str
+    attributes:
+      label: "Parent Stakeholder Requirement"
+      description: "Link to the parent StR issue (#N syntax)"
+      placeholder: "Traces to: #"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: quality-attribute
+    attributes:
+      label: "Quality Attribute Category"
+      options:
+        - "Performance (latency, throughput, jitter)"
+        - "Real-Time (timing constraints, determinism)"
+        - "Reliability (MTBF, availability, fault tolerance)"
+        - "Safety (fail-safe, IEC 61508)"
+        - "Security (authentication, encryption)"
+        - "Usability (API ergonomics, configuration)"
+        - "Maintainability (testability, modularity)"
+        - "Portability (OS, hardware compatibility)"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirement-description
+    attributes:
+      label: "Requirement Description"
+      description: "Specific quality constraint (use 'shall' for mandatory)"
+      placeholder: "The system shall ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: measurable-criteria
+    attributes:
+      label: "Measurable Criteria"
+      description: "Objective, numeric targets and measurement method"
+      placeholder: |
+        | Metric | Target | Measurement Method |
+        |--------|--------|--------------------|
+        | RT thread jitter | < 50µs (soft RT) | `cyclictest` |
+        | USB poll latency | < 5ms | oscilloscope / GPIO |
+    validations:
+      required: true
+
+  - type: dropdown
+    id: verification-method
+    attributes:
+      label: "Verification Method"
+      options:
+        - "Test (automated measurement)"
+        - "Test (manual measurement)"
+        - "Analysis (mathematical proof)"
+        - "Inspection"
+        - "Demonstration"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority"
+      options:
+        - "P0 - Critical"
+        - "P1 - High"
+        - "P2 - Medium"
+        - "P3 - Low"
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceability
+    attributes:
+      label: "Traceability"
+      value: |
+        ## Traceability
+        - **Traces to**: # (parent StR)
+        - **Implemented by**: (add PR when created)
+        - **Verified by**: (add TEST issues when created)

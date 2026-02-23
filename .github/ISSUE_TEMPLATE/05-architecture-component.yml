@@ -1,0 +1,78 @@
+name: "🧱 Architecture Component (ARC-C)"
+description: "Specify an architecture component — interfaces, responsibilities, technology (ISO/IEC/IEEE 42010:2011)"
+labels: ["architecture-component", "phase-03"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Architecture Component
+        Define a **component's responsibilities, interfaces, and technology**.
+        Trace to Architecture Decisions (ADRs) and requirements.
+
+  - type: textarea
+    id: architecture-decisions
+    attributes:
+      label: "Architecture Decisions"
+      description: "Which ADRs govern this component? (#N syntax)"
+      placeholder: "Based on: # (ADR)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: component-purpose
+    attributes:
+      label: "Component Purpose"
+      description: "What is this component responsible for? What is out of scope?"
+      placeholder: |
+        **Responsibility**: ...
+        **Scope**: ...
+        **Out of Scope**: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: interfaces
+    attributes:
+      label: "Interfaces"
+      description: "HAL pins, function signatures, APIs, events published/consumed"
+      placeholder: |
+        ### HAL Pins (if applicable)
+        - `pokeys-async.N.pin-name` (hal_bit_t, OUT) — description
+
+        ### C API / Functions
+        ```c
+        int PK_FunctionName(sPoKeysDevice* device, ...);
+        ```
+
+        ### Events / Callbacks
+        - ...
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: "Dependencies"
+      description: "Other components or external systems this depends on"
+      placeholder: |
+        **Internal**: #
+        **External**: libusb-1.0, LinuxCNC HAL
+
+  - type: textarea
+    id: technology-stack
+    attributes:
+      label: "Technology Stack"
+      description: "Language, libraries, build tools"
+      placeholder: |
+        - Language: C99
+        - Libraries: libusb-1.0, pthreads, liblinuxcnchal
+        - Build: make -f Makefile.noqmake
+
+  - type: textarea
+    id: traceability
+    attributes:
+      label: "Traceability"
+      value: |
+        ## Traceability
+        - **Based on**: # (ADR)
+        - **Traces to**: # (requirements)
+        - **Implemented by**: (add PR when created)
+        - **Verified by**: (add TEST issues when created)

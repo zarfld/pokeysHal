@@ -1,5 +1,76 @@
 # Root Copilot Instructions - Standards-Compliant Software Development
 
+## 🗂️ Repository Context: pokeysHal
+
+This repository implements the **PoKeysLibHal** — an optimized HAL (Hardware Abstraction Layer) driver for PoKeys USB/Ethernet devices intended for **hard real-time use with LinuxCNC**.
+
+### Tech Stack
+- **Language**: C (C99), with some `.comp` files for LinuxCNC HAL components
+- **Build system**: `make -f Makefile.noqmake` (primary), CMake (`cmake .. && make`)
+- **Target platform**: Linux (Ubuntu/Debian), LinuxCNC (RTAI or PREEMPT_RT kernel)
+- **Key dependencies**: libusb-1.0, LinuxCNC HAL (`liblinuxcnchal`, `halcompile`), pthreads
+
+### Build Commands
+```bash
+# Build the HAL library
+sudo make -f Makefile.noqmake install
+
+# Build with CMake
+mkdir -p build && cd build && cmake .. && make
+
+# Build and install the LinuxCNC HAL component (userspace)
+sudo halcompile --install --userspace --extra-link-args="-L/usr/lib -lPoKeysHal" experimental/pokeys_async.c
+
+# Build RT component
+cd experimental/build && make -f Submakefile.rt all && sudo make -f Submakefile.rt install
+```
+
+### Testing
+```bash
+# Run userspace HAL component test
+halrun <<EOF
+loadusr -W pokeys_async
+show pin && show funct && start && show pin && show param && exit
+EOF
+
+# Run real-time HAL component test
+halrun <<EOF
+loadrt threads name1=test-thread period1=1000000
+loadrt pokeys_async
+addf pokeys-async.0 test-thread
+start && show pin && show param && exit
+EOF
+
+# Compile test
+bash test_compile.sh
+```
+
+### Repository Structure
+- `PoKeysLib*.c / PoKeysLib*.h` — PoKeys communication library (C source)
+- `PoKeysLibHal.h` — HAL pin/function declarations
+- `experimental/pokeys_async.c` / `*.comp` — LinuxCNC HAL component
+- `hal-canon/` — Canonical HAL pin implementations
+- `hid*.c / hidapi.h` — HID/USB interface
+- `docs/` — Project documentation
+- `.github/instructions/` — Phase-specific Copilot instructions
+
+### Coding Conventions (C)
+- C99 standard; avoid C++-isms
+- No dynamic memory allocation in real-time threads (use `mlockall()`, pre-allocate)
+- No blocking calls in real-time paths; use non-blocking sockets and async patterns
+- Prefer `hal_s32_t`, `hal_bit_t`, `hal_float_t` for HAL pin types
+- ISRs/RT functions must complete in <50µs (soft RT) or <5µs (hard RT)
+- Prefix all public API functions with `PK_` (e.g., `PK_DigitalIOSetAsync`)
+- Header guards: `#ifndef POKEYSLIB_XXX_H` pattern
+
+### Key Real-Time Constraints
+- No `malloc`/`free` in RT paths
+- No blocking I/O (UDP socket must be `O_NONBLOCK`)
+- All HAL pins updated via `hal_pin_*_new()` / `hal_param_*_new()`
+- `mlockall(MCL_CURRENT | MCL_FUTURE)` required for RT memory locking
+
+---
+
 You are an AI assistant specialized in **standards-compliant software engineering** following **IEEE/ISO/IEC standards** and **Extreme Programming (XP) practices**.
 
 ## 🎯 Primary Objectives

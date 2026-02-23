@@ -1,0 +1,115 @@
+name: "🧪 Test Case (TEST)"
+description: "Specify a verification or validation test case (IEEE 1012-2016)"
+labels: ["test-case", "phase-07"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Test Case
+        Specify a **verification or validation test case** linked to requirements.
+        Every REQ-F and REQ-NF must have at least one test case.
+
+  - type: textarea
+    id: verified-requirements
+    attributes:
+      label: "Verified Requirements"
+      description: "Which requirements does this test verify? (#N syntax)"
+      placeholder: |
+        Verifies:
+        - # (REQ-F or REQ-NF)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: test-type
+    attributes:
+      label: "Test Type"
+      options:
+        - "Unit (C function level)"
+        - "Integration (component interaction)"
+        - "System (end-to-end HAL)"
+        - "Acceptance (customer scenario)"
+        - "Performance / RT timing"
+        - "Security"
+        - "Regression"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Test Priority"
+      options:
+        - "P0 - Critical (must pass for release)"
+        - "P1 - High"
+        - "P2 - Medium"
+        - "P3 - Low"
+    validations:
+      required: true
+
+  - type: textarea
+    id: preconditions
+    attributes:
+      label: "Preconditions"
+      description: "System state before test runs"
+      placeholder: |
+        - HAL is initialized
+        - PoKeys device connected (or simulated)
+        - ...
+
+  - type: textarea
+    id: test-steps
+    attributes:
+      label: "Test Steps"
+      description: "Step-by-step procedure"
+      placeholder: |
+        1. Load HAL component: `halrun -f test_config.hal`
+        2. Set input pin: `setp pokeys-async.0.pin-in 1`
+        3. Observe output pin: `getp pokeys-async.0.pin-out`
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-results
+    attributes:
+      label: "Expected Results"
+      description: "Observable, measurable outcomes"
+      placeholder: |
+        - pin-out equals 1 within 50ms
+        - No HAL errors in log
+        - RT thread jitter < 50µs
+    validations:
+      required: true
+
+  - type: textarea
+    id: test-data
+    attributes:
+      label: "Test Data / Configuration"
+      description: "Input values, HAL config files, device configuration required"
+      placeholder: |
+        ```bash
+        # test_config.hal
+        loadrt pokeys_async
+        ...
+        ```
+
+  - type: dropdown
+    id: automation-status
+    attributes:
+      label: "Automation Status"
+      options:
+        - "Automated (CI)"
+        - "Semi-automated (script + manual check)"
+        - "Manual"
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceability
+    attributes:
+      label: "Traceability"
+      value: |
+        ## Traceability
+        - **Verifies**: # (REQ-F or REQ-NF)
+        - **Test Suite**: (link to test file/script)
+        - **Automated**: Yes/No

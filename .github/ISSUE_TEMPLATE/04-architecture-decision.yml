@@ -1,0 +1,92 @@
+name: "🏛️ Architecture Decision (ADR)"
+description: "Document an architecture decision with context, rationale, and consequences (ISO/IEC/IEEE 42010:2011)"
+labels: ["architecture-decision", "phase-03"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Architecture Decision Record (ADR)
+        Document a **significant architectural choice**. Record the context, decision, alternatives, and consequences.
+        Status progresses: Proposed → Under Review → Accepted / Rejected.
+
+  - type: textarea
+    id: requirements-addressed
+    attributes:
+      label: "Requirements Addressed"
+      description: "Which requirements does this decision satisfy? (#N syntax)"
+      placeholder: |
+        - Traces to: # (REQ-F or REQ-NF)
+        - Relates to: #
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: "Status"
+      options:
+        - "Proposed"
+        - "Under Review"
+        - "Accepted"
+        - "Rejected"
+        - "Deprecated"
+        - "Superseded"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "Context"
+      description: "What forces or constraints are influencing this decision?"
+      placeholder: "We need to decide ... because ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: decision
+    attributes:
+      label: "Decision"
+      description: "What architecture decision was made?"
+      placeholder: "We will ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives Considered"
+      description: "What other options were evaluated and why were they rejected?"
+      placeholder: |
+        ### Alternative 1: ...
+        **Pros**: ...
+        **Cons**: ...
+        **Rejected because**: ...
+
+  - type: textarea
+    id: consequences
+    attributes:
+      label: "Consequences"
+      description: "Positive and negative impacts of this decision"
+      placeholder: |
+        ### Positive
+        - ✅ ...
+
+        ### Negative
+        - ❌ ...
+
+        ### Mitigations
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceability
+    attributes:
+      label: "Traceability"
+      value: |
+        ## Traceability
+        - **Traces to**: # (requirements)
+        - **Depends on**: # (other ADRs)
+        - **Components**: # (ARC-C issues using this decision)
+        - **Implemented by**: (add PR when created)

@@ -1,0 +1,115 @@
+name: "🎯 Quality Scenario (QA-SC)"
+description: "Define a measurable quality attribute scenario for architecture evaluation (ATAM)"
+labels: ["quality-scenario", "phase-03"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Quality Attribute Scenario
+        Define a **concrete, measurable quality scenario** for architecture evaluation (ATAM).
+        Every prioritized quality attribute must have at least one scenario with **measurable response criteria**.
+
+  - type: dropdown
+    id: quality-attribute
+    attributes:
+      label: "Quality Attribute"
+      options:
+        - "Performance"
+        - "Real-Time / Determinism"
+        - "Reliability / Availability"
+        - "Safety"
+        - "Security"
+        - "Maintainability"
+        - "Testability"
+        - "Portability"
+        - "Usability"
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirement-link
+    attributes:
+      label: "Traces to Requirements"
+      description: "Link to REQ-NF issues (#N syntax)"
+      placeholder: "Traces to: # (REQ-NF)"
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: "Stimulus Source"
+      description: "Who or what triggers the scenario"
+      placeholder: "e.g., LinuxCNC RT thread at 1kHz"
+    validations:
+      required: true
+
+  - type: input
+    id: stimulus
+    attributes:
+      label: "Stimulus"
+      description: "The event or condition"
+      placeholder: "e.g., pokeys_async HAL function called"
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: "Environment"
+      description: "System state when stimulus occurs"
+      placeholder: "e.g., Normal operation, Preempt-RT kernel"
+    validations:
+      required: true
+
+  - type: input
+    id: artifact
+    attributes:
+      label: "Artifact"
+      description: "The component/system affected"
+      placeholder: "e.g., pokeys_async RT module"
+    validations:
+      required: true
+
+  - type: input
+    id: response
+    attributes:
+      label: "Response"
+      description: "What the system does"
+      placeholder: "e.g., Updates HAL pins with latest PoKeys I/O values"
+    validations:
+      required: true
+
+  - type: input
+    id: response-measure
+    attributes:
+      label: "Response Measure (must be numeric)"
+      description: "Measurable criterion — NO vague terms like 'fast'"
+      placeholder: "e.g., Completes within 50µs; jitter < 10µs (p99)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: validation-method
+    attributes:
+      label: "Validation Method"
+      options:
+        - "Benchmark / measurement (cyclictest, GPIO + oscilloscope)"
+        - "Load test"
+        - "Chaos / fault injection test"
+        - "Security penetration test"
+        - "Inspection"
+        - "Simulation"
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceability
+    attributes:
+      label: "Traceability"
+      value: |
+        ## Traceability
+        - **Traces to**: # (REQ-NF)
+        - **Affects ADR**: # (ADR)
+        - **Affects component**: # (ARC-C)
+        - **Validated by**: (add TEST issues when created)

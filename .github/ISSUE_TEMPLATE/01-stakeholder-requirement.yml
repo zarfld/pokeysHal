@@ -1,0 +1,88 @@
+name: "🎯 Stakeholder Requirement (StR)"
+description: "Capture a stakeholder need or business requirement (ISO/IEC/IEEE 29148:2018)"
+labels: ["stakeholder-requirement", "phase-01"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Stakeholder Requirement
+        Capture a **business need or stakeholder expectation**. Describe WHAT is needed and WHY — not HOW to implement it.
+        Use **"shall"** for mandatory requirements. Do **not** specify technical solutions here.
+
+  - type: input
+    id: stakeholder-source
+    attributes:
+      label: "Stakeholder / Source"
+      description: "Which stakeholder class or user requested this? (e.g., LinuxCNC operator, integrator, developer)"
+      placeholder: "e.g., LinuxCNC machine operator"
+    validations:
+      required: true
+
+  - type: textarea
+    id: business-justification
+    attributes:
+      label: "Business Justification"
+      description: "Why is this requirement needed? What problem does it solve?"
+      placeholder: |
+        Problem: ...
+        Impact: ...
+        Value: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirement-description
+    attributes:
+      label: "Requirement Description"
+      description: "What shall the system do? Use 'shall' for mandatory items."
+      placeholder: "The system shall ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: success-criteria
+    attributes:
+      label: "Success Criteria"
+      description: "How will we know this requirement is satisfied? (measurable, testable)"
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority"
+      options:
+        - "P0 - Critical (must have)"
+        - "P1 - High (should have)"
+        - "P2 - Medium (nice to have)"
+        - "P3 - Low (future consideration)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: "Constraints"
+      description: "Budget, timeline, technical, regulatory, or platform limitations"
+      placeholder: "e.g., Must work on LinuxCNC 2.8+, must not break existing HAL configs"
+
+  - type: textarea
+    id: assumptions
+    attributes:
+      label: "Assumptions"
+      description: "Dependencies or conditions that must hold true"
+      placeholder: "e.g., Assumes PoKeys device is connected via Ethernet"
+
+  - type: textarea
+    id: traceability
+    attributes:
+      label: "Traceability"
+      description: "Links to related issues (refined by system requirements in Phase 02)"
+      value: |
+        ## Traceability
+        - **Traces to**: N/A (root stakeholder requirement)
+        - **Refined by**: (add REQ-F/REQ-NF issues when created)
+        - **Verified by**: (add TEST issues when created)
