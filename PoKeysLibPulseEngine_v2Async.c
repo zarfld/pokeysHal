@@ -274,3 +274,97 @@ int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device)
     return SendRequestAsync(device, req);
 }
 
+/*
+ * Parse callback for PK_PEv2_BufferFill[_16]Async.
+ *
+ * The BufferFill response is identical to the GetStatus response except
+ * that byte[2] carries the number of accepted motion-buffer slots instead
+ * of the status echo.  The remaining bytes [3..62] are the same engine
+ * status fields decoded by PK_PEv2_DecodeStatusFromResp().
+ */
+static int PK_PEv2_BufferFillParse(sPoKeysDevice *dev, const uint8_t *resp)
+{
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    dev->PEv2.motionBufferEntriesAccepted = resp[2];
+    PK_PEv2_DecodeStatusFromResp(dev, resp);
+    return PK_OK;
+}
+
+/**
+ * @brief Asynchronously transfer 8-bit motion buffer entries to the device.
+ *
+ * Mirrors @ref PK_PEv2_BufferFill but schedules the packet through the
+ * async infrastructure.  @c newMotionBufferEntries must be set before
+ * calling.  On completion the parse callback populates
+ * @c motionBufferEntriesAccepted and refreshes the engine status cache.
+ *
+ * @param device PoKeys device handle.
+ * @return Request ID (>= 0) on success, negative error code on failure.
+ */
+int PK_PEv2_BufferFillAsync(sPoKeysDevice *device)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    const uint8_t subcmds[4] = {
+        (uint8_t)PEV2_CMD_FILL_BUFFER_8BIT,
+        device->PEv2.newMotionBufferEntries,
+        (uint8_t)(device->PEv2.PulseEngineEnabled & 0x0F),
+        0
+    };
+
+    int req = CreateRequestAsyncWithPayload(device, PK_CMD_PULSE_ENGINE_V2,
+                                            subcmds, 4,
+                                            device->PEv2.MotionBuffer, 56,
+                                            PK_PEv2_BufferFillParse);
+    if (req < 0) return req;
+    return SendRequestAsync(device, req);
+}
+
+/**
+ * @brief Asynchronously transfer 16-bit motion buffer entries to the device.
+ *
+ * Identical to @ref PK_PEv2_BufferFillAsync but uses the 16-bit buffer
+ * command (subcommand @c 0xFE / @c PEV2_CMD_FILL_BUFFER_16BIT).
+ *
+ * @param device PoKeys device handle.
+ * @return Request ID (>= 0) on success, negative error code on failure.
+ */
+int PK_PEv2_BufferFill_16Async(sPoKeysDevice *device)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    const uint8_t subcmds[4] = {
+        (uint8_t)PEV2_CMD_FILL_BUFFER_16BIT,
+        device->PEv2.newMotionBufferEntries,
+        (uint8_t)(device->PEv2.PulseEngineEnabled & 0x0F),
+        0
+    };
+
+    int req = CreateRequestAsyncWithPayload(device, PK_CMD_PULSE_ENGINE_V2,
+                                            subcmds, 4,
+                                            device->PEv2.MotionBuffer, 56,
+                                            PK_PEv2_BufferFillParse);
+    if (req < 0) return req;
+    return SendRequestAsync(device, req);
+}
+
+/**
+ * @brief Asynchronously clear the device motion buffer.
+ *
+ * Mirrors @ref PK_PEv2_BufferClear.  No response data is parsed.
+ *
+ * @param device PoKeys device handle.
+ * @return Request ID (>= 0) on success, negative error code on failure.
+ */
+int PK_PEv2_BufferClearAsync(sPoKeysDevice *device)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+
+    const uint8_t subcmds[4] = {PEV2_CMD_CLEAR_BUFFER, 0, 0, 0};
+    int req = CreateRequestAsync(device, PK_CMD_PULSE_ENGINE_V2,
+                                 subcmds, 4,
+                                 NULL, 0, NULL);
+    if (req < 0) return req;
+    return SendRequestAsync(device, req);
+}
+

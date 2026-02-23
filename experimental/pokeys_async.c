@@ -28,6 +28,8 @@ int PK_PEv2_PulseEngineMovePVAsync(sPoKeysDevice *device);
 int PK_PEv2_HomingStartAsync(sPoKeysDevice *device);
 int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device);
 int PK_PEv2_StatusGetAsync(sPoKeysDevice *device);
+int PK_PEv2_BufferFillAsync(sPoKeysDevice *device);
+int PK_PEv2_BufferClearAsync(sPoKeysDevice *device);
 
 static int comp_id;
 
@@ -125,6 +127,10 @@ struct __comp_state {
         hal_bit_t *PEv2_joint_kb_jog_active[8];     // pokeys.0.PEv2.0.joint-kb-jog-active
         hal_bit_t *PEv2_joint_wheel_jog_active[8];  // pokeys.0.PEv2.0.joint-wheel-jog-active
         
+        // Motion buffer mode pins
+        hal_bit_t *PEv2_motion_buffer_mode;          // pokeys.0.PEv2.motion-buffer-mode
+        hal_s32_t *PEv2_motion_buffer_entries_accepted; // pokeys.0.PEv2.motion-buffer-entries-accepted
+
         // Parameters (not HAL pins, stored directly)
         hal_float_t PEv2_MaxSpeed[8];
         hal_float_t PEv2_MaxAcceleration[8];
@@ -132,7 +138,12 @@ struct __comp_state {
         hal_float_t PEv2_stepgen_STEP_SCALE[8];
         hal_s32_t PEv2_PositionScale[8];
         hal_s32_t PEv2_PositionOffset[8];
+        hal_float_t PEv2_step_width[8];              // minimum position delta to register movement
     } pev2_data;
+
+    // Motion buffer mode state (per-instance)
+    float mb_last_pos[8];       // last commanded position per axis (for delta calculation)
+    float mb_pulses_leftover[8]; // fractional pulse accumulator per axis
 };
 
 #include <stdlib.h>
@@ -499,6 +510,10 @@ static void rt_update_external_outputs(struct __comp_state *inst);
 static void rt_update_performance_monitoring(struct __comp_state *inst, int64_t start_time);
 static void rt_handle_test_mode(struct __comp_state *inst);
 
+// Motion buffer mode functions
+static void rt_motion_buffer_fill(struct __comp_state *inst);
+static void rt_motion_buffer_send(struct __comp_state *inst);
+
 // PEv2 HAL pin export function
 int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
     int r = 0;
@@ -653,6 +668,12 @@ int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
                              "%s.PEv2.%01d.joint-wheel-jog-active", prefix, i);
     }
     
+    // Motion buffer mode pins
+    r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_motion_buffer_mode, comp_id,
+                         "%s.PEv2.motion-buffer-mode", prefix);
+    r |= hal_pin_s32_newf(HAL_OUT, &inst->pev2_data.PEv2_motion_buffer_entries_accepted, comp_id,
+                         "%s.PEv2.motion-buffer-entries-accepted", prefix);
+    
     if (r != 0) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export PEv2 HAL pins\n");
         return r;
@@ -666,6 +687,17 @@ int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
         inst->pev2_data.PEv2_stepgen_STEP_SCALE[i] = 1000.0;  // 1000 steps per unit
         inst->pev2_data.PEv2_PositionScale[i] = 1000;
         inst->pev2_data.PEv2_PositionOffset[i] = 0;
+        inst->pev2_data.PEv2_step_width[i] = 1e-4f;  // 0.1 milli-unit minimum movement
+    }
+    
+    // Initialize motion buffer mode pins
+    *(inst->pev2_data.PEv2_motion_buffer_mode) = 0;
+    *(inst->pev2_data.PEv2_motion_buffer_entries_accepted) = 0;
+    
+    // Initialize motion buffer state
+    for (int i = 0; i < 8; i++) {
+        inst->mb_last_pos[i] = 0.0f;
+        inst->mb_pulses_leftover[i] = 0.0f;
     }
     
     // Phase 4: Initialize debug and performance monitoring pins
@@ -1228,6 +1260,124 @@ static void rt_handle_test_mode(struct __comp_state *inst) {
     }
 }
 
+/*
+ * rt_motion_buffer_fill - called each servo cycle in motion buffer mode.
+ *
+ * Computes the position delta for each enabled axis, converts it to the
+ * 8-bit buffer entry format used by the PoKeys device, and appends one
+ * time-slot entry to device->PEv2.MotionBuffer.
+ *
+ * Buffer entry format (per axis per slot):
+ *   bits [6:0] = step count (0-127)
+ *   bit  [7]   = direction flag (1 = negative direction)
+ */
+static void rt_motion_buffer_fill(struct __comp_state *inst) {
+    if (!inst->dev) return;
+    if (!*(inst->pev2_data.PEv2_motion_buffer_mode)) return;
+    if (!device_cache.communication_ok || device_cache.emergency_stop_active) return;
+
+    int numberOfAxes = inst->dev->PEv2.PulseEngineEnabled & 0x0F;
+    if (numberOfAxes == 0) numberOfAxes = 1;
+
+    /* Maximum slots that fit in the 56-byte buffer payload */
+    int maxEntries = 56 / numberOfAxes;
+
+    int pendingEntries = inst->dev->PEv2.newMotionBufferEntries;
+    if (pendingEntries >= maxEntries) return; /* buffer full, wait for send */
+
+    /* Compute motion entry for each axis */
+    for (int i = 0; i < numberOfAxes; i++) {
+        float pos_cmd   = *(inst->pev2_data.joint_pos_cmd[i]);
+        float step_scale = inst->pev2_data.PEv2_stepgen_STEP_SCALE[i];
+        float step_width = inst->pev2_data.PEv2_step_width[i];
+
+        float differenceInPosition = pos_cmd - inst->mb_last_pos[i];
+        uint8_t motion = 0;
+
+        if (fabsf(differenceInPosition) >= step_width) {
+            inst->mb_last_pos[i] = pos_cmd;
+
+            float pulsesDifference = differenceInPosition * step_scale;
+            int32_t pulses = (int32_t)floorf(pulsesDifference);
+
+            inst->mb_pulses_leftover[i] += (pulsesDifference - (float)pulses);
+
+            if (inst->mb_pulses_leftover[i] >= 1.0f) {
+                pulses++;
+                inst->mb_pulses_leftover[i] -= 1.0f;
+            } else if (inst->mb_pulses_leftover[i] <= -1.0f) {
+                pulses--;
+                inst->mb_pulses_leftover[i] += 1.0f;
+            }
+
+            /* Clamp to the 7-bit hardware range */
+            if (pulses > 127)  pulses = 127;
+            if (pulses < -127) pulses = -127;
+
+            motion = (uint8_t)((pulses < 0 ? -pulses : pulses) & 127);
+            if (pulses < 0) {
+                motion |= (1 << 7);
+            }
+        }
+
+        inst->dev->PEv2.MotionBuffer[pendingEntries * numberOfAxes + i] = motion;
+    }
+
+    inst->dev->PEv2.newMotionBufferEntries = pendingEntries + 1;
+}
+
+/*
+ * rt_motion_buffer_send - transmits the accumulated motion buffer to the device.
+ *
+ * Queues PK_PEv2_BufferFillAsync() and immediately calls PK_ReceiveAndDispatch()
+ * to collect any pending response (including the one just sent, if the device
+ * replies within the same cycle).  The parse callback populates
+ * motionBufferEntriesAccepted; unaccepted entries are then shifted to the
+ * front of the buffer so they are retransmitted on the next cycle.
+ */
+static void rt_motion_buffer_send(struct __comp_state *inst) {
+    if (!inst->dev) return;
+    if (!*(inst->pev2_data.PEv2_motion_buffer_mode)) return;
+    if (!device_cache.communication_ok || device_cache.emergency_stop_active) return;
+
+    if (inst->dev->PEv2.newMotionBufferEntries == 0) return;
+
+    int numberOfAxes = inst->dev->PEv2.PulseEngineEnabled & 0x0F;
+    if (numberOfAxes == 0) numberOfAxes = 1;
+
+    /* Queue async buffer fill; response callback sets motionBufferEntriesAccepted */
+    PK_PEv2_BufferFillAsync(inst->dev);
+
+    /* Attempt to collect the response within this cycle */
+    PK_ReceiveAndDispatch(inst->dev);
+
+    int accepted = inst->dev->PEv2.motionBufferEntriesAccepted;
+    int total    = inst->dev->PEv2.newMotionBufferEntries;
+
+    /* Update diagnostic output pin */
+    *(inst->pev2_data.PEv2_motion_buffer_entries_accepted) = accepted;
+
+    /* Also refresh device status cache from the combined status response */
+    device_cache.pulse_engine_state = inst->dev->PEv2.PulseEngineState;
+    for (int i = 0; i < 8; i++) {
+        device_cache.axes_state[i]       = inst->dev->PEv2.AxesState[i];
+        device_cache.current_position[i] = inst->dev->PEv2.CurrentPosition[i];
+    }
+    device_cache.limit_status_p = inst->dev->PEv2.LimitStatusP;
+    device_cache.limit_status_n = inst->dev->PEv2.LimitStatusN;
+    device_cache.home_status    = inst->dev->PEv2.HomeStatus;
+
+    /* Shift remaining (unaccepted) entries to the front of the buffer */
+    if (accepted > 0 && accepted < total) {
+        memmove(&inst->dev->PEv2.MotionBuffer[0],
+                &inst->dev->PEv2.MotionBuffer[accepted * numberOfAxes],
+                (size_t)((total - accepted) * numberOfAxes));
+    }
+
+    inst->dev->PEv2.newMotionBufferEntries  = total - accepted;
+    inst->dev->PEv2.motionBufferEntriesAccepted = 0;
+}
+
 FUNCTION(_) {
     if (__comp_inst == 0) return;
     
@@ -1244,7 +1394,14 @@ FUNCTION(_) {
     rt_read_device_cache(__comp_inst);
     
     // 3. Process motion commands and queue async operations
-    rt_update_motion_commands(__comp_inst);
+    if (__comp_inst->pev2_data.PEv2_motion_buffer_mode &&
+        *(__comp_inst->pev2_data.PEv2_motion_buffer_mode)) {
+        /* Motion buffer mode: fill one slot per cycle, send buffer each cycle */
+        rt_motion_buffer_fill(__comp_inst);
+        rt_motion_buffer_send(__comp_inst);
+    } else {
+        rt_update_motion_commands(__comp_inst);
+    }
     
     // 4. Handle homing sequence commands
     rt_handle_homing_commands(__comp_inst);
