@@ -1,0 +1,102 @@
+name: "⚙️ Functional Requirement (REQ-F)"
+description: "Specify a system functional behavior (ISO/IEC/IEEE 29148:2018)"
+labels: ["functional-requirement", "phase-02"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Functional Requirement
+        Describe **what the system shall do**. Must be traceable to a parent Stakeholder Requirement.
+        Use **"shall"** for mandatory. Use Given/When/Then for acceptance criteria.
+
+  - type: input
+    id: parent-str
+    attributes:
+      label: "Parent Stakeholder Requirement"
+      description: "Link to the parent StR issue (use #N syntax)"
+      placeholder: "Traces to: #"
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirement-description
+    attributes:
+      label: "Requirement Description"
+      description: "What the system shall do (active voice, measurable)"
+      placeholder: "The system shall ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: "Acceptance Criteria"
+      description: "Given/When/Then scenarios that define done"
+      placeholder: |
+        ### Scenario 1: Happy path
+        **Given** ...
+        **When** ...
+        **Then** ...
+
+        ### Scenario 2: Error path
+        **Given** ...
+        **When** ...
+        **Then** ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: verification-method
+    attributes:
+      label: "Verification Method"
+      options:
+        - "Test (automated)"
+        - "Test (manual)"
+        - "Analysis"
+        - "Inspection"
+        - "Demonstration"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority"
+      options:
+        - "P0 - Critical"
+        - "P1 - High"
+        - "P2 - Medium"
+        - "P3 - Low"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: integrity-level
+    attributes:
+      label: "Integrity Level (IEEE 1012-2016)"
+      description: "1 = highest criticality (safety/RT), 4 = lowest"
+      options:
+        - "IL-1 (safety-critical / hard real-time)"
+        - "IL-2 (high criticality / soft real-time)"
+        - "IL-3 (moderate criticality)"
+        - "IL-4 (low criticality)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: "Dependencies"
+      description: "Other requirements or issues this depends on (#N syntax)"
+      placeholder: "Depends on: #"
+
+  - type: textarea
+    id: traceability
+    attributes:
+      label: "Traceability"
+      value: |
+        ## Traceability
+        - **Traces to**: # (parent StR)
+        - **Depends on**: (add prerequisite issues)
+        - **Implemented by**: (add PR when created)
+        - **Verified by**: (add TEST issues when created)
