@@ -228,6 +228,7 @@ typedef enum {
     /* Buffer and raw transfer */
     PEV2_CMD_CLEAR_BUFFER                = 0xF0,
     PEV2_CMD_TRANSFER_RAW                = 0xE0,
+    PEV2_CMD_FILL_BUFFER_16BIT           = 0xFE,
     PEV2_CMD_FILL_BUFFER_8BIT            = 0xFF,
     PEV2_CMD_OUTPUT_ENABLE               = 0xFF
 } PEv2_command_t;
@@ -346,6 +347,11 @@ int PK_PEv2_AxisConfigurationSetAsync(sPoKeysDevice *device);
 int PK_PEv2_PulseEngineMovePVAsync(sPoKeysDevice *device);
 int PK_PEv2_HomingStartAsync(sPoKeysDevice *device);
 int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device);
+
+// Motion buffer async functions
+int PK_PEv2_BufferFillAsync(sPoKeysDevice *device);
+int PK_PEv2_BufferFill_16Async(sPoKeysDevice *device);
+int PK_PEv2_BufferClearAsync(sPoKeysDevice *device);
 
 // Encoder Reset Functions - Critical for LinuxCNC compatibility
 int PK_EncoderRawValueResetAsync(sPoKeysDevice* device, uint32_t encoderMask);

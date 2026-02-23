@@ -1491,6 +1491,10 @@ POKEYSDECL int32_t PK_PEv2_BufferFillLarge(sPoKeysDevice * device);
 POKEYSDECL int32_t PK_PEv2_BufferFillLarge_16(sPoKeysDevice * device);
 // Clear motion buffer in device
 POKEYSDECL int32_t PK_PEv2_BufferClear(sPoKeysDevice * device);
+// Async variants of motion buffer functions
+int PK_PEv2_BufferFillAsync(sPoKeysDevice * device);
+int PK_PEv2_BufferFill_16Async(sPoKeysDevice * device);
+int PK_PEv2_BufferClearAsync(sPoKeysDevice * device);
 // Reboot pulse engine v2
 POKEYSDECL int32_t PK_PEv2_PulseEngineReboot(sPoKeysDevice * device);
 // Start the homing procedure. Home offsets must be provided in the HomeOffsets

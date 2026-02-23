@@ -28,6 +28,8 @@ int PK_PEv2_PulseEngineMovePVAsync(sPoKeysDevice *device);
 int PK_PEv2_HomingStartAsync(sPoKeysDevice *device);
 int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device);
 int PK_PEv2_StatusGetAsync(sPoKeysDevice *device);
+int PK_PEv2_BufferFillAsync(sPoKeysDevice *device);
+int PK_PEv2_BufferClearAsync(sPoKeysDevice *device);
 
 static int comp_id;
 
@@ -685,7 +687,7 @@ int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
         inst->pev2_data.PEv2_stepgen_STEP_SCALE[i] = 1000.0;  // 1000 steps per unit
         inst->pev2_data.PEv2_PositionScale[i] = 1000;
         inst->pev2_data.PEv2_PositionOffset[i] = 0;
-        inst->pev2_data.PEv2_step_width[i] = 1e-6f;  // 1 micro-unit minimum movement
+        inst->pev2_data.PEv2_step_width[i] = 1e-4f;  // 0.1 milli-unit minimum movement
     }
     
     // Initialize motion buffer mode pins
@@ -1308,6 +1310,10 @@ static void rt_motion_buffer_fill(struct __comp_state *inst) {
                 inst->mb_pulses_leftover[i] += 1.0f;
             }
 
+            /* Clamp to the 7-bit hardware range */
+            if (pulses > 127)  pulses = 127;
+            if (pulses < -127) pulses = -127;
+
             motion = (uint8_t)((pulses < 0 ? -pulses : pulses) & 127);
             if (pulses < 0) {
                 motion |= (1 << 7);
@@ -1323,8 +1329,11 @@ static void rt_motion_buffer_fill(struct __comp_state *inst) {
 /*
  * rt_motion_buffer_send - transmits the accumulated motion buffer to the device.
  *
- * Calls PK_PEv2_BufferFill() synchronously, then shifts any unaccepted
- * entries to the front of the buffer so they are retransmitted next cycle.
+ * Queues PK_PEv2_BufferFillAsync() and immediately calls PK_ReceiveAndDispatch()
+ * to collect any pending response (including the one just sent, if the device
+ * replies within the same cycle).  The parse callback populates
+ * motionBufferEntriesAccepted; unaccepted entries are then shifted to the
+ * front of the buffer so they are retransmitted on the next cycle.
  */
 static void rt_motion_buffer_send(struct __comp_state *inst) {
     if (!inst->dev) return;
@@ -1336,8 +1345,11 @@ static void rt_motion_buffer_send(struct __comp_state *inst) {
     int numberOfAxes = inst->dev->PEv2.PulseEngineEnabled & 0x0F;
     if (numberOfAxes == 0) numberOfAxes = 1;
 
-    /* Send buffer; response populates motionBufferEntriesAccepted */
-    PK_PEv2_BufferFill(inst->dev);
+    /* Queue async buffer fill; response callback sets motionBufferEntriesAccepted */
+    PK_PEv2_BufferFillAsync(inst->dev);
+
+    /* Attempt to collect the response within this cycle */
+    PK_ReceiveAndDispatch(inst->dev);
 
     int accepted = inst->dev->PEv2.motionBufferEntriesAccepted;
     int total    = inst->dev->PEv2.newMotionBufferEntries;
@@ -1383,7 +1395,7 @@ FUNCTION(_) {
     
     // 3. Process motion commands and queue async operations
     if (__comp_inst->pev2_data.PEv2_motion_buffer_mode &&
-        *(  __comp_inst->pev2_data.PEv2_motion_buffer_mode)) {
+        *(__comp_inst->pev2_data.PEv2_motion_buffer_mode)) {
         /* Motion buffer mode: fill one slot per cycle, send buffer each cycle */
         rt_motion_buffer_fill(__comp_inst);
         rt_motion_buffer_send(__comp_inst);
