@@ -47,26 +47,33 @@ bash test_compile.sh
 
 ### Repository Structure
 - `PoKeysLib*.c / PoKeysLib*.h` — PoKeys communication library (C source)
-- `PoKeysLibHal.h` — HAL pin/function declarations
-- `experimental/pokeys_async.c` / `*.comp` — LinuxCNC HAL component
-- `hal-canon/` — Canonical HAL pin implementations
+- `PoKeysLibHal.h` — HAL-conform structs (uses `hal_u32_t`, `hal_s32_t`, `hal_float_t`, `hal_bit_t`; includes canonical interfaces `hal_digin_t`, `hal_digout_t`, `hal_adcin_t`, `hal_adcout_t`, `hal_encoder_t`)
+- `PoKeysLibAsync.h` — Async infrastructure declarations (enums, structs, `PK_*Async()` declarations)
+- `PoKeysLibAsync.c` — Async infrastructure implementation (mailbox, dispatch, retry)
+- `PoKeysLib**Async.c` — Per-subsystem async implementations + `export_**_pins()` HAL pin export functions
+- `experimental/pokeys_async.c` — LinuxCNC HAL component integration shell (calls `export_**_pins()`, `EXTRA_SETUP`, RT function, `user_mainloop`)
+- `experimental/async_scheduler.h/.c` — Async scheduler (to be migrated to `PoKeysLibAsync`)
+- `hal-canon/` — Canonical HAL pin implementations (`hal_digin_t`, `hal_digout_t`, `hal_adcin_t`, `hal_adcout_t`, `hal_encoder_t`)
 - `hid*.c / hidapi.h` — HID/USB interface
 - `docs/` — Project documentation
-- `.github/instructions/` — Phase-specific Copilot instructions
+- `.github/instructions/` — Phase-specific and architecture Copilot instructions
+
+> ⚠️ **Architecture rules are enforced via `.github/instructions/pokeyshal-architecture.instructions.md`**. All agents MUST follow these rules when reading, writing, or reviewing C/H files.
 
 ### Coding Conventions (C)
 - C99 standard; avoid C++-isms
 - No dynamic memory allocation in real-time threads (use `mlockall()`, pre-allocate)
 - No blocking calls in real-time paths; use non-blocking sockets and async patterns
-- Prefer `hal_s32_t`, `hal_bit_t`, `hal_float_t` for HAL pin types
+- Use `hal_u32_t`, `hal_s32_t`, `hal_bit_t`, `hal_float_t` for all HAL-exposed struct members in `PoKeysLibHal.h`
 - ISRs/RT functions must complete in <50µs (soft RT) or <5µs (hard RT)
 - Prefix all public API functions with `PK_` (e.g., `PK_DigitalIOSetAsync`)
 - Header guards: `#ifndef POKEYSLIB_XXX_H` pattern
+- HAL pin exports for digital/analog/encoder channels use canonical functions: `hal_export_digin()`, `hal_export_digout()`, `hal_export_adcin()`, `hal_export_adcout()`, `hal_export_encoder()`
 
 ### Key Real-Time Constraints
 - No `malloc`/`free` in RT paths
 - No blocking I/O (UDP socket must be `O_NONBLOCK`)
-- All HAL pins updated via `hal_pin_*_new()` / `hal_param_*_new()`
+- HAL pins exported via `export_<subsystem>_pins()` in `PoKeysLib**Async.c` (NOT directly in `experimental/pokeys_async.c`)
 - `mlockall(MCL_CURRENT | MCL_FUTURE)` required for RT memory locking
 
 ---
