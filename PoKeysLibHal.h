@@ -380,10 +380,10 @@ typedef struct
 // Pulse engine v2 information
 typedef struct
 {
- uint8_t nrOfAxes;
- uint8_t maxPulseFrequency;
- uint8_t bufferDepth;
- uint8_t slotTiming;
+ hal_u32_t nrOfAxes;
+ hal_u32_t maxPulseFrequency;
+ hal_u32_t bufferDepth;
+ hal_u32_t slotTiming;
 
  uint8_t reserved[4];
 } sPoKeysPEv2info;
@@ -397,6 +397,24 @@ typedef struct
  uint8_t         AxesState[8];              // Axis states (bit-mapped) - see ePK_PEAxisState
  uint8_t         AxesConfig[8];             // Axis configuration - see ePK_PEv2_AxisConfig
  uint8_t         AxesSwitchConfig[8];       // Axis switch configuration - see ePK_PEv2_AxisSwitchOptions
+ // Expanded AxesConfig bitfields (hal_bit_t for direct HAL availability)
+ hal_bit_t       AxesConfig_enabled[8];           // PK_AC_ENABLED (bit 0)
+ hal_bit_t       AxesConfig_inverted[8];           // PK_AC_INVERTED (bit 1)
+ hal_bit_t       AxesConfig_internal_planner[8];   // PK_AC_INTERNAL_PLANNER (bit 2)
+ hal_bit_t       AxesConfig_position_mode[8];      // PK_AC_POSITION_MODE (bit 3)
+ hal_bit_t       AxesConfig_inverted_home[8];      // PK_AC_INVERTED_HOME (bit 4)
+ hal_bit_t       AxesConfig_soft_limit_enabled[8]; // PK_AC_SOFT_LIMIT_ENABLED (bit 5)
+ hal_bit_t       AxesConfig_fast_output[8];        // PK_AC_FAST_OUTPUT (bit 6)
+ hal_bit_t       AxesConfig_enabled_masked[8];     // PK_AC_ENABLED_MASKED (bit 7)
+ // Expanded AxesSwitchConfig bitfields (hal_bit_t for direct HAL availability)
+ hal_bit_t       AxesSwitchConfig_LimitN[8];           // PK_ASO_SWITCH_LIMIT_N (bit 0)
+ hal_bit_t       AxesSwitchConfig_LimitP[8];           // PK_ASO_SWITCH_LIMIT_P (bit 1)
+ hal_bit_t       AxesSwitchConfig_Home[8];              // PK_ASO_SWITCH_HOME (bit 2)
+ hal_bit_t       AxesSwitchConfig_CombinedLN_H[8];    // PK_ASO_SWITCH_COMBINED_LN_H (bit 3)
+ hal_bit_t       AxesSwitchConfig_CombinedLP_H[8];    // PK_ASO_SWITCH_COMBINED_LP_H (bit 4)
+ hal_bit_t       AxesSwitchConfig_InvertLimitN[8];    // PK_ASO_SWITCH_INVERT_LIMIT_N (bit 5)
+ hal_bit_t       AxesSwitchConfig_InvertLimitP[8];    // PK_ASO_SWITCH_INVERT_LIMIT_P (bit 6)
+ hal_bit_t       AxesSwitchConfig_InvertHome[8];       // PK_ASO_SWITCH_INVERT_HOME (bit 7)
  hal_s32_t         CurrentPosition[8];        // Current position
  hal_s32_t         PositionSetup[8];          // Position to be set as current position
  hal_s32_t         ReferencePositionSpeed[8]; // Reference position or speed (position or pulses/s)
@@ -525,7 +543,101 @@ typedef struct
  uint8_t         InternalDriverStepConfig[4];
  uint8_t         InternalDriverCurrentConfig[4];
 
+ // HAL pin pointers - exported via export_pev2_pins() in PoKeysLibPulseEngine_v2Async.c
+ hal_float_t    *pin_joint_pos_cmd[8];       // pokeys.0.PEv2.0.joint-pos-cmd
+ hal_float_t    *pin_joint_vel_cmd[8];       // pokeys.0.PEv2.0.joint-vel-cmd
+ hal_float_t    *pin_joint_pos_fb[8];        // pokeys.0.PEv2.0.joint-pos-fb
+ hal_bit_t      *pin_joint_in_position[8];  // pokeys.0.PEv2.0.joint-in-position
+ hal_u32_t      *pin_AxesState[8];           // pokeys.0.PEv2.0.AxesState
+ hal_u32_t      *pin_AxesCommand[8];         // pokeys.0.PEv2.0.AxesCommand
+ hal_s32_t      *pin_CurrentPosition[8];    // pokeys.0.PEv2.0.CurrentPosition
+ hal_u32_t      *pin_nrOfAxes;              // pokeys.0.PEv2.nrOfAxes
+ hal_u32_t      *pin_maxPulseFrequency;     // pokeys.0.PEv2.maxPulseFrequency
+ hal_u32_t      *pin_bufferDepth;           // pokeys.0.PEv2.bufferDepth
+ hal_u32_t      *pin_slotTiming;            // pokeys.0.PEv2.slotTiming
+ hal_u32_t      *pin_PulseEngineActivated;  // pokeys.0.PEv2.PulseEngineActivated
+ hal_u32_t      *pin_PulseEngineState;      // pokeys.0.PEv2.PulseEngineState
+ hal_bit_t      *pin_digin_Emergency_in;    // pokeys.0.PEv2.digin.Emergency.in
+ hal_bit_t      *pin_digin_Emergency_in_not; // pokeys.0.PEv2.digin.Emergency.in-not
+ hal_bit_t      *pin_digout_Emergency_out;  // pokeys.0.PEv2.digout.Emergency.out
+ hal_bit_t      *pin_digin_LimitN_in[8];    // pokeys.0.PEv2.0.digin.LimitN.in
+ hal_bit_t      *pin_digin_LimitN_in_not[8]; // pokeys.0.PEv2.0.digin.LimitN.in-not
+ hal_bit_t      *pin_digin_LimitP_in[8];    // pokeys.0.PEv2.0.digin.LimitP.in
+ hal_bit_t      *pin_digin_LimitP_in_not[8]; // pokeys.0.PEv2.0.digin.LimitP.in-not
+ hal_bit_t      *pin_digin_Home_in[8];      // pokeys.0.PEv2.0.digin.Home.in
+ hal_bit_t      *pin_digin_Home_in_not[8];  // pokeys.0.PEv2.0.digin.Home.in-not
+ hal_u32_t      *pin_HomingStatus[8];       // pokeys.0.PEv2.0.HomingStatus
+ hal_bit_t      *pin_index_enable[8];       // pokeys.0.PEv2.0.index-enable
+ hal_bit_t      *pin_digout_ExternalRelay_out[4]; // pokeys.0.PEv2.digout.ExternalRelay-0.out
+ hal_bit_t      *pin_digout_ExternalOC_out[4];    // pokeys.0.PEv2.digout.ExternalOC-0.out
+ hal_u32_t      *pin_ExternalRelayOutputs;  // pokeys.0.PEv2.ExternalRelayOutputs
+ hal_u32_t      *pin_ExternalOCOutputs;     // pokeys.0.PEv2.ExternalOCOutputs
+ hal_bit_t      *pin_debug_test_enable;     // pokeys.0.PEv2.debug.test-enable
+ hal_u32_t      *pin_debug_cycle_time;      // pokeys.0.PEv2.debug.cycle-time-ns
+ hal_u32_t      *pin_debug_error_count;     // pokeys.0.PEv2.debug.error-count
+ hal_u32_t      *pin_debug_cmd_sent;        // pokeys.0.PEv2.debug.commands-sent
+ hal_u32_t      *pin_debug_cmd_failed;      // pokeys.0.PEv2.debug.commands-failed
+ hal_bit_t      *pin_debug_comm_ok;         // pokeys.0.PEv2.debug.communication-ok
+ hal_float_t    *pin_debug_test_freq;       // pokeys.0.PEv2.debug.test-frequency
+ hal_u32_t      *pin_perf_rt_min_cycle;     // pokeys.0.PEv2.perf.rt-min-cycle-ns
+ hal_u32_t      *pin_perf_rt_max_cycle;     // pokeys.0.PEv2.perf.rt-max-cycle-ns
+ hal_u32_t      *pin_perf_rt_avg_cycle;     // pokeys.0.PEv2.perf.rt-avg-cycle-ns
+ hal_u32_t      *pin_ProbePosition[8];      // pokeys.0.PEv2.0.ProbePosition
+ hal_u32_t      *pin_ProbeMaxPosition[8];   // pokeys.0.PEv2.0.ProbeMaxPosition
+ hal_u32_t      *pin_ProbeStatus;           // pokeys.0.PEv2.ProbeStatus
+ hal_bit_t      *pin_digin_Probed_in;       // pokeys.0.PEv2.digin.Probed.in
+ hal_bit_t      *pin_joint_kb_jog_active[8];     // pokeys.0.PEv2.0.joint-kb-jog-active
+ hal_bit_t      *pin_joint_wheel_jog_active[8];  // pokeys.0.PEv2.0.joint-wheel-jog-active
+ hal_bit_t      *pin_motion_buffer_mode;          // pokeys.0.PEv2.motion-buffer-mode
+ hal_s32_t      *pin_motion_buffer_entries_accepted; // pokeys.0.PEv2.motion-buffer-entries-accepted
+ // HAL parameters (not HAL pins, stored directly) not already in sPoKeysPEv2 fields
+ hal_s32_t       home_sequence[8];           // Homing sequence (-1 = no homing)
+ hal_float_t     stepgen_STEP_SCALE[8];      // Steps per unit (for position scaling)
+ hal_s32_t       pos_scale[8];               // Position scale factor
+ hal_s32_t       pos_offset[8];              // Position offset
+ hal_float_t     step_width[8];              // Minimum position delta to register movement
+
 } sPoKeysPEv2;
+
+// RT-safe motion data structures (for async command queue)
+typedef struct {
+    volatile float pos_cmd[8];
+    volatile float vel_cmd[8];
+    volatile bool pos_cmd_changed[8];
+    volatile bool vel_cmd_changed[8];
+    // Cached feedback from device
+    volatile float pos_fb[8];
+    volatile bool in_position[8];
+    volatile uint32_t axis_state[8];
+    volatile int32_t current_position[8];
+} rt_motion_data_t;
+
+// Device status cache for RT-safe access
+typedef struct {
+    volatile uint32_t pulse_engine_state;
+    volatile uint32_t axes_state[8];
+    volatile int32_t current_position[8];
+    volatile uint8_t limit_status_p;
+    volatile uint8_t limit_status_n;
+    volatile uint8_t home_status;
+    volatile bool emergency_active;
+    volatile uint32_t last_update_time;
+    volatile bool communication_ok;
+    // Error tracking and statistics
+    volatile uint32_t error_count;
+    volatile uint32_t reconnect_attempts;
+    volatile uint32_t last_error_time;
+    volatile uint32_t total_commands_sent;
+    volatile uint32_t failed_commands;
+    volatile bool device_connected;
+    volatile bool emergency_stop_active;
+    // Performance monitoring
+    volatile uint32_t rt_cycle_min_ns;
+    volatile uint32_t rt_cycle_max_ns;
+    volatile uint32_t rt_cycle_total_ns;
+    volatile uint32_t rt_cycle_count;
+    volatile uint32_t last_cycle_time_ns;
+} device_status_cache_t;
 
 // PoStep driver configuration
 typedef struct

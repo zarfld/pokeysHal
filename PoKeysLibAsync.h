@@ -7,6 +7,30 @@
 
 
 #define MAX_TRANSACTIONS 64 // Maximum number of async transactions
+#define MAX_ASYNC_COMMANDS 32  // Maximum number of queued async commands
+
+typedef enum {
+    CMD_MOVE_PV,
+    CMD_HOME_START,
+    CMD_PROBE_START,
+    CMD_EMERGENCY_STOP,
+    CMD_EXTERNAL_OUTPUT_SET
+} async_cmd_type_t;
+
+typedef struct {
+    async_cmd_type_t type;
+    uint8_t axis_mask;
+    float pos_values[8];
+    float vel_values[8];
+    uint32_t misc_data;
+    bool processed;
+} async_command_t;
+
+typedef struct {
+    async_command_t commands[MAX_ASYNC_COMMANDS];
+    volatile int head, tail;
+    volatile int count;
+} async_command_queue_t;
 
 typedef enum {
     TRANSACTION_PENDING = 0,
@@ -439,5 +463,8 @@ int PK_PoNETKbd48CNCLEDSetPatternAsync(sPoKeysDevice* device, uint8_t pattern[6]
 int PK_PoNETKbd48CNCBrightnessSetAsync(sPoKeysDevice* device, uint8_t brightness);
 int PK_PoNETDeviceDiscoveryAsync(sPoKeysDevice* device);
 int PK_PoNETModuleReinitializeAsync(sPoKeysDevice* device, uint8_t moduleID);
+
+/* PEv2 HAL pin export - implemented in PoKeysLibPulseEngine_v2Async.c */
+int export_pev2_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 
 #endif // POKEYSLIB_ASYNC_H
