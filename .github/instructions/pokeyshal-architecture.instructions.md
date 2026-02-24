@@ -75,13 +75,86 @@ The PoKeysHal project is structured as a layered HAL (Hardware Abstraction Layer
 - `pokeys_command_t` enum (all PoKeys protocol command codes)
 - `PEv2_command_t` enum
 - `async_transaction_t` struct
-- `mailbox_entry_t` struct
-- Declarations for core async functions:
-  - `CreateRequestAsync()`
-  - `CreateRequestAsyncWithPayload()`
-  - `SendRequestAsync()`
-  - `PK_ReceiveAndDispatch()`
-  - `PK_TimeoutAndRetryCheck()`
+- `mailbox_entry_t` struct — central data structure for pending async requests:
+
+```c
+typedef struct {
+    uint8_t request_id;               // Cyclic request ID (0–255)
+    pokeys_command_t command_sent;    // Sent command code
+    uint8_t subindex;                 // Optional sub-index (e.g., encoder number)
+    uint64_t timestamp_sent;          // Timestamp at send time (µs)
+    int retries_left;                 // Remaining retry count
+    bool response_ready;              // Set to true when response is received
+
+    void *target_ptr;                 // Pointer to HAL pin or target memory;
+                                      // if set, response payload (from byte 8)
+                                      // is auto-copied here — no manual parsing needed
+    size_t target_size;               // Expected size of response data
+
+    uint8_t request_buffer[64];       // Outgoing packet buffer
+    uint8_t response_buffer[64];      // Incoming response buffer
+} mailbox_entry_t;
+```
+
+- Declarations for core async functions with canonical signatures:
+
+```c
+/**
+ * Prepares a request packet and creates a mailbox entry.
+ * Builds the UDP packet (header, command, request ID, checksum).
+ * No network activity at this stage.
+ *
+ * @param dev         PoKeys device handle
+ * @param cmd         Protocol command to send
+ * @param params      Command parameters buffer (may be NULL)
+ * @param params_len  Length of params buffer
+ * @param target_ptr  Optional destination for auto-copy of response payload
+ * @param target_size Size of target_ptr buffer
+ * @return            Assigned request_id on success, negative on error
+ */
+int CreateRequestAsync(pokeys_device_t *dev, pokeys_command_t cmd,
+                       const uint8_t *params, size_t params_len,
+                       void *target_ptr, size_t target_size);
+
+/**
+ * Variant of CreateRequestAsync with an explicit additional payload buffer.
+ */
+int CreateRequestAsyncWithPayload(pokeys_device_t *dev, pokeys_command_t cmd,
+                                  const uint8_t *params, size_t params_len,
+                                  const uint8_t *payload, size_t payload_len,
+                                  void *target_ptr, size_t target_size);
+
+/**
+ * Sends a previously prepared request over UDP (non-blocking sendto).
+ * Sets timestamp_sent and increments the retry counter.
+ *
+ * @param dev        PoKeys device handle
+ * @param request_id ID returned by CreateRequestAsync()
+ * @return           0 on success, negative on error
+ */
+int SendRequestAsync(pokeys_device_t *dev, uint8_t request_id);
+
+/**
+ * Receives one UDP packet in non-blocking mode, extracts the request ID,
+ * finds the matching mailbox entry, auto-copies the payload into target_ptr
+ * (if set), invokes the registered parser callback, and sets response_ready.
+ *
+ * @param dev  PoKeys device handle
+ * @return     1 if a packet was processed, 0 if nothing received, negative on error
+ */
+int PK_ReceiveAndDispatch(pokeys_device_t *dev);
+
+/**
+ * Checks all open mailbox entries for timeout.
+ * If (current_time - timestamp_sent) > timeout_us and retries_left > 0,
+ * re-sends the request; otherwise marks the entry as failed.
+ *
+ * @param dev        PoKeys device handle
+ * @param timeout_us Timeout threshold in microseconds
+ */
+void PK_TimeoutAndRetryCheck(pokeys_device_t *dev, uint64_t timeout_us);
+```
+
 - Declarations for all `PK_*Async()` functions
 
 **MUST NOT contain**:
