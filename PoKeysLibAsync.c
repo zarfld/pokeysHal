@@ -226,8 +226,9 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
     }
 
     // Guard against NULL devHandle (e.g. USB-only device without UDP socket)
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle=%p for request ID %d\n", __FILE__, __FUNCTION__, dev->devHandle, request_id);
     if (!dev->devHandle) {
-        rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: %s:%s: devHandle is NULL for request ID %d - skipping send\n", __FILE__, __FUNCTION__, request_id);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle is NULL for request ID %d - skipping send\n", __FILE__, __FUNCTION__, request_id);
         return -1;
     }
 
@@ -282,6 +283,21 @@ int CreateAndSendRequestAsyncWithPayload(sPoKeysDevice *dev, pokeys_command_t cm
 int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
 {
     if (!dev) return 0;
+
+    // Log devHandle before use so its value appears in the CI log regardless
+    // of whether it is valid — this is the evidence we need to prove the crash
+    // location (NULL here → SIGSEGV on the recvfrom below).
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: entering PK_ReceiveAndDispatch, devHandle=%p\n",
+        __FILE__, __FUNCTION__, dev->devHandle);
+
+    if (!dev->devHandle) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: devHandle is NULL - skipping recvfrom\n",
+            __FILE__, __FUNCTION__);
+        return 0;
+    }
+
     uint8_t rx_buffer[64];
     ssize_t len;
     struct sockaddr_in addr;
