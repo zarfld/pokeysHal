@@ -62,7 +62,7 @@ int PK_PWMConfigurationGetAsync(sPoKeysDevice* device)
     
     static const uint8_t params[] = {0x00}; // Get configuration
     
-    return CreateRequestAsync(device, PK_CMD_PWM_CONFIGURATION,
+    return CreateAndSendRequestAsync(device, PK_CMD_PWM_CONFIGURATION,
                              params, 1, NULL, 0,
                              PK_Parse_PWMConfiguration);
 }
@@ -100,7 +100,7 @@ int PK_PWMConfigurationSetAsync(sPoKeysDevice* device)
         params[5 + i] = device->PWM.PWMenabledChannels[i];
     }
     
-    return CreateRequestAsync(device, PK_CMD_PWM_CONFIGURATION,
+    return CreateAndSendRequestAsync(device, PK_CMD_PWM_CONFIGURATION,
                              params, 11, NULL, 0,
                              NULL);
 }
@@ -135,7 +135,7 @@ int PK_PWMUpdateAsync(sPoKeysDevice* device)
         params[4 + i*4] = (device->PWM.PWMduty[i] >> 24) & 0xFF;
     }
     
-    return CreateRequestAsync(device, PK_CMD_PWM_CONFIGURATION,
+    return CreateAndSendRequestAsync(device, PK_CMD_PWM_CONFIGURATION,
                              params, 25, NULL, 0,
                              NULL);
 }
@@ -229,7 +229,7 @@ int PK_PWMSetSingleChannelAsync(sPoKeysDevice* device, uint8_t channel, uint32_t
         device->PWM.PWMduty[channel] = dutyCycle;
     }
     
-    return CreateRequestAsync(device, PK_CMD_PWM_CONFIGURATION,
+    return CreateAndSendRequestAsync(device, PK_CMD_PWM_CONFIGURATION,
                              params, 6, NULL, 0,
                              NULL);
 }

@@ -162,7 +162,7 @@ int PK_ParsePinFunctionsResponse(sPoKeysDevice *dev, const uint8_t *resp) {
  */
 int PK_StartPinFunctionsRequestAsync(sPoKeysDevice *dev) {
     if (!dev) return PK_ERR_NOT_CONNECTED;
-    return CreateRequestAsync(dev, 0xC0, (const uint8_t[]){0}, 1,
+    return CreateAndSendRequestAsync(dev, 0xC0, (const uint8_t[]){0}, 1,
                                NULL, 0, PK_ParsePinFunctionsResponse);
 }
 
@@ -294,26 +294,26 @@ int32_t PK_PinConfigurationGetAsync(sPoKeysDevice* device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
     // Get all pin configuration
-    CreateRequestAsync(device, 0xC0, (const uint8_t[]){0}, 1,
+    CreateAndSendRequestAsync(device, 0xC0, (const uint8_t[]){0}, 1,
                                NULL, 0, PK_ParsePinFunctionsResponse);
 
     // If device supports digital counters, get the settings for them
     if (device->info.iDigitalCounters) {
         // Get all pin configuration - counter setup
-        CreateRequestAsync(device, 0xC0, (const uint8_t[]){1}, 1,
+        CreateAndSendRequestAsync(device, 0xC0, (const uint8_t[]){1}, 1,
                            NULL, 0, PK_PinCounterConfigurationParse);
     }
 
     // If the device supports key mapping, get the settings
     if (device->info.iKeyMapping) {
         // Get all pin key mapping - type
-        CreateRequestAsync(device, 0xC1, NULL, 0,
+        CreateAndSendRequestAsync(device, 0xC1, NULL, 0,
                            NULL, 0, PK_PinKeyMappingTypeParse);
         // Get all pin key mapping - key codes
-        CreateRequestAsync(device, 0xC2, NULL, 0,
+        CreateAndSendRequestAsync(device, 0xC2, NULL, 0,
                            NULL, 0, PK_PinKeyMappingCodesParse);
         // Get all pin key mapping - modifiers
-        CreateRequestAsync(device, 0xC3, NULL, 0,
+        CreateAndSendRequestAsync(device, 0xC3, NULL, 0,
                            NULL, 0, PK_PinKeyMappingModifiersParse);
     }
 
@@ -321,16 +321,16 @@ int32_t PK_PinConfigurationGetAsync(sPoKeysDevice* device)
 	if (device->info.iTriggeredKeyMapping)
 	{
         // Get all pin key mapping - triggered inputs
-        CreateRequestAsync(device, 0xD7, (const uint8_t[]){11}, 1,
+        CreateAndSendRequestAsync(device, 0xD7, (const uint8_t[]){11}, 1,
                               NULL, 0, PK_PinTriggeredDownKeyCodeParse);
 
-        CreateRequestAsync(device, 0xD7, (const uint8_t[]){12}, 1,
+        CreateAndSendRequestAsync(device, 0xD7, (const uint8_t[]){12}, 1,
                               NULL, 0, PK_PinTriggeredDownKeyModifierParse);
 
-        CreateRequestAsync(device, 0xD7, (const uint8_t[]){13}, 1,
+        CreateAndSendRequestAsync(device, 0xD7, (const uint8_t[]){13}, 1,
                               NULL, 0, PK_PinTriggeredUpKeyCodeParse);
 
-        CreateRequestAsync(device, 0xD7, (const uint8_t[]){14}, 1,
+        CreateAndSendRequestAsync(device, 0xD7, (const uint8_t[]){14}, 1,
                               NULL, 0, PK_PinTriggeredUpKeyModifierParse);
     }
     return PK_OK;
@@ -362,7 +362,7 @@ int32_t PK_PinConfigurationSetAsync(sPoKeysDevice* device) {
         }
         bufferC0[i] = (uint8_t)(device->Pins[i].PinFunction);  // write (PinFunction)hal_u32_t to bufferC0 (uint8_t)
     }
-    CreateRequestAsync(device, 0xC0, (const uint8_t[]){1}, 1,
+    CreateAndSendRequestAsyncWithPayload(device, 0xC0, (const uint8_t[]){1}, 1,
                        bufferC0, 56, NULL);
 
     // CMD 0xC0, param2=2: Set counter options
@@ -371,7 +371,7 @@ int32_t PK_PinConfigurationSetAsync(sPoKeysDevice* device) {
         for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
             bufferCounters[i] = device->Pins[i].CounterOptions;
         }
-        CreateRequestAsync(device, 0xC0, (const uint8_t[]){0, 2}, 2,
+        CreateAndSendRequestAsyncWithPayload(device, 0xC0, (const uint8_t[]){0, 2}, 2,
                            bufferCounters, 56, NULL);
     }
 
@@ -388,11 +388,11 @@ int32_t PK_PinConfigurationSetAsync(sPoKeysDevice* device) {
             }
         }
 
-        CreateRequestAsync(device, 0xC1, (const uint8_t[]){1}, 1,
+        CreateAndSendRequestAsyncWithPayload(device, 0xC1, (const uint8_t[]){1}, 1,
                            keyType, 56, NULL);
-        CreateRequestAsync(device, 0xC2, (const uint8_t[]){1}, 1,
+        CreateAndSendRequestAsyncWithPayload(device, 0xC2, (const uint8_t[]){1}, 1,
                            keyCode, 56, NULL);
-        CreateRequestAsync(device, 0xC3, (const uint8_t[]){1}, 1,
+        CreateAndSendRequestAsyncWithPayload(device, 0xC3, (const uint8_t[]){1}, 1,
                            keyMod, 56, NULL);
 
         if (device->info.iTriggeredKeyMapping) {
@@ -407,13 +407,13 @@ int32_t PK_PinConfigurationSetAsync(sPoKeysDevice* device) {
                 }
             }
 
-            CreateRequestAsync(device, 0xD7, (const uint8_t[]){1}, 1,
+            CreateAndSendRequestAsyncWithPayload(device, 0xD7, (const uint8_t[]){1}, 1,
                                downCode, 56, NULL);
-            CreateRequestAsync(device, 0xD7, (const uint8_t[]){2}, 1,
+            CreateAndSendRequestAsyncWithPayload(device, 0xD7, (const uint8_t[]){2}, 1,
                                downMod, 56, NULL);
-            CreateRequestAsync(device, 0xD7, (const uint8_t[]){3}, 1,
+            CreateAndSendRequestAsyncWithPayload(device, 0xD7, (const uint8_t[]){3}, 1,
                                upCode, 56, NULL);
-            CreateRequestAsync(device, 0xD7, (const uint8_t[]){4}, 1,
+            CreateAndSendRequestAsyncWithPayload(device, 0xD7, (const uint8_t[]){4}, 1,
                                upMod, 56, NULL);
         }
     }
@@ -443,7 +443,7 @@ int32_t PK_DigitalIOSetAsync(sPoKeysDevice* device) {
         device->request[20 + i] = mask[i];
     }
 
-    return CreateRequestAsync(device, 0xCC, (const uint8_t[]){1}, 1,
+    return CreateAndSendRequestAsync(device, 0xCC, (const uint8_t[]){1}, 1,
                                device->request + 8, 56, NULL);
 }
 
@@ -464,7 +464,7 @@ int PK_DigitalIOGetParse(sPoKeysDevice* device, const uint8_t* response) {
  */
 int PK_DigitalIOGetAsync(sPoKeysDevice* device) {
     if (!device) return PK_ERR_NOT_CONNECTED;
-    return CreateRequestAsync(device, 0xCC, (const uint8_t[]){0}, 1,
+    return CreateAndSendRequestAsync(device, 0xCC, (const uint8_t[]){0}, 1,
                               NULL, 0, PK_DigitalIOGetParse);
 }
 
@@ -490,7 +490,7 @@ int PK_DigitalIOSetGetAsync(sPoKeysDevice* device) {
         device->request[20 + i] = mask[i];
     }
 
-    return CreateRequestAsync(device, 0xCC, (const uint8_t[]){1}, 1,
+    return CreateAndSendRequestAsync(device, 0xCC, (const uint8_t[]){1}, 1,
                                device->request + 8, 
                                  56, PK_DigitalIOGetParse);
 }
@@ -517,7 +517,7 @@ int PK_AnalogIOGetAsync(sPoKeysDevice* device) {
     if (!device) return PK_ERR_NOT_CONNECTED;
     if (device->info.iAnalogInputs == 0) return PK_ERR_NOT_SUPPORTED;
 
-    return CreateRequestAsync(device, 0x3A, (const uint8_t[]){1}, 1,
+    return CreateAndSendRequestAsync(device, 0x3A, (const uint8_t[]){1}, 1,
                               NULL, 0, PK_AnalogIOParse);
 }
 
@@ -544,7 +544,7 @@ int PK_AnalogRCFilterGetAsync(sPoKeysDevice* device) {
     if (!device) return PK_ERR_NOT_CONNECTED;
     if (device->info.iAnalogFiltering == 0) return PK_ERR_NOT_SUPPORTED;
 
-    return CreateRequestAsync(device, 0x38, NULL, 0, NULL, 0, PK_AnalogRCFilterParse);
+    return CreateAndSendRequestAsync(device, 0x38, NULL, 0, NULL, 0, PK_AnalogRCFilterParse);
 }
 
 /**
@@ -562,7 +562,7 @@ int PK_AnalogRCFilterSetAsync(sPoKeysDevice* device) {
         (uint8_t)((tmp >> 24) & 0xFF)
     };
 
-    return CreateRequestAsync(device, 0x39, NULL, 0, payload, 4, NULL);
+    return CreateAndSendRequestAsync(device, 0x39, NULL, 0, payload, 4, NULL);
 }
 
 
@@ -598,7 +598,7 @@ int PK_DigitalCounterGetAsync(sPoKeysDevice* device) {
     }
     if (k == 0) return PK_OK; // no counters to query
 
-    return CreateRequestAsync(device, 0xD8, NULL, 0, pinIndices, k, PK_DigitalCounterParse);
+    return CreateAndSendRequestAsync(device, 0xD8, NULL, 0, pinIndices, k, PK_DigitalCounterParse);
 }
 
 /**
@@ -606,7 +606,7 @@ int PK_DigitalCounterGetAsync(sPoKeysDevice* device) {
  */
 int PK_DigitalCounterClearAsync(sPoKeysDevice* device) {
     if (!device) return PK_ERR_NOT_CONNECTED;
-    return CreateRequestAsync(device, 0x1D, NULL, 0, NULL, 0, NULL);
+    return CreateAndSendRequestAsync(device, 0x1D, NULL, 0, NULL, 0, NULL);
 }
 
 /**
@@ -637,7 +637,7 @@ int PK_PWMConfigurationSetAsync(sPoKeysDevice* device) {
     payload[35] = (uint8_t)((period >> 16) & 0xFF);
     payload[36] = (uint8_t)((period >> 24) & 0xFF);
 
-    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1}, 1, payload, sizeof(payload), NULL);
+    return CreateAndSendRequestAsync(device, 0xCB, (const uint8_t[]){1}, 1, payload, sizeof(payload), NULL);
 }
 
 
@@ -670,7 +670,7 @@ int PK_PWMConfigurationParse(sPoKeysDevice* device, const uint8_t* response) {
 int PK_PWMConfigurationGetAsync(sPoKeysDevice* device) {
     if (!device) return PK_ERR_NOT_CONNECTED;
 
-    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){0}, 1, NULL, 0, PK_PWMConfigurationParse);
+    return CreateAndSendRequestAsync(device, 0xCB, (const uint8_t[]){0}, 1, NULL, 0, PK_PWMConfigurationParse);
 }
 
 
@@ -702,7 +702,7 @@ int PK_PWMUpdateAsync(sPoKeysDevice* device) {
     payload[35] = (uint8_t)((period >> 16) & 0xFF);
     payload[36] = (uint8_t)((period >> 24) & 0xFF);
 
-    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
+    return CreateAndSendRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
 }
 
 /**
@@ -739,7 +739,7 @@ int PK_PWMConfigurationSetDirectlyAsync(sPoKeysDevice* device, uint32_t PWMperio
     payload[35] = (uint8_t)((PWMperiod >> 16) & 0xFF);
     payload[36] = (uint8_t)((PWMperiod >> 24) & 0xFF);
 
-    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1}, 1, payload, sizeof(payload), NULL);
+    return CreateAndSendRequestAsync(device, 0xCB, (const uint8_t[]){1}, 1, payload, sizeof(payload), NULL);
 }
 
 /**
@@ -778,7 +778,7 @@ int PK_PWMUpdateDirectlyAsync(sPoKeysDevice* device, uint32_t* dutyCycles) {
     payload[35] = (uint8_t)((period >> 16) & 0xFF);
     payload[36] = (uint8_t)((period >> 24) & 0xFF);
 
-    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
+    return CreateAndSendRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
 }
 
 /**
@@ -822,7 +822,7 @@ int PK_PWMSetSingleChannelAsync(sPoKeysDevice* device, uint8_t channel, uint32_t
     // Update the device structure for the changed channel
     *(device->PWM.PWMduty[channel]) = dutyCycle;
 
-    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
+    return CreateAndSendRequestAsync(device, 0xCB, (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
 }
 
 /**
@@ -851,7 +851,7 @@ int PK_PWMPinAssignmentsParse(sPoKeysDevice* device, const uint8_t* response) {
 int PK_PWMGetPinAssignmentsAsync(sPoKeysDevice* device) {
     if (!device) return PK_ERR_NOT_CONNECTED;
 
-    return CreateRequestAsync(device, 0xCB, (const uint8_t[]){2}, 1, NULL, 0, PK_PWMPinAssignmentsParse);
+    return CreateAndSendRequestAsync(device, 0xCB, (const uint8_t[]){2}, 1, NULL, 0, PK_PWMPinAssignmentsParse);
 }
 
 /**
@@ -939,7 +939,7 @@ int PK_PoExtBusSetAsync(sPoKeysDevice* device) {
     }
 
 
-    return CreateRequestAsync(device, 0xDA, (const uint8_t[]){1, 0}, 2, payload, len, parse_PoExtBusGet);
+    return CreateAndSendRequestAsync(device, 0xDA, (const uint8_t[]){1, 0}, 2, payload, len, parse_PoExtBusGet);
 }
 
 
@@ -955,5 +955,5 @@ int PK_PoExtBusGetAsync(sPoKeysDevice* device) {
 
 
 
-    return CreateRequestAsync(device, 0xDA, (const uint8_t[]){2, 0}, 2, NULL, 0, parse_PoExtBusGet);
+    return CreateAndSendRequestAsync(device, 0xDA, (const uint8_t[]){2, 0}, 2, NULL, 0, parse_PoExtBusGet);
 }

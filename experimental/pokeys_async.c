@@ -31,6 +31,10 @@ int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device);
 int PK_PEv2_StatusGetAsync(sPoKeysDevice *device);
 int PK_PEv2_BufferFillAsync(sPoKeysDevice *device);
 int PK_PEv2_BufferClearAsync(sPoKeysDevice *device);
+// Scheduler-ready PEv2 wrappers (defined in PoKeysLibPulseEngine_v2Async.c)
+int PK_PEv2_StatusUpdateHALAsync(sPoKeysDevice *device);
+int PK_PEv2_MovePVFromHALAsync(sPoKeysDevice *device);
+int PK_PEv2_ExternalOutputsFromHALAsync(sPoKeysDevice *device);
 
 static int comp_id;
 
@@ -616,47 +620,24 @@ sPoKeysDevice *TryConnectToDevice(uint32_t intSerial) {
 #ifndef RTAPI
 void user_mainloop(void) 
 { 
-
-   int RTC_count =10;
-   int RTC_Trig = 10;
     #ifndef RTAPI
     while(0xb){
        FOR_ALL_INSTS() {
+            // Dispatch all currently-due async send tasks.
+            // async_dispatcher() fires the single most-overdue registered task
+            // (RTC at 1 Hz, encoders at 500 Hz, IO at 200 Hz, …) and returns 1.
+            // When nothing is due it returns 0 and we stop immediately.
+            while (async_dispatcher()) {}
 
-           // while(dev == NULL)dev = PK_ConnectToDeviceWSerial(devSerial, 2000);  //waits for usb device
-            
+            // Drain all pending responses: loop until the receive buffer is empty.
+            while (PK_ReceiveAndDispatch(__comp_inst->dev) > 0) {}
+            PK_TimeoutAndRetryCheck(__comp_inst->dev, 6000);
 
-          //  alive=1; 
-            if(RTC_count>=RTC_Trig){
-                rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync\n", __FILE__, __FUNCTION__);
-                if (PK_RTCGetAsync(__comp_inst->dev)==0){
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync OK\n", __FILE__, __FUNCTION__);
-                    RTC_count = 0;
-                }
-                else if (PK_RTCGet(__comp_inst->dev)==PK_OK){
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet OK\n", __FILE__, __FUNCTION__);
-                    RTC_count = 0;
-                }
-                else{
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGet FAILED\n", __FILE__, __FUNCTION__);
-                }
-            }
-            else{
-                RTC_count++;
-            }
-
-            if(PK_EncoderValuesGetAsync(__comp_inst->dev) == PK_OK) {
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync OK\n", __FILE__, __FUNCTION__);
-                } else {
-                    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync FAILED\n", __FILE__, __FUNCTION__);
-                }
-
-            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
-            PK_TimeoutAndRetryCheck(__comp_inst->dev, 6000); // checks for timeout and retry
+            update_ponet_hal_pins(__comp_inst->dev);
 
             alive=0;
 #ifndef RTAPI
-            usleep(100);  // 100 microseconds delay (userspace only)
+            usleep(100);  // 100 µs target loop period
 #endif 
         
         }
@@ -1032,97 +1013,57 @@ static void rt_motion_buffer_send(struct __comp_state *inst) {
 
 FUNCTION(_) {
     if (__comp_inst == 0) return;
-    
+
     int64_t start_time = rtapi_get_time();
-    
-    // Process communication with device
-    PK_ReceiveAndDispatch(__comp_inst->dev);
+
+    // Phase 1: Drain ALL pending responses that arrived since the last cycle.
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: FUNCTION(_): Phase1-drain start, dev=%p\n",
+        (void*)__comp_inst->dev);
+    while (PK_ReceiveAndDispatch(__comp_inst->dev) > 0) {}
     PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000);
-    
-    // 1. Read HAL command pins and detect changes
-    rt_read_command_pins(__comp_inst);
-    
-    // 2. Update cached device data from async responses
-    rt_read_device_cache(__comp_inst);
-    
-    // 3. Process motion commands and queue async operations
-    if (__comp_inst->dev->PEv2.pin_motion_buffer_mode &&
-        *(__comp_inst->dev->PEv2.pin_motion_buffer_mode)) {
-        /* Motion buffer mode: fill one slot per cycle, send buffer each cycle */
-        rt_motion_buffer_fill(__comp_inst);
-        rt_motion_buffer_send(__comp_inst);
-    } else {
-        rt_update_motion_commands(__comp_inst);
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: FUNCTION(_): Phase1-drain done\n");
+
+    // Phase 2: Dispatch scheduler-managed async sends within the time budget.
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: FUNCTION(_): Phase2-dispatch start\n");
+    {
+        const long SCHED_GUARD_NS = 100000L;
+        int dispatched = 0;
+        while ((rtapi_get_time() - start_time) < (period - SCHED_GUARD_NS)) {
+            if (async_dispatcher() == 0)
+                break;  /* nothing more due this cycle */
+            dispatched++;
+        }
+        rtapi_print_msg(RTAPI_MSG_DBG,
+            "PoKeys: FUNCTION(_): Phase2-dispatch done (%d tasks fired)\n",
+            dispatched);
     }
-    
-    // 4. Handle homing sequence commands
-    rt_handle_homing_commands(__comp_inst);
-    
-    // 5. Update external outputs if changed
-    rt_update_external_outputs(__comp_inst);
-    
-    // 6. Process async commands (limited per cycle to maintain RT performance)
-    if (async_processing_enabled) {
-        process_async_commands(__comp_inst);
-        update_device_cache(__comp_inst);
+
+    // Phase 3: Drain any additional responses that arrived during Phase 2.
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: FUNCTION(_): Phase3-drain start\n");
+    {
+        const long DRAIN_GUARD_NS = 20000L;
+        int drained = 0;
+        while ((rtapi_get_time() - start_time) < (period - DRAIN_GUARD_NS)) {
+            if (PK_ReceiveAndDispatch(__comp_inst->dev) <= 0)
+                break;
+            drained++;
+        }
+        rtapi_print_msg(RTAPI_MSG_DBG,
+            "PoKeys: FUNCTION(_): Phase3-drain done (%d packets processed)\n",
+            drained);
     }
-    
-    // Legacy IO operations (maintain existing behavior)
-    if (PK_RTCGetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
-    
-    if (PK_EncoderValuesGetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
-    
-    if (PK_DigitalIOSetGetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
-    
-    if (PK_DigitalIOGetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
-    
-    if (PK_DigitalIOSetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
-    
-    if (PK_PWMUpdateAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
-    
-    if (PK_AnalogIOGetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
-    
-    // PoNET communication operations - NEW
-    if (PK_PoNETGetPoNETStatusAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
-    
-    if (PK_PoNETGetModuleStatusAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
-    
-    if (PK_PoNETSetModuleStatusAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
-    
-    // Update PoNET HAL pins after communication
+
+    // Update PoNET HAL output pins from latest received data.
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: FUNCTION(_): update_ponet_hal_pins\n");
     update_ponet_hal_pins(__comp_inst->dev);
-    
-    // Final communication processing
-    PK_ReceiveAndDispatch(__comp_inst->dev);
-    PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000);
-    
-    // Phase 4: Performance monitoring and test mode
-    rt_update_performance_monitoring(__comp_inst, start_time);
-    rt_handle_test_mode(__comp_inst);
-    
+
     int64_t end_time = rtapi_get_time();
-    if ((end_time - start_time) > 5000000) { // Only log if > 5ms
-        rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys RT: Long cycle time: %lld ns\n", 
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: FUNCTION(_): cycle done in %lld ns\n",
+        (long long)(end_time - start_time));
+    if ((end_time - start_time) > 5000000) {
+        rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys RT: Long cycle time: %lld ns\n",
                        end_time - start_time);
     }
 }
@@ -1350,9 +1291,33 @@ static int start_async_processing(struct __comp_state *inst) {
     device_cache.failed_commands = 0;
     device_cache.device_connected = (inst->dev != NULL);
     device_cache.emergency_stop_active = false;
-    
+
+    // Register each subsystem send function with the async scheduler at its
+    // natural update rate.  async_dispatcher() will fire each task when it is
+    // due so that FUNCTION(_) and user_mainloop need only call async_dispatcher()
+    // rather than driving every subsystem directly every cycle.
+    // We are registering 13 tasks; MAX_ASYNC_TASKS must be >= 13.
+    if (register_async_task(PK_RTCGetAsync,                     inst->dev,   1.0, "rtc")              < 0 ||
+        register_async_task(PK_EncoderValuesGetAsync,           inst->dev, 500.0, "encoders")          < 0 ||
+        register_async_task(PK_DigitalIOGetAsync,               inst->dev, 200.0, "digio_get")         < 0 ||
+        register_async_task(PK_DigitalIOSetGetAsync,            inst->dev, 200.0, "digio_setget")      < 0 ||
+        register_async_task(PK_DigitalIOSetAsync,               inst->dev, 200.0, "digio_set")         < 0 ||
+        register_async_task(PK_PWMUpdateAsync,                  inst->dev, 100.0, "pwm")               < 0 ||
+        register_async_task(PK_AnalogIOGetAsync,                inst->dev, 100.0, "aio")               < 0 ||
+        register_async_task(PK_PoNETGetPoNETStatusAsync,        inst->dev,  10.0, "ponet_status")      < 0 ||
+        register_async_task(PK_PoNETGetModuleStatusAsync,       inst->dev,  10.0, "ponet_mod_status")  < 0 ||
+        register_async_task(PK_PoNETSetModuleStatusAsync,       inst->dev,  10.0, "ponet_mod_set")     < 0 ||
+        register_async_task(PK_PEv2_StatusUpdateHALAsync,       inst->dev, 100.0, "pev2_status")       < 0 ||
+        register_async_task(PK_PEv2_MovePVFromHALAsync,         inst->dev, 500.0, "pev2_movepv")       < 0 ||
+        register_async_task(PK_PEv2_ExternalOutputsFromHALAsync,inst->dev, 100.0, "pev2_extout")       < 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: register_async_task failed (MAX_ASYNC_TASKS=%d too small?)\n",
+            MAX_ASYNC_TASKS);
+        return -1;
+    }
+
     async_processing_enabled = true;
-    
+
     rtapi_print_msg(RTAPI_MSG_INFO, "PoKeys: Async processing enabled\n");
     return 0;
 }

@@ -90,7 +90,7 @@ int PK_DeviceAliveCheckAsync(sPoKeysDevice* device)
     if (!device) return PK_ERR_NOT_CONNECTED;
     
     // Use basic device data read as ping
-    return CreateRequestAsync(device, PK_CMD_READ_DEVICE_DATA,
+    return CreateAndSendRequestAsync(device, PK_CMD_READ_DEVICE_DATA,
                              NULL, 0, NULL, 0,
                              PK_Parse_DeviceAlive);
 }
@@ -111,7 +111,7 @@ int PK_DeviceLoadStatusAsync(sPoKeysDevice* device)
     if (!device->info.iLoadStatus) 
         return PK_ERR_NOT_SUPPORTED;
     
-    return CreateRequestAsync(device, PK_CMD_DEVICE_LOAD_STATUS,
+    return CreateAndSendRequestAsync(device, PK_CMD_DEVICE_LOAD_STATUS,
                              NULL, 0, NULL, 0,
                              PK_Parse_LoadStatus);
 }
@@ -129,7 +129,7 @@ int PK_DeviceErrorStatusAsync(sPoKeysDevice* device)
 {
     if (!device) return PK_ERR_NOT_CONNECTED;
     
-    return CreateRequestAsync(device, PK_CMD_DEVICE_ERROR_STATUS,
+    return CreateAndSendRequestAsync(device, PK_CMD_DEVICE_ERROR_STATUS,
                              NULL, 0, NULL, 0,
                              PK_Parse_ErrorStatus);
 }
@@ -149,7 +149,7 @@ int PK_DeviceErrorResetAsync(sPoKeysDevice* device)
     
     static const uint8_t params[] = {0x01}; // Reset command
     
-    return CreateRequestAsync(device, PK_CMD_DEVICE_ERROR_STATUS,
+    return CreateAndSendRequestAsync(device, PK_CMD_DEVICE_ERROR_STATUS,
                              params, 1, NULL, 0,
                              NULL);
 }

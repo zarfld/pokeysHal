@@ -104,16 +104,80 @@
  {
      if (device == NULL || response == NULL)
          return PK_ERR_TRANSFER;
- 
-     *(device->RTC.SEC)   = response[8];
-        *(device->RTC.MIN)   = response[9];
-            *(device->RTC.HOUR)  = response[10];
-                *(device->RTC.DOW)   = response[11];
-                    *(device->RTC.DOM)   = response[12];
-                        *(device->RTC.MONTH) = response[13];
-                            *(device->RTC.DOY)   = ((uint16_t)response[14]) | (((uint16_t)response[15]) << 8);
-                            *(device->RTC.YEAR)  = ((uint16_t)response[16]) | (((uint16_t)response[17]) << 8);
- 
+
+     /* RTAPI_MSG_ERR used intentionally: RTAPI_MSG_INFO/DBG are filtered
+      * out by default in CI; ERR ensures these diagnostics are visible
+      * without needing special halrun flags. */
+     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: called - parsing RTC response\n",
+                     __FILE__, __FUNCTION__);
+
+     /* Defense-in-depth: verify the command byte in the response matches 0x83.
+      * PK_ReceiveAndDispatch already does this check before calling us, but if
+      * the parser is ever invoked directly (unit tests, future refactors) this
+      * guard prevents writing garbage into HAL pins. */
+     if (response[1] != (uint8_t)PK_CMD_RTC_SETTINGS) {
+         rtapi_print_msg(RTAPI_MSG_ERR,
+             "PoKeys: %s:%s: wrong command byte 0x%02X (expected 0x%02X)"
+             " - discarding response\n",
+             __FILE__, __FUNCTION__,
+             (unsigned)response[1], (unsigned)(uint8_t)PK_CMD_RTC_SETTINGS);
+         return PK_ERR_TRANSFER;
+     }
+
+     /* Read raw values before range-checking. */
+     uint8_t  sec   = response[8];
+     uint8_t  min   = response[9];
+     uint8_t  hour  = response[10];
+     uint8_t  dow   = response[11];
+     uint8_t  dom   = response[12];
+     uint8_t  month = response[13];
+     uint16_t doy   = ((uint16_t)response[14]) | (((uint16_t)response[15]) << 8);
+     uint16_t year  = ((uint16_t)response[16]) | (((uint16_t)response[17]) << 8);
+
+     rtapi_print_msg(RTAPI_MSG_ERR,
+                     "PoKeys: %s:%s: RTC raw: year=%u month=%u dom=%u dow=%u"
+                     " hour=%u min=%u sec=%u doy=%u\n",
+                     __FILE__, __FUNCTION__,
+                     (unsigned)year, (unsigned)month, (unsigned)dom,
+                     (unsigned)dow,  (unsigned)hour,  (unsigned)min,
+                     (unsigned)sec,  (unsigned)doy);
+
+     /* Range-validate before writing HAL pins.  A command-code mismatch
+      * (stale/recycled req_id dispatched to the wrong parser) would produce
+      * wildly out-of-range values — month=14, year=3080 etc.  Reject and
+      * leave the HAL pins at their last good value rather than overwriting
+      * with garbage. */
+     if (sec   > 59 || min   > 59 || hour  > 23 ||
+         dom   < 1  || dom   > 31 || dow   > 6  ||
+         month < 1  || month > 12 ||
+         year  < 2000 || year > 2100) {
+         rtapi_print_msg(RTAPI_MSG_ERR,
+             "PoKeys: %s:%s: RTC values out of range"
+             " (year=%u month=%u dom=%u dow=%u hour=%u min=%u sec=%u)"
+             " - discarding, keeping previous HAL pin values\n",
+             __FILE__, __FUNCTION__,
+             (unsigned)year, (unsigned)month, (unsigned)dom, (unsigned)dow,
+             (unsigned)hour, (unsigned)min,   (unsigned)sec);
+         return PK_ERR_TRANSFER;
+     }
+
+     *(device->RTC.SEC)   = sec;
+     *(device->RTC.MIN)   = min;
+     *(device->RTC.HOUR)  = hour;
+     *(device->RTC.DOW)   = dow;
+     *(device->RTC.DOM)   = dom;
+     *(device->RTC.MONTH) = month;
+     *(device->RTC.DOY)   = doy;
+     *(device->RTC.YEAR)  = year;
+
+     rtapi_print_msg(RTAPI_MSG_ERR,
+                     "PoKeys: %s:%s: RTC parsed OK: year=%u month=%u dom=%u dow=%u"
+                     " hour=%u min=%u sec=%u doy=%u\n",
+                     __FILE__, __FUNCTION__,
+                     (unsigned)year, (unsigned)month, (unsigned)dom,
+                     (unsigned)dow,  (unsigned)hour,  (unsigned)min,
+                     (unsigned)sec,  (unsigned)doy);
+
      return PK_OK;
  }
  
@@ -134,11 +198,11 @@
      uint8_t params[1] = { 0x00 }; // Only param1 used
  
      // Important: Target is NOT device->RTC directly, but temporary response buffer
-    uint8_t req_id = CreateRequestAsync(device, PK_CMD_RTC_SETTINGS, params, 1,
+    int req_id = CreateRequestAsync(device, PK_CMD_RTC_SETTINGS, params, 1,
                                         NULL, 0,
                                 PK_RTCGetAsync_Process); // Set parser function!
     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_RTCGetAsync: req_id=%d\n", __FILE__, __FUNCTION__, req_id);
- 
+
      if (req_id < 0) {
          rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: CreateRequestAsync failed\n", __FILE__, __FUNCTION__);
          return req_id; // Error in request creation

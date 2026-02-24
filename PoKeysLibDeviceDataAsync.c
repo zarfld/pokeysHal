@@ -102,22 +102,22 @@ int PK_DeviceDataGetAsync(sPoKeysDevice* device)
     if (!device) return PK_ERR_NOT_CONNECTED;
 
     /* Basic device info (serial, fw version, etc.) */
-    CreateRequestAsync(device, PK_CMD_READ_DEVICE_DATA,
+    CreateAndSendRequestAsync(device, PK_CMD_READ_DEVICE_DATA,
                        NULL, 0, NULL, 0,
                        PK_Parse_DeviceData);
 
     /* User ID and lock status */
-    CreateRequestAsync(device, PK_CMD_READ_USER_ID_LOCK,
+    CreateAndSendRequestAsync(device, PK_CMD_READ_USER_ID_LOCK,
                        NULL, 0, NULL, 0,
                        PK_Parse_UserID);
 
     /* Network settings (if supported, parser will allocate structure) */
-    CreateRequestAsync(device, PK_CMD_NETWORK_SETTINGS,
+    CreateAndSendRequestAsync(device, PK_CMD_NETWORK_SETTINGS,
                        (const uint8_t[]){0}, 1, NULL, 0,
                        PK_Parse_NetworkInfo);
 
     /* Device name */
-    CreateRequestAsync(device, PK_CMD_DEVICE_NAME,
+    CreateAndSendRequestAsync(device, PK_CMD_DEVICE_NAME,
                        NULL, 0, NULL, 0,
                        PK_Parse_DeviceName);
 

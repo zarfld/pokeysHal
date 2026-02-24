@@ -125,7 +125,7 @@ t->request_buffer[7] = checksum;              // Checksum byte
 t->request_id = req_id;
 t->command_sent = cmd;
 t->status = TRANSACTION_PENDING;
-t->retries_left = 2;                          // Example: allow 2 retries (total 3 attempts)
+t->retries_left = 1;                          // Allow 1 retry (2 total attempts)
 t->timestamp_sent = 0;                        // Will be set on first send
 
 t->target_ptr = target_ptr;
@@ -199,7 +199,7 @@ return req_id;
     t->request_id = req_id;
     t->command_sent = cmd;
     t->status = TRANSACTION_PENDING;
-    t->retries_left = 2; // 2 retries allowed
+    t->retries_left = 1; // 1 retry allowed (2 total attempts)
     t->timestamp_sent = 0; // Will be set when sent
 
     t->target_ptr = NULL; // No response buffer for write commands
@@ -218,10 +218,18 @@ return req_id;
  */
 int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
 {
+    if (!dev) return -1;
     async_transaction_t *t = transaction_find(request_id);
     if (!t) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: No matching transaction found for request ID %d\n", __FILE__, __FUNCTION__, request_id);
         return -1; // No matching pending transaction found
+    }
+
+    // Guard against NULL devHandle (e.g. USB-only device without UDP socket)
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: devHandle=%p for request ID %d\n", __FILE__, __FUNCTION__, dev->devHandle, request_id);
+    if (!dev->devHandle) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle is NULL for request ID %d - skipping send\n", __FILE__, __FUNCTION__, request_id);
+        return -1;
     }
 
     // Send the packet
@@ -242,6 +250,30 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
     return 0; // Success
 }
 
+int CreateAndSendRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,
+    const uint8_t *params, size_t params_len,
+    void *target_ptr, size_t target_size,
+    int (*parser_func)(sPoKeysDevice *dev, const uint8_t *response))
+{
+    int req_id = CreateRequestAsync(dev, cmd, params, params_len,
+                                    target_ptr, target_size, parser_func);
+    if (req_id < 0)
+        return req_id;
+    return SendRequestAsync(dev, (uint8_t)req_id);
+}
+
+int CreateAndSendRequestAsyncWithPayload(sPoKeysDevice *dev, pokeys_command_t cmd,
+    const uint8_t *params, size_t params_len,
+    const void *payload, size_t payload_size,
+    pokeys_response_parser_t parser_func)
+{
+    int req_id = CreateRequestAsyncWithPayload(dev, cmd, params, params_len,
+                                               payload, payload_size, parser_func);
+    if (req_id < 0)
+        return req_id;
+    return SendRequestAsync(dev, (uint8_t)req_id);
+}
+
 /**
  * @brief Receives UDP packets and dispatches them to the correct async transaction.
  *
@@ -250,51 +282,125 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
  */
 int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
 {
+    if (!dev) return 0;
+
+    // Checkpoint 1: entry — log devHandle so the CI trace shows where we are
+    // even if the very next instruction segfaults.
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: %s:%s: [1] entering, devHandle=%p\n",
+        __FILE__, __FUNCTION__, dev->devHandle);
+
+    if (!dev->devHandle) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [1a] devHandle is NULL - skipping\n",
+            __FILE__, __FUNCTION__);
+        return 0;
+    }
+
+    int fd = *(int*)dev->devHandle;
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: %s:%s: [2] fd=%d - about to recvfrom\n",
+        __FILE__, __FUNCTION__, fd);
+
     uint8_t rx_buffer[64];
     ssize_t len;
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
 
     // Non-blocking UDP receive
-    len = recvfrom(*(int*)dev->devHandle, rx_buffer, sizeof(rx_buffer),
+    len = recvfrom(fd, rx_buffer, sizeof(rx_buffer),
                    MSG_DONTWAIT, (struct sockaddr *)&addr, &addrlen);
+
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: %s:%s: [3] recvfrom returned len=%d (errno=%d)\n",
+        __FILE__, __FUNCTION__, (int)len, errno);
 
     if (len <= 0)
         return 0; // No packet available or recv error (EAGAIN/EWOULDBLOCK)
 
+    // Checkpoint 4: got a packet — log first bytes for protocol check
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: %s:%s: [4] rx[0]=0x%02X rx[1]=0x%02X rx[6]=0x%02X\n",
+        __FILE__, __FUNCTION__, rx_buffer[0], rx_buffer[1], rx_buffer[6]);
+
     // Check valid PoKeys response
     if (rx_buffer[0] != 0xAA) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [4a] bad start byte 0x%02X - discarding\n",
+            __FILE__, __FUNCTION__, rx_buffer[0]);
         return -1; // Invalid start byte (should be 0xAA from Device → Host)
     }
 
-    uint8_t cmd = rx_buffer[1];  // Command echoed back
+    uint8_t cmd    = rx_buffer[1]; // Command echoed back
     uint8_t req_id = rx_buffer[6]; // Request ID echoed back
+
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: %s:%s: [5] cmd=0x%02X req_id=%u - looking up transaction\n",
+        __FILE__, __FUNCTION__, cmd, (unsigned)req_id);
 
     // Find the corresponding async transaction
     async_transaction_t *t = transaction_find(req_id);
+
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: %s:%s: [6] transaction_find=%p status=%d parser=%p\n",
+        __FILE__, __FUNCTION__,
+        (void*)t,
+        t ? (int)t->status : -1,
+        t ? (void*)t->response_parser : NULL);
+
     if (!t) {
         return -2; // No matching open request
     }
 
-    // Store full response buffer (optional)
+    /* [6a] Verify the echoed command byte matches what was sent.
+     * The PoKeys protocol always echoes response[1] == the request command.
+     * If they differ, this response belongs to a different (stale or reused)
+     * req_id slot — calling the wrong parser would produce garbage in HAL pins
+     * (e.g. month=14, year=3080 observed in CI when an IO response was
+     * dispatched to the RTC parser).  Discard and leave the transaction
+     * PENDING so it can be retried or timed out normally. */
+    if (cmd != (uint8_t)t->command_sent) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [6a] cmd mismatch for req_id=%u:"
+            " expected 0x%02X, got 0x%02X — discarding stale response\n",
+            __FILE__, __FUNCTION__,
+            (unsigned)req_id,
+            (unsigned)(uint8_t)t->command_sent,
+            (unsigned)cmd);
+        return -3; /* discard; transaction stays PENDING for retry/timeout */
+    }
+
+    // Checkpoint 7: copy raw response into transaction slot
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: %s:%s: [7] memcpy response_buffer\n",
+        __FILE__, __FUNCTION__);
     memcpy(t->response_buffer, rx_buffer, sizeof(t->response_buffer));
 
     // Write result directly into target_ptr if set
     if (t->target_ptr && t->target_size > 0) {
+        rtapi_print_msg(RTAPI_MSG_DBG,
+            "PoKeys: %s:%s: [8] memcpy target_ptr=%p size=%zu\n",
+            __FILE__, __FUNCTION__, t->target_ptr, t->target_size);
         memcpy(t->target_ptr, &rx_buffer[8], t->target_size);
-        // Note: Response payload starts at byte 9 (index 8) according to PoKeys protocol
     }
 
-    // NEW: call optional parser function after response received
+    // Call optional parser — this is the most likely crash site
     if (t->response_parser) {
-        t->response_parser(dev, rx_buffer);
+        rtapi_print_msg(RTAPI_MSG_DBG,
+            "PoKeys: %s:%s: [9] calling parser %p\n",
+            __FILE__, __FUNCTION__, (void*)t->response_parser);
+        int parse_ret = t->response_parser(dev, rx_buffer);
+        rtapi_print_msg(RTAPI_MSG_DBG,
+            "PoKeys: %s:%s: [10] parser returned %d\n",
+            __FILE__, __FUNCTION__, parse_ret);
     }
 
     t->status = TRANSACTION_COMPLETED;
     t->response_ready = true;
 
-    // (Optional) You could immediately free/recycle the transaction here if desired
-    // transaction_free(t);
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: %s:%s: [11] done, returning 1\n",
+        __FILE__, __FUNCTION__);
 
     return 1; // One response processed
 }
@@ -312,6 +418,26 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
  */
 void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
 {
+    if (!dev) return;
+
+    // Guard against NULL devHandle (e.g. USB-only device without UDP socket).
+    // Mirrors the identical guard already present in PK_ReceiveAndDispatch and
+    // SendRequestAsync.  Without this check, the sendto() inside the retry loop
+    // would dereference a NULL pointer and produce SIGSEGV — the same crash that
+    // was observed in the RT component before the devHandle guards were added.
+    if (!dev->devHandle) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: devHandle is NULL - clearing pending transactions\n",
+            __FILE__, __FUNCTION__);
+        for (int i = 0; i < MAX_TRANSACTIONS; i++) {
+            if (pk_transactions[i].status == TRANSACTION_PENDING) {
+                pk_transactions[i].status = TRANSACTION_FAILED;
+                pk_transactions[i].retries_left = 0;
+            }
+        }
+        return;
+    }
+
     uint64_t now = get_current_time_us();
     static uint32_t consecutive_errors = 0;
     static uint64_t last_error_time = 0;
@@ -333,9 +459,11 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
         async_transaction_t *t = &pk_transactions[i];
 
         if (t->status == TRANSACTION_PENDING) {
-            // Calculate dynamic timeout with exponential backoff
-            uint32_t retry_multiplier = (3 - t->retries_left); // 0, 1, 2 for retries
-            uint64_t effective_timeout = timeout_us * (1 << retry_multiplier); // 1x, 2x, 4x
+            // Use fixed timeout (no exponential backoff) to bound slot occupancy.
+            // With retries_left=1 and a fixed timeout_us each cycle, a slot is
+            // freed within 2 × timeout_us (one retry + one timeout cycle),
+            // keeping steady-state slot usage well below MAX_TRANSACTIONS.
+            uint64_t effective_timeout = timeout_us;
             
             if ((now - t->timestamp_sent) > effective_timeout) {
                 if (t->retries_left > 0) {
@@ -350,8 +478,8 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
                         if (consecutive_errors > 0) consecutive_errors--;
                         
                         #ifdef DEBUG_ASYNC_RETRIES
-                        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: Retry %d for request ID %d, cmd=0x%02X\n", 
-                                       (3 - t->retries_left), t->request_id, t->command_sent);
+                        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: Retry for request ID %d, cmd=0x%02X, retries_left=%d\n", 
+                                       t->request_id, t->command_sent, t->retries_left);
                         #endif
                     } else {
                         // Send failed - increment error counter and log
@@ -368,10 +496,12 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
                         }
                     }
                 } else {
-                    // No retries left: mark timeout
+                    // No retries left: mark timeout.
+                    // Do NOT increment consecutive_errors here — a timeout means
+                    // the device did not respond in time, which is a normal event
+                    // (e.g., no device present).  The circuit breaker is reserved
+                    // for actual send failures where retrying would be harmful.
                     t->status = TRANSACTION_TIMEOUT;
-                    consecutive_errors++;
-                    last_error_time = now;
                     
                     rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: Request ID %d timed out after all retries, cmd=0x%02X\n", 
                                    t->request_id, t->command_sent);
@@ -381,3 +511,79 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
     }
 }
 
+
+/* -------------------------------------------------------------------------
+ * Async Scheduler implementation
+ * (Migrated from experimental/async_scheduler.c per architecture rules.)
+ * ------------------------------------------------------------------------- */
+#include <string.h>
+
+static periodic_async_task_t async_tasks[MAX_ASYNC_TASKS];
+static size_t async_task_count_internal = 0;
+
+int register_async_task(async_func_t func, sPoKeysDevice *dev, double freq_hz, const char *name)
+{
+    if (async_task_count_internal >= MAX_ASYNC_TASKS || freq_hz <= 0.0) return -1;
+
+    int64_t now      = rtapi_get_time();
+    int64_t interval = (int64_t)(1e9 / freq_hz);
+
+    async_tasks[async_task_count_internal++] = (periodic_async_task_t){
+        .func            = func,
+        .dev             = dev,
+        .interval_ns     = interval,
+        .next_call_time  = now + interval,
+        .name            = name,
+        .active          = 1
+    };
+    return 0;
+}
+
+int async_dispatcher(void)
+{
+    int64_t now            = rtapi_get_time();
+    size_t  selected_index = SIZE_MAX;
+    int64_t earliest_due   = INT64_MAX;
+
+    for (size_t i = 0; i < async_task_count_internal; ++i) {
+        if (!async_tasks[i].active) continue;
+        if (async_tasks[i].next_call_time <= now &&
+            async_tasks[i].next_call_time  < earliest_due) {
+            selected_index = i;
+            earliest_due   = async_tasks[i].next_call_time;
+        }
+    }
+
+    if (selected_index == SIZE_MAX)
+        return 0; /* nothing due */
+
+    periodic_async_task_t *t = &async_tasks[selected_index];
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: async_dispatcher: firing task '%s' (func=%p dev=%p)\n",
+        t->name, (void*)t->func, (void*)t->dev);
+    int ret = t->func(t->dev);
+    t->next_call_time = now + t->interval_ns;
+    rtapi_print_msg(RTAPI_MSG_DBG,
+        "PoKeys: async_dispatcher: task '%s' returned %d\n",
+        t->name, ret);
+
+    if (ret < 0)
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys async_dispatcher: %s FAILED (ret=%d)\n", t->name, ret);
+
+    return 1;
+}
+
+void async_task_set_active(const char *name, int active)
+{
+    for (size_t i = 0; i < async_task_count_internal; ++i) {
+        if (strcmp(async_tasks[i].name, name) == 0) {
+            async_tasks[i].active = (active != 0);
+            return;
+        }
+    }
+}
+
+size_t async_task_count(void)
+{
+    return async_task_count_internal;
+}
