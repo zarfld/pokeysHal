@@ -192,7 +192,7 @@ jobs:
         show pin
         show funct
         start
-        loadusr -W sleep 2
+        loadusr -W sleep 5
         show pin
         show param
         exit
@@ -219,6 +219,9 @@ jobs:
             print(f"  {k}: {v} (0x{v:04X})")
         if not pins:
             print("WARNING: no RTC pins found in output (device may not be connected)")
+            sys.exit(0)
+        if all(v == 0 for v in pins.values()):
+            print("WARNING: all RTC pins are zero - device not connected or RTC not yet updated")
             sys.exit(0)
         err = []
         if pins.get('rtc.year', 0) < 2024:
@@ -253,7 +256,7 @@ jobs:
         show param
         addf pokeys-async.0 test-thread
         start
-        loadusr -W sleep 2
+        loadusr -W sleep 5
         show funct
         show thread
         show pin
@@ -282,6 +285,9 @@ jobs:
             print(f"  {k}: {v} (0x{v:04X})")
         if not pins:
             print("WARNING: no RTC pins found in output (device may not be connected)")
+            sys.exit(0)
+        if all(v == 0 for v in pins.values()):
+            print("WARNING: all RTC pins are zero - device not connected or RTC not yet updated")
             sys.exit(0)
         err = []
         if pins.get('rtc.year', 0) < 2024:

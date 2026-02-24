@@ -104,16 +104,35 @@
  {
      if (device == NULL || response == NULL)
          return PK_ERR_TRANSFER;
- 
+
+     /* RTAPI_MSG_ERR used intentionally: RTAPI_MSG_INFO/DBG are filtered
+      * out by default in CI; ERR ensures these diagnostics are visible
+      * without needing special halrun flags. */
+     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: called - parsing RTC response\n",
+                     __FILE__, __FUNCTION__);
+
      *(device->RTC.SEC)   = response[8];
-        *(device->RTC.MIN)   = response[9];
-            *(device->RTC.HOUR)  = response[10];
-                *(device->RTC.DOW)   = response[11];
-                    *(device->RTC.DOM)   = response[12];
-                        *(device->RTC.MONTH) = response[13];
-                            *(device->RTC.DOY)   = ((uint16_t)response[14]) | (((uint16_t)response[15]) << 8);
-                            *(device->RTC.YEAR)  = ((uint16_t)response[16]) | (((uint16_t)response[17]) << 8);
- 
+     *(device->RTC.MIN)   = response[9];
+     *(device->RTC.HOUR)  = response[10];
+     *(device->RTC.DOW)   = response[11];
+     *(device->RTC.DOM)   = response[12];
+     *(device->RTC.MONTH) = response[13];
+     *(device->RTC.DOY)   = ((uint16_t)response[14]) | (((uint16_t)response[15]) << 8);
+     *(device->RTC.YEAR)  = ((uint16_t)response[16]) | (((uint16_t)response[17]) << 8);
+
+     rtapi_print_msg(RTAPI_MSG_ERR,
+                     "PoKeys: %s:%s: RTC parsed: year=%u month=%u dom=%u dow=%u"
+                     " hour=%u min=%u sec=%u doy=%u\n",
+                     __FILE__, __FUNCTION__,
+                     (unsigned)*(device->RTC.YEAR),
+                     (unsigned)*(device->RTC.MONTH),
+                     (unsigned)*(device->RTC.DOM),
+                     (unsigned)*(device->RTC.DOW),
+                     (unsigned)*(device->RTC.HOUR),
+                     (unsigned)*(device->RTC.MIN),
+                     (unsigned)*(device->RTC.SEC),
+                     (unsigned)*(device->RTC.DOY));
+
      return PK_OK;
  }
  
