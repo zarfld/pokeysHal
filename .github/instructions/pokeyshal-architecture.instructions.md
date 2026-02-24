@@ -37,6 +37,28 @@ The PoKeysHal project is structured as a layered HAL (Hardware Abstraction Layer
 └───────────────────────────────────────────────────────────┘
 ```
 
+### Async Execution Model — Two Concurrent Flows
+
+The async infrastructure separates the RT servo-thread from the UDP receive path. Both flows share the mailbox buffer, coordinated only via atomic flags (no mutexes in RT):
+
+```plaintext
+[RT-Thread — called every servo period]   [PK_ReceiveAndDispatch — non-blocking poll]
+               │                                           │
+               │ CreateRequestAsync()                      │
+               │ SendRequestAsync()       UDP Packet ──────┤
+               │ mailbox_insert()         arrives          │
+               │                                           ├─► Find matching mailbox entry
+               │                                           ├─► Copy payload → target_ptr
+               │                                           ├─► Invoke parse callback
+               │                                           └─► Set response_ready = true
+               │
+               ├─► Poll mailbox each cycle
+               ├─► If response_ready: consume data, clear slot
+               └─► PK_TimeoutAndRetryCheck()
+                     ├─► timeout & retries_left > 0: resend, decrement retries
+                     └─► timeout & retries_left == 0: set error status
+```
+
 ---
 
 ## 📋 File Responsibilities
@@ -188,6 +210,33 @@ void PK_TimeoutAndRetryCheck(pokeys_device_t *dev, uint64_t timeout_us);
 **Relationship to `PoKeysLib**Async.c`**:  
 `PoKeysLibAsync.c` is the **called** infrastructure; `PoKeysLib**Async.c` files are the **callers** that build on top of it.
 
+**Step-by-step async request/response workflow** (all four functions in sequence):
+
+```plaintext
+Step 1 — CreateRequestAsync()
+  • Build the UDP packet (header, command code, request ID, checksum)
+  • Allocate a mailbox slot; store target_ptr/target_size for auto-copy
+  • No network activity at this stage
+
+Step 2 — SendRequestAsync()
+  • Transmit via non-blocking UDP sendto()
+  • Record timestamp_sent; increment retry counter
+
+Step 3 — PK_ReceiveAndDispatch()   [called every RT cycle or via select()]
+  • recvfrom() in non-blocking mode — returns immediately if no data
+  • Extract request_id from incoming packet
+  • Locate matching mailbox entry
+  • If target_ptr is set: memcpy payload (bytes 8+) → target_ptr automatically
+  • Invoke registered parse callback (subsystem-specific, if any)
+  • Set response_ready = true; release mailbox slot
+
+Step 4 — PK_TimeoutAndRetryCheck()   [called every RT cycle]
+  • For every open mailbox entry:
+      if (now − timestamp_sent) > timeout_us:
+          if retries_left > 0:  re-SendRequestAsync(); update timestamp_sent; retries_left--
+          else:                 mark slot as FAILED; release slot
+```
+
 ---
 
 ### `PoKeysLib**Async.c` — Per-Subsystem Async Files (**subsystem implementations**)
@@ -257,6 +306,24 @@ The `export_<subsystem>_pins()` function uses:
 - Implementations of `CreateRequestAsync`, `SendRequestAsync`, `PK_ReceiveAndDispatch`, or `PK_TimeoutAndRetryCheck` — those implementations live in `PoKeysLibAsync.c`; subsystem files only **call** them
 - Direct exports of HAL pins that belong to another subsystem
 - Definitions of structs/enums/constants that belong in `PoKeysLibHal.h` or `PoKeysLibAsync.h`
+
+**Command dispatching via function pointers** (optional but recommended for clean extension):
+
+Subsystem parse callbacks can be registered in a dispatch table keyed on the command code, so `PK_ReceiveAndDispatch` calls the right handler automatically:
+
+```c
+/* In PoKeysLibAsync.h — typedef for per-command response handlers */
+typedef int (*pokeys_response_handler_t)(mailbox_entry_t *entry, const uint8_t *rx_buffer);
+
+/* In PoKeysLibAsync.c — dispatch table indexed by pokeys_command_t */
+pokeys_response_handler_t response_handlers[] = {
+    [PK_CMD_ENCODER_VALUES_GET]  = handle_encoder_response,   /* PoKeysLibEncodersAsync.c */
+    [PK_CMD_DIGITAL_INPUTS_GET]  = handle_inputs_response,    /* PoKeysLibIOAsync.c */
+    /* ... additional subsystem handlers registered here ... */
+};
+```
+
+Each subsystem `PoKeysLib**Async.c` provides its own `handle_*_response()` function and registers it during `EXTRA_SETUP()`. The infrastructure layer calls `response_handlers[cmd](entry, rx_buffer)` — it never needs to know the subsystem internals.
 
 ---
 
@@ -335,6 +402,71 @@ The `export_<subsystem>_pins()` function uses:
 - `hal_encoder_t` + `hal_export_encoder()` — encoder
 
 **Rule**: All HAL pin exports for digital/analog/encoder channels MUST use these canonical export functions rather than calling `hal_pin_*_new()` directly.
+
+---
+
+## ⚙️ Async Implementation Notes
+
+These rules apply to all code in `PoKeysLibAsync.c` and `PoKeysLib**Async.c`:
+
+| Rule | Rationale |
+|------|-----------|
+| Configure UDP socket with `O_NONBLOCK` | `recvfrom()` / `sendto()` must return immediately — blocking calls violate RT deadlines |
+| Call `mlockall(MCL_CURRENT \| MCL_FUTURE)` before starting RT threads | Prevents page faults inside the RT path; all mailbox and HAL memory stays in RAM |
+| Manage `request_id` cyclically over 0–255 | Wrap-around is expected; the mailbox must tolerate reuse after a full cycle |
+| Receive path must complete in **< 5 µs** (hard RT) | `PK_ReceiveAndDispatch()` is called every servo period — it must not loop or block |
+| Use **atomic flags** (not mutexes) for `response_ready` | Mutexes can block the RT thread; `_Atomic bool` or `volatile` + memory barriers are sufficient |
+| Receiving strategy: cyclic poll **or** `select()`-based | Cyclic polling (every 1–5 ms) is simpler; `select()` reduces CPU load but adds latency jitter |
+| No `malloc`/`free` in RT paths | All mailbox slots must be pre-allocated at startup; use fixed-size arrays |
+
+---
+
+## 🔧 Build & Test Quick Reference
+
+> Per [GitHub Copilot best practices](https://gh.io/copilot-coding-agent-tips), instructions files for specific file types should include how to build and test them.
+
+### Build C/H files
+
+```bash
+# Primary build (library + HAL component)
+sudo make -f Makefile.noqmake install
+
+# CMake build
+mkdir -p build && cd build && cmake .. && make
+
+# Build userspace HAL component
+sudo halcompile --install --userspace \
+    --extra-link-args="-L/usr/lib -lPoKeysHal" \
+    experimental/pokeys_async.c
+
+# Build RT component
+cd experimental/build && make -f Submakefile.rt all && sudo make -f Submakefile.rt install
+```
+
+### Validate C/H files compile
+
+```bash
+# Compile test (checks all .c/.h files for syntax errors)
+bash test_compile.sh
+```
+
+### Run HAL component (smoke test)
+
+```bash
+# Userspace
+halrun <<'EOF'
+loadusr -W pokeys_async
+show pin && show funct && start && show pin && show param && exit
+EOF
+
+# Real-time
+halrun <<'EOF'
+loadrt threads name1=pokeys-test-thread period1=1000000
+loadrt pokeys_async
+addf pokeys-async.0 pokeys-test-thread
+start && show pin && show param && exit
+EOF
+```
 
 ---
 
