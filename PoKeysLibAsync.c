@@ -352,6 +352,24 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
         return -2; // No matching open request
     }
 
+    /* [6a] Verify the echoed command byte matches what was sent.
+     * The PoKeys protocol always echoes response[1] == the request command.
+     * If they differ, this response belongs to a different (stale or reused)
+     * req_id slot — calling the wrong parser would produce garbage in HAL pins
+     * (e.g. month=14, year=3080 observed in CI when an IO response was
+     * dispatched to the RTC parser).  Discard and leave the transaction
+     * PENDING so it can be retried or timed out normally. */
+    if (cmd != (uint8_t)t->command_sent) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [6a] cmd mismatch for req_id=%u:"
+            " expected 0x%02X, got 0x%02X — discarding stale response\n",
+            __FILE__, __FUNCTION__,
+            (unsigned)req_id,
+            (unsigned)(uint8_t)t->command_sent,
+            (unsigned)cmd);
+        return -3; /* discard; transaction stays PENDING for retry/timeout */
+    }
+
     // Checkpoint 7: copy raw response into transaction slot
     rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [7] memcpy response_buffer\n",
