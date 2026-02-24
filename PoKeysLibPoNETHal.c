@@ -104,6 +104,8 @@ POKEYSDECL int export_ponet_basic_pins(const char *prefix, long comp_id, sPoKeys
     
     // Export PoNET status input array (16 bytes) - hardware to HAL
     for (int byte_idx = 0; byte_idx < 16; byte_idx++) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.ponet.status-in.%02d\n",
+                       __FILE__, __FUNCTION__, prefix, byte_idx);
         r = hal_pin_u32_newf(HAL_OUT, &device->PoNETmodule.statusIn_pins[byte_idx], 
                             comp_id, "%s.ponet.status-in.%02d", prefix, byte_idx);
         if (r != 0) {
@@ -112,12 +114,12 @@ POKEYSDECL int export_ponet_basic_pins(const char *prefix, long comp_id, sPoKeys
                            __FILE__, __FUNCTION__, prefix, byte_idx, r);
             return r;
         }
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Created %s.ponet.status-in.%02d\n", 
-                       __FILE__, __FUNCTION__, prefix, byte_idx);
     }
     
     // Export PoNET status output array (16 bytes) - HAL to hardware
     for (int byte_idx = 0; byte_idx < 16; byte_idx++) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.ponet.status-out.%02d\n",
+                       __FILE__, __FUNCTION__, prefix, byte_idx);
         r = hal_pin_u32_newf(HAL_IN, &device->PoNETmodule.statusOut_pins[byte_idx], 
                             comp_id, "%s.ponet.status-out.%02d", prefix, byte_idx);
         if (r != 0) {
@@ -126,8 +128,6 @@ POKEYSDECL int export_ponet_basic_pins(const char *prefix, long comp_id, sPoKeys
                            __FILE__, __FUNCTION__, prefix, byte_idx, r);
             return r;
         }
-        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: Created %s.ponet.status-out.%02d\n", 
-                       __FILE__, __FUNCTION__, prefix, byte_idx);
     }
     
     rtapi_print_msg(RTAPI_MSG_INFO, "PoKeys: %s:%s: Successfully exported basic PoNET arrays for %s\n", 
@@ -158,6 +158,7 @@ POKEYSDECL int export_ponet_status_pins(const char *prefix, long comp_id, sPoKey
                     __FILE__, __FUNCTION__, prefix);
     
     // Export PoNET status pin
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.ponet.status\n", __FILE__, __FUNCTION__, prefix);
     r = hal_pin_u32_newf(HAL_OUT, &device->PoNETmodule.PoNETstatus_pin, 
                         comp_id, "%s.ponet.status", prefix);
     if (r != 0) {
@@ -167,6 +168,7 @@ POKEYSDECL int export_ponet_status_pins(const char *prefix, long comp_id, sPoKey
     }
     
     // Export PoNET module type pin
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.ponet.module-type\n", __FILE__, __FUNCTION__, prefix);
     r = hal_pin_u32_newf(HAL_OUT, &device->PoNETmodule.moduleType_pin, 
                         comp_id, "%s.ponet.module-type", prefix);
     if (r != 0) {
@@ -176,6 +178,7 @@ POKEYSDECL int export_ponet_status_pins(const char *prefix, long comp_id, sPoKey
     }
     
     // Export PoNET module ID pin
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.ponet.module-id\n", __FILE__, __FUNCTION__, prefix);
     r = hal_pin_u32_newf(HAL_OUT, &device->PoNETmodule.moduleID_pin, 
                         comp_id, "%s.ponet.module-id", prefix);
     if (r != 0) {
@@ -185,6 +188,7 @@ POKEYSDECL int export_ponet_status_pins(const char *prefix, long comp_id, sPoKey
     }
     
     // Export light sensor value pin - output from hardware to HAL
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.ponet.light-value\n", __FILE__, __FUNCTION__, prefix);
     r = hal_pin_u32_newf(HAL_OUT, &device->PoNETmodule.lightValue_pin, 
                         comp_id, "%s.ponet.light-value", prefix);
     if (r != 0) {
@@ -194,6 +198,7 @@ POKEYSDECL int export_ponet_status_pins(const char *prefix, long comp_id, sPoKey
     }
     
     // Export PWM duty control pin - input from HAL to hardware
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.ponet.pwm-duty\n", __FILE__, __FUNCTION__, prefix);
     r = hal_pin_u32_newf(HAL_IN, &device->PoNETmodule.PWMduty_pin, 
                         comp_id, "%s.ponet.pwm-duty", prefix);
     if (r != 0) {

@@ -372,164 +372,210 @@ int export_pev2_pins(const char *prefix, long comp_id, sPoKeysDevice *device) {
     int r = 0;
     sPoKeysPEv2 *pev2 = &device->PEv2;
 
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: Exporting PEv2 HAL pins with prefix %s\n", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2 [8 axes]\n", __FILE__, __FUNCTION__, prefix);
 
     // Motion control pins - CRITICAL for LinuxCNC compatibility
     for (int i = 0; i < 8; i++) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.joint-pos-cmd\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_float_newf(HAL_IN, &pev2->pin_joint_pos_cmd[i], comp_id,
                                "%s.PEv2.%01d.joint-pos-cmd", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.joint-vel-cmd\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_float_newf(HAL_IN, &pev2->pin_joint_vel_cmd[i], comp_id,
                                "%s.PEv2.%01d.joint-vel-cmd", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.joint-pos-fb\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_float_newf(HAL_OUT, &pev2->pin_joint_pos_fb[i], comp_id,
                                "%s.PEv2.%01d.joint-pos-fb", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.joint-in-position\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_joint_in_position[i], comp_id,
                              "%s.PEv2.%01d.joint-in-position", prefix, i);
 
         if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export motion pins for axis %d\n", i);
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: motion pins axis %d failed\n", __FILE__, __FUNCTION__, i);
             return r;
         }
     }
 
     // State and command pins
     for (int i = 0; i < 8; i++) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.AxesState\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_AxesState[i], comp_id,
                              "%s.PEv2.%01d.AxesState", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.AxesCommand\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_u32_newf(HAL_IN, &pev2->pin_AxesCommand[i], comp_id,
                              "%s.PEv2.%01d.AxesCommand", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.CurrentPosition\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_s32_newf(HAL_OUT, &pev2->pin_CurrentPosition[i], comp_id,
                              "%s.PEv2.%01d.CurrentPosition", prefix, i);
 
         if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export state pins for axis %d\n", i);
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: state pins axis %d failed\n", __FILE__, __FUNCTION__, i);
             return r;
         }
     }
 
     // Device info pins
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.nrOfAxes\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_nrOfAxes, comp_id,
                          "%s.PEv2.nrOfAxes", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.maxPulseFrequency\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_maxPulseFrequency, comp_id,
                          "%s.PEv2.maxPulseFrequency", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.bufferDepth\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_bufferDepth, comp_id,
                          "%s.PEv2.bufferDepth", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.slotTiming\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_slotTiming, comp_id,
                          "%s.PEv2.slotTiming", prefix);
 
     // Engine state pins
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.PulseEngineActivated\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_PulseEngineActivated, comp_id,
                          "%s.PEv2.PulseEngineActivated", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.PulseEngineState\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_PulseEngineState, comp_id,
                          "%s.PEv2.PulseEngineState", prefix);
 
     // Emergency and safety pins
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.digin.Emergency.in\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_Emergency_in, comp_id,
                          "%s.PEv2.digin.Emergency.in", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.digin.Emergency.in-not\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_Emergency_in_not, comp_id,
                          "%s.PEv2.digin.Emergency.in-not", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.digout.Emergency.out\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_digout_Emergency_out, comp_id,
                          "%s.PEv2.digout.Emergency.out", prefix);
 
     // Limit switch pins per axis
     for (int i = 0; i < 8; i++) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.digin.LimitN.in\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_LimitN_in[i], comp_id,
                              "%s.PEv2.%01d.digin.LimitN.in", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.digin.LimitN.in-not\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_LimitN_in_not[i], comp_id,
                              "%s.PEv2.%01d.digin.LimitN.in-not", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.digin.LimitP.in\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_LimitP_in[i], comp_id,
                              "%s.PEv2.%01d.digin.LimitP.in", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.digin.LimitP.in-not\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_LimitP_in_not[i], comp_id,
                              "%s.PEv2.%01d.digin.LimitP.in-not", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.digin.Home.in\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_Home_in[i], comp_id,
                              "%s.PEv2.%01d.digin.Home.in", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.digin.Home.in-not\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_Home_in_not[i], comp_id,
                              "%s.PEv2.%01d.digin.Home.in-not", prefix, i);
 
         if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export limit/home pins for axis %d\n", i);
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: limit/home pins axis %d failed\n", __FILE__, __FUNCTION__, i);
             return r;
         }
     }
 
     // Homing pins
     for (int i = 0; i < 8; i++) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.HomingStatus\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_u32_newf(HAL_IO, &pev2->pin_HomingStatus[i], comp_id,
                              "%s.PEv2.%01d.HomingStatus", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.index-enable\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_IO, &pev2->pin_index_enable[i], comp_id,
                              "%s.PEv2.%01d.index-enable", prefix, i);
 
         if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export homing pins for axis %d\n", i);
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: homing pins axis %d failed\n", __FILE__, __FUNCTION__, i);
             return r;
         }
     }
 
     // External outputs
     for (int i = 0; i < 4; i++) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.digout.ExternalRelay-%01d.out\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_digout_ExternalRelay_out[i], comp_id,
                              "%s.PEv2.digout.ExternalRelay-%01d.out", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.digout.ExternalOC-%01d.out\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_digout_ExternalOC_out[i], comp_id,
                              "%s.PEv2.digout.ExternalOC-%01d.out", prefix, i);
     }
 
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.ExternalRelayOutputs\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_ExternalRelayOutputs, comp_id,
                          "%s.PEv2.ExternalRelayOutputs", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.ExternalOCOutputs\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_ExternalOCOutputs, comp_id,
                          "%s.PEv2.ExternalOCOutputs", prefix);
 
     // Debug and diagnostics pins
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.debug.test-enable\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_debug_test_enable, comp_id,
                          "%s.PEv2.debug.test-enable", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.debug.cycle-time-ns\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_debug_cycle_time, comp_id,
                          "%s.PEv2.debug.cycle-time-ns", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.debug.error-count\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_debug_error_count, comp_id,
                          "%s.PEv2.debug.error-count", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.debug.commands-sent\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_debug_cmd_sent, comp_id,
                          "%s.PEv2.debug.commands-sent", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.debug.commands-failed\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_debug_cmd_failed, comp_id,
                          "%s.PEv2.debug.commands-failed", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.debug.communication-ok\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_debug_comm_ok, comp_id,
                          "%s.PEv2.debug.communication-ok", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.debug.test-frequency\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_float_newf(HAL_IN, &pev2->pin_debug_test_freq, comp_id,
                          "%s.PEv2.debug.test-frequency", prefix);
 
     // Performance monitoring pins
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.perf.rt-min-cycle-ns\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_perf_rt_min_cycle, comp_id,
                          "%s.PEv2.perf.rt-min-cycle-ns", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.perf.rt-max-cycle-ns\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_perf_rt_max_cycle, comp_id,
                          "%s.PEv2.perf.rt-max-cycle-ns", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.perf.rt-avg-cycle-ns\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_perf_rt_avg_cycle, comp_id,
                          "%s.PEv2.perf.rt-avg-cycle-ns", prefix);
 
     // Probing pins
     for (int i = 0; i < 8; i++) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.ProbePosition\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_u32_newf(HAL_IO, &pev2->pin_ProbePosition[i], comp_id,
                              "%s.PEv2.%01d.ProbePosition", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.ProbeMaxPosition\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_u32_newf(HAL_IO, &pev2->pin_ProbeMaxPosition[i], comp_id,
                              "%s.PEv2.%01d.ProbeMaxPosition", prefix, i);
     }
 
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.ProbeStatus\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_ProbeStatus, comp_id,
                          "%s.PEv2.ProbeStatus", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.digin.Probed.in\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_Probed_in, comp_id,
                          "%s.PEv2.digin.Probed.in", prefix);
 
     // MPG jogging pins
     for (int i = 0; i < 8; i++) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.joint-kb-jog-active\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_joint_kb_jog_active[i], comp_id,
                              "%s.PEv2.%01d.joint-kb-jog-active", prefix, i);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.%01d.joint-wheel-jog-active\n", __FILE__, __FUNCTION__, prefix, i);
         r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_joint_wheel_jog_active[i], comp_id,
                              "%s.PEv2.%01d.joint-wheel-jog-active", prefix, i);
     }
 
     // Motion buffer mode pins
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.motion-buffer-mode\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_motion_buffer_mode, comp_id,
                          "%s.PEv2.motion-buffer-mode", prefix);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: %s.PEv2.motion-buf-entries\n", __FILE__, __FUNCTION__, prefix);
     r |= hal_pin_s32_newf(HAL_OUT, &pev2->pin_motion_buffer_entries_accepted, comp_id,
                          "%s.PEv2.motion-buf-entries", prefix);
 
     if (r != 0) {
-        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export PEv2 HAL pins\n");
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: Failed to export PEv2 HAL pins\n", __FILE__, __FUNCTION__);
         return r;
     }
 
@@ -561,7 +607,7 @@ int export_pev2_pins(const char *prefix, long comp_id, sPoKeysDevice *device) {
     *(pev2->pin_perf_rt_max_cycle) = 0;
     *(pev2->pin_perf_rt_avg_cycle) = 0;
 
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: PEv2 HAL pins exported successfully\n");
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PEv2 HAL pins exported successfully\n", __FILE__, __FUNCTION__);
     return 0;
 }
 
