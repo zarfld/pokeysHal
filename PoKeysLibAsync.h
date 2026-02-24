@@ -7,7 +7,7 @@
 
 
 #define MAX_TRANSACTIONS 64 // Maximum number of async transactions
-#define MAX_ASYNC_COMMANDS 32  // Maximum number of queued async commands
+#define MAX_ASYNC_COMMANDS 32  // Maximum number of queued async commands; enqueue_async_command() drops new entries when full
 
 typedef enum {
     CMD_MOVE_PV,

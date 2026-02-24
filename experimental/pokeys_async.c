@@ -701,9 +701,12 @@ static void rt_update_motion_commands(struct __comp_state *inst) {
             changed_axis_mask |= (1 << i);
             // Convert to device units using scale
             positions[i] = motion_data.pos_cmd[i] * inst->dev->PEv2.stepgen_STEP_SCALE[i];
-            velocities[i] = (inst->dev->PEv2.MaxSpeed[i] != 0.0f)
-                ? motion_data.vel_cmd[i] / inst->dev->PEv2.MaxSpeed[i]
-                : 0.0f;
+            if (inst->dev->PEv2.MaxSpeed[i] != 0.0f)
+                velocities[i] = motion_data.vel_cmd[i] / inst->dev->PEv2.MaxSpeed[i];
+            else {
+                velocities[i] = 0.0f;
+                rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: PEv2 axis %d MaxSpeed is zero; velocity clamped to 0\n", i);
+            }
             motion_data.pos_cmd_changed[i] = false;
         }
     }

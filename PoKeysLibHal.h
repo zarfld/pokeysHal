@@ -397,7 +397,9 @@ typedef struct
  uint8_t         AxesState[8];              // Axis states (bit-mapped) - see ePK_PEAxisState
  uint8_t         AxesConfig[8];             // Axis configuration - see ePK_PEv2_AxisConfig
  uint8_t         AxesSwitchConfig[8];       // Axis switch configuration - see ePK_PEv2_AxisSwitchOptions
- // Expanded AxesConfig bitfields (hal_bit_t for direct HAL availability)
+ // Expanded AxesConfig bitfields (hal_bit_t for direct HAL availability).
+ // These must be kept in sync with AxesConfig[8] by the subsystem decode logic
+ // (copy each bit from the device byte into the corresponding hal_bit_t field).
  hal_bit_t       AxesConfig_enabled[8];           // PK_AC_ENABLED (bit 0)
  hal_bit_t       AxesConfig_inverted[8];           // PK_AC_INVERTED (bit 1)
  hal_bit_t       AxesConfig_internal_planner[8];   // PK_AC_INTERNAL_PLANNER (bit 2)
@@ -406,7 +408,8 @@ typedef struct
  hal_bit_t       AxesConfig_soft_limit_enabled[8]; // PK_AC_SOFT_LIMIT_ENABLED (bit 5)
  hal_bit_t       AxesConfig_fast_output[8];        // PK_AC_FAST_OUTPUT (bit 6)
  hal_bit_t       AxesConfig_enabled_masked[8];     // PK_AC_ENABLED_MASKED (bit 7)
- // Expanded AxesSwitchConfig bitfields (hal_bit_t for direct HAL availability)
+ // Expanded AxesSwitchConfig bitfields (hal_bit_t for direct HAL availability).
+ // Must be kept in sync with AxesSwitchConfig[8] by the subsystem decode logic.
  hal_bit_t       AxesSwitchConfig_LimitN[8];           // PK_ASO_SWITCH_LIMIT_N (bit 0)
  hal_bit_t       AxesSwitchConfig_LimitP[8];           // PK_ASO_SWITCH_LIMIT_P (bit 1)
  hal_bit_t       AxesSwitchConfig_Home[8];              // PK_ASO_SWITCH_HOME (bit 2)
