@@ -254,29 +254,91 @@ int export_encoder_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
  int PK_EncoderValuesGetAsync_ProcessPage0(sPoKeysDevice *device, const uint8_t *response)
  {
      if (device == NULL || response == NULL) return PK_ERR_TRANSFER;
- 
+
+#ifdef DEBUG_ENCODER_VALUES
+     rtapi_print_msg(RTAPI_MSG_DBG,
+         "PoKeys: %s:%s: entry iBasicEncoderCount=%u Encoders=%p\n",
+         __FILE__, __FUNCTION__,
+         (unsigned)device->info.iBasicEncoderCount, (void*)device->Encoders);
+#endif
+
      for (uint32_t i = 0; i < 13; i++) {
-        *(device->Encoders[i].encoderValue) = *(uint32_t*)&response[8 + (i * 4)];
+        uint32_t raw = *(uint32_t*)&response[8 + (i * 4)];
+        hal_s32_t *ptr = device->Encoders[i].encoderValue;
+#ifdef DEBUG_ENCODER_VALUES
+        rtapi_print_msg(RTAPI_MSG_DBG,
+            "PoKeys: %s:%s: [P0] i=%u encoderValue=%p raw=0x%08X\n",
+            __FILE__, __FUNCTION__, i, (void*)ptr, raw);
+#endif
+        if (ptr == NULL) {
+            rtapi_print_msg(RTAPI_MSG_WARN,
+                "PoKeys: %s:%s: [P0] encoderValue NULL at i=%u - skipping\n",
+                __FILE__, __FUNCTION__, i);
+            continue;
+        }
+        *ptr = (hal_s32_t)raw;
      }
      return PK_OK;
  }
- 
+
  int PK_EncoderValuesGetAsync_ProcessPage1(sPoKeysDevice *device, const uint8_t *response)
  {
      if (device == NULL || response == NULL) return PK_ERR_TRANSFER;
- 
+
+#ifdef DEBUG_ENCODER_VALUES
+     rtapi_print_msg(RTAPI_MSG_DBG,
+         "PoKeys: %s:%s: entry iBasicEncoderCount=%u Encoders=%p\n",
+         __FILE__, __FUNCTION__,
+         (unsigned)device->info.iBasicEncoderCount, (void*)device->Encoders);
+#endif
+
      for (uint32_t i = 0; i < 13; i++) {
-        *(device->Encoders[13 + i].encoderValue) = *(uint32_t*)&response[8 + (i * 4)];
+        uint32_t idx = 13 + i;
+        uint32_t raw = *(uint32_t*)&response[8 + (i * 4)];
+        hal_s32_t *ptr = device->Encoders[idx].encoderValue;
+#ifdef DEBUG_ENCODER_VALUES
+        rtapi_print_msg(RTAPI_MSG_DBG,
+            "PoKeys: %s:%s: [P1] i=%u idx=%u encoderValue=%p raw=0x%08X\n",
+            __FILE__, __FUNCTION__, i, idx, (void*)ptr, raw);
+#endif
+        if (ptr == NULL) {
+            rtapi_print_msg(RTAPI_MSG_WARN,
+                "PoKeys: %s:%s: [P1] encoderValue NULL at idx=%u - skipping\n",
+                __FILE__, __FUNCTION__, idx);
+            continue;
+        }
+        *ptr = (hal_s32_t)raw;
      }
      return PK_OK;
  }
- 
+
  int PK_EncoderValuesGetAsync_ProcessPage1_FastOnly(sPoKeysDevice *device, const uint8_t *response)
  {
      if (device == NULL || response == NULL) return PK_ERR_TRANSFER;
- 
+
+#ifdef DEBUG_ENCODER_VALUES
+     rtapi_print_msg(RTAPI_MSG_DBG,
+         "PoKeys: %s:%s: entry iBasicEncoderCount=%u Encoders=%p\n",
+         __FILE__, __FUNCTION__,
+         (unsigned)device->info.iBasicEncoderCount, (void*)device->Encoders);
+#endif
+
      for (uint32_t i = 0; i < 12; i++) {
-        *(device->Encoders[13 + i].encoderValue) = *(uint32_t*)&response[8 + (i * 4)];
+        uint32_t idx = 13 + i;
+        uint32_t raw = *(uint32_t*)&response[8 + (i * 4)];
+        hal_s32_t *ptr = device->Encoders[idx].encoderValue;
+#ifdef DEBUG_ENCODER_VALUES
+        rtapi_print_msg(RTAPI_MSG_DBG,
+            "PoKeys: %s:%s: [P1F] i=%u idx=%u encoderValue=%p raw=0x%08X\n",
+            __FILE__, __FUNCTION__, i, idx, (void*)ptr, raw);
+#endif
+        if (ptr == NULL) {
+            rtapi_print_msg(RTAPI_MSG_WARN,
+                "PoKeys: %s:%s: [P1F] encoderValue NULL at idx=%u - skipping\n",
+                __FILE__, __FUNCTION__, idx);
+            continue;
+        }
+        *ptr = (hal_s32_t)raw;
      }
      return PK_OK;
  }
