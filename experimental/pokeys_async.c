@@ -651,7 +651,11 @@ void user_mainloop(void)
                     rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: PK_EncoderValuesGetAsync FAILED\n", __FILE__, __FUNCTION__);
                 }
 
-            PK_ReceiveAndDispatch(__comp_inst->dev); // checks for timeout and retry
+            // Drain all pending responses: a single PK_ReceiveAndDispatch call
+            // processes at most one UDP packet. Loop here so that every response
+            // that arrived since the previous iteration (RTC, encoder, etc.) is
+            // dispatched to its parser and the HAL pins are updated.
+            while (PK_ReceiveAndDispatch(__comp_inst->dev) > 0) {}
             PK_TimeoutAndRetryCheck(__comp_inst->dev, 6000); // checks for timeout and retry
 
             alive=0;
@@ -1035,8 +1039,11 @@ FUNCTION(_) {
     
     int64_t start_time = rtapi_get_time();
     
-    // Process communication with device
-    PK_ReceiveAndDispatch(__comp_inst->dev);
+    // Drain all pending responses from previous cycles before sending new requests.
+    // A single PK_ReceiveAndDispatch call processes at most one UDP packet; loop
+    // here so that every response that has arrived since the last servo cycle is
+    // dispatched to its parser and the corresponding HAL pins are updated.
+    while (PK_ReceiveAndDispatch(__comp_inst->dev) > 0) {}
     PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000);
     
     // 1. Read HAL command pins and detect changes
@@ -1067,54 +1074,37 @@ FUNCTION(_) {
         update_device_cache(__comp_inst);
     }
     
-    // Legacy IO operations (maintain existing behavior)
-    if (PK_RTCGetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
+    // Legacy IO operations: send new requests for this cycle.
+    // Responses will be collected at the TOP of the NEXT cycle's drain loop.
+    // RTC changes at most once per second; rate-limit to avoid flooding the
+    // transaction table with 1000 RTC requests per second.
+    static int rtc_cycle_counter = 0;
+    if (++rtc_cycle_counter >= 100) {  /* every ~100 ms with a 1 ms servo period */
+        rtc_cycle_counter = 0;
+        PK_RTCGetAsync(__comp_inst->dev);
     }
     
-    if (PK_EncoderValuesGetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
+    PK_EncoderValuesGetAsync(__comp_inst->dev);
     
-    if (PK_DigitalIOSetGetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
+    PK_DigitalIOSetGetAsync(__comp_inst->dev);
     
-    if (PK_DigitalIOGetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
+    PK_DigitalIOGetAsync(__comp_inst->dev);
     
-    if (PK_DigitalIOSetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
+    PK_DigitalIOSetAsync(__comp_inst->dev);
     
-    if (PK_PWMUpdateAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
+    PK_PWMUpdateAsync(__comp_inst->dev);
     
-    if (PK_AnalogIOGetAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
+    PK_AnalogIOGetAsync(__comp_inst->dev);
     
-    // PoNET communication operations - NEW
-    if (PK_PoNETGetPoNETStatusAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
+    // PoNET communication operations
+    PK_PoNETGetPoNETStatusAsync(__comp_inst->dev);
     
-    if (PK_PoNETGetModuleStatusAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
+    PK_PoNETGetModuleStatusAsync(__comp_inst->dev);
     
-    if (PK_PoNETSetModuleStatusAsync(__comp_inst->dev) == PK_OK) {
-        PK_ReceiveAndDispatch(__comp_inst->dev);
-    }
+    PK_PoNETSetModuleStatusAsync(__comp_inst->dev);
     
     // Update PoNET HAL pins after communication
     update_ponet_hal_pins(__comp_inst->dev);
-    
-    // Final communication processing
-    PK_ReceiveAndDispatch(__comp_inst->dev);
-    PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000);
     
     // Phase 4: Performance monitoring and test mode
     rt_update_performance_monitoring(__comp_inst, start_time);

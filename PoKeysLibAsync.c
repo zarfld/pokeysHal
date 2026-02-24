@@ -218,6 +218,7 @@ return req_id;
  */
 int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
 {
+    if (!dev) return -1;
     async_transaction_t *t = transaction_find(request_id);
     if (!t) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: No matching transaction found for request ID %d\n", __FILE__, __FUNCTION__, request_id);
@@ -250,6 +251,7 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
  */
 int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
 {
+    if (!dev) return 0;
     uint8_t rx_buffer[64];
     ssize_t len;
     struct sockaddr_in addr;
@@ -312,6 +314,7 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
  */
 void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
 {
+    if (!dev) return;
     uint64_t now = get_current_time_us();
     static uint32_t consecutive_errors = 0;
     static uint64_t last_error_time = 0;

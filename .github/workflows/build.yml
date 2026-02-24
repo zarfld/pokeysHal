@@ -192,6 +192,7 @@ jobs:
         show pin
         show funct
         start
+        loadusr -W sleep 2
         show pin
         show param
         exit
@@ -209,6 +210,7 @@ jobs:
         show param
         addf pokeys-async.0 test-thread
         start
+        loadusr -W sleep 2
         show funct
         show thread
         show pin
