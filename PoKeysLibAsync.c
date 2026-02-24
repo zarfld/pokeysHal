@@ -225,6 +225,12 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
         return -1; // No matching pending transaction found
     }
 
+    // Guard against NULL devHandle (e.g. USB-only device without UDP socket)
+    if (!dev->devHandle) {
+        rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: %s:%s: devHandle is NULL for request ID %d - skipping send\n", __FILE__, __FUNCTION__, request_id);
+        return -1;
+    }
+
     // Send the packet
  //   ssize_t sent = sendto(*(int*)dev->devHandle, t->request_buffer, sizeof(t->request_buffer), 0,(struct sockaddr *)&dev->devHandle2, sizeof(struct sockaddr_in));
  ssize_t sent = sendto(*(int*)dev->devHandle, t->request_buffer, sizeof(t->request_buffer), 0,(struct sockaddr *)dev->devHandle2, sizeof(struct sockaddr_in));
