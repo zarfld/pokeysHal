@@ -305,63 +305,37 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
     if (!device->info.iBasicEncoderCount) return PK_ERR_NOT_SUPPORTED;
 
-    // Step 1: Basic encoder options (0xC4)
-    for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
-        uint32_t temp = device->Encoders[i].encoderOptions;
-        CreateRequestAsync(device, 0xC4, NULL, 0,
-            &temp, sizeof(temp),PK_EncoderOptionsParse);
-    }
+    /* Each GET command (0xC4/0xC5/0xC6/0xC7) returns ALL encoder configuration
+     * in a single response packet — no per-encoder index parameter is needed.
+     * Send one request per command type; the parser handles all encoders. */
 
-    // Step 2: Channel mappings (0xC5)
-    for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
-        // Channel A pin
-        uint32_t tempA = device->Encoders[i].channelApin;
-        CreateRequestAsync(device, 0xC5, NULL, 0,
-            &tempA, sizeof(tempA),NULL);
+    // Step 1: Basic encoder options (0xC4) — returns options for all encoders
+    CreateAndSendRequestAsync(device, 0xC4, NULL, 0,
+        NULL, 0, PK_EncoderOptionsParse);
 
-        // Channel B pin
-        uint32_t tempB = device->Encoders[i].channelBpin;
-        CreateRequestAsync(device, 0xC5, NULL, 0,
-            &tempB, sizeof(tempB),NULL);
-    }
+    // Step 2: Channel A/B mappings (0xC5) — returns all channel pins
+    CreateAndSendRequestAsync(device, 0xC5, NULL, 0, NULL, 0, NULL);
 
     if (device->info.iKeyMapping)
     {
         // Step 3: Direction A key mapping (0xC6)
-        for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
-            uint32_t tempA1 = device->Encoders[i].dirAkeyCode;
-            uint32_t tempA2 = device->Encoders[i].dirAkeyModifier;
-            CreateRequestAsync(device, 0xC6, NULL, 0,
-                &tempA1, sizeof(tempA1),NULL);
-            CreateRequestAsync(device, 0xC6, NULL, 0,
-                &tempA2, sizeof(tempA2),NULL);
-
-
+        CreateAndSendRequestAsync(device, 0xC6, NULL, 0, NULL, 0, NULL);
         // Step 4: Direction B key mapping (0xC7)
-        uint32_t tempB1 = device->Encoders[i].dirBkeyCode;
-        uint32_t tempB2 = device->Encoders[i].dirBkeyModifier;
-            CreateRequestAsync(device, 0xC7, NULL, 0,
-                &tempB1, sizeof(tempB1),NULL);
-            CreateRequestAsync(device, 0xC7, NULL, 0,
-                &tempB2, sizeof(tempB2),NULL);
-        }
+        CreateAndSendRequestAsync(device, 0xC7, NULL, 0, NULL, 0, NULL);
     }
 
     if (device->info.iFastEncoders)
     {
         uint8_t params_fast[] = {2}; // As seen in original 0xCE, param=2
-
-        CreateRequestAsync(device, 0xCE, params_fast, 1,
-                   NULL, 0,
-                   PK_FastEncodersOptionsParse);
+        CreateAndSendRequestAsync(device, 0xCE, params_fast, 1,
+                   NULL, 0, PK_FastEncodersOptionsParse);
     }
 
     if (device->info.iUltraFastEncoders)
     {
         uint8_t params_ultra[] = {0xFF}; // 0x1C, param=0xFF
-        CreateRequestAsync(device, 0x1C, params_ultra, 1,
-            NULL, 0,
-            PK_UltraFastEncoderOptionsParse);
+        CreateAndSendRequestAsync(device, 0x1C, params_ultra, 1,
+            NULL, 0, PK_UltraFastEncoderOptionsParse);
     }
 
     return PK_OK;
@@ -396,7 +370,7 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
      for (uint32_t i = 0; i < device->info.iBasicEncoderCount; i++) {
          payload_encoderOptions[i] = device->Encoders[i].encoderOptions;
      }
-     CreateRequestAsyncWithPayload(device, 0xC4, params_basic, 1,
+     CreateAndSendRequestAsyncWithPayload(device, 0xC4, params_basic, 1,
                                     payload_encoderOptions, device->info.iBasicEncoderCount,
                                     NULL);
  
@@ -406,7 +380,7 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
          payload_mapping[i] = device->Encoders[i].channelApin;
          payload_mapping[25 + i + 1] = device->Encoders[i].channelBpin;
      }
-     CreateRequestAsyncWithPayload(device, 0xC5, params_mapping, 1,
+     CreateAndSendRequestAsyncWithPayload(device, 0xC5, params_mapping, 1,
                                     payload_mapping, sizeof(payload_mapping),
                                     NULL);
  
@@ -424,12 +398,12 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
              payload_dirB[25 + i + 1] = device->Encoders[i].dirBkeyModifier;
          }
  
-         CreateRequestAsyncWithPayload(device, 0xC6, params_dir_mapping, 1,
+         CreateAndSendRequestAsyncWithPayload(device, 0xC6, params_dir_mapping, 1,
                                         payload_dirA, sizeof(payload_dirA),
                                         NULL);
  
          // 4. Direction B mapping (0xC7)
-         CreateRequestAsyncWithPayload(device, 0xC7, params_dir_mapping, 1,
+         CreateAndSendRequestAsyncWithPayload(device, 0xC7, params_dir_mapping, 1,
                                         payload_dirB, sizeof(payload_dirB),
                                         NULL);
      }
@@ -442,7 +416,7 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
              device->FastEncodersOptions
          };
  
-         CreateRequestAsyncWithPayload(device, 0xCE, params_fast, 1,
+         CreateAndSendRequestAsyncWithPayload(device, 0xCE, params_fast, 1,
                                         payload_fast, sizeof(payload_fast),
                                         NULL);
      }
@@ -460,7 +434,7 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
          payload_ultra[4] = (filter >> 16) & 0xFF;
          payload_ultra[5] = (filter >> 24) & 0xFF;
  
-         CreateRequestAsyncWithPayload(device, 0x1C, params_ultra, 1,
+         CreateAndSendRequestAsyncWithPayload(device, 0x1C, params_ultra, 1,
                                         payload_ultra, sizeof(payload_ultra),
                                         NULL);
      }
@@ -477,38 +451,40 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
  int PK_EncoderValuesGetAsync(sPoKeysDevice *device)
  {
      if (device == NULL) return PK_ERR_NOT_CONNECTED;
- 
+     int ret;
+
      // Always read the first 13 encoders
-     CreateRequestAsync(device, 0xCD, NULL, 0,
-         NULL, 0, // target_ptr=NULL: will parse manually
-         PK_EncoderValuesGetAsync_ProcessPage0);
- 
+     ret = CreateAndSendRequestAsync(device, 0xCD, NULL, 0,
+         NULL, 0, PK_EncoderValuesGetAsync_ProcessPage0);
+     if (ret < 0) return ret;
+
      if (device->info.iBasicEncoderCount >= 25)
      {
          if (device->info.iUltraFastEncoders != 0)
          {
              // Read the next 13 encoders (Page 1, with UltraFast)
              uint8_t param_next = 1;
-             CreateRequestAsync(device, 0xCD, &param_next, 1,
-                 NULL, 0,
-                 PK_EncoderValuesGetAsync_ProcessPage1);
- 
+             ret = CreateAndSendRequestAsync(device, 0xCD, &param_next, 1,
+                 NULL, 0, PK_EncoderValuesGetAsync_ProcessPage1);
+             if (ret < 0) return ret;
+
              // Read UltraFast encoder extra values
              uint8_t params_ultrafast[] = {0x37}; // Sub-command for test mode
-            CreateRequestAsync(device, PK_CMD_PULSE_ENGINE_V2, params_ultrafast, 1,
-                NULL, 0,
-                PK_EncoderValuesGetAsync_ProcessUltraFast);
+             ret = CreateAndSendRequestAsync(device, PK_CMD_PULSE_ENGINE_V2,
+                 params_ultrafast, 1, NULL, 0,
+                 PK_EncoderValuesGetAsync_ProcessUltraFast);
+             if (ret < 0) return ret;
          }
          else
          {
              // Fast encoders only: next 12 encoders (Page 1)
              uint8_t param_next = 1;
-             CreateRequestAsync(device, 0xCD, &param_next, 1,
-                 NULL, 0,
-                 PK_EncoderValuesGetAsync_ProcessPage1_FastOnly);
+             ret = CreateAndSendRequestAsync(device, 0xCD, &param_next, 1,
+                 NULL, 0, PK_EncoderValuesGetAsync_ProcessPage1_FastOnly);
+             if (ret < 0) return ret;
          }
      }
- 
+
      return PK_OK;
  }
  
@@ -522,12 +498,13 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
  int PK_EncoderValuesSetAsync(sPoKeysDevice *device)
  {
      if (device == NULL) return PK_ERR_NOT_CONNECTED;
- 
+     int req_id;
+
      if (device->info.iBasicEncoderCount >= 13)
      {
          uint8_t param_first = 10;
          uint8_t payload[56] = {0}; // Payload for 13 encoders × 4 bytes each
- 
+
          for (uint32_t i = 0; i < 13; i++) {
              uint32_t val = (uint32_t)*(device->Encoders[i].encoderValue);
              payload[8 + i * 4 + 0] = (val >> 0) & 0xFF;
@@ -535,16 +512,18 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
              payload[8 + i * 4 + 2] = (val >> 16) & 0xFF;
              payload[8 + i * 4 + 3] = (val >> 24) & 0xFF;
          }
- 
-         CreateRequestAsyncWithPayload(device, 0xCD, &param_first, 1,
+
+         req_id = CreateRequestAsyncWithPayload(device, 0xCD, &param_first, 1,
                                        &payload[8], 13 * 4, NULL); // Skip first 8 bytes
+         if (req_id < 0) return req_id;
+         if (SendRequestAsync(device, (uint8_t)req_id) < 0) return PK_ERR_TRANSFER;
      }
- 
+
      if (device->info.iBasicEncoderCount >= 25)
      {
          uint8_t param_next = 11;
          uint8_t payload[56] = {0};
- 
+
          for (uint32_t i = 0; i < 13; i++) {
              uint32_t val = (uint32_t)*(device->Encoders[13 + i].encoderValue);
              payload[8 + i * 4 + 0] = (val >> 0) & 0xFF;
@@ -552,11 +531,13 @@ int PK_EncoderConfigurationGetAsync(sPoKeysDevice* device)
              payload[8 + i * 4 + 2] = (val >> 16) & 0xFF;
              payload[8 + i * 4 + 3] = (val >> 24) & 0xFF;
          }
- 
-         CreateRequestAsyncWithPayload(device, 0xCD, &param_next, 1,
+
+         req_id = CreateRequestAsyncWithPayload(device, 0xCD, &param_next, 1,
                                        &payload[8], 13 * 4, NULL);
+         if (req_id < 0) return req_id;
+         if (SendRequestAsync(device, (uint8_t)req_id) < 0) return PK_ERR_TRANSFER;
      }
- 
+
      return PK_OK;
  }
 
@@ -584,7 +565,7 @@ int PK_EncoderRawValueResetAsync(sPoKeysDevice* device, uint32_t encoderMask)
         (encoderMask >> 24) & 0xFF   // MSB
     };
     
-    return CreateRequestAsync(device, PK_CMD_ENCODER_RAW_VALUE_RESET,
+    return CreateAndSendRequestAsync(device, PK_CMD_ENCODER_RAW_VALUE_RESET,
                               params, 4, NULL, 0, NULL);
 }
 

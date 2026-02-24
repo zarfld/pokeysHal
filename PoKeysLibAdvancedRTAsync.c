@@ -63,7 +63,7 @@ int PK_DigitalCounterGetSelectedAsync(sPoKeysDevice* device, const uint8_t* pinL
         }
     }
 
-    return CreateRequestAsync(device, PK_CMD_DIGITAL_COUNTERS_VALUES,
+    return CreateAndSendRequestAsync(device, PK_CMD_DIGITAL_COUNTERS_VALUES,
                               NULL, 0, (void*)pinList, count, PK_DigitalCounterParse);
 }
 
@@ -114,7 +114,7 @@ int PK_PWMUpdateSelectedChannelsAsync(sPoKeysDevice* device, uint8_t channelMask
     payload[35] = (uint8_t)((period >> 16) & 0xFF);
     payload[36] = (uint8_t)((period >> 24) & 0xFF);
 
-    return CreateRequestAsync(device, PK_CMD_PWM_CONFIGURATION, 
+    return CreateAndSendRequestAsync(device, PK_CMD_PWM_CONFIGURATION, 
                               (const uint8_t[]){1, 1}, 2, payload, sizeof(payload), NULL);
 }
 

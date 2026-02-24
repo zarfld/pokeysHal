@@ -243,6 +243,30 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
     return 0; // Success
 }
 
+int CreateAndSendRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,
+    const uint8_t *params, size_t params_len,
+    void *target_ptr, size_t target_size,
+    int (*parser_func)(sPoKeysDevice *dev, const uint8_t *response))
+{
+    int req_id = CreateRequestAsync(dev, cmd, params, params_len,
+                                    target_ptr, target_size, parser_func);
+    if (req_id < 0)
+        return req_id;
+    return SendRequestAsync(dev, (uint8_t)req_id);
+}
+
+int CreateAndSendRequestAsyncWithPayload(sPoKeysDevice *dev, pokeys_command_t cmd,
+    const uint8_t *params, size_t params_len,
+    const void *payload, size_t payload_size,
+    pokeys_response_parser_t parser_func)
+{
+    int req_id = CreateRequestAsyncWithPayload(dev, cmd, params, params_len,
+                                               payload, payload_size, parser_func);
+    if (req_id < 0)
+        return req_id;
+    return SendRequestAsync(dev, (uint8_t)req_id);
+}
+
 /**
  * @brief Receives UDP packets and dispatches them to the correct async transaction.
  *
@@ -434,7 +458,7 @@ int async_dispatcher(void)
     int ret = t->func(t->dev);
     t->next_call_time = now + t->interval_ns;
 
-    if (ret)
+    if (ret < 0)
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys async_dispatcher: %s FAILED (ret=%d)\n", t->name, ret);
 
     return 1;

@@ -356,6 +356,30 @@ int CreateRequestAsyncWithPayload(
 
 int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id);
 
+/**
+ * Convenience wrapper: CreateRequestAsync() + SendRequestAsync() in one call.
+ * Use this in every async send function instead of returning CreateRequestAsync()
+ * directly, so that the UDP packet is actually transmitted and the transaction
+ * slot is not left permanently PENDING (which would exhaust the 64-slot table).
+ *
+ * @return 0 on success, negative error code on failure.
+ */
+int CreateAndSendRequestAsync(sPoKeysDevice *dev, pokeys_command_t cmd,
+    const uint8_t *params, size_t params_len,
+    void *target_ptr, size_t target_size,
+    int (*parser_func)(sPoKeysDevice *dev, const uint8_t *response));
+
+/**
+ * Convenience wrapper: CreateRequestAsyncWithPayload() + SendRequestAsync().
+ * Same as CreateAndSendRequestAsync() but includes an extra outbound payload.
+ *
+ * @return 0 on success, negative error code on failure.
+ */
+int CreateAndSendRequestAsyncWithPayload(sPoKeysDevice *dev, pokeys_command_t cmd,
+    const uint8_t *params, size_t params_len,
+    const void *payload, size_t payload_size,
+    pokeys_response_parser_t parser_func);
+
 int PK_ReceiveAndDispatch(sPoKeysDevice *dev);
 
 void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us);
