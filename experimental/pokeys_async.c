@@ -1017,37 +1017,51 @@ FUNCTION(_) {
     int64_t start_time = rtapi_get_time();
 
     // Phase 1: Drain ALL pending responses that arrived since the last cycle.
-    // PK_ReceiveAndDispatch processes exactly one UDP packet per call (non-blocking).
-    // Loop until the receive buffer is empty so every response is handled.
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: FUNCTION(_): Phase1-drain start, dev=%p\n",
+        (void*)__comp_inst->dev);
     while (PK_ReceiveAndDispatch(__comp_inst->dev) > 0) {}
     PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: FUNCTION(_): Phase1-drain done\n");
 
     // Phase 2: Dispatch scheduler-managed async sends within the time budget.
-    // PEv2 status/motion/outputs and all IO subsystems are registered as
-    // scheduler tasks (see start_async_processing).  async_dispatcher() fires
-    // the single most-overdue registered task and returns 1, or 0 when nothing
-    // is due yet.  The 100 µs guard ensures we never crowd out the final drain.
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: FUNCTION(_): Phase2-dispatch start\n");
     {
         const long SCHED_GUARD_NS = 100000L;
+        int dispatched = 0;
         while ((rtapi_get_time() - start_time) < (period - SCHED_GUARD_NS)) {
             if (async_dispatcher() == 0)
                 break;  /* nothing more due this cycle */
+            dispatched++;
         }
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: FUNCTION(_): Phase2-dispatch done (%d tasks fired)\n",
+            dispatched);
     }
 
     // Phase 3: Drain any additional responses that arrived during Phase 2.
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: FUNCTION(_): Phase3-drain start\n");
     {
         const long DRAIN_GUARD_NS = 20000L;
+        int drained = 0;
         while ((rtapi_get_time() - start_time) < (period - DRAIN_GUARD_NS)) {
             if (PK_ReceiveAndDispatch(__comp_inst->dev) <= 0)
                 break;
+            drained++;
         }
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: FUNCTION(_): Phase3-drain done (%d packets processed)\n",
+            drained);
     }
 
     // Update PoNET HAL output pins from latest received data.
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: FUNCTION(_): update_ponet_hal_pins\n");
     update_ponet_hal_pins(__comp_inst->dev);
 
     int64_t end_time = rtapi_get_time();
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: FUNCTION(_): cycle done in %lld ns\n",
+        (long long)(end_time - start_time));
     if ((end_time - start_time) > 5000000) {
         rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys RT: Long cycle time: %lld ns\n",
                        end_time - start_time);

@@ -763,16 +763,34 @@ int export_pev2_pins(const char *prefix, long comp_id, sPoKeysDevice *device) {
 static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
 {
     if (!dev || !resp) return PK_ERR_GENERIC;
+
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [A] entry req_id=%u resp[63]=0x%02X\n",
+        __FILE__, __FUNCTION__, (unsigned)resp[6], resp[63]);
+
     uint8_t req_id = resp[6];
     uint8_t tstB = (0x10 + req_id) % 199;
     if (resp[63] != (uint8_t)(tstB + 0x5A)) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [A1] checksum fail (got 0x%02X expected 0x%02X)\n",
+            __FILE__, __FUNCTION__, resp[63], (uint8_t)(tstB + 0x5A));
         dev->PEv2.PulseEngineActivated = 0;
         dev->PEv2.PulseEngineEnabled   = 0;
         return PK_ERR_GENERIC;
     }
+
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [B] checksum OK - decoding status\n",
+        __FILE__, __FUNCTION__);
     PK_PEv2_DecodeStatusFromResp(dev, resp);
 
     sPoKeysPEv2 *pev2 = &dev->PEv2;
+
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [C] global pins  PulseEngineState=%p PulseEngineActivated=%p\n",
+        __FILE__, __FUNCTION__,
+        (void*)pev2->pin_PulseEngineState,
+        (void*)pev2->pin_PulseEngineActivated);
 
     /* Global engine status */
     if (pev2->pin_PulseEngineState)     *pev2->pin_PulseEngineState     = pev2->PulseEngineState;
@@ -782,6 +800,10 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
     if (pev2->pin_bufferDepth)          *pev2->pin_bufferDepth          = pev2->info.bufferDepth;
     if (pev2->pin_slotTiming)           *pev2->pin_slotTiming           = pev2->info.slotTiming;
 
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [D] emergency pin=%p\n",
+        __FILE__, __FUNCTION__, (void*)pev2->pin_digin_Emergency_in);
+
     /* Emergency stop */
     if (pev2->pin_digin_Emergency_in) {
         hal_bit_t emg = (pev2->ErrorInputStatus & 0x01) ? 1 : 0;
@@ -790,8 +812,20 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
             *pev2->pin_digin_Emergency_in_not = !emg;
     }
 
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [E] per-axis loop start\n",
+        __FILE__, __FUNCTION__);
+
     /* Per-axis feedback */
     for (int i = 0; i < 8; i++) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [E%d] AxesState=%p CurrentPos=%p pos_fb=%p in_pos=%p\n",
+            __FILE__, __FUNCTION__, i,
+            (void*)pev2->pin_AxesState[i],
+            (void*)pev2->pin_CurrentPosition[i],
+            (void*)pev2->pin_joint_pos_fb[i],
+            (void*)pev2->pin_joint_in_position[i]);
+
         if (pev2->pin_AxesState[i])
             *pev2->pin_AxesState[i] = pev2->AxesState[i];
         if (pev2->pin_CurrentPosition[i])
@@ -813,6 +847,13 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
             *pev2->pin_joint_in_position[i] = (fabsf(fb - cmd) <= tol) ? 1 : 0;
         }
 
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [E%d-lim] LimitN=%p LimitP=%p Home=%p\n",
+            __FILE__, __FUNCTION__, i,
+            (void*)pev2->pin_digin_LimitN_in[i],
+            (void*)pev2->pin_digin_LimitP_in[i],
+            (void*)pev2->pin_digin_Home_in[i]);
+
         /* Limit switches (from bitmasks) */
         if (pev2->pin_digin_LimitN_in[i]) {
             hal_bit_t lim = (pev2->LimitStatusN & (1u << i)) ? 1 : 0;
@@ -833,6 +874,10 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
                 *pev2->pin_digin_Home_in_not[i] = !hm;
         }
     }
+
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [F] returning PK_OK\n",
+        __FILE__, __FUNCTION__);
     return PK_OK;
 }
 
@@ -845,6 +890,9 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
  */
 int PK_PEv2_StatusUpdateHALAsync(sPoKeysDevice *device)
 {
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: entry device=%p\n",
+        __FILE__, __FUNCTION__, (void*)device);
     if (!device) return PK_ERR_NOT_CONNECTED;
     int req = CreateRequestAsync(device, PK_CMD_PULSE_ENGINE_V2,
                                  (const uint8_t[]){PEV2_CMD_GET_STATUS, 0}, 2,
@@ -870,8 +918,18 @@ int PK_PEv2_StatusUpdateHALAsync(sPoKeysDevice *device)
  */
 int PK_PEv2_MovePVFromHALAsync(sPoKeysDevice *device)
 {
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: entry device=%p\n",
+        __FILE__, __FUNCTION__, (void*)device);
     if (!device) return PK_ERR_NOT_CONNECTED;
     sPoKeysPEv2 *pev2 = &device->PEv2;
+
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: pev2=%p pin_joint_pos_cmd[0]=%p stepgen_STEP_SCALE[0]=%f\n",
+        __FILE__, __FUNCTION__,
+        (void*)pev2,
+        (void*)pev2->pin_joint_pos_cmd[0],
+        (double)pev2->stepgen_STEP_SCALE[0]);
 
     /* Copy HAL command pins → device struct */
     for (int i = 0; i < 8; i++) {
@@ -891,6 +949,9 @@ int PK_PEv2_MovePVFromHALAsync(sPoKeysDevice *device)
         }
     }
     pev2->param2 = 0xFF; /* all axes */
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: calling PK_PEv2_PulseEngineMovePVAsync\n",
+        __FILE__, __FUNCTION__);
     return PK_PEv2_PulseEngineMovePVAsync(device);
 }
 
@@ -903,6 +964,9 @@ int PK_PEv2_MovePVFromHALAsync(sPoKeysDevice *device)
  */
 int PK_PEv2_ExternalOutputsFromHALAsync(sPoKeysDevice *device)
 {
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: entry device=%p\n",
+        __FILE__, __FUNCTION__, (void*)device);
     if (!device) return PK_ERR_NOT_CONNECTED;
     sPoKeysPEv2 *pev2 = &device->PEv2;
 

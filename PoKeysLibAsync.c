@@ -284,19 +284,23 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
 {
     if (!dev) return 0;
 
-    // Log devHandle before use so its value appears in the CI log regardless
-    // of whether it is valid — this is the evidence we need to prove the crash
-    // location (NULL here → SIGSEGV on the recvfrom below).
+    // Checkpoint 1: entry — log devHandle so the CI trace shows where we are
+    // even if the very next instruction segfaults.
     rtapi_print_msg(RTAPI_MSG_ERR,
-        "PoKeys: %s:%s: entering PK_ReceiveAndDispatch, devHandle=%p\n",
+        "PoKeys: %s:%s: [1] entering, devHandle=%p\n",
         __FILE__, __FUNCTION__, dev->devHandle);
 
     if (!dev->devHandle) {
         rtapi_print_msg(RTAPI_MSG_ERR,
-            "PoKeys: %s:%s: devHandle is NULL - skipping recvfrom\n",
+            "PoKeys: %s:%s: [1a] devHandle is NULL - skipping\n",
             __FILE__, __FUNCTION__);
         return 0;
     }
+
+    int fd = *(int*)dev->devHandle;
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [2] fd=%d - about to recvfrom\n",
+        __FILE__, __FUNCTION__, fd);
 
     uint8_t rx_buffer[64];
     ssize_t len;
@@ -304,45 +308,81 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
     socklen_t addrlen = sizeof(addr);
 
     // Non-blocking UDP receive
-    len = recvfrom(*(int*)dev->devHandle, rx_buffer, sizeof(rx_buffer),
+    len = recvfrom(fd, rx_buffer, sizeof(rx_buffer),
                    MSG_DONTWAIT, (struct sockaddr *)&addr, &addrlen);
+
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [3] recvfrom returned len=%d (errno=%d)\n",
+        __FILE__, __FUNCTION__, (int)len, errno);
 
     if (len <= 0)
         return 0; // No packet available or recv error (EAGAIN/EWOULDBLOCK)
 
+    // Checkpoint 4: got a packet — log first bytes for protocol check
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [4] rx[0]=0x%02X rx[1]=0x%02X rx[6]=0x%02X\n",
+        __FILE__, __FUNCTION__, rx_buffer[0], rx_buffer[1], rx_buffer[6]);
+
     // Check valid PoKeys response
     if (rx_buffer[0] != 0xAA) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [4a] bad start byte 0x%02X - discarding\n",
+            __FILE__, __FUNCTION__, rx_buffer[0]);
         return -1; // Invalid start byte (should be 0xAA from Device → Host)
     }
 
-    uint8_t cmd = rx_buffer[1];  // Command echoed back
+    uint8_t cmd    = rx_buffer[1]; // Command echoed back
     uint8_t req_id = rx_buffer[6]; // Request ID echoed back
+
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [5] cmd=0x%02X req_id=%u - looking up transaction\n",
+        __FILE__, __FUNCTION__, cmd, (unsigned)req_id);
 
     // Find the corresponding async transaction
     async_transaction_t *t = transaction_find(req_id);
+
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [6] transaction_find=%p status=%d parser=%p\n",
+        __FILE__, __FUNCTION__,
+        (void*)t,
+        t ? (int)t->status : -1,
+        t ? (void*)t->response_parser : NULL);
+
     if (!t) {
         return -2; // No matching open request
     }
 
-    // Store full response buffer (optional)
+    // Checkpoint 7: copy raw response into transaction slot
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [7] memcpy response_buffer\n",
+        __FILE__, __FUNCTION__);
     memcpy(t->response_buffer, rx_buffer, sizeof(t->response_buffer));
 
     // Write result directly into target_ptr if set
     if (t->target_ptr && t->target_size > 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [8] memcpy target_ptr=%p size=%zu\n",
+            __FILE__, __FUNCTION__, t->target_ptr, t->target_size);
         memcpy(t->target_ptr, &rx_buffer[8], t->target_size);
-        // Note: Response payload starts at byte 9 (index 8) according to PoKeys protocol
     }
 
-    // NEW: call optional parser function after response received
+    // Call optional parser — this is the most likely crash site
     if (t->response_parser) {
-        t->response_parser(dev, rx_buffer);
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [9] calling parser %p\n",
+            __FILE__, __FUNCTION__, (void*)t->response_parser);
+        int parse_ret = t->response_parser(dev, rx_buffer);
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [10] parser returned %d\n",
+            __FILE__, __FUNCTION__, parse_ret);
     }
 
     t->status = TRANSACTION_COMPLETED;
     t->response_ready = true;
 
-    // (Optional) You could immediately free/recycle the transaction here if desired
-    // transaction_free(t);
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: %s:%s: [11] done, returning 1\n",
+        __FILE__, __FUNCTION__);
 
     return 1; // One response processed
 }
@@ -477,8 +517,14 @@ int async_dispatcher(void)
         return 0; /* nothing due */
 
     periodic_async_task_t *t = &async_tasks[selected_index];
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: async_dispatcher: firing task '%s' (func=%p dev=%p)\n",
+        t->name, (void*)t->func, (void*)t->dev);
     int ret = t->func(t->dev);
     t->next_call_time = now + t->interval_ns;
+    rtapi_print_msg(RTAPI_MSG_ERR,
+        "PoKeys: async_dispatcher: task '%s' returned %d\n",
+        t->name, ret);
 
     if (ret < 0)
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys async_dispatcher: %s FAILED (ret=%d)\n", t->name, ret);
