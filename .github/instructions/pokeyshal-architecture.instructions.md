@@ -91,50 +91,97 @@ The PoKeysHal project is structured as a layered HAL (Hardware Abstraction Layer
 
 ---
 
-### `PoKeysLibAsync.c` — Async Infrastructure Implementation
+### `PoKeysLibAsync.c` — Async Infrastructure Implementation (**infrastructure only**)
 
-**Purpose**: Implements the core asynchronous request/response mailbox system used by all `PoKeysLib**Async.c` modules.
+> ⚠️ **This file is the async infrastructure layer. It MUST NOT contain any subsystem-specific logic, HAL exports, or command parsers.**
+
+**Purpose**: Implements the core asynchronous request/response mailbox system that is shared by **all** `PoKeysLib**Async.c` subsystem modules. Think of it as the "transport layer" — it knows how to send, receive, queue, and retry packets, but it knows nothing about what is inside them.
 
 **MUST contain**:
-- Implementation of `CreateRequestAsync()`
-- Implementation of `CreateRequestAsyncWithPayload()`
-- Implementation of `SendRequestAsync()`
-- Implementation of `PK_ReceiveAndDispatch()`
-- Implementation of `PK_TimeoutAndRetryCheck()`
-- Mailbox management (buffer allocation, slot tracking)
+
+- Implementation of `CreateRequestAsync()` — allocate a mailbox slot and build a request packet
+- Implementation of `CreateRequestAsyncWithPayload()` — same as above, with an additional payload buffer
+- Implementation of `SendRequestAsync()` — transmit the prepared packet over UDP (non-blocking)
+- Implementation of `PK_ReceiveAndDispatch()` — receive UDP response, match to mailbox entry, invoke the registered parser callback
+- Implementation of `PK_TimeoutAndRetryCheck()` — detect timed-out transactions, retry or mark as failed
+- Mailbox management: slot allocation, slot reset, request-ID cycling
 
 **MUST NOT contain**:
-- HAL pin export functions (those belong in `PoKeysLib**Async.c`)
-- Subsystem-specific parsing (belongs in the respective `PoKeysLib**Async.c`)
+- HAL pin export functions → belong in the subsystem `PoKeysLib**Async.c`
+- Subsystem-specific response parsers (e.g., `PK_DigitalIOGetParse`) → belong in `PoKeysLibIOAsync.c`
+- `export_<subsystem>_pins()` functions → belong in the subsystem `PoKeysLib**Async.c`
+- Any `#include "hal.h"` or direct use of `hal_pin_*_new()` / `hal_param_*_new()`
+
+**Relationship to `PoKeysLib**Async.c`**:  
+`PoKeysLibAsync.c` is the **called** infrastructure; `PoKeysLib**Async.c` files are the **callers** that build on top of it.
 
 ---
 
-### `PoKeysLib**Async.c` — Per-Subsystem Async Files
+### `PoKeysLib**Async.c` — Per-Subsystem Async Files (**subsystem implementations**)
 
-**Examples**: `PoKeysLibIOAsync.c`, `PoKeysLibEncodersAsync.c`, `PoKeysLibPulseEngine_v2Async.c`, `PoKeysLibRTCAsync.c`, `PoKeysLibPoNETHal.c`, etc.
+> ⚠️ **These files are fundamentally different from `PoKeysLibAsync.c`.** They implement the async protocol for a specific hardware subsystem (IO, encoders, CAN, RTC, PulseEngine, etc.) and also own the HAL pin export and RT task registration for that subsystem.
 
-**Purpose**: Each file provides the async implementation for its corresponding subsystem (IO, encoders, PulseEngine, etc.) plus the HAL pin/parameter export for that subsystem.
+**Examples**: `PoKeysLibIOAsync.c`, `PoKeysLibCANAsync.c`, `PoKeysLibEncodersAsync.c`, `PoKeysLibPulseEngine_v2Async.c`, `PoKeysLibRTCAsync.c`, `PoKeysLibPoNETHal.c`
+
+**Purpose**: Each file provides three distinct responsibilities for its subsystem:
+
+1. **HAL pin/parameter export** — registers HAL pins and parameters for the structs managed by this subsystem
+2. **Send side** — builds and sends async requests to the device (calls `CreateRequestAsync` / `SendRequestAsync`)
+3. **Parse side (response handler)** — parses the device response; this callback is invoked by `PK_ReceiveAndDispatch` in the infrastructure layer
+
+This **Send / Parse split** is the defining characteristic of subsystem async files:
+- The **Send function** (e.g., `PK_DigitalIOGetAsync()`) is called actively from the RT thread or scheduler to trigger a request.
+- The **Parse function** (e.g., `PK_DigitalIOGetParse()`) is registered as a callback and called passively by `PK_ReceiveAndDispatch()` when the device response arrives.
 
 **MUST contain**:
+
 ```c
+/* 1. HAL pin export (called once during component setup) */
 /**
- * Export HAL pins and parameters for this subsystem.
+ * Export HAL pins and parameters for the <subsystem> subsystem.
  *
  * @param prefix  HAL component name prefix (e.g., "pokeys")
- * @param comp_id HAL component ID
+ * @param comp_id HAL component ID returned by hal_init()
  * @param device  Pointer to the PoKeys device struct
  * @return 0 on success, negative HAL error code on failure
  */
 int export_<subsystem>_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
+
+/* 2. Send function — called from RT thread / scheduler to issue a request */
+int PK_<Subsystem>GetAsync(sPoKeysDevice *device);   /* example */
+
+/* 3. Parse function — registered as callback, called by PK_ReceiveAndDispatch */
+static int PK_<Subsystem>GetParse(sPoKeysDevice *device, const uint8_t *response);
+
+/* 4. (Optional) RT task registration — registers Send function with async_scheduler */
+int register_<subsystem>_tasks(sPoKeysDevice *device);
 ```
 
-The function uses `hal_pin_*_new()` / `hal_param_*_new()` and `hal_export_digin()` / `hal_export_digout()` / `hal_export_adcin()` / `hal_export_adcout()` / `hal_export_encoder()` from `hal-canon/hal_canon.h`.
+The `export_<subsystem>_pins()` function uses:
+- `hal_pin_*_new()` / `hal_param_*_new()` for PoKeys-specific pins
+- `hal_export_digin()` / `hal_export_digout()` / `hal_export_adcin()` / `hal_export_adcout()` / `hal_export_encoder()` from `hal-canon/hal_canon.h` for canonical channel types
 
-- Async request functions for the subsystem (e.g., `PK_DigitalIOGetAsync()`)
-- Response parser functions for the subsystem
-- (Optionally) a register function that schedules async tasks
+**Functional flow inside a subsystem async file**:
+```
+[RT Thread / Scheduler]
+       │
+       ▼
+   PK_<Subsystem>GetAsync(device)          ← Send side
+       │  CreateRequestAsync(cmd, parser_fn)
+       │  SendRequestAsync(req_id)
+       ▼
+   (packet in flight …)
+
+[PK_ReceiveAndDispatch — in PoKeysLibAsync.c]
+       │  receives UDP response
+       │  looks up mailbox entry by request_id
+       ▼
+   PK_<Subsystem>GetParse(device, response) ← Parse side (callback)
+       │  fills device->Subsystem.* fields (HAL pins updated)
+```
 
 **MUST NOT contain**:
+- Implementations of `CreateRequestAsync`, `SendRequestAsync`, `PK_ReceiveAndDispatch`, or `PK_TimeoutAndRetryCheck` — those implementations live in `PoKeysLibAsync.c`; subsystem files only **call** them
 - Direct exports of HAL pins that belong to another subsystem
 - Definitions of structs/enums/constants that belong in `PoKeysLibHal.h` or `PoKeysLibAsync.h`
 

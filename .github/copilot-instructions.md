@@ -49,8 +49,8 @@ bash test_compile.sh
 - `PoKeysLib*.c / PoKeysLib*.h` — PoKeys communication library (C source)
 - `PoKeysLibHal.h` — HAL-conform structs (uses `hal_u32_t`, `hal_s32_t`, `hal_float_t`, `hal_bit_t`; includes canonical interfaces `hal_digin_t`, `hal_digout_t`, `hal_adcin_t`, `hal_adcout_t`, `hal_encoder_t`)
 - `PoKeysLibAsync.h` — Async infrastructure declarations (enums, structs, `PK_*Async()` declarations)
-- `PoKeysLibAsync.c` — Async infrastructure implementation (mailbox, dispatch, retry)
-- `PoKeysLib**Async.c` — Per-subsystem async implementations + `export_**_pins()` HAL pin export functions
+- `PoKeysLibAsync.c` — **Async infrastructure ONLY**: `CreateRequestAsync()`, `SendRequestAsync()`, `PK_ReceiveAndDispatch()`, `PK_TimeoutAndRetryCheck()`, mailbox management. No subsystem logic, no HAL exports.
+- `PoKeysLib**Async.c` — **Per-subsystem async** (fundamentally different from `PoKeysLibAsync.c`): async implementation of the corresponding `PoKeysLib**.c` subsystem, with (1) `export_<subsystem>_pins()` HAL export, (2) Send functions (`PK_**GetAsync()`) called from RT thread, (3) Parse callbacks (`PK_**Parse()`) invoked by `PK_ReceiveAndDispatch`, (4) optional `register_<subsystem>_tasks()` for scheduler
 - `experimental/pokeys_async.c` — LinuxCNC HAL component integration shell (calls `export_**_pins()`, `EXTRA_SETUP`, RT function, `user_mainloop`)
 - `experimental/async_scheduler.h/.c` — Async scheduler (to be migrated to `PoKeysLibAsync`)
 - `hal-canon/` — Canonical HAL pin implementations (`hal_digin_t`, `hal_digout_t`, `hal_adcin_t`, `hal_adcout_t`, `hal_encoder_t`)
