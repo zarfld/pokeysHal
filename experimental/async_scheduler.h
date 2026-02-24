@@ -23,7 +23,9 @@ typedef struct {
 } periodic_async_task_t;
 
 int register_async_task(async_func_t func, sPoKeysDevice *dev, double freq_hz, const char *name);
-void async_dispatcher(void);
+/* Fires the single most-overdue task.
+ * Returns 1 if a task was dispatched, 0 if nothing was due. */
+int async_dispatcher(void);
 void async_task_set_active(const char *name, int active);
 size_t async_task_count(void);
 

@@ -24,7 +24,9 @@ int register_async_task(async_func_t func, sPoKeysDevice *dev, double freq_hz, c
     return 0;
 }
 
-void async_dispatcher(void) {
+/* Fires the single most-overdue task.
+ * Returns 1 if a task was dispatched, 0 if nothing was due. */
+int async_dispatcher(void) {
     int64_t now = rtapi_get_time();
     size_t selected_index = SIZE_MAX;
     int64_t earliest_due = INT64_MAX;
@@ -37,16 +39,18 @@ void async_dispatcher(void) {
         }
     }
 
-    if (selected_index != SIZE_MAX) {
-        periodic_async_task_t *t = &async_tasks[selected_index];
-        int ret = t->func(t->dev);
-        t->next_call_time = now + t->interval_ns;
+    if (selected_index == SIZE_MAX)
+        return 0;  /* nothing due */
 
-        if (ret) {
-            rtapi_print_msg(RTAPI_MSG_ERR,
-                "Async call %s FAILED (ret=%d)\n", t->name, ret);
-        }
+    periodic_async_task_t *t = &async_tasks[selected_index];
+    int ret = t->func(t->dev);
+    t->next_call_time = now + t->interval_ns;
+
+    if (ret) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "Async call %s FAILED (ret=%d)\n", t->name, ret);
     }
+    return 1;  /* task was dispatched */
 }
 
 void async_task_set_active(const char *name, int active) {
