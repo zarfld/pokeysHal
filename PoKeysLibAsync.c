@@ -401,6 +401,25 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
 void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
 {
     if (!dev) return;
+
+    // Guard against NULL devHandle (e.g. USB-only device without UDP socket).
+    // Mirrors the identical guard already present in PK_ReceiveAndDispatch and
+    // SendRequestAsync.  Without this check, the sendto() inside the retry loop
+    // would dereference a NULL pointer and produce SIGSEGV — the same crash that
+    // was observed in the RT component before the devHandle guards were added.
+    if (!dev->devHandle) {
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: devHandle is NULL - clearing pending transactions\n",
+            __FILE__, __FUNCTION__);
+        for (int i = 0; i < MAX_TRANSACTIONS; i++) {
+            if (pk_transactions[i].status == TRANSACTION_PENDING) {
+                pk_transactions[i].status = TRANSACTION_FAILED;
+                pk_transactions[i].retries_left = 0;
+            }
+        }
+        return;
+    }
+
     uint64_t now = get_current_time_us();
     static uint32_t consecutive_errors = 0;
     static uint64_t last_error_time = 0;
