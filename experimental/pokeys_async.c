@@ -10,7 +10,6 @@
 #include "rtapi_math64.h"
 #include "PoKeysLibHal.h"
 #include "PoKeysLibAsync.h"
-#include "async_scheduler.h"
 
 // Include math.h for fabs() function
 #include <math.h>

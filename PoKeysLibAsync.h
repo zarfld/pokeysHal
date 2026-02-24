@@ -467,4 +467,49 @@ int PK_PoNETModuleReinitializeAsync(sPoKeysDevice* device, uint8_t moduleID);
 /* PEv2 HAL pin export - implemented in PoKeysLibPulseEngine_v2Async.c */
 int export_pev2_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 
+/* -------------------------------------------------------------------------
+ * Async Scheduler
+ * Provides periodic, rate-limited firing of async send functions so that
+ * subsystem files (PoKeysLib**Async.c) can call register_async_task() to
+ * self-register at their natural update rates, and the RT servo thread or
+ * user_mainloop only needs to call async_dispatcher() once per iteration.
+ * (Migrated from experimental/async_scheduler.h per architecture rules.)
+ * ------------------------------------------------------------------------- */
+
+#define MAX_ASYNC_TASKS 16
+
+typedef int (*async_func_t)(sPoKeysDevice *dev);
+
+typedef struct {
+    async_func_t  func;
+    sPoKeysDevice *dev;
+    int64_t        interval_ns;
+    int64_t        next_call_time;
+    const char    *name;
+    int            active;
+} periodic_async_task_t;
+
+/**
+ * Register a periodic async send function with the scheduler.
+ * @param func     The async send function (signature: int f(sPoKeysDevice*))
+ * @param dev      Device handle passed to func on each call
+ * @param freq_hz  Desired call frequency in Hz (> 0)
+ * @param name     Short unique name for logging / async_task_set_active()
+ * @return 0 on success, -1 if the table is full or freq_hz <= 0
+ */
+int register_async_task(async_func_t func, sPoKeysDevice *dev, double freq_hz, const char *name);
+
+/**
+ * Fire the single most-overdue registered task.
+ * Designed to be called in a loop: while (async_dispatcher()) { ... }
+ * @return 1 if a task was dispatched, 0 if nothing was due.
+ */
+int async_dispatcher(void);
+
+/** Enable or disable a named task without removing it from the table. */
+void async_task_set_active(const char *name, int active);
+
+/** Return the number of registered tasks. */
+size_t async_task_count(void);
+
 #endif // POKEYSLIB_ASYNC_H
