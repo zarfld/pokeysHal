@@ -9,6 +9,22 @@
   - `hal-canon/`: Canonical HAL helpers for analog/digital/encoder
   - Protocol details in `PoKeys - protocol specification.pdf`
 
+> ⚠️ **Architecture Enforcement**: See `.github/instructions/pokeyshal-architecture.instructions.md` for the authoritative, detailed architecture rules that ALL agents MUST follow. The rules below are a summary.
+
+### Layered Architecture — File Responsibilities (Summary)
+
+Each file has a strict role. Violations must be corrected and tracked as GitHub issues:
+
+| File / Pattern | Role | Key Constraint |
+|---|---|---|
+| `PoKeysLibHal.h` | HAL-conform structs using `hal_*` types + canonical interfaces | Use `hal_u32_t`, `hal_s32_t`, `hal_float_t`, `hal_bit_t`; expand bitfields to `hal_bit_t`; include `hal_digin_t`, `hal_digout_t`, etc. |
+| `PoKeysLibAsync.h` | Async infrastructure declarations (enums, structs, function decls) | Contains `pokeys_command_t`, `mailbox_entry_t`, all `PK_*Async()` declarations |
+| `PoKeysLibAsync.c` | **Async infrastructure ONLY** — mailbox, `PK_ReceiveAndDispatch`, `PK_TimeoutAndRetryCheck`. No subsystem logic, no HAL exports, no command parsers. | `CreateRequestAsync()`, `SendRequestAsync()`, `PK_ReceiveAndDispatch()`, `PK_TimeoutAndRetryCheck()` |
+| `PoKeysLib**Async.c` | **Subsystem async** (≠ `PoKeysLibAsync.c`): async impl of `PoKeysLib**.c` + Send/Parse split + HAL export + RT registration | MUST have: `export_<subsystem>_pins()`, Send (`PK_**GetAsync()`), Parse callback (`PK_**Parse()` invoked by `PK_ReceiveAndDispatch`), optional `register_<subsystem>_tasks()` |
+| `experimental/pokeys_async.c` | LinuxCNC HAL component integration shell ONLY | MUST contain: `export()`, `EXTRA_SETUP()`, `user_mainloop()`, `FUNCTION(_)`. MUST NOT contain: struct/enum defs, `#define` constants, direct `hal_pin_*_new()` calls, `export_*_pins()` definitions |
+| `experimental/async_scheduler.h/.c` | Async scheduling (migrate to `PoKeysLibAsync` when ready) | Content should be migrated to `PoKeysLibAsync.h/.c` |
+| `hal-canon/hal_canon.h` + `hal-canon/*.c` | Canonical HAL device interface definitions | Always use `hal_export_digin/digout/adcin/adcout/encoder()` — never call `hal_pin_*_new()` directly for these |
+
 ### Critical Developer Workflows
 - **Build RT HAL component:**
   - Use VSCode task "4 - Build RT HAL component (Submakefile.rt)" or run:
