@@ -125,7 +125,7 @@ t->request_buffer[7] = checksum;              // Checksum byte
 t->request_id = req_id;
 t->command_sent = cmd;
 t->status = TRANSACTION_PENDING;
-t->retries_left = 2;                          // Example: allow 2 retries (total 3 attempts)
+t->retries_left = 1;                          // Allow 1 retry (2 total attempts)
 t->timestamp_sent = 0;                        // Will be set on first send
 
 t->target_ptr = target_ptr;
@@ -199,7 +199,7 @@ return req_id;
     t->request_id = req_id;
     t->command_sent = cmd;
     t->status = TRANSACTION_PENDING;
-    t->retries_left = 2; // 2 retries allowed
+    t->retries_left = 1; // 1 retry allowed (2 total attempts)
     t->timestamp_sent = 0; // Will be set when sent
 
     t->target_ptr = NULL; // No response buffer for write commands
@@ -441,9 +441,11 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
         async_transaction_t *t = &pk_transactions[i];
 
         if (t->status == TRANSACTION_PENDING) {
-            // Calculate dynamic timeout with exponential backoff
-            uint32_t retry_multiplier = (3 - t->retries_left); // 0, 1, 2 for retries
-            uint64_t effective_timeout = timeout_us * (1 << retry_multiplier); // 1x, 2x, 4x
+            // Use fixed timeout (no exponential backoff) to bound slot occupancy.
+            // With retries_left=1 and a fixed timeout_us each cycle, a slot is
+            // freed within 2 × timeout_us (one retry + one timeout cycle),
+            // keeping steady-state slot usage well below MAX_TRANSACTIONS.
+            uint64_t effective_timeout = timeout_us;
             
             if ((now - t->timestamp_sent) > effective_timeout) {
                 if (t->retries_left > 0) {
@@ -458,8 +460,8 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
                         if (consecutive_errors > 0) consecutive_errors--;
                         
                         #ifdef DEBUG_ASYNC_RETRIES
-                        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: Retry %d for request ID %d, cmd=0x%02X\n", 
-                                       (3 - t->retries_left), t->request_id, t->command_sent);
+                        rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: Retry for request ID %d, cmd=0x%02X, retries_left=%d\n", 
+                                       t->request_id, t->command_sent, t->retries_left);
                         #endif
                     } else {
                         // Send failed - increment error counter and log
@@ -476,10 +478,12 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
                         }
                     }
                 } else {
-                    // No retries left: mark timeout
+                    // No retries left: mark timeout.
+                    // Do NOT increment consecutive_errors here — a timeout means
+                    // the device did not respond in time, which is a normal event
+                    // (e.g., no device present).  The circuit breaker is reserved
+                    // for actual send failures where retrying would be harmful.
                     t->status = TRANSACTION_TIMEOUT;
-                    consecutive_errors++;
-                    last_error_time = now;
                     
                     rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: Request ID %d timed out after all retries, cmd=0x%02X\n", 
                                    t->request_id, t->command_sent);
