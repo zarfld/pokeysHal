@@ -764,7 +764,7 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
 {
     if (!dev || !resp) return PK_ERR_GENERIC;
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [A] entry req_id=%u resp[63]=0x%02X\n",
         __FILE__, __FUNCTION__, (unsigned)resp[6], resp[63]);
 
@@ -779,14 +779,14 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
         return PK_ERR_GENERIC;
     }
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [B] checksum OK - decoding status\n",
         __FILE__, __FUNCTION__);
     PK_PEv2_DecodeStatusFromResp(dev, resp);
 
     sPoKeysPEv2 *pev2 = &dev->PEv2;
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [C] global pins  PulseEngineState=%p PulseEngineActivated=%p\n",
         __FILE__, __FUNCTION__,
         (void*)pev2->pin_PulseEngineState,
@@ -800,7 +800,7 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
     if (pev2->pin_bufferDepth)          *pev2->pin_bufferDepth          = pev2->info.bufferDepth;
     if (pev2->pin_slotTiming)           *pev2->pin_slotTiming           = pev2->info.slotTiming;
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [D] emergency pin=%p\n",
         __FILE__, __FUNCTION__, (void*)pev2->pin_digin_Emergency_in);
 
@@ -812,7 +812,7 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
             *pev2->pin_digin_Emergency_in_not = !emg;
     }
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [E] per-axis loop start\n",
         __FILE__, __FUNCTION__);
 
@@ -820,7 +820,7 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
     for (int i = 0; i < 8; i++) {
         /* [Ei] — log ALL five per-axis HAL pin pointers so pin_joint_pos_cmd
          * is visible in crash output (it was the missing unknown before). */
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: %s:%s: [E%d] AxesState=%p CurrentPos=%p pos_fb=%p in_pos=%p pos_cmd=%p\n",
             __FILE__, __FUNCTION__, i,
             (void*)pev2->pin_AxesState[i],
@@ -835,7 +835,7 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
             *pev2->pin_CurrentPosition[i] = pev2->CurrentPosition[i];
 
         /* [E%d-a] — AxesState and CurrentPosition written successfully */
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: %s:%s: [E%d-a] state/pos writes done\n",
             __FILE__, __FUNCTION__, i);
 
@@ -845,12 +845,12 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
                                           / pev2->stepgen_STEP_SCALE[i];
 
         /* [E%d-b] — pos_fb write done (or skipped if ptr/scale zero) */
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: %s:%s: [E%d-b] pos_fb write done\n",
             __FILE__, __FUNCTION__, i);
 
         /* In-position: compare feedback to command */
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: %s:%s: [E%d-c] in_pos check: in_pos=%p cmd=%p fb=%p\n",
             __FILE__, __FUNCTION__, i,
             (void*)pev2->pin_joint_in_position[i],
@@ -860,28 +860,28 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
         if (pev2->pin_joint_in_position[i] && pev2->pin_joint_pos_cmd[i] &&
             pev2->pin_joint_pos_fb[i]) {
             hal_float_t fb  = *pev2->pin_joint_pos_fb[i];
-            rtapi_print_msg(RTAPI_MSG_ERR,
+            rtapi_print_msg(RTAPI_MSG_DBG,
                 "PoKeys: %s:%s: [E%d-d1] fb read ok fb=%f\n",
                 __FILE__, __FUNCTION__, i, (double)fb);
             hal_float_t cmd = *pev2->pin_joint_pos_cmd[i];
-            rtapi_print_msg(RTAPI_MSG_ERR,
+            rtapi_print_msg(RTAPI_MSG_DBG,
                 "PoKeys: %s:%s: [E%d-d2] cmd read ok cmd=%f\n",
                 __FILE__, __FUNCTION__, i, (double)cmd);
             hal_float_t tol = fabsf(pev2->stepgen_STEP_SCALE[i]) > 1e-9f
                               ? 1.0f / fabsf(pev2->stepgen_STEP_SCALE[i])
                               : 0.001f;
             *pev2->pin_joint_in_position[i] = (fabsf(fb - cmd) <= tol) ? 1 : 0;
-            rtapi_print_msg(RTAPI_MSG_ERR,
+            rtapi_print_msg(RTAPI_MSG_DBG,
                 "PoKeys: %s:%s: [E%d-d3] in_pos written\n",
                 __FILE__, __FUNCTION__, i);
         }
 
         /* [E%d-e] — whole in_pos block finished */
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: %s:%s: [E%d-e] in_pos block done\n",
             __FILE__, __FUNCTION__, i);
 
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: %s:%s: [E%d-lim] LimitN=%p LimitP=%p Home=%p\n",
             __FILE__, __FUNCTION__, i,
             (void*)pev2->pin_digin_LimitN_in[i],
@@ -909,7 +909,7 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
         }
     }
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [F] returning PK_OK\n",
         __FILE__, __FUNCTION__);
     return PK_OK;
@@ -924,7 +924,7 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
  */
 int PK_PEv2_StatusUpdateHALAsync(sPoKeysDevice *device)
 {
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: entry device=%p\n",
         __FILE__, __FUNCTION__, (void*)device);
     if (!device) return PK_ERR_NOT_CONNECTED;
@@ -952,13 +952,13 @@ int PK_PEv2_StatusUpdateHALAsync(sPoKeysDevice *device)
  */
 int PK_PEv2_MovePVFromHALAsync(sPoKeysDevice *device)
 {
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: entry device=%p\n",
         __FILE__, __FUNCTION__, (void*)device);
     if (!device) return PK_ERR_NOT_CONNECTED;
     sPoKeysPEv2 *pev2 = &device->PEv2;
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: pev2=%p pin_joint_pos_cmd[0]=%p stepgen_STEP_SCALE[0]=%f\n",
         __FILE__, __FUNCTION__,
         (void*)pev2,
@@ -983,7 +983,7 @@ int PK_PEv2_MovePVFromHALAsync(sPoKeysDevice *device)
         }
     }
     pev2->param2 = 0xFF; /* all axes */
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: calling PK_PEv2_PulseEngineMovePVAsync\n",
         __FILE__, __FUNCTION__);
     return PK_PEv2_PulseEngineMovePVAsync(device);
@@ -998,7 +998,7 @@ int PK_PEv2_MovePVFromHALAsync(sPoKeysDevice *device)
  */
 int PK_PEv2_ExternalOutputsFromHALAsync(sPoKeysDevice *device)
 {
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: entry device=%p\n",
         __FILE__, __FUNCTION__, (void*)device);
     if (!device) return PK_ERR_NOT_CONNECTED;

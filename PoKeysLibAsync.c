@@ -226,7 +226,7 @@ int SendRequestAsync(sPoKeysDevice *dev, uint8_t request_id)
     }
 
     // Guard against NULL devHandle (e.g. USB-only device without UDP socket)
-    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle=%p for request ID %d\n", __FILE__, __FUNCTION__, dev->devHandle, request_id);
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: devHandle=%p for request ID %d\n", __FILE__, __FUNCTION__, dev->devHandle, request_id);
     if (!dev->devHandle) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: devHandle is NULL for request ID %d - skipping send\n", __FILE__, __FUNCTION__, request_id);
         return -1;
@@ -286,7 +286,7 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
 
     // Checkpoint 1: entry — log devHandle so the CI trace shows where we are
     // even if the very next instruction segfaults.
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [1] entering, devHandle=%p\n",
         __FILE__, __FUNCTION__, dev->devHandle);
 
@@ -298,7 +298,7 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
     }
 
     int fd = *(int*)dev->devHandle;
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [2] fd=%d - about to recvfrom\n",
         __FILE__, __FUNCTION__, fd);
 
@@ -311,7 +311,7 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
     len = recvfrom(fd, rx_buffer, sizeof(rx_buffer),
                    MSG_DONTWAIT, (struct sockaddr *)&addr, &addrlen);
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [3] recvfrom returned len=%d (errno=%d)\n",
         __FILE__, __FUNCTION__, (int)len, errno);
 
@@ -319,7 +319,7 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
         return 0; // No packet available or recv error (EAGAIN/EWOULDBLOCK)
 
     // Checkpoint 4: got a packet — log first bytes for protocol check
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [4] rx[0]=0x%02X rx[1]=0x%02X rx[6]=0x%02X\n",
         __FILE__, __FUNCTION__, rx_buffer[0], rx_buffer[1], rx_buffer[6]);
 
@@ -334,14 +334,14 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
     uint8_t cmd    = rx_buffer[1]; // Command echoed back
     uint8_t req_id = rx_buffer[6]; // Request ID echoed back
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [5] cmd=0x%02X req_id=%u - looking up transaction\n",
         __FILE__, __FUNCTION__, cmd, (unsigned)req_id);
 
     // Find the corresponding async transaction
     async_transaction_t *t = transaction_find(req_id);
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [6] transaction_find=%p status=%d parser=%p\n",
         __FILE__, __FUNCTION__,
         (void*)t,
@@ -353,14 +353,14 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
     }
 
     // Checkpoint 7: copy raw response into transaction slot
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [7] memcpy response_buffer\n",
         __FILE__, __FUNCTION__);
     memcpy(t->response_buffer, rx_buffer, sizeof(t->response_buffer));
 
     // Write result directly into target_ptr if set
     if (t->target_ptr && t->target_size > 0) {
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: %s:%s: [8] memcpy target_ptr=%p size=%zu\n",
             __FILE__, __FUNCTION__, t->target_ptr, t->target_size);
         memcpy(t->target_ptr, &rx_buffer[8], t->target_size);
@@ -368,11 +368,11 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
 
     // Call optional parser — this is the most likely crash site
     if (t->response_parser) {
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: %s:%s: [9] calling parser %p\n",
             __FILE__, __FUNCTION__, (void*)t->response_parser);
         int parse_ret = t->response_parser(dev, rx_buffer);
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: %s:%s: [10] parser returned %d\n",
             __FILE__, __FUNCTION__, parse_ret);
     }
@@ -380,7 +380,7 @@ int PK_ReceiveAndDispatch(sPoKeysDevice *dev)
     t->status = TRANSACTION_COMPLETED;
     t->response_ready = true;
 
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: %s:%s: [11] done, returning 1\n",
         __FILE__, __FUNCTION__);
 
@@ -540,12 +540,12 @@ int async_dispatcher(void)
         return 0; /* nothing due */
 
     periodic_async_task_t *t = &async_tasks[selected_index];
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: async_dispatcher: firing task '%s' (func=%p dev=%p)\n",
         t->name, (void*)t->func, (void*)t->dev);
     int ret = t->func(t->dev);
     t->next_call_time = now + t->interval_ns;
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: async_dispatcher: task '%s' returned %d\n",
         t->name, ret);
 

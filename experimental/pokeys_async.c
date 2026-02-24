@@ -1017,15 +1017,15 @@ FUNCTION(_) {
     int64_t start_time = rtapi_get_time();
 
     // Phase 1: Drain ALL pending responses that arrived since the last cycle.
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: FUNCTION(_): Phase1-drain start, dev=%p\n",
         (void*)__comp_inst->dev);
     while (PK_ReceiveAndDispatch(__comp_inst->dev) > 0) {}
     PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000);
-    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: FUNCTION(_): Phase1-drain done\n");
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: FUNCTION(_): Phase1-drain done\n");
 
     // Phase 2: Dispatch scheduler-managed async sends within the time budget.
-    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: FUNCTION(_): Phase2-dispatch start\n");
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: FUNCTION(_): Phase2-dispatch start\n");
     {
         const long SCHED_GUARD_NS = 100000L;
         int dispatched = 0;
@@ -1034,13 +1034,13 @@ FUNCTION(_) {
                 break;  /* nothing more due this cycle */
             dispatched++;
         }
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: FUNCTION(_): Phase2-dispatch done (%d tasks fired)\n",
             dispatched);
     }
 
     // Phase 3: Drain any additional responses that arrived during Phase 2.
-    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: FUNCTION(_): Phase3-drain start\n");
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: FUNCTION(_): Phase3-drain start\n");
     {
         const long DRAIN_GUARD_NS = 20000L;
         int drained = 0;
@@ -1049,17 +1049,17 @@ FUNCTION(_) {
                 break;
             drained++;
         }
-        rtapi_print_msg(RTAPI_MSG_ERR,
+        rtapi_print_msg(RTAPI_MSG_DBG,
             "PoKeys: FUNCTION(_): Phase3-drain done (%d packets processed)\n",
             drained);
     }
 
     // Update PoNET HAL output pins from latest received data.
-    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: FUNCTION(_): update_ponet_hal_pins\n");
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: FUNCTION(_): update_ponet_hal_pins\n");
     update_ponet_hal_pins(__comp_inst->dev);
 
     int64_t end_time = rtapi_get_time();
-    rtapi_print_msg(RTAPI_MSG_ERR,
+    rtapi_print_msg(RTAPI_MSG_DBG,
         "PoKeys: FUNCTION(_): cycle done in %lld ns\n",
         (long long)(end_time - start_time));
     if ((end_time - start_time) > 5000000) {

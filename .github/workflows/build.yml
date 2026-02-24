@@ -187,7 +187,7 @@ jobs:
     - name: run uspace PoKeys_Async
       run: |
         echo "run uspace pokeys_async..."
-        halrun <<EOF
+        halrun <<EOF 2>&1 | tee /tmp/halpin_uspace.log
         loadusr -W pokeys_async
         show pin
         show funct
@@ -196,12 +196,55 @@ jobs:
         show pin
         show param
         exit
-        EOF  
+        EOF
+
+    - name: Validate RTC pin values (uspace)
+      run: |
+        python3 - <<'PYEOF'
+        import re, sys
+        try:
+            content = open('/tmp/halpin_uspace.log').read()
+        except FileNotFoundError:
+            print("WARNING: /tmp/halpin_uspace.log not found - skipping RTC validation")
+            sys.exit(0)
+        pins = {}
+        for line in content.splitlines():
+            for pin in ['rtc.year', 'rtc.month', 'rtc.dom', 'rtc.hour', 'rtc.min', 'rtc.sec']:
+                if pin in line:
+                    m = re.search(r'0x([0-9A-Fa-f]+)', line)
+                    if m:
+                        pins[pin] = int(m.group(1), 16)
+        print("RTC pin values detected:")
+        for k, v in sorted(pins.items()):
+            print(f"  {k}: {v} (0x{v:04X})")
+        if not pins:
+            print("WARNING: no RTC pins found in output (device may not be connected)")
+            sys.exit(0)
+        err = []
+        if pins.get('rtc.year', 0) < 2024:
+            err.append(f"rtc.year={pins.get('rtc.year',0)} is not >= 2024")
+        if not (1 <= pins.get('rtc.month', 0) <= 12):
+            err.append(f"rtc.month={pins.get('rtc.month',0)} is not in range 1-12")
+        if not (1 <= pins.get('rtc.dom', 0) <= 31):
+            err.append(f"rtc.dom={pins.get('rtc.dom',0)} is not in range 1-31")
+        if pins.get('rtc.hour', 99) > 23:
+            err.append(f"rtc.hour={pins.get('rtc.hour',99)} is not in range 0-23")
+        if pins.get('rtc.min', 99) > 59:
+            err.append(f"rtc.min={pins.get('rtc.min',99)} is not in range 0-59")
+        if pins.get('rtc.sec', 99) > 59:
+            err.append(f"rtc.sec={pins.get('rtc.sec',99)} is not in range 0-59")
+        if err:
+            print("RTC validation FAILED:")
+            for e in err:
+                print(f"  ERROR: {e}")
+            sys.exit(1)
+        print("RTC validation PASSED")
+        PYEOF
 
     - name: run RT PoKeys_Async
       run: |
         echo "run rt pokeys_async..."
-        halrun <<EOF
+        halrun <<EOF 2>&1 | tee /tmp/halpin_rt.log
         loadrt threads name1=test-thread period1=1000000
         loadrt pokeys_async
         show funct
@@ -217,6 +260,49 @@ jobs:
         show param
         exit
         EOF
+
+    - name: Validate RTC pin values (RT)
+      run: |
+        python3 - <<'PYEOF'
+        import re, sys
+        try:
+            content = open('/tmp/halpin_rt.log').read()
+        except FileNotFoundError:
+            print("WARNING: /tmp/halpin_rt.log not found - skipping RTC validation")
+            sys.exit(0)
+        pins = {}
+        for line in content.splitlines():
+            for pin in ['rtc.year', 'rtc.month', 'rtc.dom', 'rtc.hour', 'rtc.min', 'rtc.sec']:
+                if pin in line:
+                    m = re.search(r'0x([0-9A-Fa-f]+)', line)
+                    if m:
+                        pins[pin] = int(m.group(1), 16)
+        print("RTC pin values detected:")
+        for k, v in sorted(pins.items()):
+            print(f"  {k}: {v} (0x{v:04X})")
+        if not pins:
+            print("WARNING: no RTC pins found in output (device may not be connected)")
+            sys.exit(0)
+        err = []
+        if pins.get('rtc.year', 0) < 2024:
+            err.append(f"rtc.year={pins.get('rtc.year',0)} is not >= 2024")
+        if not (1 <= pins.get('rtc.month', 0) <= 12):
+            err.append(f"rtc.month={pins.get('rtc.month',0)} is not in range 1-12")
+        if not (1 <= pins.get('rtc.dom', 0) <= 31):
+            err.append(f"rtc.dom={pins.get('rtc.dom',0)} is not in range 1-31")
+        if pins.get('rtc.hour', 99) > 23:
+            err.append(f"rtc.hour={pins.get('rtc.hour',99)} is not in range 0-23")
+        if pins.get('rtc.min', 99) > 59:
+            err.append(f"rtc.min={pins.get('rtc.min',99)} is not in range 0-59")
+        if pins.get('rtc.sec', 99) > 59:
+            err.append(f"rtc.sec={pins.get('rtc.sec',99)} is not in range 0-59")
+        if err:
+            print("RTC validation FAILED:")
+            for e in err:
+                print(f"  ERROR: {e}")
+            sys.exit(1)
+        print("RTC validation PASSED")
+        PYEOF
 
     - name: Clean build artifakts
       run: |
