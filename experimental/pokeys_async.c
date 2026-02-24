@@ -9,6 +9,7 @@
 #include "stdio.h"
 #include "rtapi_math64.h"
 #include "PoKeysLibHal.h"
+#include "PoKeysLibAsync.h"
 
 // Include math.h for fabs() function
 #include <math.h>
@@ -57,90 +58,6 @@ struct __comp_state {
 
     sPoKeysDevice *dev;
     
-    // PulseEngine v2 HAL interface - exact userspace compatibility
-    struct {
-        // Motion control pins - CRITICAL for LinuxCNC
-        hal_float_t *joint_pos_cmd[8];     // pokeys.0.PEv2.0.joint-pos-cmd
-        hal_float_t *joint_vel_cmd[8];     // pokeys.0.PEv2.0.joint-vel-cmd  
-        hal_float_t *joint_pos_fb[8];      // pokeys.0.PEv2.0.joint-pos-fb
-        hal_bit_t *joint_in_position[8];   // pokeys.0.PEv2.0.joint-in-position
-        
-        // PEv2 state pins - exact userspace match
-        hal_u32_t *PEv2_AxesState[8];      // pokeys.0.PEv2.0.AxesState
-        hal_u32_t *PEv2_AxesCommand[8];    // pokeys.0.PEv2.0.AxesCommand
-        hal_s32_t *PEv2_CurrentPosition[8]; // pokeys.0.PEv2.0.CurrentPosition
-        
-        // Device info pins
-        hal_u32_t *PEv2_nrOfAxes;          // pokeys.0.PEv2.nrOfAxes
-        hal_u32_t *PEv2_maxPulseFrequency; // pokeys.0.PEv2.maxPulseFrequency
-        hal_u32_t *PEv2_bufferDepth;       // pokeys.0.PEv2.bufferDepth
-        hal_u32_t *PEv2_slotTiming;        // pokeys.0.PEv2.slotTiming
-        
-        // Engine state pins
-        hal_u32_t *PEv2_PulseEngineActivated; // pokeys.0.PEv2.PulseEngineActivated
-        hal_u32_t *PEv2_PulseEngineState;     // pokeys.0.PEv2.PulseEngineState
-        
-        // Emergency and safety pins
-        hal_bit_t *PEv2_digin_Emergency_in;     // pokeys.0.PEv2.digin.Emergency.in
-        hal_bit_t *PEv2_digin_Emergency_in_not; // pokeys.0.PEv2.digin.Emergency.in-not
-        hal_bit_t *PEv2_digout_Emergency_out;   // pokeys.0.PEv2.digout.Emergency.out
-        
-        // Limit switch pins per axis
-        hal_bit_t *PEv2_digin_LimitN_in[8];     // pokeys.0.PEv2.0.digin.LimitN.in
-        hal_bit_t *PEv2_digin_LimitN_in_not[8]; // pokeys.0.PEv2.0.digin.LimitN.in-not
-        hal_bit_t *PEv2_digin_LimitP_in[8];     // pokeys.0.PEv2.0.digin.LimitP.in
-        hal_bit_t *PEv2_digin_LimitP_in_not[8]; // pokeys.0.PEv2.0.digin.LimitP.in-not
-        hal_bit_t *PEv2_digin_Home_in[8];       // pokeys.0.PEv2.0.digin.Home.in
-        hal_bit_t *PEv2_digin_Home_in_not[8];   // pokeys.0.PEv2.0.digin.Home.in-not
-        
-        // Homing pins
-        hal_u32_t *PEv2_HomingStatus[8];        // pokeys.0.PEv2.0.HomingStatus
-        hal_bit_t *PEv2_index_enable[8];        // pokeys.0.PEv2.0.index-enable
-        
-        // External outputs
-        hal_bit_t *PEv2_digout_ExternalRelay_out[4]; // pokeys.0.PEv2.digout.ExternalRelay-0.out
-        hal_bit_t *PEv2_digout_ExternalOC_out[4];    // pokeys.0.PEv2.digout.ExternalOC-0.out
-        hal_u32_t *PEv2_ExternalRelayOutputs;        // pokeys.0.PEv2.ExternalRelayOutputs
-        hal_u32_t *PEv2_ExternalOCOutputs;           // pokeys.0.PEv2.ExternalOCOutputs
-        
-        // Phase 4: Debug and diagnostics pins
-        hal_bit_t *PEv2_debug_test_enable;     // pokeys.0.PEv2.debug.test-enable
-        hal_u32_t *PEv2_debug_cycle_time;     // pokeys.0.PEv2.debug.cycle-time-ns
-        hal_u32_t *PEv2_debug_error_count;    // pokeys.0.PEv2.debug.error-count
-        hal_u32_t *PEv2_debug_cmd_sent;       // pokeys.0.PEv2.debug.commands-sent
-        hal_u32_t *PEv2_debug_cmd_failed;     // pokeys.0.PEv2.debug.commands-failed
-        hal_bit_t *PEv2_debug_comm_ok;        // pokeys.0.PEv2.debug.communication-ok
-        hal_float_t *PEv2_debug_test_freq;    // pokeys.0.PEv2.debug.test-frequency
-        
-        // Phase 4: Performance monitoring
-        hal_u32_t *PEv2_perf_rt_min_cycle;    // pokeys.0.PEv2.perf.rt-min-cycle-ns
-        hal_u32_t *PEv2_perf_rt_max_cycle;    // pokeys.0.PEv2.perf.rt-max-cycle-ns
-        hal_u32_t *PEv2_perf_rt_avg_cycle;    // pokeys.0.PEv2.perf.rt-avg-cycle-ns
-        
-        // Probing pins
-        hal_u32_t *PEv2_ProbePosition[8];       // pokeys.0.PEv2.0.ProbePosition
-        hal_u32_t *PEv2_ProbeMaxPosition[8];    // pokeys.0.PEv2.0.ProbeMaxPosition
-        hal_u32_t *PEv2_ProbeStatus;            // pokeys.0.PEv2.ProbeStatus
-        hal_bit_t *PEv2_digin_Probed_in;        // pokeys.0.PEv2.digin.Probed.in
-        
-        // MPG jogging pins
-        hal_bit_t *PEv2_joint_kb_jog_active[8];     // pokeys.0.PEv2.0.joint-kb-jog-active
-        hal_bit_t *PEv2_joint_wheel_jog_active[8];  // pokeys.0.PEv2.0.joint-wheel-jog-active
-        
-        // Motion buffer mode pins
-        hal_bit_t *PEv2_motion_buffer_mode;          // pokeys.0.PEv2.motion-buffer-mode
-        hal_s32_t *PEv2_motion_buffer_entries_accepted; // pokeys.0.PEv2.motion-buffer-entries-accepted
-
-        // Parameters (not HAL pins, stored directly)
-        hal_float_t PEv2_MaxSpeed[8];
-        hal_float_t PEv2_MaxAcceleration[8];
-        hal_s32_t PEv2_home_sequence[8];
-        hal_float_t PEv2_stepgen_STEP_SCALE[8];
-        hal_s32_t PEv2_PositionScale[8];
-        hal_s32_t PEv2_PositionOffset[8];
-        hal_float_t PEv2_step_width[8];              // minimum position delta to register movement
-    } pev2_data;
-
     // Motion buffer mode state (per-instance)
     float mb_last_pos[8];       // last commanded position per axis (for delta calculation)
     float mb_pulses_leftover[8]; // fractional pulse accumulator per axis
@@ -204,10 +121,10 @@ static int export(char *prefix, long extra_arg) {
     };
     
     // Export PEv2 HAL pins - NEW
-    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: exporting component - export_pev2_hal_pins %s\n", __FILE__, __FUNCTION__, prefix);
-    r = export_pev2_hal_pins(inst, prefix, comp_id);
+    rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: exporting component - export_pev2_pins %s\n", __FILE__, __FUNCTION__, prefix);
+    r = export_pev2_pins(prefix, comp_id, inst->dev);
     if(r != 0){
-        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_pev2_hal_pins failed %d \n", __FILE__, __FUNCTION__, r);
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: %s:%s: export_pev2_pins failed %d \n", __FILE__, __FUNCTION__, r);
         return r;
     };
 
@@ -380,74 +297,6 @@ int main(int argc_, char **argv_) {
 #undef FOR_ALL_INSTS
 #define FOR_ALL_INSTS() struct __comp_state *__comp_inst; for(__comp_inst = __comp_first_inst; __comp_inst; __comp_inst = __comp_inst->_next)
 
-// RT-safe motion data structures
-typedef struct {
-    volatile float pos_cmd[8];
-    volatile float vel_cmd[8];
-    volatile bool pos_cmd_changed[8];
-    volatile bool vel_cmd_changed[8];
-    
-    // Cached feedback from device
-    volatile float pos_fb[8];
-    volatile bool in_position[8];
-    volatile uint32_t axis_state[8];
-    volatile int32_t current_position[8];
-} rt_motion_data_t;
-
-// Async command queue system
-typedef enum {
-    CMD_MOVE_PV,
-    CMD_HOME_START,
-    CMD_PROBE_START,
-    CMD_EMERGENCY_STOP,
-    CMD_EXTERNAL_OUTPUT_SET
-} async_cmd_type_t;
-
-typedef struct {
-    async_cmd_type_t type;
-    uint8_t axis_mask;
-    float pos_values[8];
-    float vel_values[8];
-    uint32_t misc_data;
-    bool processed;
-} async_command_t;
-
-#define MAX_ASYNC_COMMANDS 32
-typedef struct {
-    async_command_t commands[MAX_ASYNC_COMMANDS];
-    volatile int head, tail;
-    volatile int count;
-} async_command_queue_t;
-
-// Device status cache for RT-safe access
-typedef struct {
-    volatile uint32_t pulse_engine_state;
-    volatile uint32_t axes_state[8];
-    volatile int32_t current_position[8];
-    volatile uint8_t limit_status_p;
-    volatile uint8_t limit_status_n;
-    volatile uint8_t home_status;
-    volatile bool emergency_active;
-    volatile uint32_t last_update_time;
-    volatile bool communication_ok;
-    
-    // Phase 3: Error tracking and statistics
-    volatile uint32_t error_count;
-    volatile uint32_t reconnect_attempts;
-    volatile uint32_t last_error_time;
-    volatile uint32_t total_commands_sent;
-    volatile uint32_t failed_commands;
-    volatile bool device_connected;
-    volatile bool emergency_stop_active;
-    
-    // Phase 4: Performance monitoring
-    volatile uint32_t rt_cycle_min_ns;
-    volatile uint32_t rt_cycle_max_ns;
-    volatile uint32_t rt_cycle_total_ns;
-    volatile uint32_t rt_cycle_count;
-    volatile uint32_t last_cycle_time_ns;
-} device_status_cache_t;
-
 // Global data structures
 static rt_motion_data_t motion_data;
 static async_command_queue_t cmd_queue = {0};
@@ -514,208 +363,6 @@ static void rt_handle_test_mode(struct __comp_state *inst);
 static void rt_motion_buffer_fill(struct __comp_state *inst);
 static void rt_motion_buffer_send(struct __comp_state *inst);
 
-// PEv2 HAL pin export function
-int export_pev2_hal_pins(struct __comp_state *inst, char *prefix, int comp_id) {
-    int r = 0;
-    
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: Exporting PEv2 HAL pins with prefix %s\n", prefix);
-    
-    // Motion control pins - CRITICAL for LinuxCNC compatibility
-    for (int i = 0; i < 8; i++) {
-        r |= hal_pin_float_newf(HAL_IN, &inst->pev2_data.joint_pos_cmd[i], comp_id, 
-                               "%s.PEv2.%01d.joint-pos-cmd", prefix, i);
-        r |= hal_pin_float_newf(HAL_IN, &inst->pev2_data.joint_vel_cmd[i], comp_id, 
-                               "%s.PEv2.%01d.joint-vel-cmd", prefix, i);
-        r |= hal_pin_float_newf(HAL_OUT, &inst->pev2_data.joint_pos_fb[i], comp_id, 
-                               "%s.PEv2.%01d.joint-pos-fb", prefix, i);
-        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.joint_in_position[i], comp_id, 
-                             "%s.PEv2.%01d.joint-in-position", prefix, i);
-        
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export motion pins for axis %d\n", i);
-            return r;
-        }
-    }
-    
-    // State and command pins
-    for (int i = 0; i < 8; i++) {
-        r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_AxesState[i], comp_id,
-                             "%s.PEv2.%01d.AxesState", prefix, i);
-        r |= hal_pin_u32_newf(HAL_IN, &inst->pev2_data.PEv2_AxesCommand[i], comp_id,
-                             "%s.PEv2.%01d.AxesCommand", prefix, i);
-        r |= hal_pin_s32_newf(HAL_OUT, &inst->pev2_data.PEv2_CurrentPosition[i], comp_id,
-                             "%s.PEv2.%01d.CurrentPosition", prefix, i);
-        
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export state pins for axis %d\n", i);
-            return r;
-        }
-    }
-    
-    // Device info pins
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_nrOfAxes, comp_id,
-                         "%s.PEv2.nrOfAxes", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_maxPulseFrequency, comp_id,
-                         "%s.PEv2.maxPulseFrequency", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_bufferDepth, comp_id,
-                         "%s.PEv2.bufferDepth", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_slotTiming, comp_id,
-                         "%s.PEv2.slotTiming", prefix);
-    
-    // Engine state pins
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_PulseEngineActivated, comp_id,
-                         "%s.PEv2.PulseEngineActivated", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_PulseEngineState, comp_id,
-                         "%s.PEv2.PulseEngineState", prefix);
-    
-    // Emergency and safety pins
-    r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_Emergency_in, comp_id,
-                         "%s.PEv2.digin.Emergency.in", prefix);
-    r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_Emergency_in_not, comp_id,
-                         "%s.PEv2.digin.Emergency.in-not", prefix);
-    r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_digout_Emergency_out, comp_id,
-                         "%s.PEv2.digout.Emergency.out", prefix);
-    
-    // Limit switch pins per axis
-    for (int i = 0; i < 8; i++) {
-        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_LimitN_in[i], comp_id,
-                             "%s.PEv2.%01d.digin.LimitN.in", prefix, i);
-        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_LimitN_in_not[i], comp_id,
-                             "%s.PEv2.%01d.digin.LimitN.in-not", prefix, i);
-        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_LimitP_in[i], comp_id,
-                             "%s.PEv2.%01d.digin.LimitP.in", prefix, i);
-        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_LimitP_in_not[i], comp_id,
-                             "%s.PEv2.%01d.digin.LimitP.in-not", prefix, i);
-        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_Home_in[i], comp_id,
-                             "%s.PEv2.%01d.digin.Home.in", prefix, i);
-        r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_Home_in_not[i], comp_id,
-                             "%s.PEv2.%01d.digin.Home.in-not", prefix, i);
-        
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export limit/home pins for axis %d\n", i);
-            return r;
-        }
-    }
-    
-    // Homing pins
-    for (int i = 0; i < 8; i++) {
-        r |= hal_pin_u32_newf(HAL_IO, &inst->pev2_data.PEv2_HomingStatus[i], comp_id,
-                             "%s.PEv2.%01d.HomingStatus", prefix, i);
-        r |= hal_pin_bit_newf(HAL_IO, &inst->pev2_data.PEv2_index_enable[i], comp_id,
-                             "%s.PEv2.%01d.index-enable", prefix, i);
-        
-        if (r != 0) {
-            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export homing pins for axis %d\n", i);
-            return r;
-        }
-    }
-    
-    // External outputs
-    for (int i = 0; i < 4; i++) {
-        r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_digout_ExternalRelay_out[i], comp_id,
-                             "%s.PEv2.digout.ExternalRelay-%01d.out", prefix, i);
-        r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_digout_ExternalOC_out[i], comp_id,
-                             "%s.PEv2.digout.ExternalOC-%01d.out", prefix, i);
-    }
-    
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_ExternalRelayOutputs, comp_id,
-                         "%s.PEv2.ExternalRelayOutputs", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_ExternalOCOutputs, comp_id,
-                         "%s.PEv2.ExternalOCOutputs", prefix);
-    
-    // Phase 4: Debug and diagnostics pins
-    r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_debug_test_enable, comp_id,
-                         "%s.PEv2.debug.test-enable", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_debug_cycle_time, comp_id,
-                         "%s.PEv2.debug.cycle-time-ns", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_debug_error_count, comp_id,
-                         "%s.PEv2.debug.error-count", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_debug_cmd_sent, comp_id,
-                         "%s.PEv2.debug.commands-sent", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_debug_cmd_failed, comp_id,
-                         "%s.PEv2.debug.commands-failed", prefix);
-    r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_debug_comm_ok, comp_id,
-                         "%s.PEv2.debug.communication-ok", prefix);
-    r |= hal_pin_float_newf(HAL_IN, &inst->pev2_data.PEv2_debug_test_freq, comp_id,
-                         "%s.PEv2.debug.test-frequency", prefix);
-    
-    // Phase 4: Performance monitoring pins  
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_perf_rt_min_cycle, comp_id,
-                         "%s.PEv2.perf.rt-min-cycle-ns", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_perf_rt_max_cycle, comp_id,
-                         "%s.PEv2.perf.rt-max-cycle-ns", prefix);
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_perf_rt_avg_cycle, comp_id,
-                         "%s.PEv2.perf.rt-avg-cycle-ns", prefix);
-    
-    // Probing pins
-    for (int i = 0; i < 8; i++) {
-        r |= hal_pin_u32_newf(HAL_IO, &inst->pev2_data.PEv2_ProbePosition[i], comp_id,
-                             "%s.PEv2.%01d.ProbePosition", prefix, i);
-        r |= hal_pin_u32_newf(HAL_IO, &inst->pev2_data.PEv2_ProbeMaxPosition[i], comp_id,
-                             "%s.PEv2.%01d.ProbeMaxPosition", prefix, i);
-    }
-    
-    r |= hal_pin_u32_newf(HAL_OUT, &inst->pev2_data.PEv2_ProbeStatus, comp_id,
-                         "%s.PEv2.ProbeStatus", prefix);
-    r |= hal_pin_bit_newf(HAL_OUT, &inst->pev2_data.PEv2_digin_Probed_in, comp_id,
-                         "%s.PEv2.digin.Probed.in", prefix);
-    
-    // MPG jogging pins
-    for (int i = 0; i < 8; i++) {
-        r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_joint_kb_jog_active[i], comp_id,
-                             "%s.PEv2.%01d.joint-kb-jog-active", prefix, i);
-        r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_joint_wheel_jog_active[i], comp_id,
-                             "%s.PEv2.%01d.joint-wheel-jog-active", prefix, i);
-    }
-    
-    // Motion buffer mode pins
-    r |= hal_pin_bit_newf(HAL_IN, &inst->pev2_data.PEv2_motion_buffer_mode, comp_id,
-                         "%s.PEv2.motion-buffer-mode", prefix);
-    r |= hal_pin_s32_newf(HAL_OUT, &inst->pev2_data.PEv2_motion_buffer_entries_accepted, comp_id,
-                         "%s.PEv2.motion-buffer-entries-accepted", prefix);
-    
-    if (r != 0) {
-        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export PEv2 HAL pins\n");
-        return r;
-    }
-    
-    // Initialize parameters with defaults
-    for (int i = 0; i < 8; i++) {
-        inst->pev2_data.PEv2_MaxSpeed[i] = 1000.0;
-        inst->pev2_data.PEv2_MaxAcceleration[i] = 100.0;
-        inst->pev2_data.PEv2_home_sequence[i] = -1;  // No homing by default
-        inst->pev2_data.PEv2_stepgen_STEP_SCALE[i] = 1000.0;  // 1000 steps per unit
-        inst->pev2_data.PEv2_PositionScale[i] = 1000;
-        inst->pev2_data.PEv2_PositionOffset[i] = 0;
-        inst->pev2_data.PEv2_step_width[i] = 1e-4f;  // 0.1 milli-unit minimum movement
-    }
-    
-    // Initialize motion buffer mode pins
-    *(inst->pev2_data.PEv2_motion_buffer_mode) = 0;
-    *(inst->pev2_data.PEv2_motion_buffer_entries_accepted) = 0;
-    
-    // Initialize motion buffer state
-    for (int i = 0; i < 8; i++) {
-        inst->mb_last_pos[i] = 0.0f;
-        inst->mb_pulses_leftover[i] = 0.0f;
-    }
-    
-    // Phase 4: Initialize debug and performance monitoring pins
-    *(inst->pev2_data.PEv2_debug_test_enable) = false;
-    *(inst->pev2_data.PEv2_debug_cycle_time) = 0;
-    *(inst->pev2_data.PEv2_debug_error_count) = 0;
-    *(inst->pev2_data.PEv2_debug_cmd_sent) = 0;
-    *(inst->pev2_data.PEv2_debug_cmd_failed) = 0;
-    *(inst->pev2_data.PEv2_debug_comm_ok) = false;
-    *(inst->pev2_data.PEv2_debug_test_freq) = 1.0; // Default test frequency 1 Hz
-    
-    *(inst->pev2_data.PEv2_perf_rt_min_cycle) = 0;
-    *(inst->pev2_data.PEv2_perf_rt_max_cycle) = 0;
-    *(inst->pev2_data.PEv2_perf_rt_avg_cycle) = 0;
-    
-    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: PEv2 HAL pins exported successfully\n");
-    return 0;
-}
 
 
 sPoKeysDevice * dev=0;
@@ -1023,8 +670,8 @@ void user_mainloop(void)
 // RT-safe motion command processing functions
 static void rt_read_command_pins(struct __comp_state *inst) {
     for (int i = 0; i < 8; i++) {
-        float new_pos = *(inst->pev2_data.joint_pos_cmd[i]);
-        float new_vel = *(inst->pev2_data.joint_vel_cmd[i]);
+        float new_pos = *(inst->dev->PEv2.pin_joint_pos_cmd[i]);
+        float new_vel = *(inst->dev->PEv2.pin_joint_vel_cmd[i]);
         
         // Check for command changes
         if (new_pos != motion_data.pos_cmd[i] || new_vel != motion_data.vel_cmd[i]) {
@@ -1053,8 +700,13 @@ static void rt_update_motion_commands(struct __comp_state *inst) {
         if (motion_data.pos_cmd_changed[i]) {
             changed_axis_mask |= (1 << i);
             // Convert to device units using scale
-            positions[i] = motion_data.pos_cmd[i] * inst->pev2_data.PEv2_stepgen_STEP_SCALE[i];
-            velocities[i] = motion_data.vel_cmd[i] / inst->pev2_data.PEv2_MaxSpeed[i];
+            positions[i] = motion_data.pos_cmd[i] * inst->dev->PEv2.stepgen_STEP_SCALE[i];
+            if (inst->dev->PEv2.MaxSpeed[i] != 0.0f)
+                velocities[i] = motion_data.vel_cmd[i] / inst->dev->PEv2.MaxSpeed[i];
+            else {
+                velocities[i] = 0.0f;
+                rtapi_print_msg(RTAPI_MSG_WARN, "PoKeys: PEv2 axis %d MaxSpeed is zero; velocity clamped to 0\n", i);
+            }
             motion_data.pos_cmd_changed[i] = false;
         }
     }
@@ -1070,8 +722,8 @@ static void rt_read_device_cache(struct __comp_state *inst) {
     if (!device_cache.communication_ok) {
         // Set error state on all feedback pins during communication loss
         for (int i = 0; i < 8; i++) {
-            *(inst->pev2_data.joint_in_position[i]) = false;
-            *(inst->pev2_data.PEv2_AxesState[i]) = 0; // Stopped state
+            *(inst->dev->PEv2.pin_joint_in_position[i]) = false;
+            *(inst->dev->PEv2.pin_AxesState[i]) = 0; // Stopped state
         }
         return;
     }
@@ -1079,7 +731,7 @@ static void rt_read_device_cache(struct __comp_state *inst) {
     // Emergency stop handling - disable motion immediately
     if (device_cache.emergency_stop_active) {
         for (int i = 0; i < 8; i++) {
-            *(inst->pev2_data.joint_in_position[i]) = false;
+            *(inst->dev->PEv2.pin_joint_in_position[i]) = false;
             motion_data.pos_cmd_changed[i] = false; // Stop new commands
             motion_data.vel_cmd_changed[i] = false;
         }
@@ -1088,25 +740,25 @@ static void rt_read_device_cache(struct __comp_state *inst) {
     // Update feedback from cached device data (populated by async thread)
     for (int i = 0; i < 8; i++) {
         // Position feedback with scaling  
-        float pos_fb = (float)device_cache.current_position[i] / inst->pev2_data.PEv2_stepgen_STEP_SCALE[i];
-        *(inst->pev2_data.joint_pos_fb[i]) = pos_fb;
+        float pos_fb = (float)device_cache.current_position[i] / inst->dev->PEv2.stepgen_STEP_SCALE[i];
+        *(inst->dev->PEv2.pin_joint_pos_fb[i]) = pos_fb;
         motion_data.pos_fb[i] = pos_fb;
         
         // In-position status (within deadband) - only if not in emergency
         if (!device_cache.emergency_stop_active) {
             float pos_error = fabs(motion_data.pos_cmd[i] - pos_fb);
             bool in_position = (pos_error < 0.01); // 0.01 unit deadband
-            *(inst->pev2_data.joint_in_position[i]) = in_position;
+            *(inst->dev->PEv2.pin_joint_in_position[i]) = in_position;
             motion_data.in_position[i] = in_position;
         }
         
         // Update axis state
-        *(inst->pev2_data.PEv2_AxesState[i]) = device_cache.axes_state[i];
-        *(inst->pev2_data.PEv2_CurrentPosition[i]) = device_cache.current_position[i];
+        *(inst->dev->PEv2.pin_AxesState[i]) = device_cache.axes_state[i];
+        *(inst->dev->PEv2.pin_CurrentPosition[i]) = device_cache.current_position[i];
     }
     
     // Update device info
-    *(inst->pev2_data.PEv2_PulseEngineState) = device_cache.pulse_engine_state;
+    *(inst->dev->PEv2.pin_PulseEngineState) = device_cache.pulse_engine_state;
     
     // Update limit switches
     for (int i = 0; i < 8; i++) {
@@ -1114,17 +766,17 @@ static void rt_read_device_cache(struct __comp_state *inst) {
         bool limit_p = (device_cache.limit_status_p & (1 << i)) != 0;
         bool home = (device_cache.home_status & (1 << i)) != 0;
         
-        *(inst->pev2_data.PEv2_digin_LimitN_in[i]) = limit_n;
-        *(inst->pev2_data.PEv2_digin_LimitN_in_not[i]) = !limit_n;
-        *(inst->pev2_data.PEv2_digin_LimitP_in[i]) = limit_p;
-        *(inst->pev2_data.PEv2_digin_LimitP_in_not[i]) = !limit_p;
-        *(inst->pev2_data.PEv2_digin_Home_in[i]) = home;
-        *(inst->pev2_data.PEv2_digin_Home_in_not[i]) = !home;
+        *(inst->dev->PEv2.pin_digin_LimitN_in[i]) = limit_n;
+        *(inst->dev->PEv2.pin_digin_LimitN_in_not[i]) = !limit_n;
+        *(inst->dev->PEv2.pin_digin_LimitP_in[i]) = limit_p;
+        *(inst->dev->PEv2.pin_digin_LimitP_in_not[i]) = !limit_p;
+        *(inst->dev->PEv2.pin_digin_Home_in[i]) = home;
+        *(inst->dev->PEv2.pin_digin_Home_in_not[i]) = !home;
     }
     
     // Update emergency status
-    *(inst->pev2_data.PEv2_digin_Emergency_in) = device_cache.emergency_active;
-    *(inst->pev2_data.PEv2_digin_Emergency_in_not) = !device_cache.emergency_active;
+    *(inst->dev->PEv2.pin_digin_Emergency_in) = device_cache.emergency_active;
+    *(inst->dev->PEv2.pin_digin_Emergency_in_not) = !device_cache.emergency_active;
 }
 
 static void rt_handle_homing_commands(struct __comp_state *inst) {
@@ -1133,7 +785,7 @@ static void rt_handle_homing_commands(struct __comp_state *inst) {
     uint32_t homing_mask = 0;
     
     for (int i = 0; i < 8; i++) {
-        uint32_t current_status = *(inst->pev2_data.PEv2_HomingStatus[i]);
+        uint32_t current_status = *(inst->dev->PEv2.pin_HomingStatus[i]);
         
         // Detect homing start request (rising edge)
         if (current_status != 0 && last_homing_status[i] == 0) {
@@ -1156,8 +808,8 @@ static void rt_update_external_outputs(struct __comp_state *inst) {
     uint8_t relay_mask = 0, oc_mask = 0;
     
     for (int i = 0; i < 4; i++) {
-        bool relay_out = *(inst->pev2_data.PEv2_digout_ExternalRelay_out[i]);
-        bool oc_out = *(inst->pev2_data.PEv2_digout_ExternalOC_out[i]);
+        bool relay_out = *(inst->dev->PEv2.pin_digout_ExternalRelay_out[i]);
+        bool oc_out = *(inst->dev->PEv2.pin_digout_ExternalOC_out[i]);
         
         if (relay_out != last_relay_outputs[i]) {
             outputs_changed = true;
@@ -1188,8 +840,8 @@ static void rt_update_external_outputs(struct __comp_state *inst) {
     }
     
     // Update feedback pins
-    *(inst->pev2_data.PEv2_ExternalRelayOutputs) = relay_mask;
-    *(inst->pev2_data.PEv2_ExternalOCOutputs) = oc_mask;
+    *(inst->dev->PEv2.pin_ExternalRelayOutputs) = relay_mask;
+    *(inst->dev->PEv2.pin_ExternalOCOutputs) = oc_mask;
 }
 
 // Forward declarations for Phase 2 async functions
@@ -1215,30 +867,30 @@ static void rt_update_performance_monitoring(struct __comp_state *inst, int64_t 
     }
     
     // Update HAL pins with current performance data
-    *(inst->pev2_data.PEv2_debug_cycle_time) = cycle_time;
-    *(inst->pev2_data.PEv2_debug_error_count) = device_cache.error_count;
-    *(inst->pev2_data.PEv2_debug_cmd_sent) = device_cache.total_commands_sent;
-    *(inst->pev2_data.PEv2_debug_cmd_failed) = device_cache.failed_commands;
-    *(inst->pev2_data.PEv2_debug_comm_ok) = device_cache.communication_ok;
+    *(inst->dev->PEv2.pin_debug_cycle_time) = cycle_time;
+    *(inst->dev->PEv2.pin_debug_error_count) = device_cache.error_count;
+    *(inst->dev->PEv2.pin_debug_cmd_sent) = device_cache.total_commands_sent;
+    *(inst->dev->PEv2.pin_debug_cmd_failed) = device_cache.failed_commands;
+    *(inst->dev->PEv2.pin_debug_comm_ok) = device_cache.communication_ok;
     
-    *(inst->pev2_data.PEv2_perf_rt_min_cycle) = device_cache.rt_cycle_min_ns;
-    *(inst->pev2_data.PEv2_perf_rt_max_cycle) = device_cache.rt_cycle_max_ns;
+    *(inst->dev->PEv2.pin_perf_rt_min_cycle) = device_cache.rt_cycle_min_ns;
+    *(inst->dev->PEv2.pin_perf_rt_max_cycle) = device_cache.rt_cycle_max_ns;
     
     // Calculate moving average (every 100 cycles to reduce RT overhead)
     if (device_cache.rt_cycle_count % 100 == 0 && device_cache.rt_cycle_count > 0) {
-        *(inst->pev2_data.PEv2_perf_rt_avg_cycle) = device_cache.rt_cycle_total_ns / device_cache.rt_cycle_count;
+        *(inst->dev->PEv2.pin_perf_rt_avg_cycle) = device_cache.rt_cycle_total_ns / device_cache.rt_cycle_count;
     }
 }
 
 // Phase 4: Test mode handler
 static void rt_handle_test_mode(struct __comp_state *inst) {
-    if (!*(inst->pev2_data.PEv2_debug_test_enable)) {
+    if (!*(inst->dev->PEv2.pin_debug_test_enable)) {
         return; // Test mode disabled
     }
     
     // Simple sine wave test pattern for axis 0
     static uint32_t test_counter = 0;
-    float test_freq = *(inst->pev2_data.PEv2_debug_test_freq);
+    float test_freq = *(inst->dev->PEv2.pin_debug_test_freq);
     if (test_freq <= 0.0) test_freq = 1.0; // Default 1 Hz
     
     test_counter++;
@@ -1250,13 +902,13 @@ static void rt_handle_test_mode(struct __comp_state *inst) {
     int32_t test_position = (int32_t)(amplitude * sin(2.0 * M_PI * test_freq * time_sec));
     
     // Update test position command for axis 0
-    if (inst->pev2_data.joint_pos_cmd && inst->pev2_data.joint_pos_cmd[0]) {
-        *(inst->pev2_data.joint_pos_cmd[0]) = test_position;
+    if (inst->dev->PEv2.pin_joint_pos_cmd && inst->dev->PEv2.pin_joint_pos_cmd[0]) {
+        *(inst->dev->PEv2.pin_joint_pos_cmd[0]) = test_position;
     }
     
     // Enable axis 0 during test mode
-    if (inst->pev2_data.PEv2_AxesCommand && inst->pev2_data.PEv2_AxesCommand[0]) {
-        *(inst->pev2_data.PEv2_AxesCommand[0]) |= 0x01; // Set enable bit
+    if (inst->dev->PEv2.pin_AxesCommand && inst->dev->PEv2.pin_AxesCommand[0]) {
+        *(inst->dev->PEv2.pin_AxesCommand[0]) |= 0x01; // Set enable bit
     }
 }
 
@@ -1273,7 +925,7 @@ static void rt_handle_test_mode(struct __comp_state *inst) {
  */
 static void rt_motion_buffer_fill(struct __comp_state *inst) {
     if (!inst->dev) return;
-    if (!*(inst->pev2_data.PEv2_motion_buffer_mode)) return;
+    if (!*(inst->dev->PEv2.pin_motion_buffer_mode)) return;
     if (!device_cache.communication_ok || device_cache.emergency_stop_active) return;
 
     int numberOfAxes = inst->dev->PEv2.PulseEngineEnabled & 0x0F;
@@ -1287,9 +939,9 @@ static void rt_motion_buffer_fill(struct __comp_state *inst) {
 
     /* Compute motion entry for each axis */
     for (int i = 0; i < numberOfAxes; i++) {
-        float pos_cmd   = *(inst->pev2_data.joint_pos_cmd[i]);
-        float step_scale = inst->pev2_data.PEv2_stepgen_STEP_SCALE[i];
-        float step_width = inst->pev2_data.PEv2_step_width[i];
+        float pos_cmd   = *(inst->dev->PEv2.pin_joint_pos_cmd[i]);
+        float step_scale = inst->dev->PEv2.stepgen_STEP_SCALE[i];
+        float step_width = inst->dev->PEv2.step_width[i];
 
         float differenceInPosition = pos_cmd - inst->mb_last_pos[i];
         uint8_t motion = 0;
@@ -1337,7 +989,7 @@ static void rt_motion_buffer_fill(struct __comp_state *inst) {
  */
 static void rt_motion_buffer_send(struct __comp_state *inst) {
     if (!inst->dev) return;
-    if (!*(inst->pev2_data.PEv2_motion_buffer_mode)) return;
+    if (!*(inst->dev->PEv2.pin_motion_buffer_mode)) return;
     if (!device_cache.communication_ok || device_cache.emergency_stop_active) return;
 
     if (inst->dev->PEv2.newMotionBufferEntries == 0) return;
@@ -1355,7 +1007,7 @@ static void rt_motion_buffer_send(struct __comp_state *inst) {
     int total    = inst->dev->PEv2.newMotionBufferEntries;
 
     /* Update diagnostic output pin */
-    *(inst->pev2_data.PEv2_motion_buffer_entries_accepted) = accepted;
+    *(inst->dev->PEv2.pin_motion_buffer_entries_accepted) = accepted;
 
     /* Also refresh device status cache from the combined status response */
     device_cache.pulse_engine_state = inst->dev->PEv2.PulseEngineState;
@@ -1394,8 +1046,8 @@ FUNCTION(_) {
     rt_read_device_cache(__comp_inst);
     
     // 3. Process motion commands and queue async operations
-    if (__comp_inst->pev2_data.PEv2_motion_buffer_mode &&
-        *(__comp_inst->pev2_data.PEv2_motion_buffer_mode)) {
+    if (__comp_inst->dev->PEv2.pin_motion_buffer_mode &&
+        *(__comp_inst->dev->PEv2.pin_motion_buffer_mode)) {
         /* Motion buffer mode: fill one slot per cycle, send buffer each cycle */
         rt_motion_buffer_fill(__comp_inst);
         rt_motion_buffer_send(__comp_inst);

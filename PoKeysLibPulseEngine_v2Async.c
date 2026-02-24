@@ -368,3 +368,200 @@ int PK_PEv2_BufferClearAsync(sPoKeysDevice *device)
     return SendRequestAsync(device, req);
 }
 
+int export_pev2_pins(const char *prefix, long comp_id, sPoKeysDevice *device) {
+    int r = 0;
+    sPoKeysPEv2 *pev2 = &device->PEv2;
+
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: Exporting PEv2 HAL pins with prefix %s\n", prefix);
+
+    // Motion control pins - CRITICAL for LinuxCNC compatibility
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_float_newf(HAL_IN, &pev2->pin_joint_pos_cmd[i], comp_id,
+                               "%s.PEv2.%01d.joint-pos-cmd", prefix, i);
+        r |= hal_pin_float_newf(HAL_IN, &pev2->pin_joint_vel_cmd[i], comp_id,
+                               "%s.PEv2.%01d.joint-vel-cmd", prefix, i);
+        r |= hal_pin_float_newf(HAL_OUT, &pev2->pin_joint_pos_fb[i], comp_id,
+                               "%s.PEv2.%01d.joint-pos-fb", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_joint_in_position[i], comp_id,
+                             "%s.PEv2.%01d.joint-in-position", prefix, i);
+
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export motion pins for axis %d\n", i);
+            return r;
+        }
+    }
+
+    // State and command pins
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_AxesState[i], comp_id,
+                             "%s.PEv2.%01d.AxesState", prefix, i);
+        r |= hal_pin_u32_newf(HAL_IN, &pev2->pin_AxesCommand[i], comp_id,
+                             "%s.PEv2.%01d.AxesCommand", prefix, i);
+        r |= hal_pin_s32_newf(HAL_OUT, &pev2->pin_CurrentPosition[i], comp_id,
+                             "%s.PEv2.%01d.CurrentPosition", prefix, i);
+
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export state pins for axis %d\n", i);
+            return r;
+        }
+    }
+
+    // Device info pins
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_nrOfAxes, comp_id,
+                         "%s.PEv2.nrOfAxes", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_maxPulseFrequency, comp_id,
+                         "%s.PEv2.maxPulseFrequency", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_bufferDepth, comp_id,
+                         "%s.PEv2.bufferDepth", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_slotTiming, comp_id,
+                         "%s.PEv2.slotTiming", prefix);
+
+    // Engine state pins
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_PulseEngineActivated, comp_id,
+                         "%s.PEv2.PulseEngineActivated", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_PulseEngineState, comp_id,
+                         "%s.PEv2.PulseEngineState", prefix);
+
+    // Emergency and safety pins
+    r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_Emergency_in, comp_id,
+                         "%s.PEv2.digin.Emergency.in", prefix);
+    r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_Emergency_in_not, comp_id,
+                         "%s.PEv2.digin.Emergency.in-not", prefix);
+    r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_digout_Emergency_out, comp_id,
+                         "%s.PEv2.digout.Emergency.out", prefix);
+
+    // Limit switch pins per axis
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_LimitN_in[i], comp_id,
+                             "%s.PEv2.%01d.digin.LimitN.in", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_LimitN_in_not[i], comp_id,
+                             "%s.PEv2.%01d.digin.LimitN.in-not", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_LimitP_in[i], comp_id,
+                             "%s.PEv2.%01d.digin.LimitP.in", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_LimitP_in_not[i], comp_id,
+                             "%s.PEv2.%01d.digin.LimitP.in-not", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_Home_in[i], comp_id,
+                             "%s.PEv2.%01d.digin.Home.in", prefix, i);
+        r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_Home_in_not[i], comp_id,
+                             "%s.PEv2.%01d.digin.Home.in-not", prefix, i);
+
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export limit/home pins for axis %d\n", i);
+            return r;
+        }
+    }
+
+    // Homing pins
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_u32_newf(HAL_IO, &pev2->pin_HomingStatus[i], comp_id,
+                             "%s.PEv2.%01d.HomingStatus", prefix, i);
+        r |= hal_pin_bit_newf(HAL_IO, &pev2->pin_index_enable[i], comp_id,
+                             "%s.PEv2.%01d.index-enable", prefix, i);
+
+        if (r != 0) {
+            rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export homing pins for axis %d\n", i);
+            return r;
+        }
+    }
+
+    // External outputs
+    for (int i = 0; i < 4; i++) {
+        r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_digout_ExternalRelay_out[i], comp_id,
+                             "%s.PEv2.digout.ExternalRelay-%01d.out", prefix, i);
+        r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_digout_ExternalOC_out[i], comp_id,
+                             "%s.PEv2.digout.ExternalOC-%01d.out", prefix, i);
+    }
+
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_ExternalRelayOutputs, comp_id,
+                         "%s.PEv2.ExternalRelayOutputs", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_ExternalOCOutputs, comp_id,
+                         "%s.PEv2.ExternalOCOutputs", prefix);
+
+    // Debug and diagnostics pins
+    r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_debug_test_enable, comp_id,
+                         "%s.PEv2.debug.test-enable", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_debug_cycle_time, comp_id,
+                         "%s.PEv2.debug.cycle-time-ns", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_debug_error_count, comp_id,
+                         "%s.PEv2.debug.error-count", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_debug_cmd_sent, comp_id,
+                         "%s.PEv2.debug.commands-sent", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_debug_cmd_failed, comp_id,
+                         "%s.PEv2.debug.commands-failed", prefix);
+    r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_debug_comm_ok, comp_id,
+                         "%s.PEv2.debug.communication-ok", prefix);
+    r |= hal_pin_float_newf(HAL_IN, &pev2->pin_debug_test_freq, comp_id,
+                         "%s.PEv2.debug.test-frequency", prefix);
+
+    // Performance monitoring pins
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_perf_rt_min_cycle, comp_id,
+                         "%s.PEv2.perf.rt-min-cycle-ns", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_perf_rt_max_cycle, comp_id,
+                         "%s.PEv2.perf.rt-max-cycle-ns", prefix);
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_perf_rt_avg_cycle, comp_id,
+                         "%s.PEv2.perf.rt-avg-cycle-ns", prefix);
+
+    // Probing pins
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_u32_newf(HAL_IO, &pev2->pin_ProbePosition[i], comp_id,
+                             "%s.PEv2.%01d.ProbePosition", prefix, i);
+        r |= hal_pin_u32_newf(HAL_IO, &pev2->pin_ProbeMaxPosition[i], comp_id,
+                             "%s.PEv2.%01d.ProbeMaxPosition", prefix, i);
+    }
+
+    r |= hal_pin_u32_newf(HAL_OUT, &pev2->pin_ProbeStatus, comp_id,
+                         "%s.PEv2.ProbeStatus", prefix);
+    r |= hal_pin_bit_newf(HAL_OUT, &pev2->pin_digin_Probed_in, comp_id,
+                         "%s.PEv2.digin.Probed.in", prefix);
+
+    // MPG jogging pins
+    for (int i = 0; i < 8; i++) {
+        r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_joint_kb_jog_active[i], comp_id,
+                             "%s.PEv2.%01d.joint-kb-jog-active", prefix, i);
+        r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_joint_wheel_jog_active[i], comp_id,
+                             "%s.PEv2.%01d.joint-wheel-jog-active", prefix, i);
+    }
+
+    // Motion buffer mode pins
+    r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_motion_buffer_mode, comp_id,
+                         "%s.PEv2.motion-buffer-mode", prefix);
+    r |= hal_pin_s32_newf(HAL_OUT, &pev2->pin_motion_buffer_entries_accepted, comp_id,
+                         "%s.PEv2.motion-buf-entries", prefix);
+
+    if (r != 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export PEv2 HAL pins\n");
+        return r;
+    }
+
+    // Initialize parameters with defaults
+    for (int i = 0; i < 8; i++) {
+        pev2->MaxSpeed[i] = 1000.0;
+        pev2->MaxAcceleration[i] = 100.0;
+        pev2->home_sequence[i] = -1;
+        pev2->stepgen_STEP_SCALE[i] = 1000.0;
+        pev2->pos_scale[i] = 1000;
+        pev2->pos_offset[i] = 0;
+        pev2->step_width[i] = 1e-4f;
+    }
+
+    // Initialize motion buffer mode pins
+    *(pev2->pin_motion_buffer_mode) = 0;
+    *(pev2->pin_motion_buffer_entries_accepted) = 0;
+
+    // Initialize debug and performance monitoring pins
+    *(pev2->pin_debug_test_enable) = 0;
+    *(pev2->pin_debug_cycle_time) = 0;
+    *(pev2->pin_debug_error_count) = 0;
+    *(pev2->pin_debug_cmd_sent) = 0;
+    *(pev2->pin_debug_cmd_failed) = 0;
+    *(pev2->pin_debug_comm_ok) = 0;
+    *(pev2->pin_debug_test_freq) = 1.0;
+
+    *(pev2->pin_perf_rt_min_cycle) = 0;
+    *(pev2->pin_perf_rt_max_cycle) = 0;
+    *(pev2->pin_perf_rt_avg_cycle) = 0;
+
+    rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: PEv2 HAL pins exported successfully\n");
+    return 0;
+}
+

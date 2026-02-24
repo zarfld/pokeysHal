@@ -45,3 +45,5 @@ experimental/build/*.comp
 experimental/build/*.h
 experimental/build/Submakefile.rt
 experimental/build/Makefile.noqmakeRT
+experimental/build/*.o
+experimental/build/*.so
