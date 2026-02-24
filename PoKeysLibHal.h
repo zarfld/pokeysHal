@@ -592,7 +592,7 @@ typedef struct
  hal_bit_t      *pin_joint_kb_jog_active[8];     // pokeys.0.PEv2.0.joint-kb-jog-active
  hal_bit_t      *pin_joint_wheel_jog_active[8];  // pokeys.0.PEv2.0.joint-wheel-jog-active
  hal_bit_t      *pin_motion_buffer_mode;          // pokeys.0.PEv2.motion-buffer-mode
- hal_s32_t      *pin_motion_buffer_entries_accepted; // pokeys.0.PEv2.motion-buffer-entries-accepted
+ hal_s32_t      *pin_motion_buffer_entries_accepted; // pokeys.0.PEv2.motion-buf-entries
  // HAL parameters (not HAL pins, stored directly) not already in sPoKeysPEv2 fields
  hal_s32_t       home_sequence[8];           // Homing sequence (-1 = no homing)
  hal_float_t     stepgen_STEP_SCALE[8];      // Steps per unit (for position scaling)

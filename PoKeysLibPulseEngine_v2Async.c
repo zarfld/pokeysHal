@@ -526,7 +526,7 @@ int export_pev2_pins(const char *prefix, long comp_id, sPoKeysDevice *device) {
     r |= hal_pin_bit_newf(HAL_IN, &pev2->pin_motion_buffer_mode, comp_id,
                          "%s.PEv2.motion-buffer-mode", prefix);
     r |= hal_pin_s32_newf(HAL_OUT, &pev2->pin_motion_buffer_entries_accepted, comp_id,
-                         "%s.PEv2.motion-buffer-entries-accepted", prefix);
+                         "%s.PEv2.motion-buf-entries", prefix);
 
     if (r != 0) {
         rtapi_print_msg(RTAPI_MSG_ERR, "PoKeys: Failed to export PEv2 HAL pins\n");
