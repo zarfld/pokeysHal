@@ -818,34 +818,68 @@ static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
 
     /* Per-axis feedback */
     for (int i = 0; i < 8; i++) {
+        /* [Ei] — log ALL five per-axis HAL pin pointers so pin_joint_pos_cmd
+         * is visible in crash output (it was the missing unknown before). */
         rtapi_print_msg(RTAPI_MSG_ERR,
-            "PoKeys: %s:%s: [E%d] AxesState=%p CurrentPos=%p pos_fb=%p in_pos=%p\n",
+            "PoKeys: %s:%s: [E%d] AxesState=%p CurrentPos=%p pos_fb=%p in_pos=%p pos_cmd=%p\n",
             __FILE__, __FUNCTION__, i,
             (void*)pev2->pin_AxesState[i],
             (void*)pev2->pin_CurrentPosition[i],
             (void*)pev2->pin_joint_pos_fb[i],
-            (void*)pev2->pin_joint_in_position[i]);
+            (void*)pev2->pin_joint_in_position[i],
+            (void*)pev2->pin_joint_pos_cmd[i]);
 
         if (pev2->pin_AxesState[i])
             *pev2->pin_AxesState[i] = pev2->AxesState[i];
         if (pev2->pin_CurrentPosition[i])
             *pev2->pin_CurrentPosition[i] = pev2->CurrentPosition[i];
 
+        /* [E%d-a] — AxesState and CurrentPosition written successfully */
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [E%d-a] state/pos writes done\n",
+            __FILE__, __FUNCTION__, i);
+
         /* Scaled position feedback */
         if (pev2->pin_joint_pos_fb[i] && fabsf(pev2->stepgen_STEP_SCALE[i]) > 1e-9f)
             *pev2->pin_joint_pos_fb[i] = (hal_float_t)pev2->CurrentPosition[i]
                                           / pev2->stepgen_STEP_SCALE[i];
 
+        /* [E%d-b] — pos_fb write done (or skipped if ptr/scale zero) */
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [E%d-b] pos_fb write done\n",
+            __FILE__, __FUNCTION__, i);
+
         /* In-position: compare feedback to command */
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [E%d-c] in_pos check: in_pos=%p cmd=%p fb=%p\n",
+            __FILE__, __FUNCTION__, i,
+            (void*)pev2->pin_joint_in_position[i],
+            (void*)pev2->pin_joint_pos_cmd[i],
+            (void*)pev2->pin_joint_pos_fb[i]);
+
         if (pev2->pin_joint_in_position[i] && pev2->pin_joint_pos_cmd[i] &&
             pev2->pin_joint_pos_fb[i]) {
             hal_float_t fb  = *pev2->pin_joint_pos_fb[i];
+            rtapi_print_msg(RTAPI_MSG_ERR,
+                "PoKeys: %s:%s: [E%d-d1] fb read ok fb=%f\n",
+                __FILE__, __FUNCTION__, i, (double)fb);
             hal_float_t cmd = *pev2->pin_joint_pos_cmd[i];
+            rtapi_print_msg(RTAPI_MSG_ERR,
+                "PoKeys: %s:%s: [E%d-d2] cmd read ok cmd=%f\n",
+                __FILE__, __FUNCTION__, i, (double)cmd);
             hal_float_t tol = fabsf(pev2->stepgen_STEP_SCALE[i]) > 1e-9f
                               ? 1.0f / fabsf(pev2->stepgen_STEP_SCALE[i])
                               : 0.001f;
             *pev2->pin_joint_in_position[i] = (fabsf(fb - cmd) <= tol) ? 1 : 0;
+            rtapi_print_msg(RTAPI_MSG_ERR,
+                "PoKeys: %s:%s: [E%d-d3] in_pos written\n",
+                __FILE__, __FUNCTION__, i);
         }
+
+        /* [E%d-e] — whole in_pos block finished */
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "PoKeys: %s:%s: [E%d-e] in_pos block done\n",
+            __FILE__, __FUNCTION__, i);
 
         rtapi_print_msg(RTAPI_MSG_ERR,
             "PoKeys: %s:%s: [E%d-lim] LimitN=%p LimitP=%p Home=%p\n",
