@@ -31,6 +31,10 @@ int PK_PEv2_ExternalOutputsSetAsync(sPoKeysDevice *device);
 int PK_PEv2_StatusGetAsync(sPoKeysDevice *device);
 int PK_PEv2_BufferFillAsync(sPoKeysDevice *device);
 int PK_PEv2_BufferClearAsync(sPoKeysDevice *device);
+// Scheduler-ready PEv2 wrappers (defined in PoKeysLibPulseEngine_v2Async.c)
+int PK_PEv2_StatusUpdateHALAsync(sPoKeysDevice *device);
+int PK_PEv2_MovePVFromHALAsync(sPoKeysDevice *device);
+int PK_PEv2_ExternalOutputsFromHALAsync(sPoKeysDevice *device);
 
 static int comp_id;
 
@@ -1018,33 +1022,11 @@ FUNCTION(_) {
     while (PK_ReceiveAndDispatch(__comp_inst->dev) > 0) {}
     PK_TimeoutAndRetryCheck(__comp_inst->dev, 1000);
 
-    // Phase 2: High-priority RT motion processing — must run every servo cycle.
-    rt_read_command_pins(__comp_inst);
-    rt_read_device_cache(__comp_inst);
-
-    if (__comp_inst->dev->PEv2.pin_motion_buffer_mode &&
-        *(__comp_inst->dev->PEv2.pin_motion_buffer_mode)) {
-        rt_motion_buffer_fill(__comp_inst);
-        rt_motion_buffer_send(__comp_inst);
-    } else {
-        rt_update_motion_commands(__comp_inst);
-    }
-
-    rt_handle_homing_commands(__comp_inst);
-    rt_update_external_outputs(__comp_inst);
-
-    if (async_processing_enabled) {
-        process_async_commands(__comp_inst);
-        update_device_cache(__comp_inst);
-    }
-
-    // Phase 3: Dispatch scheduler-managed async sends within the time budget.
-    // async_dispatcher() fires the single most-overdue registered task and
-    // returns 1, or returns 0 when nothing is due yet.  Looping here means
-    // that on lighter cycles (where few tasks are due) we fire everything due
-    // quickly and exit early, naturally leaving more budget for Phase 4.
-    // The 100 µs guard ensures we never crowd out the final drain or
-    // performance-monitoring steps.
+    // Phase 2: Dispatch scheduler-managed async sends within the time budget.
+    // PEv2 status/motion/outputs and all IO subsystems are registered as
+    // scheduler tasks (see start_async_processing).  async_dispatcher() fires
+    // the single most-overdue registered task and returns 1, or 0 when nothing
+    // is due yet.  The 100 µs guard ensures we never crowd out the final drain.
     {
         const long SCHED_GUARD_NS = 100000L;
         while ((rtapi_get_time() - start_time) < (period - SCHED_GUARD_NS)) {
@@ -1053,10 +1035,7 @@ FUNCTION(_) {
         }
     }
 
-    // Phase 4: Use remaining cycle budget to drain any additional responses
-    // that arrived while Phase 2/3 was executing (e.g. fast devices or long
-    // gaps between cycles).  Stop when the buffer is empty or the 20 µs
-    // final guard is reached.
+    // Phase 3: Drain any additional responses that arrived during Phase 2.
     {
         const long DRAIN_GUARD_NS = 20000L;
         while ((rtapi_get_time() - start_time) < (period - DRAIN_GUARD_NS)) {
@@ -1067,9 +1046,6 @@ FUNCTION(_) {
 
     // Update PoNET HAL output pins from latest received data.
     update_ponet_hal_pins(__comp_inst->dev);
-
-    rt_update_performance_monitoring(__comp_inst, start_time);
-    rt_handle_test_mode(__comp_inst);
 
     int64_t end_time = rtapi_get_time();
     if ((end_time - start_time) > 5000000) {
@@ -1306,17 +1282,20 @@ static int start_async_processing(struct __comp_state *inst) {
     // natural update rate.  async_dispatcher() will fire each task when it is
     // due so that FUNCTION(_) and user_mainloop need only call async_dispatcher()
     // rather than driving every subsystem directly every cycle.
-    // We are registering 10 tasks; MAX_ASYNC_TASKS must be >= 10.
-    if (register_async_task(PK_RTCGetAsync,                inst->dev,   1.0, "rtc")           < 0 ||
-        register_async_task(PK_EncoderValuesGetAsync,      inst->dev, 500.0, "encoders")       < 0 ||
-        register_async_task(PK_DigitalIOGetAsync,          inst->dev, 200.0, "digio_get")      < 0 ||
-        register_async_task(PK_DigitalIOSetGetAsync,       inst->dev, 200.0, "digio_setget")   < 0 ||
-        register_async_task(PK_DigitalIOSetAsync,          inst->dev, 200.0, "digio_set")      < 0 ||
-        register_async_task(PK_PWMUpdateAsync,             inst->dev, 100.0, "pwm")            < 0 ||
-        register_async_task(PK_AnalogIOGetAsync,           inst->dev, 100.0, "aio")            < 0 ||
-        register_async_task(PK_PoNETGetPoNETStatusAsync,   inst->dev,  10.0, "ponet_status")   < 0 ||
-        register_async_task(PK_PoNETGetModuleStatusAsync,  inst->dev,  10.0, "ponet_mod_status") < 0 ||
-        register_async_task(PK_PoNETSetModuleStatusAsync,  inst->dev,  10.0, "ponet_mod_set")  < 0) {
+    // We are registering 13 tasks; MAX_ASYNC_TASKS must be >= 13.
+    if (register_async_task(PK_RTCGetAsync,                     inst->dev,   1.0, "rtc")              < 0 ||
+        register_async_task(PK_EncoderValuesGetAsync,           inst->dev, 500.0, "encoders")          < 0 ||
+        register_async_task(PK_DigitalIOGetAsync,               inst->dev, 200.0, "digio_get")         < 0 ||
+        register_async_task(PK_DigitalIOSetGetAsync,            inst->dev, 200.0, "digio_setget")      < 0 ||
+        register_async_task(PK_DigitalIOSetAsync,               inst->dev, 200.0, "digio_set")         < 0 ||
+        register_async_task(PK_PWMUpdateAsync,                  inst->dev, 100.0, "pwm")               < 0 ||
+        register_async_task(PK_AnalogIOGetAsync,                inst->dev, 100.0, "aio")               < 0 ||
+        register_async_task(PK_PoNETGetPoNETStatusAsync,        inst->dev,  10.0, "ponet_status")      < 0 ||
+        register_async_task(PK_PoNETGetModuleStatusAsync,       inst->dev,  10.0, "ponet_mod_status")  < 0 ||
+        register_async_task(PK_PoNETSetModuleStatusAsync,       inst->dev,  10.0, "ponet_mod_set")     < 0 ||
+        register_async_task(PK_PEv2_StatusUpdateHALAsync,       inst->dev, 100.0, "pev2_status")       < 0 ||
+        register_async_task(PK_PEv2_MovePVFromHALAsync,         inst->dev, 500.0, "pev2_movepv")       < 0 ||
+        register_async_task(PK_PEv2_ExternalOutputsFromHALAsync,inst->dev, 100.0, "pev2_extout")       < 0) {
         rtapi_print_msg(RTAPI_MSG_ERR,
             "PoKeys: register_async_task failed (MAX_ASYNC_TASKS=%d too small?)\n",
             MAX_ASYNC_TASKS);

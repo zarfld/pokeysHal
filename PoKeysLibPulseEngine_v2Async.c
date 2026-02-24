@@ -1,5 +1,7 @@
 #include "PoKeysLibHal.h"
 #include "PoKeysLibAsync.h"
+#include <math.h>
+#include <stdint.h>
 
 // Forward declaration for transaction_find function
 async_transaction_t* transaction_find(uint8_t request_id);
@@ -741,5 +743,185 @@ int export_pev2_pins(const char *prefix, long comp_id, sPoKeysDevice *device) {
 
     rtapi_print_msg(RTAPI_MSG_DBG, "PoKeys: %s:%s: PEv2 HAL pins exported successfully\n", __FILE__, __FUNCTION__);
     return 0;
+}
+
+/* -----------------------------------------------------------------------
+ * Scheduler-ready PEv2 functions
+ *
+ * These are registered via register_async_task() so FUNCTION(_) and
+ * user_mainloop only need to call async_dispatcher() rather than driving
+ * each subsystem directly every cycle.
+ * ----------------------------------------------------------------------- */
+
+/*
+ * Parse callback for PK_PEv2_StatusUpdateHALAsync.
+ *
+ * Decodes the status response into device->PEv2.* fields (same as
+ * PK_PEv2_StatusParse) and then mirrors the values onto HAL output pins so
+ * that LinuxCNC sees up-to-date feedback every time the device responds.
+ */
+static int PK_PEv2_StatusAndHALParse(sPoKeysDevice *dev, const uint8_t *resp)
+{
+    if (!dev || !resp) return PK_ERR_GENERIC;
+    uint8_t req_id = resp[6];
+    uint8_t tstB = (0x10 + req_id) % 199;
+    if (resp[63] != (uint8_t)(tstB + 0x5A)) {
+        dev->PEv2.PulseEngineActivated = 0;
+        dev->PEv2.PulseEngineEnabled   = 0;
+        return PK_ERR_GENERIC;
+    }
+    PK_PEv2_DecodeStatusFromResp(dev, resp);
+
+    sPoKeysPEv2 *pev2 = &dev->PEv2;
+
+    /* Global engine status */
+    if (pev2->pin_PulseEngineState)     *pev2->pin_PulseEngineState     = pev2->PulseEngineState;
+    if (pev2->pin_PulseEngineActivated) *pev2->pin_PulseEngineActivated = pev2->PulseEngineActivated;
+    if (pev2->pin_nrOfAxes)             *pev2->pin_nrOfAxes             = pev2->info.nrOfAxes;
+    if (pev2->pin_maxPulseFrequency)    *pev2->pin_maxPulseFrequency    = pev2->info.maxPulseFrequency;
+    if (pev2->pin_bufferDepth)          *pev2->pin_bufferDepth          = pev2->info.bufferDepth;
+    if (pev2->pin_slotTiming)           *pev2->pin_slotTiming           = pev2->info.slotTiming;
+
+    /* Emergency stop */
+    if (pev2->pin_digin_Emergency_in) {
+        hal_bit_t emg = (pev2->ErrorInputStatus & 0x01) ? 1 : 0;
+        *pev2->pin_digin_Emergency_in     = emg;
+        if (pev2->pin_digin_Emergency_in_not)
+            *pev2->pin_digin_Emergency_in_not = !emg;
+    }
+
+    /* Per-axis feedback */
+    for (int i = 0; i < 8; i++) {
+        if (pev2->pin_AxesState[i])
+            *pev2->pin_AxesState[i] = pev2->AxesState[i];
+        if (pev2->pin_CurrentPosition[i])
+            *pev2->pin_CurrentPosition[i] = pev2->CurrentPosition[i];
+
+        /* Scaled position feedback */
+        if (pev2->pin_joint_pos_fb[i] && fabsf(pev2->stepgen_STEP_SCALE[i]) > 1e-9f)
+            *pev2->pin_joint_pos_fb[i] = (hal_float_t)pev2->CurrentPosition[i]
+                                          / pev2->stepgen_STEP_SCALE[i];
+
+        /* In-position: compare feedback to command */
+        if (pev2->pin_joint_in_position[i] && pev2->pin_joint_pos_cmd[i] &&
+            pev2->pin_joint_pos_fb[i]) {
+            hal_float_t fb  = *pev2->pin_joint_pos_fb[i];
+            hal_float_t cmd = *pev2->pin_joint_pos_cmd[i];
+            hal_float_t tol = fabsf(pev2->stepgen_STEP_SCALE[i]) > 1e-9f
+                              ? 1.0f / fabsf(pev2->stepgen_STEP_SCALE[i])
+                              : 0.001f;
+            *pev2->pin_joint_in_position[i] = (fabsf(fb - cmd) <= tol) ? 1 : 0;
+        }
+
+        /* Limit switches (from bitmasks) */
+        if (pev2->pin_digin_LimitN_in[i]) {
+            hal_bit_t lim = (pev2->LimitStatusN & (1u << i)) ? 1 : 0;
+            *pev2->pin_digin_LimitN_in[i] = lim;
+            if (pev2->pin_digin_LimitN_in_not[i])
+                *pev2->pin_digin_LimitN_in_not[i] = !lim;
+        }
+        if (pev2->pin_digin_LimitP_in[i]) {
+            hal_bit_t lim = (pev2->LimitStatusP & (1u << i)) ? 1 : 0;
+            *pev2->pin_digin_LimitP_in[i] = lim;
+            if (pev2->pin_digin_LimitP_in_not[i])
+                *pev2->pin_digin_LimitP_in_not[i] = !lim;
+        }
+        if (pev2->pin_digin_Home_in[i]) {
+            hal_bit_t hm = (pev2->HomeStatus & (1u << i)) ? 1 : 0;
+            *pev2->pin_digin_Home_in[i] = hm;
+            if (pev2->pin_digin_Home_in_not[i])
+                *pev2->pin_digin_Home_in_not[i] = !hm;
+        }
+    }
+    return PK_OK;
+}
+
+/**
+ * PK_PEv2_StatusUpdateHALAsync - poll device status and update HAL pins.
+ *
+ * Drop-in replacement for PK_PEv2_StatusGetAsync that additionally mirrors
+ * all decoded fields onto their HAL output pins inside the parse callback.
+ * Registered with the async scheduler at ~100 Hz.
+ */
+int PK_PEv2_StatusUpdateHALAsync(sPoKeysDevice *device)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    int req = CreateRequestAsync(device, PK_CMD_PULSE_ENGINE_V2,
+                                 (const uint8_t[]){PEV2_CMD_GET_STATUS, 0}, 2,
+                                 NULL, 0, PK_PEv2_StatusAndHALParse);
+    if (req < 0) return req;
+    /* Apply the same request-id checksum that the device expects */
+    async_transaction_t *t = transaction_find(req);
+    if (t) {
+        uint8_t tstB = (0x10 + req) % 199;
+        t->request_buffer[3] = tstB;
+        uint8_t cs = 0;
+        for (int i = 0; i <= 6; i++) cs += t->request_buffer[i];
+        t->request_buffer[7] = cs;
+    }
+    return SendRequestAsync(device, req);
+}
+
+/**
+ * PK_PEv2_MovePVFromHALAsync - read HAL command pins, update device struct,
+ * then send a MovePV command to the device.
+ *
+ * Registered with the async scheduler at ~500 Hz.
+ */
+int PK_PEv2_MovePVFromHALAsync(sPoKeysDevice *device)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    sPoKeysPEv2 *pev2 = &device->PEv2;
+
+    /* Copy HAL command pins → device struct */
+    for (int i = 0; i < 8; i++) {
+        if (pev2->pin_joint_pos_cmd[i] && fabsf(pev2->stepgen_STEP_SCALE[i]) > 1e-9f) {
+            float scaled = *pev2->pin_joint_pos_cmd[i] * pev2->stepgen_STEP_SCALE[i];
+            /* Clamp to int32_t range before truncation to avoid undefined behaviour */
+            if (scaled > (float)INT32_MAX)       scaled = (float)INT32_MAX;
+            else if (scaled < (float)INT32_MIN)  scaled = (float)INT32_MIN;
+            pev2->ReferencePositionSpeed[i] = (int32_t)scaled;
+        }
+
+        if (pev2->pin_joint_vel_cmd[i] && pev2->MaxSpeed[i] > 0.0f) {
+            float ratio = *pev2->pin_joint_vel_cmd[i] / pev2->MaxSpeed[i];
+            if (ratio > 1.0f)  ratio = 1.0f;
+            if (ratio < -1.0f) ratio = -1.0f;
+            pev2->ReferenceVelocityPV[i] = ratio;
+        }
+    }
+    pev2->param2 = 0xFF; /* all axes */
+    return PK_PEv2_PulseEngineMovePVAsync(device);
+}
+
+/**
+ * PK_PEv2_ExternalOutputsFromHALAsync - read HAL output pins for the four
+ * external relay and OC outputs, pack them into the device struct bitmasks,
+ * update the feedback pins, then send the command to the device.
+ *
+ * Registered with the async scheduler at ~100 Hz.
+ */
+int PK_PEv2_ExternalOutputsFromHALAsync(sPoKeysDevice *device)
+{
+    if (!device) return PK_ERR_NOT_CONNECTED;
+    sPoKeysPEv2 *pev2 = &device->PEv2;
+
+    /* Build bitmasks from individual HAL output pins */
+    uint8_t relay_mask = 0;
+    uint8_t oc_mask    = 0;
+    for (int i = 0; i < 4; i++) {
+        if (pev2->pin_digout_ExternalRelay_out[i] && *pev2->pin_digout_ExternalRelay_out[i])
+            relay_mask |= (uint8_t)(1u << i);
+        if (pev2->pin_digout_ExternalOC_out[i] && *pev2->pin_digout_ExternalOC_out[i])
+            oc_mask |= (uint8_t)(1u << i);
+    }
+    pev2->ExternalRelayOutputs = relay_mask;
+    pev2->ExternalOCOutputs    = oc_mask;
+
+    /* Update bitmask feedback pins */
+    if (pev2->pin_ExternalRelayOutputs) *pev2->pin_ExternalRelayOutputs = relay_mask;
+    if (pev2->pin_ExternalOCOutputs)    *pev2->pin_ExternalOCOutputs    = oc_mask;
+
+    return PK_PEv2_ExternalOutputsSetAsync(device);
 }
 
