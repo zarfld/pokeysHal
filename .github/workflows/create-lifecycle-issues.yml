@@ -1,0 +1,436 @@
+name: "Create Lifecycle Issues (Phase 02-04) for Async Scheduler"
+
+# ---------------------------------------------------------------------------
+# PURPOSE
+# -------
+# Creates the full lifecycle documentation chain for the
+# "Async Scheduler Optimizations" feature (Stakeholder Requirement #97):
+#
+#   Phase 02  REQ-F-SCHED-001...006  Functional Requirements
+#             REQ-NF-SCHED-001...003 Non-Functional Requirements
+#   Phase 03  ADR-SCHED-001...005    Architecture Decision Records
+#             ARC-C-ASYNC-SCHED      Architecture Component
+#   Phase 04  SDD-ASYNC-SCHED        Software Design Description
+#
+# Issues are created in dependency order; sub-issue relationships are
+# registered via the GitHub REST API.
+#
+# HOW TO RUN
+# ----------
+#   Actions -> "Create Lifecycle Issues (Phase 02-04) for Async Scheduler"
+#   -> "Run workflow"
+# ---------------------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+env:
+  STR_NUM: "97"
+  REPO: ${{ github.repository }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  BODY_DIR: ".github/lifecycle-issues"
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------
+      # Ensure all required labels exist (create if absent, update if present)
+      # ------------------------------------------------------------------
+      - name: "Ensure required labels exist"
+        run: |
+          create_label() {
+            local name="$1" color="$2" desc="$3"
+            gh api "repos/${REPO}/labels" --method POST \
+              -f name="${name}" -f color="${color}" -f description="${desc}" \
+              --silent 2>/dev/null \
+              || gh api "repos/${REPO}/labels/${name}" --method PATCH \
+                   -f color="${color}" -f description="${desc}" \
+                   --silent 2>/dev/null \
+              || true
+          }
+          create_label "functional-requirement"     "0075ca" "Functional requirement (Phase 02)"
+          create_label "non-functional-requirement" "e4e669" "Non-functional requirement (Phase 02)"
+          create_label "architecture-decision"      "d93f0b" "Architecture Decision Record (Phase 03)"
+          create_label "architecture-component"     "0e8a16" "Architecture Component (Phase 03)"
+          create_label "phase-02"                   "c5def5" "Lifecycle Phase 02 - Requirements"
+          create_label "phase-03"                   "bfd4f2" "Lifecycle Phase 03 - Architecture"
+          create_label "phase-04"                   "d4c5f9" "Lifecycle Phase 04 - Design"
+
+      # ------------------------------------------------------------------
+      # Helper: resolve placeholder tokens in a body file -> /tmp/body.md
+      # Usage:  subst <file> [KEY=VALUE ...]
+      # ------------------------------------------------------------------
+      - name: Install subst helper
+        run: |
+          cat > /usr/local/bin/subst << 'SCRIPT'
+          #!/usr/bin/env python3
+          import sys, os
+
+          src   = sys.argv[1]
+          pairs = {}
+          for kv in sys.argv[2:]:
+              k, v = kv.split("=", 1)
+              pairs[k] = v
+
+          text = open(src).read()
+          for k, v in pairs.items():
+              text = text.replace("{{" + k + "}}", v)
+
+          with open("/tmp/body.md", "w") as f:
+              f.write(text)
+          SCRIPT
+          chmod +x /usr/local/bin/subst
+
+      # ------------------------------------------------------------------
+      # Helper: add sub-issue link (non-fatal if feature not enabled)
+      # ------------------------------------------------------------------
+      - name: Install add-sub-issue helper
+        run: |
+          cat > /usr/local/bin/add_sub_issue << 'SCRIPT'
+          #!/usr/bin/env bash
+          parent=$1; child=$2
+          gh api "repos/${REPO}/issues/${parent}/sub_issues" \
+            --method POST --field sub_issue_id="${child}" --silent \
+            || echo "::warning::sub-issue ${parent}<-${child} skipped"
+          SCRIPT
+          chmod +x /usr/local/bin/add_sub_issue
+
+      # ------------------------------------------------------------------
+      # Helper: create issue from body file and echo its number
+      # ------------------------------------------------------------------
+      - name: Install create-issue helper
+        run: |
+          cat > /usr/local/bin/create_issue << 'SCRIPT'
+          #!/usr/bin/env bash
+          title=$1; labels=$2; body_file=$3
+          url=$(gh issue create --title "${title}" --label "${labels}" \
+                  --body-file "${body_file}")
+          echo "${url##*/}"
+          SCRIPT
+          chmod +x /usr/local/bin/create_issue
+
+      # ==================================================================
+      # PHASE 02 - FUNCTIONAL REQUIREMENTS
+      # ==================================================================
+
+      - name: "REQ-F-SCHED-001: Task Priority Classification"
+        id: f001
+        run: |
+          subst "${BODY_DIR}/req-f-sched-001.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-SCHED-001: Task Priority Classification" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-SCHED-002: Load-Based Dynamic Throttling"
+        id: f002
+        run: |
+          subst "${BODY_DIR}/req-f-sched-002.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-SCHED-002: Load-Based Dynamic Throttling" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-SCHED-003: Prime-Number Stagger Offsets"
+        id: f003
+        run: |
+          subst "${BODY_DIR}/req-f-sched-003.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-SCHED-003: Prime-Number Stagger Offsets at Task Registration" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-SCHED-004: Dirty-Flag Filtering"
+        id: f004
+        run: |
+          subst "${BODY_DIR}/req-f-sched-004.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-SCHED-004: Dirty-Flag Filtering for Digital Output Write Commands" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-SCHED-005: Machine-On Configuration Lock"
+        id: f005
+        run: |
+          subst "${BODY_DIR}/req-f-sched-005.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-SCHED-005: Machine-On Configuration Lock" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-SCHED-006: Periodic System Load Monitoring"
+        id: f006
+        run: |
+          subst "${BODY_DIR}/req-f-sched-006.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-SCHED-006: Periodic System Load Monitoring via Protocol Command 0x05" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      # ==================================================================
+      # PHASE 02 - NON-FUNCTIONAL REQUIREMENTS
+      # ==================================================================
+
+      - name: "REQ-NF-SCHED-001: Real-Time Timing Safety"
+        id: nf001
+        run: |
+          subst "${BODY_DIR}/req-nf-sched-001.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-NF-SCHED-001: Real-Time Timing Safety - No Blocking in RT Thread" \
+            "non-functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-NF-SCHED-002: Interface Load Distribution"
+        id: nf002
+        run: |
+          subst "${BODY_DIR}/req-nf-sched-002.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-NF-SCHED-002: Interface Load Distribution - No Periodic Packet Bursts" \
+            "non-functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-NF-SCHED-003: Safety Signal Latency < 10 ms"
+        id: nf003
+        run: |
+          subst "${BODY_DIR}/req-nf-sched-003.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-NF-SCHED-003: Safety Signal Latency less than 10 ms" \
+            "non-functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      # ==================================================================
+      # PHASE 03 - ARCHITECTURE DECISION RECORDS
+      # ==================================================================
+
+      - name: "ADR-SCHED-001: Four-Level Priority Classification"
+        id: adr1
+        env:
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          F005: ${{ steps.f005.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+          NF003: ${{ steps.nf003.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/adr-sched-001.md" \
+            "F001=${F001}" "F002=${F002}" "F005=${F005}" \
+            "NF001=${NF001}" "NF003=${NF003}"
+          NUM=$(create_issue \
+            "ADR-SCHED-001: Four-Level Priority Classification for Async Tasks" \
+            "architecture-decision,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${F001}" "${NUM}"
+          add_sub_issue "${F002}" "${NUM}"
+          add_sub_issue "${F005}" "${NUM}"
+
+      - name: "ADR-SCHED-002: Load Threshold Table"
+        id: adr2
+        env:
+          F002: ${{ steps.f002.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/adr-sched-002.md" \
+            "F002=${F002}" "NF001=${NF001}" "NF002=${NF002}"
+          NUM=$(create_issue \
+            "ADR-SCHED-002: Load Threshold Table (skip thresholds per priority)" \
+            "architecture-decision,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${F002}" "${NUM}"
+
+      - name: "ADR-SCHED-003: Prime-Number Stagger"
+        id: adr3
+        env:
+          F003: ${{ steps.f003.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/adr-sched-003.md" "F003=${F003}" "NF002=${NF002}"
+          NUM=$(create_issue \
+            "ADR-SCHED-003: Prime-Number Millisecond Stagger for Task Initial Offsets" \
+            "architecture-decision,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${F003}" "${NUM}"
+
+      - name: "ADR-SCHED-004: Static Dirty-Flag"
+        id: adr4
+        env:
+          F004: ${{ steps.f004.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/adr-sched-004.md" "F004=${F004}" "NF002=${NF002}"
+          NUM=$(create_issue \
+            "ADR-SCHED-004: Static Dirty-Flag Cache in PK_DigitalIOSetAsync" \
+            "architecture-decision,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${F004}" "${NUM}"
+
+      - name: "ADR-SCHED-005: Machine-On Lock via PulseEngine State"
+        id: adr5
+        env:
+          F005: ${{ steps.f005.outputs.num }}
+          F006: ${{ steps.f006.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/adr-sched-005.md" "F005=${F005}" "F006=${F006}"
+          NUM=$(create_issue \
+            "ADR-SCHED-005: Machine-On Lock Derived from PulseEngine v2 State" \
+            "architecture-decision,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${F005}" "${NUM}"
+          add_sub_issue "${F006}" "${NUM}"
+
+      # ==================================================================
+      # PHASE 03 - ARCHITECTURE COMPONENT
+      # ==================================================================
+
+      - name: "ARC-C-ASYNC-SCHED: Async Task Scheduler Component"
+        id: arc
+        env:
+          ADR1: ${{ steps.adr1.outputs.num }}
+          ADR2: ${{ steps.adr2.outputs.num }}
+          ADR3: ${{ steps.adr3.outputs.num }}
+          ADR4: ${{ steps.adr4.outputs.num }}
+          ADR5: ${{ steps.adr5.outputs.num }}
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          F003: ${{ steps.f003.outputs.num }}
+          F004: ${{ steps.f004.outputs.num }}
+          F005: ${{ steps.f005.outputs.num }}
+          F006: ${{ steps.f006.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+          NF003: ${{ steps.nf003.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/arc-c-async-sched.md" \
+            "ADR1=${ADR1}" "ADR2=${ADR2}" "ADR3=${ADR3}" "ADR4=${ADR4}" "ADR5=${ADR5}" \
+            "F001=${F001}" "F002=${F002}" "F003=${F003}" "F004=${F004}" "F005=${F005}" \
+            "F006=${F006}" "NF001=${NF001}" "NF002=${NF002}" "NF003=${NF003}"
+          NUM=$(create_issue \
+            "ARC-C-ASYNC-SCHED: Async Task Scheduler Component" \
+            "architecture-component,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${ADR1}" "${NUM}"
+
+      # ==================================================================
+      # PHASE 04 - SOFTWARE DESIGN DESCRIPTION
+      # ==================================================================
+
+      - name: "SDD-ASYNC-SCHED: Software Design Description"
+        id: sdd
+        env:
+          ADR1: ${{ steps.adr1.outputs.num }}
+          ADR2: ${{ steps.adr2.outputs.num }}
+          ADR3: ${{ steps.adr3.outputs.num }}
+          ADR4: ${{ steps.adr4.outputs.num }}
+          ADR5: ${{ steps.adr5.outputs.num }}
+          ARC: ${{ steps.arc.outputs.num }}
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          F003: ${{ steps.f003.outputs.num }}
+          F004: ${{ steps.f004.outputs.num }}
+          F005: ${{ steps.f005.outputs.num }}
+          F006: ${{ steps.f006.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/sdd-async-sched.md" \
+            "ADR1=${ADR1}" "ADR2=${ADR2}" "ADR3=${ADR3}" "ADR4=${ADR4}" "ADR5=${ADR5}" \
+            "ARC=${ARC}" \
+            "F001=${F001}" "F002=${F002}" "F003=${F003}" "F004=${F004}" "F005=${F005}" \
+            "F006=${F006}" "NF001=${NF001}"
+          NUM=$(create_issue \
+            "SDD-ASYNC-SCHED: Software Design Description - Async Task Scheduler" \
+            "phase-04" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${ARC}" "${NUM}"
+
+      # ==================================================================
+      # BACK-REFERENCE - add traceability comment to StR #97
+      # ==================================================================
+
+      - name: "Comment on StR #97 with full traceability"
+        env:
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          F003: ${{ steps.f003.outputs.num }}
+          F004: ${{ steps.f004.outputs.num }}
+          F005: ${{ steps.f005.outputs.num }}
+          F006: ${{ steps.f006.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+          NF003: ${{ steps.nf003.outputs.num }}
+          ADR1: ${{ steps.adr1.outputs.num }}
+          ADR2: ${{ steps.adr2.outputs.num }}
+          ADR3: ${{ steps.adr3.outputs.num }}
+          ADR4: ${{ steps.adr4.outputs.num }}
+          ADR5: ${{ steps.adr5.outputs.num }}
+          ARC: ${{ steps.arc.outputs.num }}
+          SDD: ${{ steps.sdd.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/str-comment.md" \
+            "STR_NUM=${STR_NUM}" \
+            "F001=${F001}" "F002=${F002}" "F003=${F003}" "F004=${F004}" "F005=${F005}" \
+            "F006=${F006}" "NF001=${NF001}" "NF002=${NF002}" "NF003=${NF003}" \
+            "ADR1=${ADR1}" "ADR2=${ADR2}" "ADR3=${ADR3}" "ADR4=${ADR4}" "ADR5=${ADR5}" \
+            "ARC=${ARC}" "SDD=${SDD}"
+          gh issue comment "${STR_NUM}" --body-file /tmp/body.md
+
+      # ==================================================================
+      # WORKFLOW SUMMARY
+      # ==================================================================
+
+      - name: Print summary
+        env:
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          F003: ${{ steps.f003.outputs.num }}
+          F004: ${{ steps.f004.outputs.num }}
+          F005: ${{ steps.f005.outputs.num }}
+          F006: ${{ steps.f006.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+          NF003: ${{ steps.nf003.outputs.num }}
+          ADR1: ${{ steps.adr1.outputs.num }}
+          ADR2: ${{ steps.adr2.outputs.num }}
+          ADR3: ${{ steps.adr3.outputs.num }}
+          ADR4: ${{ steps.adr4.outputs.num }}
+          ADR5: ${{ steps.adr5.outputs.num }}
+          ARC: ${{ steps.arc.outputs.num }}
+          SDD: ${{ steps.sdd.outputs.num }}
+        run: |
+          {
+            echo "### Lifecycle Issues Created"
+            echo ""
+            echo "| Phase | ID | Issue # |"
+            echo "|-------|----|---------|"
+            echo "| Phase 02 | REQ-F-SCHED-001 | #${F001} |"
+            echo "| Phase 02 | REQ-F-SCHED-002 | #${F002} |"
+            echo "| Phase 02 | REQ-F-SCHED-003 | #${F003} |"
+            echo "| Phase 02 | REQ-F-SCHED-004 | #${F004} |"
+            echo "| Phase 02 | REQ-F-SCHED-005 | #${F005} |"
+            echo "| Phase 02 | REQ-F-SCHED-006 | #${F006} |"
+            echo "| Phase 02 | REQ-NF-SCHED-001 | #${NF001} |"
+            echo "| Phase 02 | REQ-NF-SCHED-002 | #${NF002} |"
+            echo "| Phase 02 | REQ-NF-SCHED-003 | #${NF003} |"
+            echo "| Phase 03 | ADR-SCHED-001 | #${ADR1} |"
+            echo "| Phase 03 | ADR-SCHED-002 | #${ADR2} |"
+            echo "| Phase 03 | ADR-SCHED-003 | #${ADR3} |"
+            echo "| Phase 03 | ADR-SCHED-004 | #${ADR4} |"
+            echo "| Phase 03 | ADR-SCHED-005 | #${ADR5} |"
+            echo "| Phase 03 | ARC-C-ASYNC-SCHED | #${ARC} |"
+            echo "| Phase 04 | SDD-ASYNC-SCHED | #${SDD} |"
+          } >> "$GITHUB_STEP_SUMMARY"
