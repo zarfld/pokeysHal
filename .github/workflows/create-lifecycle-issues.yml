@@ -13,16 +13,36 @@ name: "Create Lifecycle Issues (Phase 02-04) for Async Scheduler"
 #   Phase 04  SDD-ASYNC-SCHED        Software Design Description
 #
 # Issues are created in dependency order; sub-issue relationships are
-# registered via the GitHub REST API.
+# registered via the GitHub REST API.  The job is IDEMPOTENT: it checks
+# whether REQ-F-SCHED-001 already exists before doing anything, so it
+# can be safely re-triggered.
 #
-# HOW TO RUN
-# ----------
-#   Actions -> "Create Lifecycle Issues (Phase 02-04) for Async Scheduler"
-#   -> "Run workflow"
+# HOW TO RUN (any of the following):
+# ---------------------------------------------------------------------------
+# 1. Automatically: fires on every push/sync of the PR that contains this
+#    file (same-repo PRs use the head-branch workflow, so it runs before
+#    the PR is merged).
+# 2. Manually from the GitHub UI Actions tab (works after the PR is merged
+#    to the default branch):
+#    Actions -> "Create Lifecycle Issues (Phase 02-04) for Async Scheduler"
+#    -> "Run workflow"
+# 3. Via API / gh CLI:
+#    gh workflow run create-lifecycle-issues.yml \
+#       --ref copilot/optimize-async-scheduler
 # ---------------------------------------------------------------------------
 
 on:
   workflow_dispatch:
+  # Also fire on the PR itself so it runs before the PR is merged.
+  # Same-repo pull_request events use the workflow from the HEAD branch.
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+# Prevent parallel runs from creating duplicate issues.
+concurrency:
+  group: lifecycle-issues-creation
+  cancel-in-progress: false
 
 permissions:
   issues: write
@@ -42,9 +62,30 @@ jobs:
       - uses: actions/checkout@v4
 
       # ------------------------------------------------------------------
+      # IDEMPOTENCY GUARD
+      # Search for the first issue (REQ-F-SCHED-001).  If it already
+      # exists, set skip=true so every subsequent step is a no-op.
+      # ------------------------------------------------------------------
+      - name: "Check if lifecycle issues already exist (idempotency guard)"
+        id: guard
+        run: |
+          COUNT=$(gh issue list \
+            --repo "${REPO}" \
+            --search "REQ-F-SCHED-001 in:title" \
+            --json number --jq 'length')
+          if [ "${COUNT}" -gt "0" ]; then
+            echo "Lifecycle issues already exist (found ${COUNT}). Skipping creation."
+            echo "skip=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "No existing lifecycle issues found. Proceeding with creation."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ------------------------------------------------------------------
       # Ensure all required labels exist (create if absent, update if present)
       # ------------------------------------------------------------------
       - name: "Ensure required labels exist"
+        if: steps.guard.outputs.skip != 'true'
         run: |
           create_label() {
             local name="$1" color="$2" desc="$3"
@@ -69,6 +110,7 @@ jobs:
       # Usage:  subst <file> [KEY=VALUE ...]
       # ------------------------------------------------------------------
       - name: Install subst helper
+        if: steps.guard.outputs.skip != 'true'
         run: |
           cat > /usr/local/bin/subst << 'SCRIPT'
           #!/usr/bin/env python3
@@ -93,6 +135,7 @@ jobs:
       # Helper: add sub-issue link (non-fatal if feature not enabled)
       # ------------------------------------------------------------------
       - name: Install add-sub-issue helper
+        if: steps.guard.outputs.skip != 'true'
         run: |
           cat > /usr/local/bin/add_sub_issue << 'SCRIPT'
           #!/usr/bin/env bash
@@ -107,6 +150,7 @@ jobs:
       # Helper: create issue from body file and echo its number
       # ------------------------------------------------------------------
       - name: Install create-issue helper
+        if: steps.guard.outputs.skip != 'true'
         run: |
           cat > /usr/local/bin/create_issue << 'SCRIPT'
           #!/usr/bin/env bash
@@ -122,6 +166,7 @@ jobs:
       # ==================================================================
 
       - name: "REQ-F-SCHED-001: Task Priority Classification"
+        if: steps.guard.outputs.skip != 'true'
         id: f001
         run: |
           subst "${BODY_DIR}/req-f-sched-001.md" "STR_NUM=${STR_NUM}"
@@ -132,6 +177,7 @@ jobs:
           add_sub_issue "${STR_NUM}" "${NUM}"
 
       - name: "REQ-F-SCHED-002: Load-Based Dynamic Throttling"
+        if: steps.guard.outputs.skip != 'true'
         id: f002
         run: |
           subst "${BODY_DIR}/req-f-sched-002.md" "STR_NUM=${STR_NUM}"
@@ -142,6 +188,7 @@ jobs:
           add_sub_issue "${STR_NUM}" "${NUM}"
 
       - name: "REQ-F-SCHED-003: Prime-Number Stagger Offsets"
+        if: steps.guard.outputs.skip != 'true'
         id: f003
         run: |
           subst "${BODY_DIR}/req-f-sched-003.md" "STR_NUM=${STR_NUM}"
@@ -152,6 +199,7 @@ jobs:
           add_sub_issue "${STR_NUM}" "${NUM}"
 
       - name: "REQ-F-SCHED-004: Dirty-Flag Filtering"
+        if: steps.guard.outputs.skip != 'true'
         id: f004
         run: |
           subst "${BODY_DIR}/req-f-sched-004.md" "STR_NUM=${STR_NUM}"
@@ -162,6 +210,7 @@ jobs:
           add_sub_issue "${STR_NUM}" "${NUM}"
 
       - name: "REQ-F-SCHED-005: Machine-On Configuration Lock"
+        if: steps.guard.outputs.skip != 'true'
         id: f005
         run: |
           subst "${BODY_DIR}/req-f-sched-005.md" "STR_NUM=${STR_NUM}"
@@ -172,6 +221,7 @@ jobs:
           add_sub_issue "${STR_NUM}" "${NUM}"
 
       - name: "REQ-F-SCHED-006: Periodic System Load Monitoring"
+        if: steps.guard.outputs.skip != 'true'
         id: f006
         run: |
           subst "${BODY_DIR}/req-f-sched-006.md" "STR_NUM=${STR_NUM}"
@@ -186,6 +236,7 @@ jobs:
       # ==================================================================
 
       - name: "REQ-NF-SCHED-001: Real-Time Timing Safety"
+        if: steps.guard.outputs.skip != 'true'
         id: nf001
         run: |
           subst "${BODY_DIR}/req-nf-sched-001.md" "STR_NUM=${STR_NUM}"
@@ -196,6 +247,7 @@ jobs:
           add_sub_issue "${STR_NUM}" "${NUM}"
 
       - name: "REQ-NF-SCHED-002: Interface Load Distribution"
+        if: steps.guard.outputs.skip != 'true'
         id: nf002
         run: |
           subst "${BODY_DIR}/req-nf-sched-002.md" "STR_NUM=${STR_NUM}"
@@ -206,6 +258,7 @@ jobs:
           add_sub_issue "${STR_NUM}" "${NUM}"
 
       - name: "REQ-NF-SCHED-003: Safety Signal Latency < 10 ms"
+        if: steps.guard.outputs.skip != 'true'
         id: nf003
         run: |
           subst "${BODY_DIR}/req-nf-sched-003.md" "STR_NUM=${STR_NUM}"
@@ -220,6 +273,7 @@ jobs:
       # ==================================================================
 
       - name: "ADR-SCHED-001: Four-Level Priority Classification"
+        if: steps.guard.outputs.skip != 'true'
         id: adr1
         env:
           F001: ${{ steps.f001.outputs.num }}
@@ -240,6 +294,7 @@ jobs:
           add_sub_issue "${F005}" "${NUM}"
 
       - name: "ADR-SCHED-002: Load Threshold Table"
+        if: steps.guard.outputs.skip != 'true'
         id: adr2
         env:
           F002: ${{ steps.f002.outputs.num }}
@@ -255,6 +310,7 @@ jobs:
           add_sub_issue "${F002}" "${NUM}"
 
       - name: "ADR-SCHED-003: Prime-Number Stagger"
+        if: steps.guard.outputs.skip != 'true'
         id: adr3
         env:
           F003: ${{ steps.f003.outputs.num }}
@@ -268,6 +324,7 @@ jobs:
           add_sub_issue "${F003}" "${NUM}"
 
       - name: "ADR-SCHED-004: Static Dirty-Flag"
+        if: steps.guard.outputs.skip != 'true'
         id: adr4
         env:
           F004: ${{ steps.f004.outputs.num }}
@@ -281,6 +338,7 @@ jobs:
           add_sub_issue "${F004}" "${NUM}"
 
       - name: "ADR-SCHED-005: Machine-On Lock via PulseEngine State"
+        if: steps.guard.outputs.skip != 'true'
         id: adr5
         env:
           F005: ${{ steps.f005.outputs.num }}
@@ -299,6 +357,7 @@ jobs:
       # ==================================================================
 
       - name: "ARC-C-ASYNC-SCHED: Async Task Scheduler Component"
+        if: steps.guard.outputs.skip != 'true'
         id: arc
         env:
           ADR1: ${{ steps.adr1.outputs.num }}
@@ -331,6 +390,7 @@ jobs:
       # ==================================================================
 
       - name: "SDD-ASYNC-SCHED: Software Design Description"
+        if: steps.guard.outputs.skip != 'true'
         id: sdd
         env:
           ADR1: ${{ steps.adr1.outputs.num }}
@@ -363,6 +423,7 @@ jobs:
       # ==================================================================
 
       - name: "Comment on StR #97 with full traceability"
+        if: steps.guard.outputs.skip != 'true'
         env:
           F001: ${{ steps.f001.outputs.num }}
           F002: ${{ steps.f002.outputs.num }}
@@ -394,6 +455,7 @@ jobs:
       # ==================================================================
 
       - name: Print summary
+        if: steps.guard.outputs.skip != 'true'
         env:
           F001: ${{ steps.f001.outputs.num }}
           F002: ${{ steps.f002.outputs.num }}
