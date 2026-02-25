@@ -1076,6 +1076,25 @@ static int __comp_get_data_size(void) { return 0; }
 static int start_async_processing(struct __comp_state *inst);
 static void stop_async_processing(void);
 
+/**
+ * pk_load_monitor_task - async scheduler task for system-load monitoring.
+ *
+ * Reads the last polled CPU-load value from the device structure into the
+ * scheduler, then issues a new async load-status request so the value is
+ * refreshed on the next scheduler cycle.  The task has SCHED_PRIORITY_LOW so
+ * it is automatically throttled away (instead of adding to the problem) when
+ * the interface is already under pressure.
+ */
+static int pk_load_monitor_task(sPoKeysDevice *dev)
+{
+    if (!dev) return 0;
+    /* Feed the last completed response into the scheduler's load variable */
+    if (dev->info.iLoadStatus)
+        scheduler_update_system_load(dev->deviceLoadStatus.CPUload);
+    /* Request a fresh load-status packet from the device */
+    return PK_DeviceLoadStatusAsync(dev);
+}
+
 EXTRA_SETUP() {
     int wait_ms = 5000;
     const char *ini_path = getenv("INI_FILE_NAME");
@@ -1276,6 +1295,12 @@ static void update_device_cache(struct __comp_state *inst) {
         // Mark cache as valid and updated
         device_cache.last_update_time = current_time;
         device_cache.communication_ok = true;
+
+        // Update scheduler machine-on state from PulseEngine state.
+        // A non-zero PulseEngineState indicates the machine is enabled/running;
+        // in that state the scheduler suppresses LOW-priority config tasks to
+        // reserve interface bandwidth for real-time motion data.
+        scheduler_set_machine_on(device_cache.pulse_engine_state > 0);
     }
 }
 
@@ -1296,20 +1321,29 @@ static int start_async_processing(struct __comp_state *inst) {
     // natural update rate.  async_dispatcher() will fire each task when it is
     // due so that FUNCTION(_) and user_mainloop need only call async_dispatcher()
     // rather than driving every subsystem directly every cycle.
-    // We are registering 13 tasks; MAX_ASYNC_TASKS must be >= 13.
-    if (register_async_task(PK_RTCGetAsync,                     inst->dev,   1.0, "rtc")              < 0 ||
-        register_async_task(PK_EncoderValuesGetAsync,           inst->dev, 500.0, "encoders")          < 0 ||
-        register_async_task(PK_DigitalIOGetAsync,               inst->dev, 200.0, "digio_get")         < 0 ||
-        register_async_task(PK_DigitalIOSetGetAsync,            inst->dev, 200.0, "digio_setget")      < 0 ||
-        register_async_task(PK_DigitalIOSetAsync,               inst->dev, 200.0, "digio_set")         < 0 ||
-        register_async_task(PK_PWMUpdateAsync,                  inst->dev, 100.0, "pwm")               < 0 ||
-        register_async_task(PK_AnalogIOGetAsync,                inst->dev, 100.0, "aio")               < 0 ||
-        register_async_task(PK_PoNETGetPoNETStatusAsync,        inst->dev,  10.0, "ponet_status")      < 0 ||
-        register_async_task(PK_PoNETGetModuleStatusAsync,       inst->dev,  10.0, "ponet_mod_status")  < 0 ||
-        register_async_task(PK_PoNETSetModuleStatusAsync,       inst->dev,  10.0, "ponet_mod_set")     < 0 ||
-        register_async_task(PK_PEv2_StatusUpdateHALAsync,       inst->dev, 100.0, "pev2_status")       < 0 ||
-        register_async_task(PK_PEv2_MovePVFromHALAsync,         inst->dev, 500.0, "pev2_movepv")       < 0 ||
-        register_async_task(PK_PEv2_ExternalOutputsFromHALAsync,inst->dev, 100.0, "pev2_extout")       < 0) {
+    //
+    // Priority assignment:
+    //   CRITICAL — position feedback and motion commands (never skipped)
+    //   HIGH     — digital I/O incl. limit/home switches and encoder values
+    //   NORMAL   — secondary sensor polling (analog, PWM)
+    //   LOW      — PoNET and RTC (non-critical; suppressed when machine is on)
+    //
+    // We are registering 14 tasks (13 subsystem + 1 load monitor);
+    // MAX_ASYNC_TASKS must be >= 14.
+    if (register_async_task(PK_RTCGetAsync,                     inst->dev,   1.0, "rtc",             SCHED_PRIORITY_LOW)      < 0 ||
+        register_async_task(PK_EncoderValuesGetAsync,           inst->dev, 500.0, "encoders",         SCHED_PRIORITY_HIGH)     < 0 ||
+        register_async_task(PK_DigitalIOGetAsync,               inst->dev, 200.0, "digio_get",        SCHED_PRIORITY_HIGH)     < 0 ||
+        register_async_task(PK_DigitalIOSetGetAsync,            inst->dev, 200.0, "digio_setget",     SCHED_PRIORITY_HIGH)     < 0 ||
+        register_async_task(PK_DigitalIOSetAsync,               inst->dev, 200.0, "digio_set",        SCHED_PRIORITY_HIGH)     < 0 ||
+        register_async_task(PK_PWMUpdateAsync,                  inst->dev, 100.0, "pwm",              SCHED_PRIORITY_NORMAL)   < 0 ||
+        register_async_task(PK_AnalogIOGetAsync,                inst->dev, 100.0, "aio",              SCHED_PRIORITY_NORMAL)   < 0 ||
+        register_async_task(PK_PoNETGetPoNETStatusAsync,        inst->dev,  10.0, "ponet_status",     SCHED_PRIORITY_LOW)      < 0 ||
+        register_async_task(PK_PoNETGetModuleStatusAsync,       inst->dev,  10.0, "ponet_mod_status", SCHED_PRIORITY_LOW)      < 0 ||
+        register_async_task(PK_PoNETSetModuleStatusAsync,       inst->dev,  10.0, "ponet_mod_set",    SCHED_PRIORITY_LOW)      < 0 ||
+        register_async_task(PK_PEv2_StatusUpdateHALAsync,       inst->dev, 100.0, "pev2_status",      SCHED_PRIORITY_CRITICAL) < 0 ||
+        register_async_task(PK_PEv2_MovePVFromHALAsync,         inst->dev, 500.0, "pev2_movepv",      SCHED_PRIORITY_CRITICAL) < 0 ||
+        register_async_task(PK_PEv2_ExternalOutputsFromHALAsync,inst->dev, 100.0, "pev2_extout",      SCHED_PRIORITY_HIGH)     < 0 ||
+        register_async_task(pk_load_monitor_task,               inst->dev,   5.0, "load_monitor",     SCHED_PRIORITY_LOW)      < 0) {
         rtapi_print_msg(RTAPI_MSG_ERR,
             "PoKeys: register_async_task failed (MAX_ASYNC_TASKS=%d too small?)\n",
             MAX_ASYNC_TASKS);

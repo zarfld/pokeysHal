@@ -521,20 +521,41 @@ void PK_TimeoutAndRetryCheck(sPoKeysDevice *dev, uint64_t timeout_us)
 static periodic_async_task_t async_tasks[MAX_ASYNC_TASKS];
 static size_t async_task_count_internal = 0;
 
-int register_async_task(async_func_t func, sPoKeysDevice *dev, double freq_hz, const char *name)
+/* Device CPU load percentage (0-100) from last PK_CMD_DEVICE_LOAD_STATUS response */
+static uint8_t scheduler_system_load = 0;
+
+/* 1 when LinuxCNC "Machine On" is active; SCHED_PRIORITY_LOW tasks are suppressed */
+static int scheduler_machine_on = 0;
+
+/* Prime-number offsets (nanoseconds) used to stagger task initial fire times.
+ * Distributes the first execution across time so multiple tasks never fire
+ * simultaneously on the first scheduler cycle. */
+static const int64_t prime_offsets_ns[16] = {
+    0LL,         2000000LL,  3000000LL,  5000000LL,
+    7000000LL,  11000000LL, 13000000LL, 17000000LL,
+   19000000LL,  23000000LL, 29000000LL, 31000000LL,
+   37000000LL,  41000000LL, 43000000LL, 47000000LL
+};
+
+int register_async_task(async_func_t func, sPoKeysDevice *dev, double freq_hz, const char *name,
+                        task_priority_t priority)
 {
     if (async_task_count_internal >= MAX_ASYNC_TASKS || freq_hz <= 0.0) return -1;
 
     int64_t now      = rtapi_get_time();
     int64_t interval = (int64_t)(1e9 / freq_hz);
 
+    /* Apply a prime-number stagger to avoid simultaneous first fires across tasks */
+    int64_t offset = prime_offsets_ns[async_task_count_internal & 15];
+
     async_tasks[async_task_count_internal++] = (periodic_async_task_t){
         .func            = func,
         .dev             = dev,
         .interval_ns     = interval,
-        .next_call_time  = now + interval,
+        .next_call_time  = now + interval + offset,
         .name            = name,
-        .active          = 1
+        .active          = 1,
+        .priority        = priority
     };
     return 0;
 }
@@ -547,8 +568,23 @@ int async_dispatcher(void)
 
     for (size_t i = 0; i < async_task_count_internal; ++i) {
         if (!async_tasks[i].active) continue;
-        if (async_tasks[i].next_call_time <= now &&
-            async_tasks[i].next_call_time  < earliest_due) {
+        if (async_tasks[i].next_call_time > now) continue;
+
+        /* Load-based throttling: skip lower-priority tasks when device load is high.
+         * CRITICAL tasks are never skipped.
+         * HIGH tasks are skipped only under extreme load (>95 %).
+         * NORMAL tasks are skipped when load exceeds 80 %.
+         * LOW tasks are skipped already at moderate load (>50 %) and always
+         * suppressed while the machine is on (config-class tasks). */
+        task_priority_t prio = async_tasks[i].priority;
+        if (prio == SCHED_PRIORITY_LOW    && scheduler_system_load >  50) continue;
+        if (prio == SCHED_PRIORITY_NORMAL && scheduler_system_load >  80) continue;
+        if (prio == SCHED_PRIORITY_HIGH   && scheduler_system_load >  95) continue;
+
+        /* Machine-on lock: suppress LOW-priority config tasks while machine is active */
+        if (prio == SCHED_PRIORITY_LOW && scheduler_machine_on) continue;
+
+        if (async_tasks[i].next_call_time < earliest_due) {
             selected_index = i;
             earliest_due   = async_tasks[i].next_call_time;
         }
@@ -586,4 +622,19 @@ void async_task_set_active(const char *name, int active)
 size_t async_task_count(void)
 {
     return async_task_count_internal;
+}
+
+void scheduler_set_machine_on(int machine_on)
+{
+    scheduler_machine_on = (machine_on != 0);
+}
+
+uint8_t scheduler_get_system_load(void)
+{
+    return scheduler_system_load;
+}
+
+void scheduler_update_system_load(uint8_t cpu_load)
+{
+    scheduler_system_load = cpu_load;
 }

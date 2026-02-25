@@ -504,24 +504,43 @@ int export_pev2_pins(const char *prefix, long comp_id, sPoKeysDevice *device);
 
 typedef int (*async_func_t)(sPoKeysDevice *dev);
 
+/**
+ * Task priority levels for the async scheduler.
+ *
+ * CRITICAL: never skipped (position feedback, e-stop, motion commands)
+ * HIGH:     skipped only when device CPU load exceeds 95 %
+ * NORMAL:   skipped when device CPU load exceeds 80 %
+ * LOW:      skipped when device CPU load exceeds 50 %, and always
+ *           suppressed while the machine is active ("Machine On")
+ */
+typedef enum {
+    SCHED_PRIORITY_CRITICAL = 0,
+    SCHED_PRIORITY_HIGH     = 1,
+    SCHED_PRIORITY_NORMAL   = 2,
+    SCHED_PRIORITY_LOW      = 3
+} task_priority_t;
+
 typedef struct {
-    async_func_t  func;
-    sPoKeysDevice *dev;
-    int64_t        interval_ns;
-    int64_t        next_call_time;
-    const char    *name;
-    int            active;
+    async_func_t    func;
+    sPoKeysDevice  *dev;
+    int64_t         interval_ns;
+    int64_t         next_call_time;
+    const char     *name;
+    int             active;
+    task_priority_t priority;  /**< Scheduling priority for load-based throttling */
 } periodic_async_task_t;
 
 /**
  * Register a periodic async send function with the scheduler.
- * @param func     The async send function (signature: int f(sPoKeysDevice*))
- * @param dev      Device handle passed to func on each call
- * @param freq_hz  Desired call frequency in Hz (> 0)
- * @param name     Short unique name for logging / async_task_set_active()
+ * @param func      The async send function (signature: int f(sPoKeysDevice*))
+ * @param dev       Device handle passed to func on each call
+ * @param freq_hz   Desired call frequency in Hz (> 0)
+ * @param name      Short unique name for logging / async_task_set_active()
+ * @param priority  Scheduling priority for load-based throttling
  * @return 0 on success, -1 if the table is full or freq_hz <= 0
  */
-int register_async_task(async_func_t func, sPoKeysDevice *dev, double freq_hz, const char *name);
+int register_async_task(async_func_t func, sPoKeysDevice *dev, double freq_hz,
+                        const char *name, task_priority_t priority);
 
 /**
  * Fire the single most-overdue registered task.
@@ -535,5 +554,26 @@ void async_task_set_active(const char *name, int active);
 
 /** Return the number of registered tasks. */
 size_t async_task_count(void);
+
+/**
+ * Notify the scheduler that the machine is active.
+ * While machine_on != 0, SCHED_PRIORITY_LOW tasks are suppressed to reserve
+ * bandwidth for real-time motion data.
+ */
+void scheduler_set_machine_on(int machine_on);
+
+/**
+ * Return the last observed device CPU load percentage (0–100).
+ * Used by callers that need to display or log the current interface load.
+ */
+uint8_t scheduler_get_system_load(void);
+
+/**
+ * Update the scheduler's cached system load.
+ * Call this from the PK_CMD_DEVICE_LOAD_STATUS response parser (or after
+ * reading dev->deviceLoadStatus.CPUload) so the dispatcher can apply
+ * load-based throttling on the next cycle.
+ */
+void scheduler_update_system_load(uint8_t cpu_load);
 
 #endif // POKEYSLIB_ASYNC_H
