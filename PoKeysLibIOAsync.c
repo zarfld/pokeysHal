@@ -1,6 +1,7 @@
 #include "PoKeysLibHal.h"
 #include "PoKeysLibAsync.h"
 #include "hal_canon.h"
+#include <string.h>
 
 
 int export_IO_pins(const char *prefix, long comp_id, sPoKeysDevice *device)
@@ -423,23 +424,45 @@ int32_t PK_PinConfigurationSetAsync(sPoKeysDevice* device) {
 
 /**
  * @brief Asynchronously sets the digital IO values.
+ *
+ * Implements a dirty-flag optimisation: the 64-byte write command is only
+ * sent to the device when the computed output byte-map actually differs from
+ * the last transmitted value.  This avoids redundant network/USB traffic and
+ * reduces interface load as required by the scheduler design.
  */
 int32_t PK_DigitalIOSetAsync(sPoKeysDevice* device) {
     if (!device) return PK_ERR_NOT_CONNECTED;
 
-    uint8_t dio[56] = {0};
-    uint8_t mask[56] = {0};
+    /* Dirty-flag state — one set of bytes per process (assumes single device).
+     * dio_out_initialized is false on the first call, forcing an unconditional send. */
+    static uint8_t last_dio_out[7]   = {0};
+    static uint8_t last_mask_out[7]  = {0};
+    static int     dio_out_initialized = 0;
+
+    uint8_t dio[7]  = {0};
+    uint8_t mask[7] = {0};
 
     for (uint32_t i = 0; i < device->info.iPinCount && i < 56; i++) {
         if (device->Pins[i].preventUpdate > 0) {
-            mask[i / 8] |= (1 << (i % 8));
+            mask[i / 8] |= (uint8_t)(1u << (i % 8));
         } else if (*(device->Pins[i].DigitalValueSet.out) > 0) {
-            dio[i / 8] |= (1 << (i % 8));
+            dio[i / 8]  |= (uint8_t)(1u << (i % 8));
         }
     }
 
+    /* Skip the send if the output pattern has not changed since the last transmission */
+    if (dio_out_initialized &&
+        memcmp(dio,  last_dio_out,  7) == 0 &&
+        memcmp(mask, last_mask_out, 7) == 0) {
+        return PK_OK;
+    }
+
+    memcpy(last_dio_out,  dio,  7);
+    memcpy(last_mask_out, mask, 7);
+    dio_out_initialized = 1;
+
     for (uint8_t i = 0; i < 7; ++i) {
-        device->request[8 + i] = dio[i];
+        device->request[8  + i] = dio[i];
         device->request[20 + i] = mask[i];
     }
 
