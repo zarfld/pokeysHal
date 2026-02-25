@@ -1,0 +1,534 @@
+name: "Create Lifecycle Issues (Phase 02-04) for PEv2 HAL Interface"
+
+# ---------------------------------------------------------------------------
+# PURPOSE
+# -------
+# Creates the full lifecycle documentation chain for the
+# "HAL Interface: PEv2" feature (Stakeholder Requirement #33):
+#
+#   Phase 02  REQ-F-PEV2-001...008  Functional Requirements
+#             REQ-NF-PEV2-001...003 Non-Functional Requirements
+#   Phase 03  ADR-PEV2-001...005    Architecture Decision Records
+#             ARC-C-PEV2             Architecture Component
+#   Phase 04  SDD-PEV2               Software Design Description
+#
+# Issues are created in dependency order; sub-issue relationships are
+# registered via the GitHub REST API.  The job is IDEMPOTENT: it checks
+# whether REQ-F-PEV2-001 already exists before doing anything, so it
+# can be safely re-triggered.
+#
+# HOW TO RUN (any of the following):
+# ---------------------------------------------------------------------------
+# 1. Automatically: fires on every push/sync of the PR that contains this
+#    file (same-repo PRs use the head-branch workflow, so it runs before
+#    the PR is merged).
+# 2. Manually from the GitHub UI Actions tab (works after the PR is merged
+#    to the default branch):
+#    Actions -> "Create Lifecycle Issues (Phase 02-04) for PEv2 HAL Interface"
+#    -> "Run workflow"
+# 3. Via API / gh CLI:
+#    gh workflow run create-lifecycle-issues-pev2.yml \
+#       --ref copilot/update-hal-interface-pev2
+# ---------------------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+  # Also fire on the PR itself so it runs before the PR is merged.
+  # Same-repo pull_request events use the workflow from the HEAD branch.
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+# Prevent parallel runs from creating duplicate issues.
+concurrency:
+  group: lifecycle-issues-creation-pev2
+  cancel-in-progress: false
+
+permissions:
+  issues: write
+  contents: read
+
+env:
+  STR_NUM: "33"
+  REPO: ${{ github.repository }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  BODY_DIR: ".github/lifecycle-issues/pev2"
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------
+      # IDEMPOTENCY GUARD
+      # Search for the first issue (REQ-F-PEV2-001).  If it already
+      # exists, set skip=true so every subsequent step is a no-op.
+      # ------------------------------------------------------------------
+      - name: "Check if lifecycle issues already exist (idempotency guard)"
+        id: guard
+        run: |
+          COUNT=$(gh issue list \
+            --repo "${REPO}" \
+            --search "REQ-F-PEV2-001 in:title" \
+            --json number --jq 'length')
+          if [ "${COUNT}" -gt "0" ]; then
+            echo "Lifecycle issues already exist (found ${COUNT}). Skipping creation."
+            echo "skip=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "No existing lifecycle issues found. Proceeding with creation."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ------------------------------------------------------------------
+      # Ensure all required labels exist (create if absent, update if present)
+      # ------------------------------------------------------------------
+      - name: "Ensure required labels exist"
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          create_label() {
+            local name="$1" color="$2" desc="$3"
+            gh api "repos/${REPO}/labels" --method POST \
+              -f name="${name}" -f color="${color}" -f description="${desc}" \
+              --silent 2>/dev/null \
+              || gh api "repos/${REPO}/labels/${name}" --method PATCH \
+                   -f color="${color}" -f description="${desc}" \
+                   --silent 2>/dev/null \
+              || true
+          }
+          create_label "functional-requirement"     "0075ca" "Functional requirement (Phase 02)"
+          create_label "non-functional-requirement" "e4e669" "Non-functional requirement (Phase 02)"
+          create_label "architecture-decision"      "d93f0b" "Architecture Decision Record (Phase 03)"
+          create_label "architecture-component"     "0e8a16" "Architecture Component (Phase 03)"
+          create_label "phase-02"                   "c5def5" "Lifecycle Phase 02 - Requirements"
+          create_label "phase-03"                   "bfd4f2" "Lifecycle Phase 03 - Architecture"
+          create_label "phase-04"                   "d4c5f9" "Lifecycle Phase 04 - Design"
+
+      # ------------------------------------------------------------------
+      # Helper: resolve placeholder tokens in a body file -> /tmp/body.md
+      # Usage:  subst <file> [KEY=VALUE ...]
+      # ------------------------------------------------------------------
+      - name: Install subst helper
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          cat > /usr/local/bin/subst << 'SCRIPT'
+          #!/usr/bin/env python3
+          import sys, os
+
+          src   = sys.argv[1]
+          pairs = {}
+          for kv in sys.argv[2:]:
+              k, v = kv.split("=", 1)
+              pairs[k] = v
+
+          text = open(src).read()
+          for k, v in pairs.items():
+              text = text.replace("{{" + k + "}}", v)
+
+          with open("/tmp/body.md", "w") as f:
+              f.write(text)
+          SCRIPT
+          chmod +x /usr/local/bin/subst
+
+      # ------------------------------------------------------------------
+      # Helper: add sub-issue link (non-fatal if feature not enabled)
+      # ------------------------------------------------------------------
+      - name: Install add-sub-issue helper
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          cat > /usr/local/bin/add_sub_issue << 'SCRIPT'
+          #!/usr/bin/env bash
+          parent=$1; child=$2
+          gh api "repos/${REPO}/issues/${parent}/sub_issues" \
+            --method POST --field sub_issue_id="${child}" --silent \
+            || echo "::warning::sub-issue ${parent}<-${child} skipped"
+          SCRIPT
+          chmod +x /usr/local/bin/add_sub_issue
+
+      # ------------------------------------------------------------------
+      # Helper: create issue from body file and echo its number
+      # ------------------------------------------------------------------
+      - name: Install create-issue helper
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          cat > /usr/local/bin/create_issue << 'SCRIPT'
+          #!/usr/bin/env bash
+          title=$1; labels=$2; body_file=$3
+          url=$(gh issue create --title "${title}" --label "${labels}" \
+                  --body-file "${body_file}")
+          echo "${url##*/}"
+          SCRIPT
+          chmod +x /usr/local/bin/create_issue
+
+      # ==================================================================
+      # PHASE 02 - FUNCTIONAL REQUIREMENTS
+      # ==================================================================
+
+      - name: "REQ-F-PEV2-001: Global PEv2 HAL Pin Export"
+        if: steps.guard.outputs.skip != 'true'
+        id: f001
+        run: |
+          subst "${BODY_DIR}/req-f-pev2-001.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-PEV2-001: Global PEv2 HAL Pin Export" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-PEV2-002: Per-Axis PEv2 HAL Pin Export"
+        if: steps.guard.outputs.skip != 'true'
+        id: f002
+        run: |
+          subst "${BODY_DIR}/req-f-pev2-002.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-PEV2-002: Per-Axis PEv2 HAL Pin Export" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-PEV2-003: Conditional Pin Creation for Enabled Axes"
+        if: steps.guard.outputs.skip != 'true'
+        id: f003
+        run: |
+          subst "${BODY_DIR}/req-f-pev2-003.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-PEV2-003: Conditional Pin Creation - Only for Required and Enabled Axes" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-PEV2-004: Input Pin Update from PoKeysLib Pointers"
+        if: steps.guard.outputs.skip != 'true'
+        id: f004
+        run: |
+          subst "${BODY_DIR}/req-f-pev2-004.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-PEV2-004: Input Pin Update - HAL Input Pins Written to PoKeysLib Pointers" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-PEV2-005: Output Pin Update from PoKeysLib Pointers"
+        if: steps.guard.outputs.skip != 'true'
+        id: f005
+        run: |
+          subst "${BODY_DIR}/req-f-pev2-005.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-PEV2-005: Output Pin Update - PoKeysLib Pointers Written to HAL Output Pins" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-PEV2-006: Bitmapped Field Decomposition"
+        if: steps.guard.outputs.skip != 'true'
+        id: f006
+        run: |
+          subst "${BODY_DIR}/req-f-pev2-006.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-PEV2-006: Bitmapped Field Decomposition into Individual HAL Pins" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-PEV2-007: HAL Parameter Export"
+        if: steps.guard.outputs.skip != 'true'
+        id: f007
+        run: |
+          subst "${BODY_DIR}/req-f-pev2-007.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-PEV2-007: HAL Parameter Export for Pin Assignments and Invert Flags" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-F-PEV2-008: PoKeysLib Function Call Sequence"
+        if: steps.guard.outputs.skip != 'true'
+        id: f008
+        run: |
+          subst "${BODY_DIR}/req-f-pev2-008.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-F-PEV2-008: PoKeysLib Async Function Call Sequence for PEv2" \
+            "functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      # ==================================================================
+      # PHASE 02 - NON-FUNCTIONAL REQUIREMENTS
+      # ==================================================================
+
+      - name: "REQ-NF-PEV2-001: Real-Time Safety"
+        if: steps.guard.outputs.skip != 'true'
+        id: nf001
+        run: |
+          subst "${BODY_DIR}/req-nf-pev2-001.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-NF-PEV2-001: Real-Time Safety - No Blocking Calls in PEv2 RT Path" \
+            "non-functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-NF-PEV2-002: Interface Completeness"
+        if: steps.guard.outputs.skip != 'true'
+        id: nf002
+        run: |
+          subst "${BODY_DIR}/req-nf-pev2-002.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-NF-PEV2-002: Interface Completeness - 100% of Specified PEv2 Pins Present" \
+            "non-functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      - name: "REQ-NF-PEV2-003: Correct Enumeration Usage"
+        if: steps.guard.outputs.skip != 'true'
+        id: nf003
+        run: |
+          subst "${BODY_DIR}/req-nf-pev2-003.md" "STR_NUM=${STR_NUM}"
+          NUM=$(create_issue \
+            "REQ-NF-PEV2-003: Correct Enumeration Usage - No Magic Numbers in Bitmask Operations" \
+            "non-functional-requirement,phase-02" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${STR_NUM}" "${NUM}"
+
+      # ==================================================================
+      # PHASE 03 - ARCHITECTURE DECISION RECORDS
+      # ==================================================================
+
+      - name: "ADR-PEV2-001: HAL Pin Naming Convention"
+        if: steps.guard.outputs.skip != 'true'
+        id: adr1
+        env:
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/adr-pev2-001.md" \
+            "F001=${F001}" "F002=${F002}" "NF002=${NF002}"
+          NUM=$(create_issue \
+            "ADR-PEV2-001: HAL Pin Naming Convention for PEv2 Interface" \
+            "architecture-decision,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${F001}" "${NUM}"
+          add_sub_issue "${F002}" "${NUM}"
+
+      - name: "ADR-PEV2-002: Axis-Conditional Pin Creation"
+        if: steps.guard.outputs.skip != 'true'
+        id: adr2
+        env:
+          F003: ${{ steps.f003.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/adr-pev2-002.md" "F003=${F003}" "NF002=${NF002}"
+          NUM=$(create_issue \
+            "ADR-PEV2-002: Axis-Conditional Pin Creation Based on nrOfAxes" \
+            "architecture-decision,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${F003}" "${NUM}"
+
+      - name: "ADR-PEV2-003: Bitmapped-to-HAL-Pin Decomposition"
+        if: steps.guard.outputs.skip != 'true'
+        id: adr3
+        env:
+          F006: ${{ steps.f006.outputs.num }}
+          NF003: ${{ steps.nf003.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/adr-pev2-003.md" "F006=${F006}" "NF003=${NF003}"
+          NUM=$(create_issue \
+            "ADR-PEV2-003: Bitmapped-to-HAL-Pin Decomposition Strategy" \
+            "architecture-decision,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${F006}" "${NUM}"
+
+      - name: "ADR-PEV2-004: Read/Write Phase Separation"
+        if: steps.guard.outputs.skip != 'true'
+        id: adr4
+        env:
+          F004: ${{ steps.f004.outputs.num }}
+          F005: ${{ steps.f005.outputs.num }}
+          F008: ${{ steps.f008.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/adr-pev2-004.md" \
+            "F004=${F004}" "F005=${F005}" "F008=${F008}" "NF001=${NF001}"
+          NUM=$(create_issue \
+            "ADR-PEV2-004: Read/Write Phase Separation in PEv2 Servo Cycle" \
+            "architecture-decision,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${F004}" "${NUM}"
+          add_sub_issue "${F005}" "${NUM}"
+          add_sub_issue "${F008}" "${NUM}"
+
+      - name: "ADR-PEV2-005: Global vs Per-Axis Struct Organisation"
+        if: steps.guard.outputs.skip != 'true'
+        id: adr5
+        env:
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          F007: ${{ steps.f007.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/adr-pev2-005.md" \
+            "F001=${F001}" "F002=${F002}" "F007=${F007}"
+          NUM=$(create_issue \
+            "ADR-PEV2-005: sPoKeysHalPEv2 Global vs Per-Axis Struct Organisation" \
+            "architecture-decision,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${F001}" "${NUM}"
+          add_sub_issue "${F002}" "${NUM}"
+          add_sub_issue "${F007}" "${NUM}"
+
+      # ==================================================================
+      # PHASE 03 - ARCHITECTURE COMPONENT
+      # ==================================================================
+
+      - name: "ARC-C-PEV2: PulseEngine v2 HAL Interface Component"
+        if: steps.guard.outputs.skip != 'true'
+        id: arc
+        env:
+          ADR1: ${{ steps.adr1.outputs.num }}
+          ADR2: ${{ steps.adr2.outputs.num }}
+          ADR3: ${{ steps.adr3.outputs.num }}
+          ADR4: ${{ steps.adr4.outputs.num }}
+          ADR5: ${{ steps.adr5.outputs.num }}
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          F003: ${{ steps.f003.outputs.num }}
+          F004: ${{ steps.f004.outputs.num }}
+          F005: ${{ steps.f005.outputs.num }}
+          F006: ${{ steps.f006.outputs.num }}
+          F007: ${{ steps.f007.outputs.num }}
+          F008: ${{ steps.f008.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+          NF003: ${{ steps.nf003.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/arc-c-pev2.md" \
+            "ADR1=${ADR1}" "ADR2=${ADR2}" "ADR3=${ADR3}" "ADR4=${ADR4}" "ADR5=${ADR5}" \
+            "F001=${F001}" "F002=${F002}" "F003=${F003}" "F004=${F004}" "F005=${F005}" \
+            "F006=${F006}" "F007=${F007}" "F008=${F008}" \
+            "NF001=${NF001}" "NF002=${NF002}" "NF003=${NF003}"
+          NUM=$(create_issue \
+            "ARC-C-PEV2: PulseEngine v2 HAL Interface Component" \
+            "architecture-component,phase-03" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${ADR1}" "${NUM}"
+
+      # ==================================================================
+      # PHASE 04 - SOFTWARE DESIGN DESCRIPTION
+      # ==================================================================
+
+      - name: "SDD-PEV2: Software Design Description"
+        if: steps.guard.outputs.skip != 'true'
+        id: sdd
+        env:
+          ADR1: ${{ steps.adr1.outputs.num }}
+          ADR2: ${{ steps.adr2.outputs.num }}
+          ADR3: ${{ steps.adr3.outputs.num }}
+          ADR4: ${{ steps.adr4.outputs.num }}
+          ADR5: ${{ steps.adr5.outputs.num }}
+          ARC: ${{ steps.arc.outputs.num }}
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          F003: ${{ steps.f003.outputs.num }}
+          F004: ${{ steps.f004.outputs.num }}
+          F005: ${{ steps.f005.outputs.num }}
+          F006: ${{ steps.f006.outputs.num }}
+          F007: ${{ steps.f007.outputs.num }}
+          F008: ${{ steps.f008.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/sdd-pev2.md" \
+            "ADR1=${ADR1}" "ADR2=${ADR2}" "ADR3=${ADR3}" "ADR4=${ADR4}" "ADR5=${ADR5}" \
+            "ARC=${ARC}" \
+            "F001=${F001}" "F002=${F002}" "F003=${F003}" "F004=${F004}" "F005=${F005}" \
+            "F006=${F006}" "F007=${F007}" "F008=${F008}" "NF001=${NF001}"
+          NUM=$(create_issue \
+            "SDD-PEV2: Software Design Description - PulseEngine v2 HAL Interface" \
+            "phase-04" "/tmp/body.md")
+          echo "num=${NUM}" >> "$GITHUB_OUTPUT"
+          add_sub_issue "${ARC}" "${NUM}"
+
+      # ==================================================================
+      # BACK-REFERENCE - add traceability comment to StR #33
+      # ==================================================================
+
+      - name: "Comment on StR #33 with full traceability"
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          F003: ${{ steps.f003.outputs.num }}
+          F004: ${{ steps.f004.outputs.num }}
+          F005: ${{ steps.f005.outputs.num }}
+          F006: ${{ steps.f006.outputs.num }}
+          F007: ${{ steps.f007.outputs.num }}
+          F008: ${{ steps.f008.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+          NF003: ${{ steps.nf003.outputs.num }}
+          ADR1: ${{ steps.adr1.outputs.num }}
+          ADR2: ${{ steps.adr2.outputs.num }}
+          ADR3: ${{ steps.adr3.outputs.num }}
+          ADR4: ${{ steps.adr4.outputs.num }}
+          ADR5: ${{ steps.adr5.outputs.num }}
+          ARC: ${{ steps.arc.outputs.num }}
+          SDD: ${{ steps.sdd.outputs.num }}
+        run: |
+          subst "${BODY_DIR}/str-comment-pev2.md" \
+            "STR_NUM=${STR_NUM}" \
+            "F001=${F001}" "F002=${F002}" "F003=${F003}" "F004=${F004}" "F005=${F005}" \
+            "F006=${F006}" "F007=${F007}" "F008=${F008}" \
+            "NF001=${NF001}" "NF002=${NF002}" "NF003=${NF003}" \
+            "ADR1=${ADR1}" "ADR2=${ADR2}" "ADR3=${ADR3}" "ADR4=${ADR4}" "ADR5=${ADR5}" \
+            "ARC=${ARC}" "SDD=${SDD}"
+          gh issue comment "${STR_NUM}" --body-file /tmp/body.md
+
+      # ==================================================================
+      # WORKFLOW SUMMARY
+      # ==================================================================
+
+      - name: Print summary
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          F001: ${{ steps.f001.outputs.num }}
+          F002: ${{ steps.f002.outputs.num }}
+          F003: ${{ steps.f003.outputs.num }}
+          F004: ${{ steps.f004.outputs.num }}
+          F005: ${{ steps.f005.outputs.num }}
+          F006: ${{ steps.f006.outputs.num }}
+          F007: ${{ steps.f007.outputs.num }}
+          F008: ${{ steps.f008.outputs.num }}
+          NF001: ${{ steps.nf001.outputs.num }}
+          NF002: ${{ steps.nf002.outputs.num }}
+          NF003: ${{ steps.nf003.outputs.num }}
+          ADR1: ${{ steps.adr1.outputs.num }}
+          ADR2: ${{ steps.adr2.outputs.num }}
+          ADR3: ${{ steps.adr3.outputs.num }}
+          ADR4: ${{ steps.adr4.outputs.num }}
+          ADR5: ${{ steps.adr5.outputs.num }}
+          ARC: ${{ steps.arc.outputs.num }}
+          SDD: ${{ steps.sdd.outputs.num }}
+        run: |
+          {
+            echo "### Lifecycle Issues Created — PEv2 HAL Interface"
+            echo ""
+            echo "| Phase | ID | Issue # |"
+            echo "|-------|----|---------|"
+            echo "| Phase 02 | REQ-F-PEV2-001 | #${F001} |"
+            echo "| Phase 02 | REQ-F-PEV2-002 | #${F002} |"
+            echo "| Phase 02 | REQ-F-PEV2-003 | #${F003} |"
+            echo "| Phase 02 | REQ-F-PEV2-004 | #${F004} |"
+            echo "| Phase 02 | REQ-F-PEV2-005 | #${F005} |"
+            echo "| Phase 02 | REQ-F-PEV2-006 | #${F006} |"
+            echo "| Phase 02 | REQ-F-PEV2-007 | #${F007} |"
+            echo "| Phase 02 | REQ-F-PEV2-008 | #${F008} |"
+            echo "| Phase 02 | REQ-NF-PEV2-001 | #${NF001} |"
+            echo "| Phase 02 | REQ-NF-PEV2-002 | #${NF002} |"
+            echo "| Phase 02 | REQ-NF-PEV2-003 | #${NF003} |"
+            echo "| Phase 03 | ADR-PEV2-001 | #${ADR1} |"
+            echo "| Phase 03 | ADR-PEV2-002 | #${ADR2} |"
+            echo "| Phase 03 | ADR-PEV2-003 | #${ADR3} |"
+            echo "| Phase 03 | ADR-PEV2-004 | #${ADR4} |"
+            echo "| Phase 03 | ADR-PEV2-005 | #${ADR5} |"
+            echo "| Phase 03 | ARC-C-PEV2 | #${ARC} |"
+            echo "| Phase 04 | SDD-PEV2 | #${SDD} |"
+          } >> "$GITHUB_STEP_SUMMARY"
