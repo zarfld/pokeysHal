@@ -37,7 +37,8 @@ add_library(PoKeys SHARED
              PoKeysLibFailsafeAsync.c
              PoKeysLibUART.c
              PoKeysLibWS2812.c
-             PoKeysLibWS2812Async.c)
+             PoKeysLibWS2812Async.c
+             PoKeysLibDeviceStatusAsync.c)
 
 install(FILES PoKeysLib.h DESTINATION include)
 install(TARGETS PoKeys DESTINATION lib)
