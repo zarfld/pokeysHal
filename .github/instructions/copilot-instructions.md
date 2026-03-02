@@ -43,7 +43,10 @@ Each file has a strict role. Violations must be corrected and tracked as GitHub 
 - All RT code must use async APIs (e.g., `PK_*Async`), avoid blocking, and only allocate memory before thread start with `hal_malloc`.
 - Use `#ifdef RTAPI` for RT-specific code sections.
 - Logging in RT code must use `rtapi_print_msg`.
-- Protocol implementation must match `PoKeys - protocol specification.pdf`.
+- Protocol implementation must match `PoKeys - protocol specification.pdf`. Use Markitdown MCP server to read and verify protocol details.
+- **No magic numbers**: All command codes must use `pokeys_command_t` enum, all bit masks must be named constants in `PoKeysLibAsync.h`.
+- **HAL pin exports**: Use standardized error handling pattern (see `.github/skills/ConvertToHalRtapi/`).
+- **Async conversions**: Follow `.github/skills/ConvertToHalRtapi/skill.md` for converting synchronous subsystems to async RT-capable implementations.
 - Feature parity between RT and userspace code is required; extend userspace code as needed.
 - Use "ToDo" comments and maintain `docs/Todo.md` for ongoing work. Track open/in-work/closed tasks in `docs/open`, `docs/in-work`, and `docs/closed`.
 
@@ -57,6 +60,40 @@ Each file has a strict role. Violations must be corrected and tracked as GitHub 
 - See `experimental/pokeys_async.c` and `pokeys_async2.c` for async RT code patterns.
 - See `Pokeys Async Overview.md` for mailbox, send/receive, and timeout logic.
 - See `README.md` for architecture, flowcharts, and key features.
+
+### Skills and Guides
+
+#### ConvertToHalRtapi Skill
+For converting synchronous PoKeysLib subsystems to asynchronous RT-capable HAL implementations:
+
+- **Skill Definition**: `.github/skills/ConvertToHalRtapi/skill.md`
+  - Structured step-by-step conversion process
+  - Protocol verification workflow using Markitdown MCP server
+  - HAL pin export patterns with error handling
+  - Real-time safety constraints and quality checklist
+  
+- **Detailed Patterns**: `.github/skills/ConvertToHalRtapi/tasks`
+  - Complete before/after code examples
+  - Named constant definitions (no magic numbers)
+  - Parse callback implementation patterns
+  - Testing procedures (userspace → RT)
+  
+- **Quick Start**: `.github/skills/ConvertToHalRtapi/README.md`
+  - Overview and navigation guide
+  - Common conversion patterns
+  - Status of subsystem conversions
+
+**Key Principles from Skill**:
+1. ✅ **Protocol Verified** - Always cross-check with `PoKeys - protocol specification.pdf` using Markitdown MCP server
+2. ✅ **No Magic Numbers** - All command codes, bit masks, and byte offsets must be named constants in `PoKeysLibAsync.h`
+3. ✅ **HAL Pin Pattern** - Every pin/parameter export follows standardized error handling pattern
+4. ✅ **RT Safe** - No blocking, no allocation, bounded execution
+5. ✅ **Self-Documenting** - Named constants from `pokeys_command_t` enum, clear structure
+
+**Usage with AI Agents**:
+```
+@workspace Using the ConvertToHalRtapi skill, convert PoKeysLib<Subsystem>.c to async operation
+```
 
 ### Task Specification
 - Use docstrings and comments to clarify intent, constraints, and completion criteria.
