@@ -9,6 +9,8 @@ This document provides an overview of the organized documentation structure for 
 ### 📋 **Main Documents**
 - [`Todo.md`](Todo.md) - Current project status and task list
 - [`README.md`](../README.md) - Project overview and setup instructions
+- [`repo_review.md`](repo_review.md) - Repository structure, architecture, and compliance review
+- [`tasks/philosophy_expl.md`](tasks/philosophy_expl.md) - Development philosophy (XP, TDD, DDD, IEEE standards)
 
 ### 🎯 **Task Management** (`tasks/`)
 
@@ -29,6 +31,9 @@ This document provides an overview of the organized documentation structure for 
 
 #### 📋 **Planned Tasks** (`tasks/planned/`)
 - [`LinuxCNC_Integration_Testing.md`](tasks/planned/LinuxCNC_Integration_Testing.md) - Integration testing plan (Next priority)
+
+#### 📖 **Reference** (`tasks/`)
+- [`philosophy_expl.md`](tasks/philosophy_expl.md) - Development philosophy: XP practices, TDD, DDD, IEEE/ISO standards rationale
 
 #### 📚 **Archive** (`tasks/archive/`)
 - Historical tasks and deprecated documentation

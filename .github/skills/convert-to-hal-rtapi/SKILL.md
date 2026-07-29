@@ -1,3 +1,12 @@
+---
+name: convert-to-hal-rtapi
+description: >
+  Convert a synchronous PoKeysLib subsystem into a non-blocking, LinuxCNC
+  RT-capable async HAL implementation. Use when creating or modifying
+  PoKeysLib*Async.c subsystem implementations, adding HAL pin exports, or
+  verifying PoKeys protocol compliance for async conversions.
+---
+
 # Convert PoKeysLib Subsystem to RT-Capable Async HAL Implementation
 
 ## Description

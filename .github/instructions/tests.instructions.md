@@ -1,13 +1,6 @@
 ---
 description: "Test-specific instructions for maintaining requirement traceability via GitHub Issues"
-applyTo: 
-  - "**/tests/**"
-  - "**/*.test.js"
-  - "**/*.test.ts"
-  - "**/*.test.py"
-  - "**/*.spec.js"
-  - "**/*.spec.ts"
-  - "**/*.spec.py"
+applyTo: "**/tests/**,**/*.test.js,**/*.test.ts,**/*.test.py,**/*.spec.js,**/*.spec.ts,**/*.spec.py,**/test_*.c,**/*_test.c,test_compile.sh"
   - "**/test_*.py"
 ---
 

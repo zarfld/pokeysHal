@@ -1,10 +1,6 @@
 ---
 description: "Architecture enforcement rules for the PoKeysHal project. Defines the role, responsibilities, and constraints for each key file and module. Applies to all C and header source files."
-applyTo:
-  - "**/*.c"
-  - "**/*.h"
-  - "experimental/*.c"
-  - "experimental/*.h"
+applyTo: "**/*.c,**/*.h,experimental/*.c,experimental/*.h"
 ---
 
 # PoKeysHal Architecture Reference & Enforcement Rules

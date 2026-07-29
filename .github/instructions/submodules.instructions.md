@@ -1,6 +1,6 @@
 ---
 description: "Guidance for working with Git submodules and external nested repositories. Aligns with XP practices (Continuous Integration, Collective Ownership) and modular architecture (high cohesion, low coupling)."
-applyTo: "**"
+applyTo: ".gitmodules,pokeyslib/**,hal-canon/**"
 ---
 
 # Submodules and External Modules: Standards-Compliant Guidance
