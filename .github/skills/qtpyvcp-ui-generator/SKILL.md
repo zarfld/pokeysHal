@@ -1,3 +1,12 @@
+---
+name: qtpyvcp-ui-generator
+description: >
+  Generate complete QtPyVCP user interface artifacts (.ui XML, Python module,
+  YAML config, optional .qss) from natural-language specifications without
+  Qt Designer. Use when building LinuxCNC machine control interfaces with the
+  QtPyVCP framework.
+---
+
 # Copilot Skill: LinuxCNC QtPyVCP UI Generator (No Qt Designer)
 
 ## Skill Identity

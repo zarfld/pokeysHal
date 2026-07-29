@@ -1,234 +1,290 @@
-# Development Philosophy — PoKeysLibHal
+Yes. My earlier recommendation to move most of this philosophy into ordinary documentation was too broad.
 
-**Document type:** Project Philosophy & Engineering Standards  
-**Applies to:** All contributors to `pokeysHal`  
-**Related files:** [`.github/copilot-instructions.md`](../../.github/copilot-instructions.md), [`.github/instructions/submodules.instructions.md`](../../.github/instructions/submodules.instructions.md)
+The **rationale and generic examples** can move out of permanent context, but the **operational consequences must remain always loaded**. These principles were introduced to prevent recurring agent failure modes, so reducing them to a vague sentence such as “report assumptions honestly” would remove an important safeguard.
 
----
+The current text is already detailed, but much of that detail is generic: cache warm-up, circuit breakers, user-interface misuse, authentication, secrets and production on-call responsibilities.    It explains the philosophies, but does not consistently tell an agent what files to inspect, which PoKeys shortcuts are prohibited, what evidence is required, or when it must stop.
 
-## 1. Introduction
+## Better allocation
 
-This document explains the **development philosophy** adopted for the `pokeysHal` project. It answers the question: *Why do we work this way?* Understanding the philosophy helps every contributor make consistent decisions even in situations not explicitly covered by rules or instructions.
+| Content                                        | Destination                      |
+| ---------------------------------------------- | -------------------------------- |
+| Repository-specific mandatory behavior         | Always-loaded root instructions  |
+| C/RT-specific prohibitions                     | `c-realtime.instructions.md`     |
+| Detailed conversion/testing procedure          | Skills                           |
+| Historical motivation and extended explanation | `docs/engineering-discipline.md` |
+| Detectable violations                          | CI scripts and static checks     |
 
-The philosophy rests on three pillars:
+The permanent instructions should act as an **engineering contract**, not as an inspirational manifesto.
 
-1. **Empirical engineering** — replace speculation with measurement and tests
-2. **Standards-compliant process** — follow IEEE/ISO/IEC standards as a structure, not a bureaucracy
-3. **Extreme Programming (XP) values** — keep feedback loops short, design simply, communicate honestly
+## Proposed replacement section
 
----
+## Repository Engineering Discipline
 
-## 2. Why These Practices Matter for a Real-Time Driver
+These rules exist because superficially successful changes—code that compiles, looks plausible, or satisfies only the happy path—have previously caused architectural violations, incomplete implementations, regressions, and poor real-time behavior.
 
-PoKeysLibHal is not a typical application. It is a **hard real-time HAL driver** for industrial CNC use. Failures are not gracefully degraded — they can damage machines, tooling, or people. This context raises the cost of every undiscovered defect and mandates:
+They are mandatory for all repository work. They do not authorize overengineering. They require the agent to perform the essential engineering work for the requested change and to provide evidence for its claims.
 
-- **Temporal correctness**: Deadlines are part of correctness, not a nice-to-have. Missing a 1 ms RT cycle is a functional defect.
-- **No speculation**: "I think this will work" is not acceptable. Proof through testing is required.
-- **Deterministic execution**: No unbounded loops, no dynamic allocation, no blocking calls in RT paths.
-- **Conservative design**: YAGNI (You Aren't Gonna Need It) is a safety principle here — speculative complexity creates RT unpredictability.
+### 1. Understand Before Modifying
 
----
+Before changing code, the agent must establish the applicable contract from the repository.
 
-## 3. Core Values
+For a behavior change, inspect the relevant sources in this order:
 
-### 3.1 Courage
+1. The linked GitHub issue, requirement, acceptance criteria, or explicit user request.
+2. Existing architecture and file-responsibility instructions.
+3. The current implementation and its callers.
+4. The corresponding synchronous `PoKeysLib<Subsystem>.c` reference implementation, where applicable.
+5. The PoKeys protocol specification for command codes, byte layouts, masks, limits, and response semantics.
+6. Existing async subsystem implementations that demonstrate the repository’s current pattern.
+7. Existing tests, build workflows, and known limitations.
 
-- Deliver unpleasant truths immediately (e.g., "the `motmod` issue prevents full LinuxCNC startup").
-- Report bad news early rather than hiding it — stakeholders have the right to know.
-- Provide **options** (not excuses) when reporting problems.
-- Separate **estimates** from **promises**: a timeline is an estimate; truth is the only promise.
+Do not infer protocol behavior from function names, comments, nearby commands, or apparently similar subsystems.
 
-### 3.2 Feedback
+Do not silently choose between contradictory sources. Identify the conflict and determine which source is authoritative before implementing affected behavior.
 
-- Seek feedback in **minutes or hours**, not weeks.
-- Working software is the primary measure of progress — "90% done" without working code is not progress.
-- The TDD Red-Green-Refactor cycle should complete in under 10 minutes.
-- CI must stay green; a broken build is fixed before any other work continues.
+First resolve questions by inspecting available repository sources. Ask the user only when a material ambiguity remains and different interpretations would change external behavior, protocol handling, HAL interfaces, safety, or real-time characteristics.
 
-### 3.3 Communication
+### 2. Establish a Baseline
 
-- Make status visible at a glance (checklist-based `Todo.md`, completed/in-work/planned task structure).
-- Document decisions with rationale (ADRs); future contributors deserve to understand *why*, not just *what*.
-- Use the ubiquitous language of the domain consistently: HAL pins, RT threads, mailbox, subsystem — always spelled the same way.
+Before modifying behavior:
 
-### 3.4 Simplicity
+* Run the narrowest relevant existing build or test.
+* Record whether the baseline passes or fails.
+* Separate pre-existing failures from failures introduced by the change.
+* Do not describe an untested repository state as working.
+* Do not weaken, delete, skip, or mark a failing check as non-fatal merely to obtain a green result.
 
-- Build only what is needed today. Speculative features add code surface area and RT unpredictability.
-- Simple design passes all tests, reveals intention clearly, contains no duplication, and uses the minimum number of classes and functions.
-- If a design feels like "walking uphill", stop — that instinct signals a design problem worth fixing now.
+When hardware, LinuxCNC, the real-time kernel, or another required environment is unavailable, state exactly which verification could not be executed. Do not substitute compilation for hardware or timing validation.
 
-### 3.5 Respect
+### 3. Make the Smallest Complete Change
 
-- Problems are team problems, not individual failures.
-- Psychological safety allows honest status reporting.
-- Collective ownership: any contributor can improve any part of the codebase.
+Implement the smallest coherent change that satisfies the requested behavior.
 
----
+A small change is not an incomplete change. It must still include all required:
 
-## 4. Test-Driven Development (TDD)
+* production behavior;
+* error handling;
+* state transitions;
+* protocol parsing;
+* HAL exports;
+* declarations and build integration;
+* tests or reproducible verification;
+* documentation updates;
+* traceability references.
 
-**Absolute rule**: write a failing test *before* writing production code.
+Do not broaden the task into unrelated cleanup, repository restructuring, generic framework creation, or speculative future support.
 
-```
-Red   → Write a test that fails (proves the feature does not yet exist)
-Green → Write the minimum code to pass the test
-Refactor → Improve design while keeping all tests green
-```
+Do not perform a large rewrite when a localized correction is sufficient.
 
-### Why TDD matters here
+Do not create parallel implementations such as `new`, `old`, `fixed`, `v2`, or `refactored` variants when the existing implementation should be corrected.
 
-- RT code is difficult to debug after the fact — tests catch defects before they enter the RT path.
-- TDD forces the developer to think about the interface before the implementation, producing cleaner APIs.
-- Each test is a permanent specification; they document intent as reliably as comments but are always up to date.
+### 4. No Fake Completion
 
-### Current test gaps
+The following do not constitute a completed implementation:
 
-Unit tests for the async infrastructure (`CreateRequestAsync`, `SendRequestAsync`, `PK_ReceiveAndDispatch`) are identified as technical debt. These functions are central to correctness — adding TDD coverage for them is a high-priority goal.
+* a stub returning success;
+* a placeholder body;
+* a TODO standing in for required behavior;
+* hardcoded sample values;
+* simulated device responses in production code;
+* a parser that accepts data without validating it;
+* a function that compiles but is never registered or called;
+* a HAL pin that is exported but never updated;
+* a send function without its corresponding response handling;
+* a test that cannot fail;
+* a test that only checks compilation;
+* a test changed to match incorrect implementation behavior;
+* commented-out failing code or tests;
+* a workflow changed to ignore failures;
+* documentation claiming behavior that has not been implemented and verified.
 
----
+A TODO is permitted only for explicitly out-of-scope future work. It must not conceal incomplete acceptance criteria and should reference a tracked issue where appropriate.
 
-## 5. Standards as Structure, Not Bureaucracy
+### 5. Preserve the PoKeysHal Architecture
 
-Standards are adopted because they encode hard-won lessons from the engineering community, not because compliance is an end in itself.
+Maintain the repository’s defined responsibilities.
 
-| Standard | Why it is used |
-|----------|----------------|
-| **ISO/IEC/IEEE 12207:2017** | Provides lifecycle phases (requirements → architecture → design → implementation → integration → V&V → transition → maintenance) as a navigational structure, not a waterfall |
-| **ISO/IEC/IEEE 29148:2018** | Ensures requirements are complete, unambiguous, and traceable to code and tests |
-| **ISO/IEC/IEEE 42010:2011** | Architecture description as viewpoints + concerns = clear, communicable structure |
-| **IEEE 1016-2009** | Design descriptions at the right level of detail for the implementation team |
-| **IEEE 1012-2016** | V&V planning ensures testing is systematic, not ad-hoc |
-| **IEC 61508** | Safety-critical implementation patterns (no RT blocking, no dynamic allocation, deterministic execution) |
+* `PoKeysLibAsync.c` contains shared asynchronous transport, mailbox, dispatch, timeout, and retry infrastructure only.
+* `PoKeysLib**Async.c` files contain subsystem-specific request creation, response parsing, HAL export, and optional scheduler registration.
+* `experimental/pokeys_async.c` remains an integration shell and must not absorb subsystem implementations.
+* `PoKeysLibHal.h` contains HAL-compatible data structures.
+* `PoKeysLibAsync.h` contains shared asynchronous declarations, protocol enums, masks, offsets, and contracts.
+* Canonical digital, analog, and encoder channels use the `hal-canon` interfaces.
 
-The lifecycle phases (01 through 09) provide orientation:
+Do not solve a local problem by violating these boundaries.
 
-```
-Phase 01: Stakeholder requirements (what do users need?)
-Phase 02: System requirements (what must the system do?)
-Phase 03: Architecture (how are the major pieces structured?)
-Phase 04: Detailed design (how does each component work?)
-Phase 05: Implementation (TDD: Red-Green-Refactor)
-Phase 06: Integration (continuous integration, adapter tests)
-Phase 07: V&V (test against requirements, acceptance criteria)
-Phase 08: Transition (deployment, user documentation)
-Phase 09: Operation & Maintenance (monitor, fix, improve)
-```
+When the existing code already violates a boundary, do not copy the violation into new code. Contain the requested change, report the existing violation, and correct it when it is necessary for the requested work.
 
-Most active work on this project is in phases 05–07. The lifecycle structure helps ensure nothing is skipped.
+### 6. No Real-Time Shortcuts
 
----
+Code reachable from a LinuxCNC real-time function must remain deterministic and bounded.
 
-## 6. Domain-Driven Design (DDD) Principles
+Do not introduce:
 
-### 6.1 Ubiquitous Language
+* blocking device communication;
+* synchronous PoKeys requests;
+* blocking socket operations;
+* mutex waits in the RT path;
+* dynamic allocation after real-time execution begins;
+* file access;
+* sleeps;
+* unbounded loops;
+* uncontrolled retries;
+* expensive logging in a high-frequency path;
+* hidden work whose runtime depends on device or network response time.
 
-All code, documentation, and communication uses a shared vocabulary:
+An asynchronous function is not RT-safe merely because its name ends in `Async`. Verify the complete call path.
 
-| Term | Meaning |
-|------|---------|
-| **HAL pin** | A LinuxCNC Hardware Abstraction Layer signal point exported by the component |
-| **RT thread** | The real-time servo thread invoked at a fixed period (e.g., 1 ms) |
-| **Mailbox** | Pre-allocated async request/response buffer shared between RT and receive threads |
-| **Subsystem** | One functional area of the PoKeys device (digital I/O, encoders, PEv2, etc.) |
-| **Dispatch** | Matching an incoming UDP response to a pending mailbox entry |
-| **Parse callback** | A function invoked by `PK_ReceiveAndDispatch` to decode a response into HAL-typed fields |
-| **Adapter layer** | Code that translates between a submodule's API and the project's domain model |
+Keep network reception, response dispatch, parsing, retries, and state changes consistent with the defined concurrency model. Shared state must have explicit ownership and synchronization semantics.
 
-### 6.2 Bounded Contexts
+Do not claim a timing guarantee from code inspection. Timing compliance requires measurement in the appropriate runtime environment.
 
-The project has three bounded contexts with explicit adapter layers between them:
+### 7. No Protocol Shortcuts
 
-1. **PoKeys device protocol** (`pokeyslib/` submodule) — device-level binary protocol
-2. **PoKeysLibHal async layer** (this project) — async request/response mapped to HAL types
-3. **LinuxCNC HAL component** (`experimental/pokeys_async.c`) — HAL pin export and RT function
+For every new or modified command:
 
-Changes in one context must not leak into another. The `PoKeysLibHal.h` HAL structs are the adapter boundary between contexts 1 and 2; `export_<subsystem>_pins()` functions are the boundary between contexts 2 and 3.
+* Verify the command and subcommand identifiers.
+* Verify request parameter and payload positions.
+* Verify response offsets, widths, byte order, ranges, and status bits.
+* Use named enums, masks, and offset constants.
+* Check response identity before applying data.
+* Validate lengths before reading payload fields.
+* Handle malformed, stale, duplicate, mismatched, and timed-out responses safely.
+* Preserve request-ID and mailbox lifecycle rules.
+* Define what happens after the final retry fails.
 
----
+Do not copy a synchronous implementation mechanically. Separate request creation from response parsing and account for the time gap and concurrency between them.
 
-## 7. Real-Time Engineering Principles
+### 8. Tests Must Prove the Requested Behavior
 
-### 7.1 Temporal Correctness
+For production behavior changes, first establish one of the following:
 
-Requirements must state timing constraints in measurable terms:
-- "The RT function must complete in < 1 ms" (not "it must be fast")
-- Timing is **proven by measurement**, not asserted (GPIO + oscilloscope, or cycle counter comparison)
+* a failing automated test;
+* a reproducible failing build or verification command;
+* a documented hardware reproduction when automation is not currently possible.
 
-### 7.2 Terse ISRs / RT Functions
+The test or reproduction must fail for the relevant reason before the implementation is changed.
 
-- Hard RT: complete in < 5 µs
-- Soft RT: complete in < 50 µs
-- The PoKeys RT function currently measures ~0.35 ms maximum on a 1 ms thread (35% utilization)
+Tests must exercise observable behavior, not merely mirror implementation details.
 
-### 7.3 RT Safety Rules (non-negotiable)
+Where applicable, cover:
 
-- **No `malloc`/`free`** in RT paths — use pre-allocated static or HAL-allocated structures
-- **No blocking calls** — UDP socket must be `O_NONBLOCK`; no `sleep()`, `mutex_lock()`, or system calls that may block
-- **No unbounded iterations** — loops in RT code must have a known maximum iteration count
-- **`mlockall(MCL_CURRENT | MCL_FUTURE)`** — prevents page faults in RT context
+* valid responses;
+* invalid or truncated responses;
+* wrong command or request ID;
+* boundary values;
+* timeout and retry exhaustion;
+* state before and after response dispatch;
+* repeated execution;
+* disconnected-device behavior;
+* relevant RT and userspace differences.
 
----
+Do not invent artificial tests for documentation-only or metadata-only changes. For refactoring, establish a passing behavioral baseline before changing structure.
 
-## 8. Submodule and Dependency Governance
+### 9. Make It Work, Make It Right, Then Make It Fast
 
-External code is brought in as a Git submodule only when:
-- A precise snapshot of another repository is needed
-- The dependency cannot be published as a package
-- A clear adapter layer can isolate the domain from the submodule's internals
+Use this sequence:
 
-Submodule management follows the [Submodule Instructions](./../.github/instructions/submodules.instructions.md):
-- Pin to immutable SHAs (not branch tracking)
-- Adapter layer always present; no domain leakage
-- CI fetches submodules recursively
-- Update policy and license documented per module
+1. **Make it work:** establish the smallest end-to-end behavior that satisfies one verified requirement.
+2. **Make it right:** remove duplication, restore architecture boundaries, improve naming, handle errors, and keep tests green.
+3. **Make it fast:** measure the relevant path and optimize only demonstrated bottlenecks.
 
----
+Compilation is not equivalent to “works.”
 
-## 9. Traceability
+Passing a happy-path test is not equivalent to “right.”
 
-Every work item traces bidirectionally:
+An optimization without before-and-after measurements is not demonstrated optimization.
 
-```
-Stakeholder Need → GitHub Issue (StR)
-  → System Requirement (REQ-F / REQ-NF Issue)
-    → Architecture Decision (ADR Issue)
-      → Implementation (PR referencing issues)
-        → Test Case (TEST Issue)
-          → Verification Result
-```
+Do not retain a knowingly poor design under the promise that it will be corrected later when the defect is within the current change’s scope.
 
-Even when working informally (outside the full issue template process), each PR description should reference the requirement it implements and the tests that verify it.
+### 10. Explicit Evidence Is Required
 
----
+Before claiming completion, report:
 
-## 10. Honest Status Reporting
+* files changed;
+* requirement or issue addressed;
+* behavior implemented;
+* architecture implications;
+* tests added or changed;
+* exact build and test commands executed;
+* results of those commands;
+* hardware or RT checks performed;
+* checks not performed and why;
+* remaining risks, assumptions, and out-of-scope work.
 
-Progress is reported against objective criteria, not feelings:
+Use precise status terms:
 
-- ✅ Tests pass and code is deployed — **done**
-- ⚠️ Tests pass in isolation but integration issue identified — **partially done with known issue**
-- ❌ No passing tests — **not done**
+* **Implemented** means the production behavior exists.
+* **Compiled** means only that compilation succeeded.
+* **Tested** means named tests were executed and passed.
+* **Hardware-verified** means the stated behavior was observed with the relevant PoKeys device.
+* **RT-validated** means it was tested in the applicable LinuxCNC real-time environment.
+* **Timing-validated** means timing was measured with an identified method and acceptance threshold.
 
-"90% complete" without working tests means "less than 50% complete" from a standards standpoint.
+Do not use “complete,” “working,” “fixed,” “RT-safe,” or “verified” without the corresponding evidence.
 
-The `docs/Todo.md` and task documents in `docs/tasks/` are the primary status instruments. They are updated after every meaningful unit of work.
+### 11. Handle Problems Without Excuses
 
----
+A tool, dependency, legacy defect, missing device, incomplete test environment, or unclear specification may constrain the work, but it does not justify inventing results or silently bypassing required steps.
 
-## 11. Summary
+When blocked:
 
-| Principle | Practical effect |
-|-----------|-----------------|
-| TDD (Red-Green-Refactor) | Tests written before code; no untested changes committed |
-| Simple design | YAGNI; no speculative features; minimum viable implementation |
-| Short feedback loops | CI must pass before merge; compile tests run immediately |
-| Standards as structure | Lifecycle phases guide navigation; standards encode engineering lessons |
-| Honest status | Progress measured by working, tested software |
-| RT discipline | No blocking, no malloc, no unbounded loops in RT paths |
-| Ubiquitous language | Consistent domain vocabulary in code, docs, and communication |
-| Traceable work | GitHub issues link requirements ↔ code ↔ tests |
+1. State the exact blocker.
+2. Show what was inspected or executed.
+3. Separate confirmed facts from hypotheses.
+4. Complete all unaffected work that can be done safely.
+5. Propose the smallest concrete action needed to remove the blocker.
+6. Do not claim the blocked verification as completed.
 
----
+When a chosen approach fails, preserve useful evidence, revert unsafe partial work, and select the next justified approach. Do not repeatedly patch symptoms without identifying the failing assumption.
 
-*See [`docs/repo_review.md`](../repo_review.md) for an objective assessment of the current repository state against these principles.*  
-*See [`.github/copilot-instructions.md`](../../.github/copilot-instructions.md) for the full standards-compliant AI assistant instructions.*
+### 12. Leave the Repository Healthier, but Stay in Scope
+
+When touching a file:
+
+* correct directly related misleading comments;
+* remove obsolete code made redundant by the change;
+* improve tests needed to make the change safe;
+* update the existing authoritative documentation;
+* avoid introducing further duplication or architectural debt.
+
+Do not turn a focused task into an unrequested cleanup campaign.
+
+If significant unrelated defects are discovered, report or create a separate issue rather than mixing them into the current implementation.
+
+### 13. Completion Gate
+
+A task is complete only when all applicable items are satisfied:
+
+* The requested behavior and acceptance criteria are implemented.
+* Architecture boundaries are preserved.
+* Protocol behavior has been checked against an authoritative source.
+* RT paths remain non-blocking, bounded, and allocation-free.
+* Relevant tests or reproducible checks exist and pass.
+* Required builds succeed.
+* No required behavior is represented by a stub, TODO, simulation, or hardcoded result.
+* Documentation reflects actual behavior.
+* Issue and requirement traceability is present.
+* Failed, skipped, unavailable, or hardware-dependent checks are reported honestly.
+
+If an item is not applicable, it need not be performed. If it is applicable but cannot be completed, the task must be reported as partially verified rather than complete.
+
+## Why this is stronger
+
+This version retains the original intent but converts abstract values into:
+
+* **required preparation**;
+* **explicit prohibited shortcuts**;
+* **PoKeysHal architecture rules**;
+* **RT and protocol-specific checks**;
+* **evidence terminology**;
+* **blocker behavior**;
+* **a completion gate**.
+
+The original principles can still be named—“Slow is Fast,” “No Excuses,” “No Shortcuts,” and “Clarify First”—but they should serve as headings or rationale. The actual control mechanism is the concrete contract above.
+
+## Recommended permanent-context arrangement
+
+I would retain a compressed version of sections 1–4, 6, 10 and 13 in `.github/copilot-instructions.md`. The full contract belongs in a path-scoped `engineering-discipline.instructions.md` or root `AGENTS.md`, depending on which agent platforms you want to support.
+
+The detailed protocol and conversion sequences should also appear in the relevant skills, but repetition there is acceptable when it is intentional: root instructions establish the non-negotiable invariant, while the skill explains how to satisfy it.
