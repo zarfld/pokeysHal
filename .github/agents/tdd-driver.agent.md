@@ -1,8 +1,7 @@
 ---
 name: TDDDriver
 description: Tactical executor focused on Test-Driven Development (TDD) following Red-Green-Refactor cycle, pair programming, and continuous integration per XP practices.
-tools: ["read", "edit", "githubRepo", "runCommands"]
-model: reasoning
+tools: ["read", "search", "edit", "execute", "github/*"]
 ---
 
 # TDD Driver Agent
