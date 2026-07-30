@@ -1,0 +1,73 @@
+---
+description: >
+  PoKeysHal C/RT architecture invariants and real-time constraints. Applies to all C
+  source files, headers, and experimental HAL components. Defines file responsibilities,
+  RT prohibitions, HAL type rules, protocol constants, and logging conventions.
+applyTo: "**/*.c,**/*.h,experimental/**"
+---
+
+# PoKeysHal C/RT Architecture and Real-Time Constraints
+
+## File Responsibilities
+
+Each file has a strict role. Violations must be reported and tracked.
+
+| File / Pattern | Role | Must NOT contain |
+|---|---|---|
+| `PoKeysLibHal.h` | HAL-compatible data structures | Raw C types in HAL-visible members; function implementations; async declarations |
+| `PoKeysLibAsync.h` | Shared async contracts: enums, masks, offsets, `PK_*Async()` declarations | HAL export logic; subsystem parsers; implementations |
+| `PoKeysLibAsync.c` | Shared async transport: mailbox, `PK_ReceiveAndDispatch`, `PK_TimeoutAndRetryCheck`, retry | Subsystem protocol logic; HAL exports; subsystem parsers; direct `hal_pin_*_new()` calls |
+| `PoKeysLib**Async.c` | Per-subsystem async: `export_<subsystem>_pins()`, Send (`PK_**GetAsync()`), Parse callback (`PK_**Parse()`), optional `register_<subsystem>_tasks()` | Shared transport logic; code that belongs in `PoKeysLibAsync.c` |
+| `experimental/pokeys_async.c` | Integration shell: `export()`, `EXTRA_SETUP()`, `user_mainloop()`, `FUNCTION(_)` | Struct/enum definitions; `#define` constants; direct `hal_pin_*_new()` calls; `export_*_pins()` definitions |
+| `hal-canon/hal_canon.h` + `hal-canon/*.c` | Canonical HAL channel interfaces | Always use `hal_export_digin/digout/adcin/adcout/encoder()`; never call `hal_pin_*_new()` directly |
+
+Do not solve a local problem by violating these boundaries. When existing code already violates a boundary, do not copy the violation — contain the change, report it, and correct it when necessary.
+
+## HAL-Compatible Types
+
+All HAL-visible struct members in `PoKeysLibHal.h` must use:
+- `hal_u32_t`, `hal_s32_t` for unsigned/signed 32-bit integers
+- `hal_float_t` for floating-point
+- `hal_bit_t` for boolean/digital
+- Expand bitfields to individual `hal_bit_t` members
+
+Never use raw `int`, `float`, `bool`, or `uint32_t` for HAL-exposed fields.
+
+## Real-Time Prohibitions
+
+Code reachable from a LinuxCNC real-time function must remain deterministic and bounded.
+
+Do not introduce in RT paths:
+- `malloc`, `free`, or any dynamic allocation after RT execution begins
+- Blocking device communication or synchronous PoKeys requests
+- Blocking socket operations (UDP socket must use `O_NONBLOCK`)
+- `mlockall(MCL_CURRENT | MCL_FUTURE)` must be called before RT starts
+- Mutex waits, condition variables, or blocking synchronization
+- File access, `sleep`, or any blocking system call
+- Unbounded loops or uncontrolled retry logic
+- Expensive logging in a high-frequency path
+
+An async function is not RT-safe merely because its name ends in `Async`. Verify the complete call path.
+
+## Protocol Constants
+
+- All PoKeys command codes must use the `pokeys_command_t` enum — no numeric literals.
+- All bit masks must be named constants defined in `PoKeysLibAsync.h`.
+- All response byte offsets must be named constants — no magic offset numbers.
+- Verify command codes, payload positions, response offsets, and status bits against the PoKeys protocol specification before implementing or modifying any command.
+- Validate response lengths before reading payload fields.
+
+## RT Logging and Conditional Compilation
+
+- Use `rtapi_print_msg(RTAPI_MSG_ERR, ...)` for RT logging; never `printf` or `fprintf` in RT paths.
+- Wrap RT-specific code in `#ifdef RTAPI` / `#endif`.
+- Keep ISR/RT functions under 50 µs (soft RT) or 5 µs (hard RT).
+
+## Timing
+
+- Do not claim timing compliance from code inspection alone.
+- Timing compliance requires measurement in the applicable runtime environment with an identified method and acceptance threshold.
+
+## Skill Reference
+
+For the full async subsystem conversion procedure (request creation, response parsing, HAL export, protocol verification), use the `convert-to-hal-rtapi` skill (`.github/skills/convert-to-hal-rtapi/SKILL.md`).
