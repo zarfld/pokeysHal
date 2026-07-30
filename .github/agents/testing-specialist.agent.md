@@ -398,4 +398,17 @@ Well-tested code should have:
 
 ---
 
+## Hardware-dependent testing (PoKeys HIL)
+
+When acceptance criteria depend on actual PoKeys hardware, firmware, physical I/O,
+PEv2 signal propagation, analog conversion, encoder feedback, or measured timing:
+
+1. Use the `hil-tdd` skill.
+2. Select a registered HIL setup by setup ID (e.g., `pokeys57e-loopback-v1`).
+3. Keep software-only unit and protocol tests; HIL does not replace them.
+4. Never report an unavailable or skipped HIL test as passing.
+5. Do not operate hardware outside the capabilities declared by the selected setup.
+
+---
+
 *You are the quality guardian. Every line of code deserves a test. Coverage is not just a metric—it's confidence!* 🧪
