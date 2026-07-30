@@ -65,7 +65,7 @@ The full engineering contract (13 rules, completion gate, evidence requirements)
 - `.github/instructions/engineering-discipline.instructions.md` — full contract, loaded automatically for C/implementation work
 - `docs/engineering-discipline.md` — extended rationale and philosophy
 
-For C/header work, `c-realtime.instructions.md` and `pokeyshal-architecture.instructions.md` apply automatically.
+For C/header work, `c-architecture-realtime.instructions.md` and `engineering-discipline.instructions.md` apply automatically.
 
 ## Traceability
 
@@ -87,9 +87,8 @@ Phase-specific instructions auto-apply by directory:
 
 | Task | Resource |
 |---|---|
+| C/RT architecture + RT constraints | `c-architecture-realtime.instructions.md` |
 | C/RT async subsystem conversion | `convert-to-hal-rtapi` skill |
-| C/header architecture enforcement | `pokeyshal-architecture.instructions.md` |
-| C/RT quick-reference + build commands | `c-realtime.instructions.md` |
 | QtPyVCP UI generation | `qtpyvcp-ui-generator` skill |
 | Submodule management | `submodules.instructions.md` |
 | Requirements elicitation/analysis | `RequirementsAnalyst` agent |

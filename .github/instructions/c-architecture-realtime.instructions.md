@@ -19,7 +19,7 @@ Each file has a strict role. Violations must be reported and tracked.
 | `PoKeysLibAsync.c` | Shared async transport: mailbox, `PK_ReceiveAndDispatch`, `PK_TimeoutAndRetryCheck`, retry | Subsystem protocol logic; HAL exports; subsystem parsers; direct `hal_pin_*_new()` calls |
 | `PoKeysLib**Async.c` | Per-subsystem async: `export_<subsystem>_pins()`, Send (`PK_**GetAsync()`), Parse callback (`PK_**Parse()`), optional `register_<subsystem>_tasks()` | Shared transport logic; code that belongs in `PoKeysLibAsync.c` |
 | `experimental/pokeys_async.c` | Integration shell: `export()`, `EXTRA_SETUP()`, `user_mainloop()`, `FUNCTION(_)` | Struct/enum definitions; `#define` constants; direct `hal_pin_*_new()` calls; `export_*_pins()` definitions |
-| `hal-canon/hal_canon.h` + `hal-canon/*.c` | Canonical HAL channel interfaces | Always use `hal_export_digin/digout/adcin/adcout/encoder()`; never call `hal_pin_*_new()` directly |
+| `hal-canon/hal_canon.h` + `hal-canon/*.c` | Canonical HAL channel interfaces | Direct `hal_pin_*_new()` calls for canonical digital, analog, or encoder channels |
 
 Do not solve a local problem by violating these boundaries. When existing code already violates a boundary, do not copy the violation — contain the change, report it, and correct it when necessary.
 
@@ -41,11 +41,12 @@ Do not introduce in RT paths:
 - `malloc`, `free`, or any dynamic allocation after RT execution begins
 - Blocking device communication or synchronous PoKeys requests
 - Blocking socket operations (UDP socket must use `O_NONBLOCK`)
-- `mlockall(MCL_CURRENT | MCL_FUTURE)` must be called before RT starts
 - Mutex waits, condition variables, or blocking synchronization
 - File access, `sleep`, or any blocking system call
 - Unbounded loops or uncontrolled retry logic
 - Expensive logging in a high-frequency path
+
+RT initialization requirement: `mlockall(MCL_CURRENT | MCL_FUTURE)` must be called before RT execution starts.
 
 An async function is not RT-safe merely because its name ends in `Async`. Verify the complete call path.
 
@@ -59,7 +60,7 @@ An async function is not RT-safe merely because its name ends in `Async`. Verify
 
 ## RT Logging and Conditional Compilation
 
-- Use `rtapi_print_msg(RTAPI_MSG_ERR, ...)` for RT logging; never `printf` or `fprintf` in RT paths.
+- Use `rtapi_print_msg` with the appropriate severity level. Avoid per-cycle logging in high-frequency RT paths. Never use `printf` or `fprintf` from an RT path.
 - Wrap RT-specific code in `#ifdef RTAPI` / `#endif`.
 - Keep ISR/RT functions under 50 µs (soft RT) or 5 µs (hard RT).
 
