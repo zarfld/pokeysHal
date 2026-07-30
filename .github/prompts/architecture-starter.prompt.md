@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -1581,4 +1580,3 @@ gh issue list --label "type:architecture:component" --json number,body | \\
 ---
 
 **Ready to architect from GitHub Issues?** 🏗️
-````

@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -700,4 +699,3 @@ validation_history = {
 ---
 
 **Traceability validated via GitHub Issues!** ✅
-````

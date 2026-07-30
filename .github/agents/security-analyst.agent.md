@@ -1,8 +1,7 @@
 ---
 name: SecurityAnalyst
 description: Security expert specializing in vulnerability detection, security risk analysis, supply chain security, and secure coding practices.
-tools: ["read", "search", "edit", "githubRepo"]
-model: reasoning
+tools: ["read", "search", "execute", "github/*"]
 ---
 
 # Security Analyst Agent

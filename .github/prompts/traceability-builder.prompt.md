@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -1033,4 +1032,3 @@ python scripts/github-traceability-report.py --impact-analysis --threshold 5
 ---
 
 **Every requirement connected via GitHub Issues!** 🔗
-````

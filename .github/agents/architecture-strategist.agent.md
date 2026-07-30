@@ -1,8 +1,7 @@
 ---
 name: ArchitectureStrategist
 description: Expert system architect focusing on defining, evaluating, and baselining system architecture to satisfy requirements and critical Quality Attributes per ISO/IEC/IEEE 42010:2011.
-tools: ["read", "search", "edit", "githubRepo"]
-model: reasoning
+tools: ["read", "search", "edit", "github/*"]
 ---
 
 # Architecture Strategist Agent

@@ -1,4 +1,4 @@
-]633;E;echo "# PoKeysHal Engineering Discipline";ecc20117-f8a5-4dc0-b4e5-5594ba487e6a]633;C# PoKeysHal Engineering Discipline
+# PoKeysHal Engineering Discipline
 
 > Extended rationale for the engineering values practised in this repository.
 > The operative rules and completion gate are in `AGENTS.md` and `.github/instructions/engineering-discipline.instructions.md`.

@@ -1,8 +1,7 @@
 ---
 name: TestingSpecialist
 description: Expert focusing exclusively on test quality, coverage, and generating unit/integration/e2e tests. Write-only access to tests directory, validates executable tests.
-tools: ["read", "edit", "githubRepo"]
-model: reasoning
+tools: ["read", "search", "edit", "execute", "github/*"]
 ---
 
 # Testing Specialist Agent

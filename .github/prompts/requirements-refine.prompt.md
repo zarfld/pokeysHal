@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -588,4 +587,3 @@ def score_issue_quality(issue):
 ---
 
 **Refine early, refine often - quality requirements lead to quality software!** ✅
-````

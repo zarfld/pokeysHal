@@ -1,3 +1,7 @@
+---
+description: "Phase transition prompt: phase-transition_3to4"
+---
+
 ## Phase 04: Detailed Design - Standards-Compliant Transition
 
 > **GitHub Issues Workflow**: Update architecture component issues (ARC-C) with detailed design specifications. Add design comments to architecture issues or create supplementary design documentation that references issues. Maintain traceability via issue references: #REQ → #ARC-C → code implementation → #TEST.

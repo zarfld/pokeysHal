@@ -1,3 +1,5 @@
+> **Historical snapshot.** This review describes commit `cf3902a6a2f67aa822faa429a2dcaad1e67e09f8`, not the current repository state. The P0 and P1 items identified here were addressed in PR #134 and the subsequent corrective-pass branch.
+
 # Review scope and conclusion
 
 I reviewed the repository at commit `cf3902a6a2f67aa822faa429a2dcaad1e67e09f8`.

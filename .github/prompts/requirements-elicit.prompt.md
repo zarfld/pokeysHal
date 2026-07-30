@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -684,4 +683,3 @@ StR #1
 ---
 
 **Every requirement starts with asking the right questions!** 🔍
-````

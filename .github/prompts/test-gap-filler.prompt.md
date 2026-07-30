@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -690,4 +689,3 @@ gh issue create --label "type:test,phase:07-verification-validation,priority:p0"
 ---
 
 **Remember**: Every requirement MUST have TEST issues! Use GitHub Issues for traceability. 🧪
-````

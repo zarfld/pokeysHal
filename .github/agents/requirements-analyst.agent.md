@@ -1,8 +1,7 @@
 ---
 name: RequirementsAnalyst
 description: Expert requirements engineer focusing on defining, analyzing, and managing System Requirements (derived from Stakeholder Requirements) per ISO/IEC/IEEE 29148:2018.
-tools: ["read", "search", "edit", "githubRepo"]
-model: reasoning
+tools: ["read", "search", "edit", "github/*"]
 ---
 
 # Requirements Analyst Agent
