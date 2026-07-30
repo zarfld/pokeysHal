@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -1237,4 +1236,3 @@ Use this when creating/reviewing requirement issues:
 ---
 
 **Remember**: Complete requirements prevent costly rework! Invest time upfront to save 10x effort during implementation. 🎯
-````

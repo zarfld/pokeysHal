@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -764,4 +763,3 @@ gh issue list --label "type:requirement:functional" --json number,title | \\
 ---
 
 **Remember**: Every requirement MUST have tests! Use GitHub Issues for traceability. 🧪
-````

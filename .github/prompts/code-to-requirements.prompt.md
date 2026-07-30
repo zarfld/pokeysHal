@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -707,4 +706,3 @@ app.post('/api/users', async (req, res) => {
 ---
 
 **Remember**: Code tells you WHAT was implemented, not WHY or whether it's correct. Always validate with stakeholders! 🔍
-````

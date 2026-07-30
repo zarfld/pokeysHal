@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 description: "Generate acceptance test issues and automation from stakeholder acceptance criteria. Validates intended use and user needs (Validation)."
@@ -614,4 +613,3 @@ gh issue create --label "type:test,test-type:acceptance,phase:07-verification-va
 ---
 
 **Remember**: Acceptance tests are customer-owned! They validate WHAT was built matches stakeholder intent. 🎯
-````

@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -625,4 +624,3 @@ jobs:
 ---
 
 **Validate requirements early, validate often!** ✅
-````

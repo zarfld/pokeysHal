@@ -1,3 +1,7 @@
+---
+description: "Phase transition prompt: phase-transition_4to5"
+---
+
 ## Phase 05: Implementation - TDD & Standards-Compliant Development
 
 > **GitHub Issues Traceability**: All code MUST reference implementing GitHub Issues in docstrings and comments. Use `Implements: #N`, `Verifies: #N`, `Architecture: #N` syntax. Traceability path via issues: #REQ-F → #ARC-C → Pull Request (#PR) → #TEST.
