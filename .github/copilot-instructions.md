@@ -60,10 +60,10 @@ bash test_compile.sh
 
 ## Engineering Discipline
 
-The full engineering contract (13 rules, completion gate, evidence requirements) is in:
-- `AGENTS.md` — compressed cross-tool invariants (rules 1–4, 6, 10, 13)
-- `.github/instructions/engineering-discipline.instructions.md` — full contract, loaded automatically for C/implementation work
-- `docs/engineering-discipline.md` — extended rationale and philosophy
+Engineering guidance is split across:
+- `AGENTS.md` — compressed cross-tool standing rules.
+- `.github/instructions/engineering-discipline.instructions.md` — eight mandatory behavioral rules, automatically applied to C and implementation work.
+- `docs/engineering-discipline.md` — full 13-rule reference and extended rationale.
 
 For C/header work, `c-architecture-realtime.instructions.md` and `engineering-discipline.instructions.md` apply automatically.
 

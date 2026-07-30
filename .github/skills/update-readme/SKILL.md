@@ -55,4 +55,5 @@ Do not include speculative roadmap, unimplemented features, or example output fr
 
 ### 5. Validate
 
+- `grep -r "README" docs/` — inspect documentation references and confirm that linked paths still exist.
 - Confirm every statement is true of the current working tree. When the branch contains unmerged functionality, clearly distinguish branch behavior from the last released version.

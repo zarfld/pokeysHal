@@ -19,9 +19,11 @@ Each file has a strict role. Violations must be reported and tracked.
 | `PoKeysLibAsync.c` | Shared async transport: mailbox, `PK_ReceiveAndDispatch`, `PK_TimeoutAndRetryCheck`, retry | Subsystem protocol logic; HAL exports; subsystem parsers; direct `hal_pin_*_new()` calls |
 | `PoKeysLib**Async.c` | Per-subsystem async: `export_<subsystem>_pins()`, Send (`PK_**GetAsync()`), Parse callback (`PK_**Parse()`), optional `register_<subsystem>_tasks()` | Shared transport logic; code that belongs in `PoKeysLibAsync.c` |
 | `experimental/pokeys_async.c` | Integration shell: `export()`, `EXTRA_SETUP()`, `user_mainloop()`, `FUNCTION(_)` | Struct/enum definitions; `#define` constants; direct `hal_pin_*_new()` calls; `export_*_pins()` definitions |
-| `hal-canon/hal_canon.h` + `hal-canon/*.c` | Canonical HAL channel interfaces | Direct `hal_pin_*_new()` calls for canonical digital, analog, or encoder channels |
+| `hal-canon/hal_canon.h` + `hal-canon/*.c` | Implements canonical HAL channel export helpers; direct `hal_pin_*_newf()` calls are permitted inside these helpers | PoKeys subsystem logic; protocol request/response handling |
 
 Do not solve a local problem by violating these boundaries. When existing code already violates a boundary, do not copy the violation — contain the change, report it, and correct it when necessary.
+
+Subsystem invariant: `PoKeysLib**Async.c` files must use `hal_export_digin()`, `hal_export_digout()`, `hal_export_adcin()`, `hal_export_adcout()`, or `hal_export_encoder()` for canonical channels. Do not call `hal_pin_bit_newf()` or other `hal_pin_*_newf()` variants directly for channels that have a canonical helper.
 
 ## HAL-Compatible Types
 
@@ -46,7 +48,7 @@ Do not introduce in RT paths:
 - Unbounded loops or uncontrolled retry logic
 - Expensive logging in a high-frequency path
 
-RT initialization requirement: `mlockall(MCL_CURRENT | MCL_FUTURE)` must be called before RT execution starts.
+For userspace real-time processes, call `mlockall(MCL_CURRENT | MCL_FUTURE)` during initialization before entering the real-time execution loop. This requirement does not apply to kernel-module code.
 
 An async function is not RT-safe merely because its name ends in `Async`. Verify the complete call path.
 
