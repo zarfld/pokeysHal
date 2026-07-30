@@ -1,4 +1,3 @@
-````prompt
 ---
 mode: agent
 applyTo:
@@ -800,4 +799,3 @@ gh issue close 50 --comment "All test scenarios implemented and verified. Closin
 ---
 
 **Remember**: Tests ALWAYS come first! Red → Green → Refactor → PR with issue links! 🔴🟢🔨
-````
