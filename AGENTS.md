@@ -33,7 +33,7 @@ Full 13-rule contract: `docs/engineering-discipline.md`. C/RT architecture: `.gi
 3. **Make the smallest complete change** — complete means all required behavior, tests, docs, and traceability are included.
 4. **No fake completion** — stubs, TODOs for required behavior, untested exports, tests that cannot fail, and undocumented assumptions are not done.
 6. **No RT shortcuts** — verify the complete call path; do not trust the name `Async`.
-10. **Report exact evidence** — use precise status terms: Implemented / Compiled / Tested / Hardware-verified / RT-validated / Timing-validated.
+10. **Report exact evidence** — use precise status terms: Implemented / Compiled / Tested / HIL-observed / HIL-test-executed / HIL-verified / RT-validated / Timing-validated. For HIL status definitions and outcomes, use `.github/skills/hil-tdd/references/result-schema.md`.
 13. **Completion gate** — architecture boundaries preserved; protocol checked; RT paths bounded; tests pass; no stubs; docs accurate; traceability present; unavailable checks disclosed.
 
 ---

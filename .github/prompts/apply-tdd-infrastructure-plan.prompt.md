@@ -91,5 +91,6 @@ Report:
 - deferred HIL phases;
 - remaining unresolved hardware facts.
 
-Use `Implemented` and `configuration-validated` precisely. Do not claim
-`HIL-tested`, `hardware-verified`, `RT-validated`, or `timing-validated`.
+Use `Implemented` and `configuration-validated` precisely. Do not use legacy labels such as `HIL-tested` or `Hardware-verified`. Use `HIL-observed`,
+`HIL-test-executed`, or `HIL-verified` according to
+`.github/skills/hil-tdd/references/result-schema.md`.
