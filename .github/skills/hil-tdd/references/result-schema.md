@@ -15,8 +15,8 @@ and `hil-tdd/SKILL.md`. Do not duplicate this table elsewhere.
 | `RT-validated` | Behavior was tested in the applicable LinuxCNC real-time environment. Do not redefine; the repository engineering contract owns this term. |
 | `Timing-validated` | Timing was measured against a documented threshold with an identified method. |
 
-Do not use `HIL-tested` — its distinction from `HIL-verified` is unclear. Use
-`HIL-test-executed` (ran) or `HIL-verified` (passed) instead.
+Do not use the legacy status label. Use `HIL-test-executed` (ran) or
+`HIL-verified` (passed) instead.
 
 ---
 
@@ -25,7 +25,7 @@ Do not use `HIL-tested` — its distinction from `HIL-verified` is unclear. Use
 | Outcome | Condition |
 |---|---|
 | SKIPPED | `POKEYS_HIL` not set, or non-HIL runner |
-| ERROR | HIL requested but device absent; device identity or revision mismatch; continuity/self-test fails; `runnable: false` |
+| ERROR | HIL requested but device absent; device identity or revision mismatch; continuity/self-test fails; `runnable: false`; fixture is still `draft`; expected device ID is unresolved or mismatched for a required run |
 | FAIL | Hardware behavior differs from expected |
 | PASS | Test executed successfully |
 

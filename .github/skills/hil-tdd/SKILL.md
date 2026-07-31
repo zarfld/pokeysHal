@@ -47,7 +47,8 @@ Before proceeding, read the fixture YAML at
 
 - `runnable: true` — if not, stop; the fixture is not verified for use
 - `fixture_status: verified` — if draft, stop; hardware questions are unresolved
-- device model, `expected_device_id`, and fixture `revision` match
+- device model and fixture `revision` match
+- when the fixture is verified and `expected_device_id` is set, the device ID must match
 - firmware version is compatible
 - the required capability is listed (not merely declared as draft)
 - required HAL pin names are present in the setup definition
@@ -176,7 +177,7 @@ LinuxCNC version
 kernel / RT mode
 HAL configuration used
 test command
-test result (PASS / FAIL / SKIP / ERROR and reason)
+test result (PASS / FAIL / SKIPPED / ERROR and reason)
 observed input/output transitions
 cleanup result
 ```
@@ -234,12 +235,13 @@ See `tests/hil/setups/pokeys57e-loopback-v1.md` for wiring constraints.
 ## PR evidence checklist
 
 ```
-Unit-tested:       yes / no
-HAL-smoke-tested:  yes / no
-HIL-tested:        yes / no  (requires physical fixture run against verified fixture)
-RT-validated:      yes / no  (requires measured timing in RT environment)
-Timing-validated:  yes / no  (requires measured threshold and tolerance)
+Unit-tested:         yes / no
+HAL-smoke-tested:    yes / no
+HIL-test-executed:   yes / no  (requires physical fixture run against a verified fixture)
+HIL-verified:        yes / no  (requires the named HIL test to pass on the named fixture revision)
+RT-validated:        yes / no  (requires measured timing in RT environment)
+Timing-validated:    yes / no  (requires measured threshold and tolerance)
 ```
 
 See `references/result-schema.md` for precise status term definitions.
-Do not mark `HIL-tested: yes` based on a userspace simulation or code review.
+Do not mark `HIL-verified: yes` based on a userspace simulation or code review.

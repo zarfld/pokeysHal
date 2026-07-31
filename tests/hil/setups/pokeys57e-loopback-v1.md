@@ -1,7 +1,7 @@
 # PoKeys57E HIL Fixture — Loopback v1
 
-**Setup ID**: `pokeys57e-loopback-v1`  **Revision**: 1  
-**Device**: PoKeys57E  **Expected device ID**: 27295 (unconfirmed — see HW-4)  
+**Setup ID**: `pokeys57e-loopback-v1`  **Revision**: 1
+**Device**: PoKeys57E  **Expected device ID**: unset while the fixture is draft; candidate ID 27295 pending HW-0 verification
 **Transport**: Ethernet
 
 ---
@@ -118,9 +118,9 @@ Track these in issue #138.
 
 ## Safety rules
 
-- All outputs must be driven to false/inactive before any test.
+- Before any test, drive each source channel to its fixture-defined `safe_logical_value` and verify the corresponding `expected_safe_physical_level`.
 - Acquire exclusive fixture lock before changing any output.
-- Restore all outputs to false/inactive after every test, even on failure.
+- Restore each source channel to its fixture-defined safe state after every test, even on failure.
 - A series resistor (~1–4.7 kΩ) per GPIO loopback is recommended to limit current
   if a test defect configures both endpoints as opposing outputs.
 - Exactly one endpoint must be configured as an active output at any time.

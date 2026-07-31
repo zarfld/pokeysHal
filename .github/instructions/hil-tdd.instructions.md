@@ -56,7 +56,7 @@ Unit tests for hardware-facing behavior must cite a verified observation or spec
 Include: `/* Oracle: HIL-P57E-DIO-001 */`
 Physical pin N = HAL channel index N−1. Never treat them as identical.
 
-## Status terms — see `skills/hil-tdd/references/result-schema.md`
+## Status terms — see `../skills/hil-tdd/references/result-schema.md`
 
 `HIL-observed` · `HIL-test-executed` · `HIL-verified` · `Timing-validated`
 Do not redefine `RT-validated`; the engineering contract owns that term.

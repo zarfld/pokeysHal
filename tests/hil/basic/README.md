@@ -22,7 +22,7 @@ The following must not be loaded from any test in this directory:
 - `pokeys_homing.hal`
 - `wcomp` window-comparator simulated switches
 
-If a test requires any of those, it belongs in `tests/integration/linuxcnc/`.
+If a test requires any of those, it belongs in `tests/hil/machine/linuxcnc/`.
 
 ## Directory layout
 
@@ -40,8 +40,11 @@ All tests in this directory must use setup ID: `pokeys57e-loopback-v1`
 
 The fixture definition is at: `tests/hil/setups/pokeys57e-loopback-v1.yaml`
 
-Tests must be guarded by `POKEYS_HIL=1` environment variable and skipped
-(not failed) when the variable is absent or the device is unreachable.
+Tests must be guarded by `POKEYS_HIL=1` environment variable. When the variable
+is absent, record `SKIPPED`. When the runner is not a HIL-capable host, or the
+fixture is not runnable, or the device identity cannot be confirmed, record
+`ERROR`. Use `FAIL` only when the hardware behavior diverges from the expected
+oracle.
 
 ## Test order
 
@@ -59,7 +62,7 @@ Tests must run in ID order. Each layer depends on the previous passing.
 
 ```bash
 # Requires physical PoKeys57E fixture and self-hosted runner
-POKEYS_HIL=1 POKEYS_DEVICE_ID=27295 pytest -m hil tests/hil/basic -v
+POKEYS_HIL=1 POKEYS_DEVICE_ID=<candidate-id-from-fixture> pytest -m hil tests/hil/basic -v
 ```
 
 A self-hosted HIL workflow is planned but not implemented in this revision.

@@ -34,7 +34,7 @@ belong in `tests/hil/basic/` where failures are diagnosable against a single sub
 ## Directory layout
 
 ```
-tests/integration/linuxcnc/
+tests/hil/machine/linuxcnc/
   README.md                  — this file
   DM542_XXYZ_mill/           — full INI/HAL configuration under test
     Pokeys57E_DM542_XXYZ_mill.ini

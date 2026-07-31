@@ -17,14 +17,15 @@ Each observation entry:
 - **Commit**: <SHA>
 
 **Wiring**: Physical Pin X → Physical Pin Y
-**HAL output**: `pokeys.0.digout.NN.out`
-**Observed HAL input**: `pokeys.0.PEv2.N.digin.XXX.in`
+**HAL source**: `pokeys.0.digout.NN.out`
+**Observed raw digital input**: `pokeys.0.digin.MM.in`
+**Observed PEv2 logical input**: `pokeys.0.PEv2.N.digin.XXX.in`
 
 **Observation**:
 - source HAL command: (e.g., `halcmd setp pokeys.0.digout.22.out false`)
-- source physical voltage: (measured or inferred)
-- sink raw digital value: (e.g., `halcmd gets pokeys.0.digout.27.in`)
-- PEv2 logical value: (e.g., `halcmd gets pokeys.0.PEv2.0.digin.LimitN.in`)
+- source physical level: (measured as high/low or voltage)
+- sink raw digital reading: (e.g., `halcmd gets pokeys.0.digin.27.in`)
+- PEv2 logical reading: (e.g., `halcmd gets pokeys.0.PEv2.0.digin.LimitN.in`)
 - configured inversion: (yes/no; INI/HAL source)
 - settling/update time: (observed or estimated)
 

@@ -1,9 +1,13 @@
 # HIL/TDD Guidance Synthesis
 
-**Status**: Approved  
-**Date**: 2026-07-30  
-**Input documents**: 6 thought documents in `docs/HIL_Setup_4_TDD/`  
+**Status**: Approved for documentation/skeleton scope
+**Date**: 2026-07-30
+**Input documents**: 6 thought documents in `docs/HIL_Setup_4_TDD/`
 **Produces**: authoritative input for `tdd-hil-infrastructure-audit.prompt.md`
+
+**Approval metadata**: this synthesis was accepted as the basis for the initial HIL-TDD infrastructure skeleton in PR #139. No hardware runs were executed in this phase; evidence is limited to fixture definitions, documented constraints, and review-approved guidance.
+
+**Conflict and resolution**: earlier drafts conflated primitive HIL with machine integration and used ambiguous status terms. The active guidance now separates those scopes, centralizes status vocabulary in the HIL result schema, and keeps the fixture draft until HW-0 through HW-5 are resolved.
 
 ---
 
@@ -72,7 +76,7 @@ Add `HIL-observed` as a category between `Assumed` and `Unit-tested`:
 | `Timing-validated` | Timing measured against a documented threshold |
 
 Do not redefine `RT-validated`; the repository engineering contract owns that term.
-Remove `HIL-tested` — its distinction from `HIL-verified` is unclear.
+Remove the legacy status label — its distinction from `HIL-verified` is unclear.
 
 ### D-07 — `applyTo` scope: `tests/hil/**` only
 
