@@ -77,16 +77,8 @@ Before touching any output:
 
 ### Preflight outcomes
 
-| Condition | Result |
-|---|---|
-| `POKEYS_HIL` absent | SKIPPED |
-| Test suite discovered on a non-HIL runner without HIL being requested | SKIPPED |
-| `POKEYS_HIL=1`, but runner lacks the fixture | ERROR |
-| Fixture draft or not runnable | ERROR |
-| Device missing or mismatched during requested HIL run | ERROR |
-| Continuity/self-test fails | ERROR |
-| Behavior differs from expectation | FAIL |
-| Success | PASS |
+Use `references/result-schema.md` for HIL outcome classification (`SKIPPED`,
+`ERROR`, `FAIL`, `PASS`) and status vocabulary.
 
 A required HIL job that produces zero test results must not be green.
 
