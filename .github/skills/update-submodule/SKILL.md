@@ -71,7 +71,8 @@ Record the exact build/test results.
 Commit message must include:
 - Old SHA → new SHA
 - Summary of upstream changes reviewed
-- Build/test result (Compiled / Tested / Hardware-verified)
+- Build/test result: `Compiled`, `Tested`, or applicable HIL status from
+  `.github/skills/hil-tdd/references/result-schema.md`
 
 ### 8. Create a dedicated bump PR
 
