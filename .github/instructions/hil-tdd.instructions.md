@@ -16,7 +16,9 @@ Never run a fixture whose YAML does not have `runnable: true` and
 
 - Acquire exclusive fixture access before changing any output.
 - Verify the per-channel safe state from the fixture YAML before each run.
-- Never energize a loopback unless the destination is configured as an input or declared peripheral input.
+- At most one endpoint of a physical loopback may be an active output.
+- If the destination mode cannot be verified, do not energize the source.
+- Direct GPIO loopbacks require confirmed series-current protection before unattended automation.
 - Restore safe state on teardown and unload HAL components after the run.
 
 ## Scope
@@ -31,6 +33,6 @@ A required HIL job that produces zero results must not be green.
 ## Oracle traceability
 
 Unit tests for hardware-facing behavior must cite a verified observation or spec.
-Include `/* Oracle: HIL-P57E-DIO-001 */`. Physical pin N != HAL channel index N−1.
+Include `/* Oracle: HIL-P57E-DIO-001 */`. Physical pin N maps to HAL channel index N−1; store and report both values separately.
 
 

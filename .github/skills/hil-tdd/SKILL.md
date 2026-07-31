@@ -54,6 +54,7 @@ Before proceeding, read the fixture YAML at
 - firmware version is compatible
 - the required capability is listed (not merely declared as draft)
 - required HAL pin names are present in the setup definition
+- all verification fields required by the selected capability are `true`
 
 For the current physical-pin layout and capability constraints, see
 `tests/hil/setups/pokeys57e-loopback-v1.md`.

@@ -108,6 +108,7 @@ OC16-CNC external generator.
 
 | ID | Question | Blocking |
 |---|---|---|
+| HW-0 | Confirm actual PoKeys57E identity and firmware version | Fixture identity and activation |
 | HW-1 | Is the emergency loopback wired to Pin 52 or Pin 54? | Emergency tests |
 | HW-2 | Is `PEv2_EmergencyInputPin` a physical pin number or API index? | Emergency tests |
 | HW-3 | Does `PEv2_AxisEnableOutputPins_N=1` conflict with Fast Encoder 1A on pin 1? | PE/encoder tests |

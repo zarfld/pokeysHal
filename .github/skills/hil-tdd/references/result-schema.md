@@ -24,8 +24,8 @@ Do not use the legacy status label. Use `HIL-test-executed` (ran) or
 
 | Outcome | Condition |
 |---|---|
-| SKIPPED | `POKEYS_HIL` not set, or non-HIL runner |
-| ERROR | HIL requested but device absent; device identity or revision mismatch; continuity/self-test fails; `runnable: false`; fixture is still `draft`; expected device ID is unresolved or mismatched for a required run |
+| SKIPPED | `POKEYS_HIL` is absent, or the suite is discovered on a non-HIL runner without HIL being requested |
+| ERROR | `POKEYS_HIL=1` but the runner lacks the fixture; fixture is draft or not runnable; identity or revision mismatch; self-test fails |
 | FAIL | Hardware behavior differs from expected |
 | PASS | Test executed successfully |
 
