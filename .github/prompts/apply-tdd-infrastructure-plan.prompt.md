@@ -94,3 +94,5 @@ Report:
 Use `Implemented` and `configuration-validated` precisely. Do not use legacy labels such as `HIL-tested` or `Hardware-verified`. Use `HIL-observed`,
 `HIL-test-executed`, or `HIL-verified` according to
 `.github/skills/hil-tdd/references/result-schema.md`.
+
+Do not claim `RT-validated` or `Timing-validated`.
