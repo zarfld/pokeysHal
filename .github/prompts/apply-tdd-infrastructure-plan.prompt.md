@@ -14,6 +14,23 @@ Implement only the approved infrastructure issue:
 
 ${input:issue:Enter the approved GitHub issue number}
 
+## Pre-condition — human approval gate (check before proceeding)
+
+**Do not invoke this prompt automatically or immediately after running
+`tdd-hil-infrastructure-audit.prompt.md`.**
+
+The audit is a planning-only task. Its output must be reviewed and approved
+by a human before any implementation begins. The required sequence is:
+
+1. Run `tdd-hil-infrastructure-audit.prompt.md` (read-only planning).
+2. A human reviews the audit output and makes explicit decisions.
+3. A GitHub issue is created or updated with those decisions as acceptance criteria.
+4. Only then invoke this prompt, supplying that approved issue number.
+
+If the input issue does not contain explicit acceptance criteria derived from
+the approved audit output, stop immediately and request issue updates.
+Do not infer or substitute missing acceptance criteria.
+
 ## Required preparation
 
 1. Read the issue and all acceptance criteria.
