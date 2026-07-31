@@ -16,7 +16,8 @@ Use this skill when the acceptance criterion requires:
 - physical loopback electrical verification;
 - PWM/ADC analog path confirmation;
 - async update latency with real USB/Ethernet round-trips;
-- RT-cycle timing measurement against a defined threshold.
+- RT environment validation in LinuxCNC;
+- timing validation against a defined threshold and tolerance.
 
 Do not use HIL as a substitute for unit tests.
 
@@ -31,7 +32,8 @@ Determine which test layers apply:
 3. HAL smoke — `halcompile`/`halrun`, exported pins visible
 4. Primitive HIL — real board I/O, minimal HAL config, no machine stack
 5. Machine integration — full `DM542_XXYZ_mill`, `wcomp`, homing, joint wiring
-6. RT validation — timing measured in RT environment with documented threshold
+6. RT environment validation — execute the behavior in the applicable LinuxCNC RT environment
+7. Timing validation — measure timing against a documented threshold and tolerance
 
 HIL (layer 4) does not replace layers 1–3. Layers 1–2 are required where
 mechanically applicable; a documentation-only change does not need an invented unit test.
@@ -75,12 +77,11 @@ Before touching any output:
 
 | Condition | Result |
 |---|---|
-| `POKEYS_HIL` not set | SKIPPED |
-| Non-HIL runner | SKIPPED |
-| `runnable: false` or `fixture_status: draft` | ERROR |
-| HIL requested but device absent | ERROR |
-| Device identity mismatch | ERROR |
-| Fixture revision mismatch | ERROR |
+| `POKEYS_HIL` absent | SKIPPED |
+| Test suite discovered on a non-HIL runner without HIL being requested | SKIPPED |
+| `POKEYS_HIL=1`, but runner lacks the fixture | ERROR |
+| Fixture draft or not runnable | ERROR |
+| Device missing or mismatched during requested HIL run | ERROR |
 | Continuity/self-test fails | ERROR |
 | Behavior differs from expectation | FAIL |
 | Success | PASS |
@@ -126,7 +127,7 @@ a prior expectation is valid for discovery; it must not be reported as a test re
 ### Oracle comment format
 
 ```c
-/* Oracle: HIL-P57E-DIO-001, observed on PoKeys57E DEVICE_ID=27295 */
+/* Oracle: HIL-P57E-DIO-001, setup=pokeys57e-loopback-v1 rev=1, device=<verified-id> */
 ```
 
 ---
@@ -239,8 +240,8 @@ Unit-tested:         yes / no
 HAL-smoke-tested:    yes / no
 HIL-test-executed:   yes / no  (requires physical fixture run against a verified fixture)
 HIL-verified:        yes / no  (requires the named HIL test to pass on the named fixture revision)
-RT-validated:        yes / no  (requires measured timing in RT environment)
-Timing-validated:    yes / no  (requires measured threshold and tolerance)
+RT-validated:        yes / no  (behavior executed in the applicable RT environment)
+Timing-validated:    yes / no  (timing measured against a threshold)
 ```
 
 See `references/result-schema.md` for precise status term definitions.

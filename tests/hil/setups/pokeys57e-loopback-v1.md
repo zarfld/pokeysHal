@@ -6,8 +6,10 @@
 
 ---
 
-> **Provenance notice**: The wiring below is derived from `Pokeys57E_SimPins.hal`
-> (historical machine configuration). Physical continuity has not been independently
+> **Provenance notice**: The wiring below is derived from the historical external configuration
+> `zarfld/LinuxCnc_PokeysLibComp/DM542_XXYZ_mill/Pokeys57E_SimPins.hal`.
+> That file supports the documented indexing convention but does not verify the
+> present fixture wiring. Physical continuity has not been independently
 > confirmed. All loopbacks are marked `status: unconfirmed` in the YAML until
 > verified by a continuity or controlled toggle test (HW-4).
 
@@ -19,8 +21,8 @@ PoKeys57E physical pin numbers are 1-based. HAL channel indices are 0-based.
 
 ```
 Physical Pin N  →  HAL channel N−1
-Physical Pin 23 →  pokeys.0.digout.22.out   ✓ confirmed from SimPins.hal
-Physical Pin 12 →  pokeys.0.digout.11.out   ✓ confirmed from SimPins.hal
+Physical Pin 23 →  pokeys.0.digout.22.out   documented in the historical configuration; not independently verified on this fixture
+Physical Pin 12 →  pokeys.0.digout.11.out   documented in the historical configuration; not independently verified on this fixture
 ```
 
 Do not treat physical pin numbers and HAL channel indices as interchangeable.
@@ -96,7 +98,7 @@ OC16-CNC external generator.
 
 | Capability | Reason excluded |
 |---|---|
-| Emergency loopback (Pin 33 → Pin 52) | HW-1: SimPins.hal says 52; INI says `PEv2_EmergencyInputPin=54`. Unresolved. |
+| Emergency loopback (Pin 33 → Pin 52) | HW-1: the historical external configuration points to 52; the INI says `PEv2_EmergencyInputPin=54`. Unresolved. |
 | PWM → ADC loopback | Requires RC low-pass filter (4.7 kΩ + 1 µF) at each connection. Not yet fitted. |
 | PE → fast encoder feedback | HW-3: `PEv2_AxisEnableOutputPins_N=1` may conflict with Fast Encoder 1A on pin 1. |
 
@@ -121,6 +123,5 @@ Track these in issue #138.
 - Before any test, drive each source channel to its fixture-defined `safe_logical_value` and verify the corresponding `expected_safe_physical_level`.
 - Acquire exclusive fixture lock before changing any output.
 - Restore each source channel to its fixture-defined safe state after every test, even on failure.
-- A series resistor (~1–4.7 kΩ) per GPIO loopback is recommended to limit current
-  if a test defect configures both endpoints as opposing outputs.
+- A series resistor (~1–4.7 kΩ) per GPIO loopback is required for unattended automated loopback tests to limit current if a test defect configures both endpoints as opposing outputs.
 - Exactly one endpoint must be configured as an active output at any time.

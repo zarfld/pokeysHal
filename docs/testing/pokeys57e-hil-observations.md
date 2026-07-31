@@ -23,11 +23,12 @@ Each observation entry:
 
 **Observation**:
 - source HAL command: (e.g., `halcmd setp pokeys.0.digout.22.out false`)
-- source physical level: (measured as high/low or voltage)
+- source physical level: <measured voltage/high/low | not measured>
+- measurement instrument: <instrument/model | none>
 - sink raw digital reading: (e.g., `halcmd gets pokeys.0.digin.27.in`)
 - PEv2 logical reading: (e.g., `halcmd gets pokeys.0.PEv2.0.digin.LimitN.in`)
 - configured inversion: (yes/no; INI/HAL source)
-- settling/update time: (observed or estimated)
+- settling/update time: <measured value and method | not measured>
 
 **Verified by**: tests/hil/basic/pytest/test_XXX.py
 **Used as oracle in**: tests/unit/test_XXX.c
@@ -35,7 +36,7 @@ Each observation entry:
 
 Unit tests citing an oracle must include:
 ```c
-/* Oracle: HIL-P57E-DIO-001, observed on PoKeys57E DEVICE_ID=27295 */
+/* Oracle: HIL-P57E-DIO-001, setup=pokeys57e-loopback-v1 rev=1, device=<verified-id> */
 ```
 
 ---

@@ -1,11 +1,11 @@
 # HIL/TDD Guidance Synthesis
 
-**Status**: Approved for documentation/skeleton scope
+**Status**: Proposed for approval in PR #139
 **Date**: 2026-07-30
 **Input documents**: 6 thought documents in `docs/HIL_Setup_4_TDD/`
 **Produces**: authoritative input for `tdd-hil-infrastructure-audit.prompt.md`
 
-**Approval metadata**: this synthesis was accepted as the basis for the initial HIL-TDD infrastructure skeleton in PR #139. No hardware runs were executed in this phase; evidence is limited to fixture definitions, documented constraints, and review-approved guidance.
+**Approval metadata**: this document is proposed as the reviewable synthesis artifact for the HIL-TDD infrastructure skeleton. No hardware runs were executed in this phase; evidence is limited to fixture definitions, documented constraints, and review-approved guidance.
 
 **Conflict and resolution**: earlier drafts conflated primitive HIL with machine integration and used ambiguous status terms. The active guidance now separates those scopes, centralizes status vocabulary in the HIL result schema, and keeps the fixture draft until HW-0 through HW-5 are resolved.
 
@@ -95,26 +95,26 @@ inverted or active-low outputs.
 
 ## 3. Claim Matrix (summary)
 
-| ID | Claim | Classification | Decision |
-|---|---|---|---|
-| C-01 | Physical pin N = HAL index N−1 | Verified (SimPins.hal) | Encode as fixture invariant |
-| C-02 | HIL does not replace unit/protocol tests | Supported | Adopt as rule |
-| C-03 | DM542 config is integration scope | Proposal | Accept (D-02) |
-| C-04 | wcomp is Layer 3 / integration | Proposal | Accept (D-02) |
-| C-05 | Emergency wired Pin 33 → Pin 52 | Provenance | Excluded (D-03) |
-| C-06 | INI `PEv2_EmergencyInputPin=54` | Provenance | Excluded (D-03) |
-| C-07/08 | Instruction file name | Conflict | Resolved: `hil-tdd` (D-01) |
-| C-09 | No dedicated HIL agent | Supported | Adopt (D-04) |
-| C-10 | AxisEnableOutputPins_N=1 conflicts FastEncoder1A | Proposal | Deferred (HW-3) |
-| C-11 | PWM→ADC needs RC filter | Supported | Documented constraint |
-| C-12 | `HIL-observed` status category | Proposal | Accept (D-06) |
-| C-13 | `applyTo: tests/hil/**` only | Proposal | Accept (D-07) |
-| C-14 | Agent routing hooks only | Supported | Adopt |
-| C-15 | First PR: documentation and skeleton only | Supported | Adopt |
-| C-16 | Loopback pairs from SimPins.hal | Provenance | Unconfirmed; mark as such |
-| C-17 | Pins 9, 11, 51 reserved for OC16-CNC | Supported | Encode in YAML |
-| C-18 | PWM pins 17–22, ADC pins 41–47 | Supported | Encode in fixture MD |
-| C-19/20 | Separate hil/basic and hil/machine dirs | Proposal | Accept (D-05) |
+| ID | Claim | Source | Classification | Evidence | Conflict / required resolution |
+|---|---|---|---|---|---|
+| C-01 | Physical pin N = HAL index N−1 | Historical HAL convention + current export implementation | Supported, but not yet physically verified | Existing HAL export and fixture naming convention | Treat as a fixture convention pending physical confirmation |
+| C-02 | HIL does not replace unit/protocol tests | Guidance synthesis and engineering contract | Supported | Existing instruction and skill scope | No conflict; retain as rule |
+| C-03 | DM542 config is integration scope | Guidance synthesis | Supported | Primitive-vs-integration split | No conflict; keep in machine integration tree |
+| C-04 | `wcomp` is integration scope | Guidance synthesis | Supported | Machine integration guidance | No conflict; keep out of primitive HIL |
+| C-05 | Emergency loopback is Pin 33 → Pin 52 | Historical external configuration + INI | Unresolved | Conflicting references in the external config and INI | Resolve via fixture hardware review before enabling |
+| C-06 | `PEv2_EmergencyInputPin=54` | INI provenance | Unresolved | Conflict with historical wiring reference | Resolve via fixture hardware review before enabling |
+| C-07/08 | Instruction file name | Guidance synthesis | Supported | Naming convention and skill name | No conflict; use `hil-tdd.instructions.md` |
+| C-09 | No dedicated HIL agent | Guidance synthesis | Supported | Current routing hooks only | No conflict; keep routing hooks only |
+| C-10 | Axis enable output pins conflict with FastEncoder1A | Hardware constraint note | Deferred | Hardware question HW-3 | Resolve before PE/encoder tests |
+| C-11 | PWM→ADC needs RC filter | Fixture documentation | Supported | Hardware constraint documented in v1 scope | Keep out of v1 until hardware fitted |
+| C-12 | `HIL-observed` status category | Guidance synthesis | Supported | Result schema and observation log | No conflict; keep the status term |
+| C-13 | `applyTo: tests/hil/**` only | Guidance synthesis | Supported | Instruction scope contract | No conflict; keep scope narrow |
+| C-14 | Agent routing hooks only | Guidance synthesis | Supported | Current agent routing | No conflict; no extra HIL agent yet |
+| C-15 | First PR is documentation and skeleton only | Issue #138 acceptance criteria | Supported | Current PR scope and draft fixture status | No conflict; keep hardware work deferred |
+| C-16 | Loopback pairs are provenance-only until verified | Fixture YAML and Markdown | Supported | Draft fixture status and HW-4/HW-5 | Keep unconfirmed until continuity/polarity checks |
+| C-17 | Pins 9, 11, 51 reserved for OC16-CNC | Fixture YAML | Supported | Reserved pin list | No conflict; preserve in fixture |
+| C-18 | PWM pins 17–22, ADC pins 41–47 | Fixture documentation | Supported | Capability matrix | Keep as planned future scope |
+| C-19/20 | Separate primitive and machine-test directories | Guidance synthesis | Supported | Directory split and scope contract | No conflict; preserve split |
 
 ---
 

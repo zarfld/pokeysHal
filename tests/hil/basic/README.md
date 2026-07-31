@@ -41,10 +41,11 @@ All tests in this directory must use setup ID: `pokeys57e-loopback-v1`
 The fixture definition is at: `tests/hil/setups/pokeys57e-loopback-v1.yaml`
 
 Tests must be guarded by `POKEYS_HIL=1` environment variable. When the variable
-is absent, record `SKIPPED`. When the runner is not a HIL-capable host, or the
-fixture is not runnable, or the device identity cannot be confirmed, record
-`ERROR`. Use `FAIL` only when the hardware behavior diverges from the expected
-oracle.
+is absent, record `SKIPPED`. When the test suite is discovered on a non-HIL runner
+without HIL being requested, record `SKIPPED`. When `POKEYS_HIL=1` but the runner
+lacks the fixture, the fixture is draft or not runnable, or the device identity
+cannot be confirmed, record `ERROR`. Use `FAIL` only when the hardware behavior
+diverges from the expected oracle.
 
 ## Test order
 
@@ -62,7 +63,7 @@ Tests must run in ID order. Each layer depends on the previous passing.
 
 ```bash
 # Requires physical PoKeys57E fixture and self-hosted runner
-POKEYS_HIL=1 POKEYS_DEVICE_ID=<candidate-id-from-fixture> pytest -m hil tests/hil/basic -v
+POKEYS_HIL=1 POKEYS_DEVICE_ID=<verified-expected-device-id-from-fixture> pytest -m hil tests/hil/basic -v
 ```
 
 A self-hosted HIL workflow is planned but not implemented in this revision.

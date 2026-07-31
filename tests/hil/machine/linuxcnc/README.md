@@ -36,13 +36,15 @@ belong in `tests/hil/basic/` where failures are diagnosable against a single sub
 ```
 tests/hil/machine/linuxcnc/
   README.md                  — this file
-  DM542_XXYZ_mill/           — full INI/HAL configuration under test
-    Pokeys57E_DM542_XXYZ_mill.ini
-    Pokeys_DM542_XXYZ_mill.hal
-    pokeys_homing.hal
-    Pokeys57E_SimPins.hal
+  # Planned:
+  DM542_XXYZ_mill/           — full INI/HAL configuration to be imported or recreated
   pytest/                    — integration test cases
 ```
+
+The intended machine integration coverage is a LinuxCNC `DM542_XXYZ_mill` stack
+with `wcomp`-based simulated switches and homing wiring. Any external
+`Pokeys57E_SimPins.hal` reference should be treated as historical provenance only;
+it is not assumed to exist in this repository.
 
 ## Status
 

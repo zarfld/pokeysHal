@@ -3,7 +3,8 @@ setup_id: pokeys57e-loopback-v1
 revision: 1
 
 # Physical continuity of declared loopbacks has NOT been independently confirmed.
-# This definition is derived from Pokeys57E_SimPins.hal (provenance).
+# This definition is derived from the historical external configuration
+# zarfld/LinuxCnc_PokeysLibComp/DM542_XXYZ_mill/Pokeys57E_SimPins.hal.
 # Verify with continuity test or controlled toggle before marking wiring as confirmed.
 
 # Runner must refuse to operate this fixture until fixture_status is 'verified'
@@ -32,7 +33,7 @@ safety:
   require_safe_reset_on_exit: true
 
 # HAL channel index = physical pin number - 1
-# Physical Pin 23 -> pokeys.0.digout.22.out  (confirmed from SimPins.hal)
+# Physical Pin 23 -> pokeys.0.digout.22.out  (documented in the historical external configuration; not independently verified)
 pin_numbering: physical_is_one_based_hal_index_is_zero_based
 
 # Capabilities are declared as draft; none are active until runnable: true
