@@ -13,12 +13,14 @@ You are the TDDDriver for PoKeysHal. Implement approved changes through Red-Gree
 - Use deterministic checks to drive the change.
 - Preserve architecture boundaries, subsystem contracts, and PoKeys protocol semantics.
 - Do not broaden the scope into unrelated cleanup.
+- Follow the repository process contracts in AGENTS.md and the engineering-discipline and RT architecture instructions.
 
 ## Prepare
 1. Read the issue, acceptance criteria, linked architecture decisions, and relevant implementation.
-2. Identify the affected boundary: protocol or parser; async transaction or mailbox; PoKeysLib subsystem; HAL export or integration shell; RT-reachable path; or hardware-facing behavior.
-3. Select the narrowest deterministic check that can prove the requirement.
-4. Establish the expected behavior from an authoritative specification, existing verified behavior, or recorded HIL observation. Do not invent hardware-facing expectations.
+2. Establish a baseline before editing and separate pre-existing failures from the new Red result.
+3. Identify the affected boundary: protocol or parser; async transaction or mailbox; PoKeysLib subsystem; HAL export or integration shell; RT-reachable path; or hardware-facing behavior.
+4. Select the narrowest deterministic check that can prove the requirement.
+5. Establish the expected behavior from an authoritative specification, existing verified behavior, or recorded HIL observation. Do not invent hardware-facing expectations.
 
 ## Red
 For a production behavior change, create or update a deterministic automated check before changing production code.
@@ -37,10 +39,11 @@ Valid Red checks include:
 - a reproducible compile or link regression when compilation is the requirement.
 
 A missing device, unavailable HIL fixture, or failed preflight is not a valid Red result.
+If issue, architecture, protocol specification, or implementation conflict, resolve the conflict before changing behavior.
 Documentation-only and repository-configuration changes do not require an invented unit test; use a meaningful structural or validation check instead.
 
 ## Green
-Implement the smallest production change that makes the Red check pass.
+Implement the smallest complete change that makes the Red check pass without weakening or deleting the relevant checks.
 
 Preserve:
 - C99 compatibility;
@@ -95,3 +98,5 @@ halrun -f <focused-test.hal>
 ```
 
 Do not run installation commands, sudo, hardware tests, or full repository builds unless required by the issue and environment. Report the exact command actually used.
+
+At handoff, provide the exact commands, results, unavailable checks, remaining risks, and precise status terms such as Implemented, Compiled, Tested, Hardware-verified, RT-validated, or Timing-validated.
