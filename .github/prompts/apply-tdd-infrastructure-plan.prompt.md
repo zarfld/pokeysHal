@@ -35,7 +35,7 @@ Do not infer or substitute missing acceptance criteria.
 
 1. Read the issue and all acceptance criteria.
 2. Read:
-   - `docs/HIL_Setup_4_TDD/HIL_TDD_synthesis.md`;
+   - `docs/HIL_Setup_4_TDD/HIL_TDD_synthesis.md` (the canonical synthesis artifact);
    - the approved infrastructure audit/plan;
    - current repository instructions;
    - every customization file affected by the issue.

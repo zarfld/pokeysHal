@@ -57,7 +57,8 @@ Before proceeding, read the fixture YAML at
 - all verification fields required by the selected capability are `true`
 
 For the current physical-pin layout and capability constraints, see
-`tests/hil/setups/pokeys57e-loopback-v1.md`.
+`tests/hil/setups/pokeys57e-loopback-v1.md`. Treat the historical external
+configuration references there as provenance only; they do not verify the live fixture.
 
 ---
 
