@@ -48,3 +48,21 @@ experimental/build/Makefile.noqmakeRT
 experimental/build/*.o
 experimental/build/*.so
 mock_headers/
+
+
+# Native build products
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dll
+*.lib
+*.exe
+
+# Generated build trees
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
