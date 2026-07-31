@@ -1,16 +1,20 @@
-# tests/integration/linuxcnc — Machine Integration Tests
+# tests/hil/machine/linuxcnc — Machine Integration Tests
 
 ## Scope
 
 These tests verify the full `DM542_XXYZ_mill` LinuxCNC machine configuration,
 including homing, simulated switches, kinematics, and the complete HAL/INI stack.
+They use the same physical PoKeys57E loopback fixture but load the full machine
+configuration, placing them in the `tests/hil/` tree so the HIL safety instruction
+(`applyTo: tests/hil/**`) applies.
 
 Integration tests intentionally test the combination of:
 driver behavior + HAL naming + INI parameter propagation + homing algorithm +
 `wcomp` window comparators + joint mappings + machine-on/e-stop routing.
 
 A failure here can come from any of those layers. Use primitive HIL tests
-(`tests/hil/basic/`) first to isolate driver-level defects.
+(`tests/hil/basic/`) first to isolate driver-level defects before running
+machine integration tests.
 
 ## What belongs here
 

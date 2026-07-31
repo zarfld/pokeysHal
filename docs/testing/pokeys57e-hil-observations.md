@@ -16,16 +16,19 @@ Each observation entry:
 - **Setup ID**: pokeys57e-loopback-v1 rev <N>
 - **Commit**: <SHA>
 
-**Wiring**: Physical Pin X → Physical Pin Y  
-**HAL output**: `pokeys.0.digout.NN.out`  
-**Expected input**: `pokeys.0.PEv2.N.digin.XXX.in`
+**Wiring**: Physical Pin X → Physical Pin Y
+**HAL output**: `pokeys.0.digout.NN.out`
+**Observed HAL input**: `pokeys.0.PEv2.N.digin.XXX.in`
 
 **Observation**:
-- output false → input false/inactive (verified)
-- output true → input true/active (verified)
-- output false → input false/inactive (verified)
+- source HAL command: (e.g., `halcmd setp pokeys.0.digout.22.out false`)
+- source physical voltage: (measured or inferred)
+- sink raw digital value: (e.g., `halcmd gets pokeys.0.digout.27.in`)
+- PEv2 logical value: (e.g., `halcmd gets pokeys.0.PEv2.0.digin.LimitN.in`)
+- configured inversion: (yes/no; INI/HAL source)
+- settling/update time: (observed or estimated)
 
-**Verified by**: tests/hil/basic/pytest/test_XXX.py  
+**Verified by**: tests/hil/basic/pytest/test_XXX.py
 **Used as oracle in**: tests/unit/test_XXX.c
 ```
 

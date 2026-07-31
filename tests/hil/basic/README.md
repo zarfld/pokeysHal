@@ -58,9 +58,11 @@ Tests must run in ID order. Each layer depends on the previous passing.
 ## Running
 
 ```bash
-# Requires physical PoKeys57E fixture and self-hosted runner label
+# Requires physical PoKeys57E fixture and self-hosted runner
 POKEYS_HIL=1 POKEYS_DEVICE_ID=27295 pytest -m hil tests/hil/basic -v
 ```
 
-Do not run on standard GitHub-hosted CI. Use the manual workflow
-`.github/workflows/hil-pokeys57e.yml`.
+A self-hosted HIL workflow is planned but not implemented in this revision.
+Run no automated HIL tests until the fixture is verified (`runnable: true`)
+and a runner with the physical device is available.
+Do not run on standard GitHub-hosted CI.

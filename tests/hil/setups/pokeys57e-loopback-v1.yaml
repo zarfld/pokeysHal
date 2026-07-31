@@ -6,26 +6,39 @@ revision: 1
 # This definition is derived from Pokeys57E_SimPins.hal (provenance).
 # Verify with continuity test or controlled toggle before marking wiring as confirmed.
 
+# Runner must refuse to operate this fixture until fixture_status is 'verified'
+# and runnable is true. See HW-0 through HW-5 in open_items.
+fixture_status: draft
+runnable: false
+
+verification:
+  device_identity_confirmed: false   # HW-0
+  continuity_confirmed: false        # HW-4
+  polarity_confirmed: false          # HW-5
+  electrical_protection_confirmed: false  # series resistors fitted?
+
 device:
   model: PoKeys57E
-  expected_device_id: 27295  # unconfirmed — verify via halcmd show param
+  candidate_device_id: 27295   # unconfirmed; set expected_device_id after HW-0
+  expected_device_id: null
   transport: ethernet
   exclusive_use: true
 
 safety:
   motion_allowed: false
   pulse_engine_allowed: false
-  startup_output_state: false    # all outputs driven to false before any test
-  cleanup_output_state: false    # all outputs restored to false after every test
+  # Safe state is defined per source channel (safe_logical_value below).
+  # Do not assume false == electrically inactive without confirming HW-5.
   require_safe_reset_on_exit: true
 
 # HAL channel index = physical pin number - 1
 # Physical Pin 23 -> pokeys.0.digout.22.out  (confirmed from SimPins.hal)
 pin_numbering: physical_is_one_based_hal_index_is_zero_based
 
+# Capabilities are declared as draft; none are active until runnable: true
 capabilities:
-  - digital-loopback
-  - pev2-limit-home
+  - digital-loopback   # draft — blocked by HW-4/HW-5
+  - pev2-limit-home    # draft — blocked by HW-4/HW-5
 
 # Excluded from v1 scope — hardware questions HW-1/HW-2 unresolved:
 # Pin 33 -> Pin 52 (SimPins.hal) vs PEv2_EmergencyInputPin=54 (INI).
@@ -47,10 +60,15 @@ loopbacks:
       physical_pin: 23
       hal_channel: 22     # physical - 1
       hal_pin: "pokeys.0.digout.22.out"
+      startup_mode: high_impedance
+      test_mode: digital_output
+      safe_logical_value: false
+      expected_safe_physical_level: low   # unconfirmed — see HW-5
     sink:
       physical_pin: 28
       hal_channel: 27
       observed_hal_pin: "pokeys.0.PEv2.0.digin.LimitN.in"
+      required_mode_before_source_enable: digital_input
     polarity: verify-from-device-configuration
     inversion_note: "INI enables inversion for X LimitN; test raw and logical separately"
 
@@ -60,10 +78,15 @@ loopbacks:
       physical_pin: 24
       hal_channel: 23
       hal_pin: "pokeys.0.digout.23.out"
+      startup_mode: high_impedance
+      test_mode: digital_output
+      safe_logical_value: false
+      expected_safe_physical_level: low
     sink:
       physical_pin: 29
       hal_channel: 28
       observed_hal_pin: "pokeys.0.PEv2.0.digin.Home.in"
+      required_mode_before_source_enable: digital_input
     polarity: verify-from-device-configuration
     inversion_note: "INI enables inversion for X Home"
 
@@ -73,10 +96,15 @@ loopbacks:
       physical_pin: 25
       hal_channel: 24
       hal_pin: "pokeys.0.digout.24.out"
+      startup_mode: high_impedance
+      test_mode: digital_output
+      safe_logical_value: false
+      expected_safe_physical_level: low
     sink:
       physical_pin: 30
       hal_channel: 29
       observed_hal_pin: "pokeys.0.PEv2.6.digin.LimitN.in"
+      required_mode_before_source_enable: digital_input
     polarity: verify-from-device-configuration
 
   - id: x2-home
@@ -85,10 +113,15 @@ loopbacks:
       physical_pin: 26
       hal_channel: 25
       hal_pin: "pokeys.0.digout.25.out"
+      startup_mode: high_impedance
+      test_mode: digital_output
+      safe_logical_value: false
+      expected_safe_physical_level: low
     sink:
       physical_pin: 31
       hal_channel: 30
       observed_hal_pin: "pokeys.0.PEv2.6.digin.Home.in"
+      required_mode_before_source_enable: digital_input
     polarity: verify-from-device-configuration
 
   - id: y-limit-negative
@@ -97,10 +130,15 @@ loopbacks:
       physical_pin: 12
       hal_channel: 11
       hal_pin: "pokeys.0.digout.11.out"
+      startup_mode: high_impedance
+      test_mode: digital_output
+      safe_logical_value: false
+      expected_safe_physical_level: low
     sink:
       physical_pin: 37
       hal_channel: 36
       observed_hal_pin: "pokeys.0.PEv2.1.digin.LimitN.in"
+      required_mode_before_source_enable: digital_input
     polarity: verify-from-device-configuration
 
   - id: y-home
@@ -109,10 +147,15 @@ loopbacks:
       physical_pin: 13
       hal_channel: 12
       hal_pin: "pokeys.0.digout.12.out"
+      startup_mode: high_impedance
+      test_mode: digital_output
+      safe_logical_value: false
+      expected_safe_physical_level: low
     sink:
       physical_pin: 38
       hal_channel: 37
       observed_hal_pin: "pokeys.0.PEv2.1.digin.Home.in"
+      required_mode_before_source_enable: digital_input
     polarity: verify-from-device-configuration
     note: "Pin 38 is also integrated-PE DIR-X when internal generator selected"
 
@@ -122,10 +165,15 @@ loopbacks:
       physical_pin: 14
       hal_channel: 13
       hal_pin: "pokeys.0.digout.13.out"
+      startup_mode: high_impedance
+      test_mode: digital_output
+      safe_logical_value: false
+      expected_safe_physical_level: low
     sink:
       physical_pin: 39
       hal_channel: 38
       observed_hal_pin: "pokeys.0.PEv2.2.digin.LimitN.in"
+      required_mode_before_source_enable: digital_input
     polarity: verify-from-device-configuration
     note: "Pin 39 is also integrated-PE DIR-Y when internal generator selected"
 
@@ -135,15 +183,25 @@ loopbacks:
       physical_pin: 15
       hal_channel: 14
       hal_pin: "pokeys.0.digout.14.out"
+      startup_mode: high_impedance
+      test_mode: digital_output
+      safe_logical_value: false
+      expected_safe_physical_level: low
     sink:
       physical_pin: 40
       hal_channel: 39
       observed_hal_pin: "pokeys.0.PEv2.2.digin.Home.in"
+      required_mode_before_source_enable: digital_input
     polarity: verify-from-device-configuration
     note: "Pin 40 is also integrated-PE DIR-Z when internal generator selected"
 
 # Open hardware questions blocking v1 completion:
 open_items:
+  - id: HW-0
+    description: "Confirm actual PoKeys57E device identity and firmware version via halcmd show param"
+    affects: [device-identity]
+    issue: 138
+
   - id: HW-1
     description: "Verify physical wiring: does the loopback wire go to Pin 52 or Pin 54?"
     affects: [emergency-loopback]
