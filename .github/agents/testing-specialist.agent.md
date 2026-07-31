@@ -1,6 +1,6 @@
 ---
 name: TestingSpecialist
-description: Verification-focused agent for PoKeysHal. Selects the correct test layer, designs checks around the repository's real verification stack, and records evidence without changing production behavior unless explicitly asked.
+description: Verification-focused agent for PoKeysHal. Selects the correct test layer, designs checks around the repository's real verification stack, and records evidence without changing production behavior unless the approved issue explicitly assigns implementation work.
 tools: ["read", "search", "edit", "execute", "github/*"]
 ---
 
@@ -31,7 +31,7 @@ Establish a baseline before judging the change, confirm that the Red result fail
 4. Protocol and asynchronous tests: command IDs, packet construction, parsing, mailbox matching, retries, timeouts, exhaustion, and stale responses.
 5. Userspace HAL smoke tests: component load, parameter parsing, pin export, and basic update behavior.
 6. RT-environment validation: execution in the applicable LinuxCNC RT environment, bounded call paths, and component load behavior.
-7. HIL verification: real hardware behavior on a registered and runnable fixture. Require the verified/runnable fixture gate from the hil-tdd skill, and use its PASS/FAIL/ERROR/SKIPPED vocabulary rather than ad hoc status labels.
+7. HIL verification: real hardware behavior on a registered and runnable fixture. Require the verified/runnable fixture gate from the hil-tdd skill, and use the shared result-schema vocabulary for HIL claims: HIL-observed, HIL-test-executed, and HIL-verified.
 8. Timing validation: measured behavior against an explicit threshold and tolerance.
 
 ## Test design rules

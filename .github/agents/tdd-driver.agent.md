@@ -85,7 +85,7 @@ When the expected behavior is not yet known:
 4. execute Red-Green-Refactor using the deterministic test;
 5. run the corresponding HIL case as outer confirmation.
 
-An exploratory HIL observation is not itself the Red test. Do not duplicate the detailed HIL procedure in this agent. Follow the skill's verified/runnable fixture gate and its PASS/FAIL/ERROR/SKIPPED vocabulary.
+An exploratory HIL observation is not itself the Red test. Do not duplicate the detailed HIL procedure in this agent. Follow the skill's verified/runnable fixture gate and the shared result-schema vocabulary for HIL claims: HIL-observed, HIL-test-executed, and HIL-verified.
 
 ## Command selection
 Choose commands from the repository's current build and test documentation. Examples may include:
