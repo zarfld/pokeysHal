@@ -73,6 +73,8 @@ Run checks from narrowest to broadest:
 Stop at the first failing layer and diagnose it before proceeding outward.
 
 ## Hardware-dependent behavior
+Use the existing hil-tdd skill for all hardware-dependent acceptance criteria, including behavior that is already specified but still requires HIL confirmation. Do not treat HIL as optional.
+
 When the expected behavior is not yet known:
 1. use the existing hil-tdd skill;
 2. perform and record a narrow exploratory observation;
@@ -80,7 +82,7 @@ When the expected behavior is not yet known:
 4. execute Red-Green-Refactor using the deterministic test;
 5. run the corresponding HIL case as outer confirmation.
 
-An exploratory HIL observation is not itself the Red test. Do not duplicate the detailed HIL procedure in this agent.
+An exploratory HIL observation is not itself the Red test. Do not duplicate the detailed HIL procedure in this agent. Follow the skill's verified/runnable fixture gate and its PASS/FAIL/ERROR/SKIPPED vocabulary.
 
 ## Command selection
 Choose commands from the repository's current build and test documentation. Examples may include:
