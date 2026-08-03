@@ -493,3 +493,48 @@ Required action:
   values in the embedded tree.
 Status: unresolved
 ```
+
+---
+
+```
+Conflict ID: CONFLICT-012
+Subject: Unreachable initialization block in pokeys_homecomp homing_init()
+Source: pokeys_rt/pokeys_homecomp.comp (E-010), function homing_init(), lines 356-398
+Evidence (inspected at E-010):
+  Line 364:  return makepins(id, n_joints);
+  Lines 366-397: // initialize jid[] and jhd[] data here
+                 for (int jno = 0; jno < EMCMOT_MAX_JOINTS; jno++) { ... }
+  The return on line 364 exits the function before the initialization loop.
+  The initialization loop on lines 366-397 is therefore unreachable dead code.
+  Explicit defaults set in the unreachable block:
+    H[jno].offset = 0
+    H[jno].home = 0, home_final_vel = 0, home_search_vel = 0
+    H[jno].home_latch_vel = 0, home_flags = 0
+    H[jno].home_sequence = 0, volatile_home = 1
+    addr->home_sw = 0, addr->homing = 0, addr->homed = 0
+    addr->home_state = HOME_IDLE
+    addr->index_enable = 0
+    addr->PEv2_AxesState = PK_PEAxisState_axSTOPPED (=0)
+    addr->PEv2_AxesCommand = PK_PEAxisCommand_axIDLE (=0)
+Why this matters for Phase 0:
+  Catalogue entries for HOMECOMP default values cannot cite this unreachable
+  block as the initialization source. Actual default values come from:
+  - HAL shared-memory zero-initialization (hal_malloc fills with zeros on
+    LinuxCNC component startup);
+  - static storage-class initialization (C global/static vars initialized to 0);
+  - makepins() only creates HAL pins; it does not assign initial non-zero values.
+  Therefore all HAL pin defaults for homecomp objects are effectively 0 (or
+  HAL_TYPE zero-equivalent), not the values in the unreachable loop.
+Safety or compatibility impact:
+  LOW for runtime (zero-default matches the explicit defaults in the dead code).
+  HIGH for documentation: any Phase 0 record claiming defaults from the
+  unreachable block is citing dead code.
+Required action:
+  1. Remove "initialized to HOME_IDLE/IDLE/STOPPED" from HOMECOMP default_value
+     fields where cited from the unreachable loop; replace with "0 (zero-init
+     from HAL shared-memory; unreachable explicit init at lines 366-397)".
+  2. Correct lifecycle-ownership-matrix.md initialization phase for homecomp.
+  3. Phase 1 implementation must verify whether makepins() itself initializes
+     any pin values, or whether a fix is needed to restore the initialization.
+Status: unresolved
+```

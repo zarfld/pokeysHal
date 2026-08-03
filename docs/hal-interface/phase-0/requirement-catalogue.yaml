@@ -542,7 +542,7 @@ requirements:
     legacy_compatibility_status: "Incompatible with canonical interface."
     current_implementation_status: "Implemented (non-canonical). PoKeysLibIOAsync.c:124."
     requirement_sources: [C-006, C-008]
-    implementation_sources: [F-003]
+    implementation_sources: [F-003, F-008, F-009]
     conflicts: ["CONFLICT-004"]
     evidence: "PoKeysLibIOAsync.c:124; issues #37, #39"
 
@@ -610,7 +610,7 @@ requirements:
     initialization_phase: "export_IO_pins via hal_export_adcout (PoKeysLibIOAsync.c:110)"
     update_phase: "HAL->device via hal_adcout_getscaledvalue; conversion IMPLEMENTED in PK_PWMUpdateAsync (PoKeysLibIOAsync.c:703); HIL not yet verified"
     device_field: "device->PWM.PWManalogOutputs[j].value"
-    pokeyslib_function: "PK_PWMAsync (conversion path unverified)"
+    pokeyslib_function: "PK_PWMUpdateAsync (PoKeysLibIOAsync.c:703; conversion implemented)"
     enumeration: "n/a"
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: canonical — present with correct direction (HAL_IN)
@@ -618,10 +618,11 @@ requirements:
     current_implementation_status: >
       IMPLEMENTED. hal_export_adcout called at PoKeysLibIOAsync.c:110.
       adcout.J.value created as HAL_IN (correct direction).
-      Whether value is functionally converted to PWM duty cycle is unverified.
-      Issues #37 and #39 remain OPEN.
+      Conversion path IMPLEMENTED: PK_PWMUpdateAsync reads adcout.J.value via
+      hal_adcout_getscaledvalue, computes PWMduty, sends CMD 0xCB (C4 trace).
+      HIL hardware verification pending. Issues #37 and #39 remain OPEN.
     requirement_sources: [C-006, C-008, A-002, B-003]
-    implementation_sources: [F-003]
+    implementation_sources: [F-003, F-008, F-009]
     conflicts: ["CONFLICT-004"]
     evidence: "PoKeysLibIOAsync.c:110; E-001 (legacy HAL file); issues #37, #39"
 
@@ -1113,7 +1114,7 @@ requirements:
     device_field: "device->PEv2.PulseEngineState"
     pokeyslib_function: "PK_PEv2_StatusGetAsync"
     enumeration: >
-      ePK_PEState (PoKeysLib.h:221): STOPPED=0, INTERNAL=1, BUFFER=2, RUNNING=3,
+      ePK_PEState (PoKeysLib.h:221, 15 values): STOPPED=0, INTERNAL=1, BUFFER=2, RUNNING=3,
       JOGGING=10, STOPPING=11, HOME=20, HOMING=21, PROBECOMPLETE=30, PROBE=31,
       PROBEERROR=32, HYBRIDPROBE_STOPPING=40, HYBRIDPROBE_COMPLETE=41,
       STOP_LIMIT=100, STOP_EMERGENCY=101.
@@ -1165,7 +1166,7 @@ requirements:
     hal_type: hal_bit_t
     direction_or_access: HAL_IN
     cardinality: "1 per joint"
-    creation_condition: "unconditional (per joint jno=0..8)"
+    creation_condition: "unconditional (per joint jno=0..n_joints-1; n_joints set by LinuxCNC)"
     units: "n/a"
     scaling_formula: "n/a"
     default_value: "0"
@@ -1177,7 +1178,10 @@ requirements:
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: LinuxCNC homemod convention (not CDI)
     legacy_compatibility_status: "defined in pokeys_homecomp.comp (E-010); must be connected to pokeysHal digin or PEv2 limit pin"
-    current_implementation_status: "Not exported by pokeysHal. Expected to be wired from pokeysHal digin.J.in or PEv2.I.digin.Home.in."
+    owner: "LinuxCnc_PokeysLibComp/pokeys_homecomp"
+    pokeysHal_requirement: out-of-scope
+    integration_role: signal endpoint
+    current_implementation_status: "Homecomp owns this pin. Signal is wired from pokeysHal digin.J.in or PEv2.I.digin.Home.in in the HAL configuration."
     requirement_sources: [E-010]
     implementation_sources: []
     conflicts: []
@@ -1202,7 +1206,10 @@ requirements:
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: LinuxCNC homemod convention
     legacy_compatibility_status: "defined in E-010"
-    current_implementation_status: "Not exported by pokeysHal."
+    owner: "LinuxCnc_PokeysLibComp/pokeys_homecomp"
+    pokeysHal_requirement: out-of-scope
+    integration_role: signal endpoint
+    current_implementation_status: "Homecomp owns this pin; not a pokeysHal export requirement."
     requirement_sources: [E-010]
     implementation_sources: []
     conflicts: []
@@ -1227,7 +1234,10 @@ requirements:
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: LinuxCNC homemod convention
     legacy_compatibility_status: "defined in E-010"
-    current_implementation_status: "Not exported by pokeysHal."
+    owner: "LinuxCnc_PokeysLibComp/pokeys_homecomp"
+    pokeysHal_requirement: out-of-scope
+    integration_role: signal endpoint
+    current_implementation_status: "Homecomp owns this pin; not a pokeysHal export requirement."
     requirement_sources: [E-010]
     implementation_sources: []
     conflicts: []
@@ -1241,18 +1251,21 @@ requirements:
     direction_or_access: HAL_OUT
     cardinality: "1 per joint"
     creation_condition: "unconditional"
-    units: "n/a — see pokeys_home_state_t enum"
+    units: "n/a — see local_home_state_t enum (LinuxCNC homing state machine)"
     scaling_formula: "n/a"
     default_value: "0"
     initialization_phase: "pokeys_homecomp hal_pin_s32_newf"
     update_phase: "written by homecomp state machine each cycle"
     device_field: "addr->home_state (local home state machine)"
     pokeyslib_function: "n/a"
-    enumeration: "pokeys_home_state_t (alias of ePK_PEAxisState in homecomp): STOPPED=0, READY=1, RUNNING=2, HOMING_RESETTING=8, HOMING_BACKING_OFF=9, HOME=10, HOMINGSTART=11, HOMINGSEARCH=12, HOMINGBACK=13, PROBED=14, PROBESTART=15, PROBESEARCH=16, ERROR=20, LIMIT=30"
+    enumeration: "local_home_state_t (LinuxCNC standard homing state machine, pokeys_rt/pokeys_homecomp.comp:137-165): HOME_IDLE=0, HOME_START=1, HOME_UNLOCK=2, HOME_UNLOCK_WAIT=3, HOME_INITIAL_BACKOFF_START=4, HOME_INITIAL_BACKOFF_WAIT=5, HOME_INITIAL_SEARCH_START=6, HOME_INITIAL_SEARCH_WAIT=7, HOME_SET_COARSE_POSITION=8, HOME_FINAL_BACKOFF_START=9, HOME_FINAL_BACKOFF_WAIT=10, HOME_RISE_SEARCH_START=11, HOME_RISE_SEARCH_WAIT=12, HOME_FALL_SEARCH_START=13, HOME_FALL_SEARCH_WAIT=14, HOME_SET_SWITCH_POSITION=15, HOME_INDEX_ONLY_START=16, HOME_INDEX_SEARCH_START=17, HOME_INDEX_SEARCH_WAIT=18, HOME_SET_INDEX_POSITION=19, HOME_FINAL_MOVE_START=20, HOME_FINAL_MOVE_WAIT=21, HOME_LOCK=22, HOME_LOCK_WAIT=23, HOME_FINISHED=24, HOME_ABORT=25"
     bitmap_definition: "n/a — single-value enum"
     linuxcnc_canonical_status: LinuxCNC homemod convention
     legacy_compatibility_status: "defined in E-010"
-    current_implementation_status: "Not exported by pokeysHal."
+    owner: "LinuxCnc_PokeysLibComp/pokeys_homecomp"
+    pokeysHal_requirement: out-of-scope
+    integration_role: signal endpoint
+    current_implementation_status: "Homecomp owns this pin; not a pokeysHal export requirement."
     requirement_sources: [E-010]
     implementation_sources: []
     conflicts: []
@@ -1277,7 +1290,10 @@ requirements:
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: LinuxCNC homemod convention
     legacy_compatibility_status: "defined in E-010"
-    current_implementation_status: "Also exported by pokeysHal PoKeysLibPulseEngine_v2Async.c as PEv2.I.index-enable (HAL_IO)."
+    owner: "Both: homecomp exports joint.N.index-enable; pokeysHal exports PEv2.I.index-enable"
+    pokeysHal_requirement: signal endpoint wiring
+    integration_role: shared signal between homecomp and pokeysHal
+    current_implementation_status: "Both components export this pin. Net them together in HAL configuration. pokeysHal export: PoKeysLibPulseEngine_v2Async.c (HAL_IO)."
     requirement_sources: [E-010]
     implementation_sources: [F-005]
     conflicts: []
@@ -1302,7 +1318,10 @@ requirements:
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: LinuxCNC homemod/PoKeys convention
     legacy_compatibility_status: "defined in E-010; wired from pokeysHal PEv2.I.AxesState"
-    current_implementation_status: "Requires wiring: pokeysHal exports PEv2.I.AxesState (HAL_OUT); homecomp reads joint.N.PEv2.AxesState (HAL_IN). Compatible."
+    owner: "LinuxCnc_PokeysLibComp/pokeys_homecomp"
+    pokeysHal_requirement: out-of-scope
+    integration_role: signal endpoint (reads from pokeysHal PEv2.I.AxesState via HAL net)
+    current_implementation_status: "Homecomp reads via HAL signal connected to pokeysHal PEv2.I.AxesState (HAL_OUT). Compatible."
     requirement_sources: [E-010, C-002]
     implementation_sources: [F-005]
     conflicts: []
@@ -1327,7 +1346,10 @@ requirements:
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: LinuxCNC homemod/PoKeys convention
     legacy_compatibility_status: "defined in E-010; wired to pokeysHal PEv2.I.AxesCommand"
-    current_implementation_status: "Requires wiring: homecomp writes joint.N.PEv2.AxesCommand (HAL_OUT); pokeysHal reads PEv2.I.AxesCommand (HAL_IN). Compatible."
+    owner: "LinuxCnc_PokeysLibComp/pokeys_homecomp"
+    pokeysHal_requirement: out-of-scope
+    integration_role: signal endpoint (writes to pokeysHal PEv2.I.AxesCommand via HAL net)
+    current_implementation_status: "Homecomp drives via HAL signal connected to pokeysHal PEv2.I.AxesCommand (HAL_IN). Compatible."
     requirement_sources: [E-010, C-002]
     implementation_sources: [F-005]
     conflicts: []
