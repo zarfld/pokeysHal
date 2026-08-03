@@ -34,8 +34,8 @@ LinuxCnc_PokeysLibComp@0c058e6c.
 | `adcin.<J>.bit-weight` (float, HAL_PARAM_RW) | canonical adcin.bit-weight | not specified in issue #35 | PRESENT via `hal_export_adcin` | **canonical and compatible** | |
 | `adcin.<J>.hw-offset` (float, HAL_PARAM_RW) | canonical adcin.hw-offset | not specified in issue #35 | PRESENT via `hal_export_adcin` | **canonical and compatible** | |
 | `adcin.<J>.ReferenceVoltage` (float, HAL_PARAM_RO) | not canonical | not in legacy | implemented | **PoKeys-specific extension** | Decide: keep or integrate into hw-offset semantics |
-| `adcout.<J>.value` (float, HAL_IN) | canonical adcout.value | `pokeys.0.adcout.0.value` (legacy HAL file) | PRESENT via `hal_export_adcout` (PoKeysLibIOAsync.c:110). Correct direction (HAL_IN). | **canonical and compatible** — functional conversion to PWM unverified (issues #37, #39 OPEN) | Verify PWM conversion path |
-| `adcout.<J>.enable` (bit, HAL_IN) | canonical adcout.enable | `pokeys.0.adcout.0.enable` (legacy HAL file) | PRESENT via `hal_export_adcout`. Correct direction (HAL_IN). | **canonical and compatible** | |
+| `adcout.<J>.value` (float, HAL_IN) | canonical adcout.value | `pokeys.0.adcout.0.value` (legacy HAL file) | PRESENT via `hal_export_adcout` (PoKeysLibIOAsync.c:110). Correct direction (HAL_IN). Conversion IMPLEMENTED (PK_PWMUpdateAsync at 100 ms). | **canonical and compatible** — conversion implemented; HIL pending | Decide policy for supplementary PWM objects |
+| `adcout.<J>.enable` (bit, HAL_IN) | canonical adcout.enable | `pokeys.0.adcout.0.enable` (legacy HAL file) | PRESENT via `hal_export_adcout`. Correct direction (HAL_IN). Enables/disables PWM output. | **canonical and compatible** | |
 | `adcout.<J>.scale` (float, HAL_PARAM_RW) | canonical adcout.scale | not confirmed | PRESENT via `hal_export_adcout` | **canonical and compatible** | |
 | `adcout.<J>.offset` (float, HAL_PARAM_RW) | canonical adcout.offset | not confirmed | PRESENT via `hal_export_adcout` | **canonical and compatible** | |
 | `adcout.<J>.high-limit` (float, HAL_PARAM_RW) | canonical adcout.high-limit | not confirmed | PRESENT via `hal_export_adcout` | **canonical and compatible** | |

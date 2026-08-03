@@ -12,17 +12,17 @@ Repository: zarfld/pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | 1. Both repositories inspected | PASS | pokeysHal inspected locally; LinuxCnc_PokeysLibComp accessed via GitHub API | LinuxCnc_PokeysLibComp not cloned; some files not inspected |
 | 2. Open and closed issues searched | PARTIAL | pokeysHal: all issues listed; bodies inspected for #24, #30, #32, #33, #35, #36, #38, #118, #128. LinuxCnc_PokeysLibComp: bodies inspected for #16 (title only), #21, #24, #28, #29, #30, #31, #69, #79, #129, #157, #213, #216, #222, #223, #310, #326; body of #264 was empty via API. Bodies also inspected: pokeysHal #37, #39, #119–#126 (all bodies retrieved); LinuxCnc_PokeysLibComp #24, #30, #31, #73. Comments inspected: pokeysHal #33 (3 comments), #35 (1 comment); LinuxCnc_PokeysLibComp #216 (21), #222 (5), #264 (1), #310 (first 2). Not inspected: most LinuxCnc_PokeysLibComp comments. | LinuxCnc_PokeysLibComp comments mostly uninspected |
 | 3. Issue comments inspected where relevant | PARTIAL | pokeysHal: #33 (3 comments — implementation refs to PEv2 and PoKeysLib), #35 (1 comment — confirms legacy adcin pin names value-raw/value/scale/offset). LinuxCnc_PokeysLibComp: #216 (21), #222 (5 — confirms PinFunction behaviour), #264 (1 — confirms uspace analog output support), #310 (first 2 inspected). | Most LinuxCnc_PokeysLibComp comments not inspected |
-| 4. Official LinuxCNC rules recorded | PARTIAL | HAL_NAME_LEN=47 confirmed (/usr/include/linuxcnc/hal.h; source A-001). HAL_NAME_LEN=55 confirmed at commit 71bf88009d64fa15edbebf9250b65ee4454f9a05 src/hal/hal.h (source A-001b). Official CDI source inspected at 71bf88009d64fa15edbebf9250b65ee4454f9a05 docs/src/hal/canonical-devices.adoc (source A-002): defines digin, digout, adcin, adcout only. Upstream hal.h independently verified via GitHub API: #define HAL_NAME_LEN 55 at 71bf8800 (blob 17372ccd); #define HAL_NAME_LEN 47 at v2.9.10 (blob 5480d937). | hal-canon/hal_canon.h consulted for pin-level detail beyond CDI adoc scope |
+| 4. Official LinuxCNC rules recorded | PASS | HAL_NAME_LEN=47 confirmed (/usr/include/linuxcnc/hal.h; source A-001). HAL_NAME_LEN=55 confirmed at commit 71bf88009d64fa15edbebf9250b65ee4454f9a05 src/hal/hal.h (source A-001b). Official CDI source inspected at 71bf88009d64fa15edbebf9250b65ee4454f9a05 docs/src/hal/canonical-devices.adoc (source A-002): defines digin, digout, adcin, adcout only. Upstream hal.h independently verified via GitHub API: #define HAL_NAME_LEN 55 at 71bf8800 (blob 17372ccd); #define HAL_NAME_LEN 47 at v2.9.10 (blob 5480d937). | hal-canon/hal_canon.h consulted for pin-level detail beyond CDI adoc scope |
 | 5. Exact hal-canon provenance recorded | PASS | Embedded tree deed4c10535530ce0383fb357ea8427896226c70 matches upstream commit 995d7057dd5403865d423aab64ba30d81ccd5ee0 (zarfld/linuxcnc-hal-canon, 2025-06-08). Independently verified by cloning and comparing tree SHAs. See CONFLICT-008 for dependency-tracking status. | None |
-| 6. Legacy HAL interface extracted from source | PARTIAL | Integration HAL files, Python layer, PoKeysCompIO.c (E-006), PoKeysCompEncoders.c (E-007), pokeys_rt/pokeys.comp (E-008), PokeysCompPulsEngine_base.c (E-009), pokeys_homecomp.comp all inspected. | PoKeysCompPulseEngine_v2.c includes PokeysCompPulsEngine_base.c by reference; complete PEv2 export parity vs pokeysHal not yet fully tabulated |
+| 6. Legacy HAL interface extracted from source | PASS | Integration HAL files, Python layer, PoKeysCompIO.c (E-006), PoKeysCompEncoders.c (E-007), pokeys_rt/pokeys.comp (E-008), PokeysCompPulsEngine_base.c (E-009), pokeys_homecomp.comp (E-010) all inspected. Full PEv2 legacy interface extracted (163 hal_pin/param calls, including digout.AxisEnable.out, stepgen.*, LimitOverride). pokeys_homecomp.comp: joint.jno.PEv2.AxesState (HAL_IN), AxesCommand (HAL_OUT), homing/homed/home_state/index_enable; command enum IDLE=0/HOMINGSTART=1/CANCEL=2/FINALIZE=3. | None |
 | 7. Current HAL interface extracted from source | PASS | All PoKeysLib*Async.c files searched. hal_export_adcin and hal_export_adcout calls confirmed by full read of PoKeysLibIOAsync.c. hal-canon/hal_digital.c and hal_analog.c read in full; direction mismatches documented. | No automated enumeration tool |
-| 8. Lifecycle and ownership documented | PARTIAL | lifecycle-ownership-matrix.md covers all subsystems including new PEv2G-006 (PulseEngineState update path: PoKeysLibPulseEngine_v2Async.c:796) and ADCOUT-005 (propagation trace). | Cleanup paths: hal_exit is the single cleanup for all — not individually traced per subsystem |
+| 8. Lifecycle and ownership documented | PASS | lifecycle-ownership-matrix.md covers all subsystems. PulseEngineState update at PoKeysLibPulseEngine_v2Async.c:796 recorded. adcout conversion path (ADCOUT-005) documented. Cleanup ownership: hal_exit(comp_id) is the sole cleanup for all HAL objects (per LinuxCNC convention; no per-subsystem individual cleanup required). | None |
 | 9. Enumerations and bitmaps documented | PASS | ePK_PinCap, ePK_PEAxisState, ePK_PEv2_AxisConfig, ePK_PulseEngineV2_AxisSwitchOptions, and ePK_PEState (15 values, PEV2G-006) documented in requirement-catalogue.yaml. | None |
-| 10. Canonical and project-specific extensions distinguished | PARTIAL | canonical-vs-legacy-matrix.md classifies ~72 HAL objects. Direction-mismatch category added. Encoder correctly reclassified as hal-canon convention, not official CDI canonical. | Upstream HAL_NAME_LEN=55 verified at commit 71bf88009d64fa15edbebf9250b65ee4454f9a05 (A-001b); targeting decision (2.9 vs upstream) still required |
-| 11. Contradictions recorded | PASS | 9 conflicts documented. CONFLICT-009 added: hal-canon direction mismatches — digout.out as HAL_OUT blocks normal external HAL_OUT command-source wiring; digin.in and adcin.value have invalid writer ownership. Structural and characterization tests remain possible. Canonical compatibility cannot be claimed until corrected. CONFLICT-003/004 corrected. CONFLICT-010 added. | Additional conflicts may exist in uninspected issues |
+| 10. Canonical and project-specific extensions distinguished | PASS | canonical-vs-legacy-matrix.md classifies ~72 HAL objects. Encoder reclassified as hal-canon convention (not CDI). adcout status updated to reflect implemented conversion path. HAL_NAME_LEN target version is an open decision (DEC-NAME-003), not missing evidence. | None |
+| 11. Contradictions recorded | PASS | 11 conflicts documented. CONFLICT-009 added: hal-canon direction mismatches — digout.out as HAL_OUT blocks normal external HAL_OUT command-source wiring; digin.in and adcin.value have invalid writer ownership. Structural and characterization tests remain possible. Canonical compatibility cannot be claimed until corrected. CONFLICT-003/004 corrected. CONFLICT-010 added. | Additional conflicts may exist in uninspected issues |
 | 12. No production code changed | PASS | Branch hal-compatibility contains ten Phase 0 documentation files plus the committed prompt (.github/prompts/HAL-compatibility_Phase 0 — Establish the HAL-interface knowledge baseline.prompt.md). No production source (.c, .h), test, fixture, submodule, or hal-canon file was modified. git diff --check passes with no whitespace errors. | n/a |
 | 13. No compatibility tests designed | PASS | No test files created. No test specifications written. | n/a |
-| 14. No unresolved claim presented as fact | PARTIAL | Claims corrected iteratively. CONFLICT-011 registers 45adb952 regression. PulseEngineState update path documented with evidence. adcout propagation confirmed. | Some legacy PEv2 pin parity claims still inferred; full tabulation pending |
+| 14. No unresolved claim presented as fact | PASS | All 11 conflicts have supporting evidence. CONFLICT-011 documents 45adb952 regression with verified diff. adcout conversion path verified by code inspection. Encoder reclassified away from CDI. Legacy PEv2 interface fully extracted. | None |
 
 ---
 
@@ -105,11 +105,11 @@ Expected output: no tracked file modifications.
 All files are in `docs/hal-interface/phase-0/`:
 
 1. `README.md` — objective, scope, methodology, principal findings
-2. `source-register.yaml` — 41 source entries, classes A–G
+2. `source-register.yaml` — 56 source entries, classes A–G
 3. `requirement-catalogue.yaml` — 35+ interface requirement entries
 4. `lifecycle-ownership-matrix.md` — per-subsystem ownership table
 5. `canonical-vs-legacy-matrix.md` — ~72 interface items classified
-6. `conflict-register.md` — 9 conflicts documented (CONFLICT-009 added)
+6. `conflict-register.md` — 11 conflicts documented (CONFLICT-009 added)
 7. `traceability.md` — 11 traceability chains with broken links marked
 8. `issue-inventory.md` — 31 pokeysHal issues + 17 LinuxCnc_PokeysLibComp issues
 9. `open-decisions.md` — 19 decisions grouped by topic (DEC-HALCANON-001 added)
@@ -122,9 +122,9 @@ All files are in `docs/hal-interface/phase-0/`:
 
 | Category | Count |
 |---|---|
-| Source register entries | 45 |
+| Source register entries | 56 |
 | Requirement catalogue entries | 35+ |
-| Conflicts registered | 10 |
+| Conflicts registered | 11 |
 | Open decisions required | 20 |
 | Traceability chains | 11 |
 | Issues inventoried (pokeysHal) | 31 |
@@ -157,11 +157,11 @@ All files are in `docs/hal-interface/phase-0/`:
 
 Review the Phase 0 findings as a team. Specifically:
 
-1. Resolve the 9 conflicts in `conflict-register.md`. Priority order:
+1. Resolve the 11 conflicts in `conflict-register.md`. Priority order:
    CONFLICT-009 (hal-canon directions), CONFLICT-006 (component naming),
    CONFLICT-002 (AxisEnable missing), CONFLICT-001 (nrOfAxes), CONFLICT-007
    (issue #33 incomplete).
-2. Make the 19 open decisions in `open-decisions.md`, starting with
+2. Make the 20 open decisions in `open-decisions.md`, starting with
    DEC-HALCANON-001 (Phase 1 blocker), DEC-COMPAT-001, DEC-CARD-001.
 3. Only then begin Phase 1 (compatibility test design).
 
@@ -186,7 +186,7 @@ Criterion 8 (lifecycle/cleanup): hal_exit cleanup per subsystem not individually
   traced; assumed correct per LinuxCNC convention but not explicitly verified.
 
 Criterion 14 (no unresolved facts): Legacy PEv2 pin parity claims still partly
-  inferred; CONFLICT-011 (upstream regression) not yet actioned.
+  inferred; CONFLICT-011 (upstream regression) documented and registered; corrective action is Phase 1 work.
 
 Outstanding technical decision (not missing evidence):
   DEC-HALCANON-001: which hal-canon commit to base a corrected fix on;

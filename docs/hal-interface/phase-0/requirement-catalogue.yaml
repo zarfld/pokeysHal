@@ -608,7 +608,7 @@ requirements:
     scaling_formula: "output = clamp((scale * value) + offset); 0 if enable==false"
     default_value: "0.0"
     initialization_phase: "export_IO_pins via hal_export_adcout (PoKeysLibIOAsync.c:110)"
-    update_phase: "HAL->device via hal_adcout_getscaledvalue; PWM conversion unverified"
+    update_phase: "HAL->device via hal_adcout_getscaledvalue; conversion IMPLEMENTED in PK_PWMUpdateAsync (PoKeysLibIOAsync.c:703); HIL not yet verified"
     device_field: "device->PWM.PWManalogOutputs[j].value"
     pokeyslib_function: "PK_PWMAsync (conversion path unverified)"
     enumeration: "n/a"
@@ -677,7 +677,7 @@ requirements:
     linuxcnc_canonical_status: canonical (encoder.position)
     legacy_compatibility_status: compatible
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:48."
-    requirement_sources: [A-002, B-004]
+    requirement_sources: [B-004]
     implementation_sources: [F-004]
     conflicts: []
     evidence: "PoKeysLibEncodersAsync.c:48"
@@ -702,7 +702,7 @@ requirements:
     linuxcnc_canonical_status: canonical (encoder.velocity)
     legacy_compatibility_status: compatible
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:53."
-    requirement_sources: [A-002, B-004]
+    requirement_sources: [B-004]
     implementation_sources: [F-004]
     conflicts: []
     evidence: "PoKeysLibEncodersAsync.c:53"
@@ -727,7 +727,7 @@ requirements:
     linuxcnc_canonical_status: canonical (encoder.reset)
     legacy_compatibility_status: compatible
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:58."
-    requirement_sources: [A-002, B-004]
+    requirement_sources: [B-004]
     implementation_sources: [F-004]
     conflicts: []
     evidence: "PoKeysLibEncodersAsync.c:58"
@@ -752,7 +752,7 @@ requirements:
     linuxcnc_canonical_status: canonical (encoder.index-enable)
     legacy_compatibility_status: compatible
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:64."
-    requirement_sources: [A-002, B-004]
+    requirement_sources: [B-004]
     implementation_sources: [F-004]
     conflicts: []
     evidence: "PoKeysLibEncodersAsync.c:64"
@@ -777,7 +777,7 @@ requirements:
     linuxcnc_canonical_status: canonical (encoder.scale)
     legacy_compatibility_status: compatible
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:71."
-    requirement_sources: [A-002, B-004]
+    requirement_sources: [B-004]
     implementation_sources: [F-004]
     conflicts: []
     evidence: "PoKeysLibEncodersAsync.c:71"

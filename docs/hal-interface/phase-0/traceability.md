@@ -78,9 +78,10 @@ LinuxCNC CDI: adcout.value (float, HAL_IN), adcout.enable (bit, HAL_IN),
         adcout.J.max_voltage (param, HAL_RW) — PoKeysLibIOAsync.c:117
         adcout.pwm.period (param, HAL_RW) — PoKeysLibIOAsync.c:132
   ✗ whether adcout.J.value is functionally converted to PWM duty cycle: unverified
-  ✗ issues #37 and #39 remain OPEN (functional conversion unverified)
-  ✗ legacy integration files reference adcout.0.value and adcout.0.enable (E-001)
-      These names ARE now present.
+  ✓ canonical adcout objects exported; conversion IMPLEMENTED per C4 trace
+  ?→ issues #37/#39 remain OPEN; HIL confirmation pending
+  ✓ legacy integration files reference adcout.0.value and adcout.0.enable (E-001)
+  ✓ these pin names ARE present in current implementation
   ✗ future verification target: none
 ```
 
@@ -208,8 +209,8 @@ PoKeys-specific requirement:
 
 | Subsystem | Missing Link Type |
 |---|---|
-| adcin | Requirement→Implementation (canonical interface not exported) |
-| adcout | Requirement→Implementation (canonical interface not exported) |
+| adcin | Canonical exported; direction mismatch (CONFLICT-009); name mismatch value-raw/in.raw |
+| adcout | Canonical exported; conversion implemented; HIL pending (CONFLICT-004) |
 | PEv2 global | Requirement→Implementation (many pins from #33 absent) |
 | PEv2 per-axis | Requirement→Implementation (digout.AxisEnable.out, stepgen.*, homing params) |
 | PEv2 conditional creation | Requirement↔ADR conflict (#118 vs #128) |

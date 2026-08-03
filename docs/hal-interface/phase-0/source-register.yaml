@@ -239,7 +239,10 @@ sources:
     scope: "HAL-Interface: Analog Output"
     state: open
     inspected: true
-    notes: "Duplicate of #39. Canonical adcout objects ARE exported via hal_export_adcout. Functional value-to-PWM propagation remains unverified. Body not retrieved."
+    notes: >
+      Body retrieved. Issue #37 is a documentation-update cross-reference to #39.
+      Canonical adcout objects ARE exported via hal_export_adcout (PoKeysLibIOAsync.c:110).
+      Conversion path IMPLEMENTED per C4 trace; HIL not yet verified.
 
   - source_id: C-007
     repository: zarfld/pokeysHal
@@ -381,7 +384,7 @@ sources:
     scope: "ADR-PEV2-004: Read/Write Phase Separation in PEv2 Servo Cycle"
     state: open
     inspected: true
-    notes: "Not inspected in Phase 0."
+    notes: "ADR-PEV2-004: Read/Write Phase Separation. Body retrieved: specifies per-cycle read/write sequence separation. Status: Accepted."
 
   - source_id: D-005
     repository: zarfld/pokeysHal
@@ -393,7 +396,7 @@ sources:
     scope: "ADR-PEV2-005: sPoKeysHalPEv2 Global vs Per-Axis Struct Organisation"
     state: open
     inspected: true
-    notes: "Not inspected in Phase 0."
+    notes: "ADR-PEV2-005: sPoKeysHalPEv2 struct organisation. Body retrieved: specifies global vs per-axis struct layout. Status: Accepted."
 
   - source_id: D-006
     repository: zarfld/pokeysHal
@@ -405,7 +408,7 @@ sources:
     scope: "ARC-C-PEV2: PulseEngine v2 HAL Interface Component"
     state: open
     inspected: true
-    notes: "Not inspected in Phase 0."
+    notes: "Body retrieved. Status: Specified. References ADRs #127-#131. Component specification for the PEv2 HAL interface."
 
   - source_id: D-007
     repository: zarfld/pokeysHal
@@ -417,7 +420,7 @@ sources:
     scope: "SDD-PEV2: Software Design Description — PulseEngine v2 HAL Interface"
     state: open
     inspected: true
-    notes: "Not inspected in Phase 0."
+    notes: "SDD-PEV2: Software Design Description for PEv2. Body retrieved: full design specification. Status: Specified."
 
   # ── E. Legacy Compatibility Implementation ────────────────────────────────────
 
@@ -719,6 +722,157 @@ sources:
       Prefix for pins is "pokeys-async.N" per rtapi_snprintf at line 165.
       Only one HAL function exported: buf (the component prefix itself).
 
+
+  # ── C-013 through C-020: PEv2 requirement issues #119-#126 ──────────────────
+
+  - source_id: C-013
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #119"
+    url: "https://github.com/zarfld/pokeysHal/issues/119"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-F-PEV2-004: Input Pin Update — HAL input pins written to PoKeysLib pointers"
+    state: open
+    inspected: true
+    notes: "Body retrieved. Specifies HAL_IN→PoKeysLib pointer mapping table per servo cycle."
+
+  - source_id: C-014
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #120"
+    url: "https://github.com/zarfld/pokeysHal/issues/120"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-F-PEV2-005: Output Pin Update — PoKeysLib pointers written to HAL output pins"
+    state: open
+    inspected: true
+    notes: "Body retrieved. Specifies PoKeysLib pointer→HAL_OUT mapping table per servo cycle."
+
+  - source_id: C-015
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #121"
+    url: "https://github.com/zarfld/pokeysHal/issues/121"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-F-PEV2-006: Bitmapped Field Decomposition into Individual HAL Pins"
+    state: open
+    inspected: true
+    notes: "Body retrieved. Specifies AxesConfig and AxesSwitchConfig decomposition via ePK_PEv2_AxisConfig."
+
+  - source_id: C-016
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #122"
+    url: "https://github.com/zarfld/pokeysHal/issues/122"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-F-PEV2-007: HAL Parameter Export for Pin Assignments and Invert Flags"
+    state: open
+    inspected: true
+    notes: "Body retrieved. Specifies global and per-axis HAL parameters for emergency/probe/limit pins."
+
+  - source_id: C-017
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #123"
+    url: "https://github.com/zarfld/pokeysHal/issues/123"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-F-PEV2-008: PoKeysLib Async Function Call Sequence for PEv2"
+    state: open
+    inspected: true
+    notes: "Body retrieved. Specifies per-cycle read (StatusGet, Status2Get) and write (SetupAsync, AxisConfigSet) sequences."
+
+  - source_id: C-018
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #124"
+    url: "https://github.com/zarfld/pokeysHal/issues/124"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-NF-PEV2-001: Real-Time Safety — No Blocking Calls in PEv2 RT Path"
+    state: open
+    inspected: true
+    notes: "Body retrieved. Requires <2 µs per function; no malloc, mutex, or blocking socket in RT path."
+
+  - source_id: C-019
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #125"
+    url: "https://github.com/zarfld/pokeysHal/issues/125"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-NF-PEV2-002: Interface Completeness — 100% of Specified PEv2 Pins Present"
+    state: open
+    inspected: true
+    notes: "Body retrieved. 100% parity with issue #33 pin specification required."
+
+  - source_id: C-020
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #126"
+    url: "https://github.com/zarfld/pokeysHal/issues/126"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-NF-PEV2-003: Correct Enumeration Usage — No Magic Numbers"
+    state: open
+    inspected: true
+    notes: "Body retrieved. All bitmask operations must use named enum constants, not integer literals."
+
+  - source_id: B-005
+    repository: zarfld/linuxcnc-hal-canon
+    revision: "45adb952627ab07cac9e5467e49c25e35aa6cd4a"
+    path_or_issue: "hal_digital.c, hal_analog.c"
+    url: "https://github.com/zarfld/linuxcnc-hal-canon/commit/45adb952"
+    source_type: library_implementation
+    authority_class: B
+    scope: "Upstream commit introducing direction regressions — inspected to document damage"
+    state: current
+    inspected: true
+    notes: >
+      Inspected via git diff. Changes: adcout.value HAL_IN→HAL_OUT (wrong),
+      adcout.enable HAL_IN→HAL_OUT (wrong), digin.in-not HAL_OUT→HAL_IN (wrong).
+      Three original bugs unchanged. Do NOT import. See CONFLICT-011.
+
+  - source_id: E-010
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: pokeys_rt/pokeys_homecomp.comp
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/main/pokeys_rt/pokeys_homecomp.comp"
+    source_type: legacy_implementation
+    authority_class: E
+    scope: "pokeys_homecomp homing module — per-joint HAL pins and PEv2 interface"
+    state: current
+    inspected: true
+    notes: >
+      Body retrieved. HAL pins exported per joint (jno):
+        joint.jno.PEv2.AxesState (HAL_IN u32) — reads PEv2 state from pokeysHal
+        joint.jno.PEv2.AxesCommand (HAL_OUT u32) — writes homing command to pokeysHal
+        joint.jno.homing (HAL_OUT bit), joint.jno.homed (HAL_OUT bit)
+        joint.jno.home_state (HAL_OUT s32), joint.jno.index_enable (HAL_IO bit)
+        joint.jno.home_sw (HAL_IN bit).
+      AxisCommand enum (pokeys_home_command_t): IDLE=0, HOMINGSTART=1, HOMINGCANCEL=2,
+      HOMINGFINALIZE=3. AxisState enum (pokeys_home_state_t): STOPPED=0, READY=1,
+      RUNNING=2, HOMING_RESETTING=8, HOMING_BACKING_OFF=9, HOME=10, HOMINGSTART=11,
+      HOMINGSEARCH=12, HOMINGBACK=13, PROBED=14, ERROR=20, LIMIT=30.
+
+  - source_id: F-009
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: experimental/Submakefile.rt
+    url: "https://github.com/zarfld/pokeysHal/blob/main/experimental/Submakefile.rt"
+    source_type: implementation_source
+    authority_class: F
+    scope: "Active RT build object list — confirms PoKeysLibIOAsync.o included, PoKeysLibPWMAsync.o excluded"
+    state: current
+    inspected: true
+    notes: >
+      Inspected. OBJECTS list includes PoKeysLibIOAsync.o (containing PK_PWMUpdateAsync
+      and the complete adcout propagation path). PoKeysLibPWMAsync.o is NOT in OBJECTS.
+      PK_PWMUpdateAsync is therefore the active implementation of the adcout→PWM conversion.
+
   # ── G. Integration Examples ───────────────────────────────────────────────────
 
   - source_id: G-001
@@ -743,4 +897,4 @@ sources:
     scope: "Test configuration HAL/INI files"
     state: unknown
     inspected: false
-    notes: "Not inspected in Phase 0."
+    notes: "Test configuration files not inspected; directory exists in repository but content not retrieved."

@@ -73,9 +73,7 @@ LinuxCnc_PokeysLibComp@0c058e6c. Inspected: 2026-08-03.
 
 1. Most LinuxCnc_PokeysLibComp issue bodies were retrieved in Phase 0;
    comments on most issues not inspected.
-   to time constraints. Their titles and seed-issue descriptions are recorded above.
-   Phase 1 compatibility work should inspect bodies and comments for all HIGH-relevance
-   issues.
+   Phase 1 compatibility work should inspect remaining comments for HIGH-relevance issues.
 
 2. Closed issues in both repositories have been treated with caution:
    CLOSED status was not treated as proof of complete implementation.

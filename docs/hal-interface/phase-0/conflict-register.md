@@ -419,3 +419,77 @@ Required decision:
   See DEC-CONFLICT010 in open-decisions.md.
 Status: unresolved
 ```
+
+---
+
+```
+Conflict ID: CONFLICT-011
+Subject: Upstream zarfld/linuxcnc-hal-canon commit 45adb952 introduces three new direction regressions
+  making six canonical pin directions wrong in current upstream main
+
+Embedded tree state (995d7057dd5403865d423aab64ba30d81ccd5ee0):
+  THREE wrong directions:
+  - digin.in   : HAL_IN  (should be HAL_OUT — component writes hardware state)
+  - digout.out : HAL_OUT (should be HAL_IN  — component reads commanded value)
+  - adcin.value: HAL_IN  (should be HAL_OUT — component writes scaled hardware reading)
+  THREE correct directions:
+  - digin.in-not : HAL_OUT (correct — component writes inverted hardware state)
+  - adcout.value : HAL_IN  (correct — external command producer writes desired output)
+  - adcout.enable: HAL_IN  (correct — external command producer writes enable signal)
+
+Source A: LinuxCNC HAL data-flow semantics and hal_link rules (Authority A):
+  - A signal can have at most one HAL_OUT writer; hal_link rejects a second HAL_OUT.
+  - Multiple HAL_IN pins can be linked to one signal without error.
+  - A component that drives hardware state must export HAL_OUT (it is the writer).
+  - A component that receives a commanded value must export HAL_IN (it is the reader).
+  - For adcout.value: the external command producer (motion controller, spindle control)
+    is the HAL_OUT writer. adcout.value must therefore be HAL_IN so the component
+    can read it. If adcout.value were HAL_OUT, any external command-source (also HAL_OUT)
+    would be rejected by hal_link as a second writer.
+
+Source B: Observed changes in upstream commit 45adb952627ab07cac9e5467e49c25e35aa6cd4a
+  (zarfld/linuxcnc-hal-canon, 2025-06-09, 'Fix pin direction for adcout and digin
+  parameters in hal_analog.c and hal_digital.c'). Changes verified by diff:
+  - adcout.value : HAL_IN  → HAL_OUT   REGRESSION (was correct; now wrong)
+  - adcout.enable: HAL_IN  → HAL_OUT   REGRESSION (was correct; now wrong)
+  - digin.in-not : HAL_OUT → HAL_IN    REGRESSION (was correct; now wrong)
+  Three original bugs (digin.in, digout.out, adcin.value) remain UNCHANGED.
+
+Current upstream state (zarfld/linuxcnc-hal-canon HEAD after 45adb952):
+  SIX wrong directions — three original bugs plus three new regressions:
+  - digin.in   : HAL_IN  WRONG (original bug)
+  - digin.in-not: HAL_IN  WRONG (regression — was HAL_OUT at 995d705)
+  - digout.out : HAL_OUT WRONG (original bug)
+  - adcin.value: HAL_IN  WRONG (original bug)
+  - adcout.value: HAL_OUT WRONG (regression — was HAL_IN at 995d705; hal_link will reject
+    any external HAL_OUT command source as second writer)
+  - adcout.enable: HAL_OUT WRONG (regression — was HAL_IN at 995d705; same second-writer
+    rejection applies)
+
+Observed implementation (pokeysHal):
+  The embedded tree (995d705) has only three wrong directions.
+  Importing 45adb952 would increase the bug count from three to six.
+
+Why the sources conflict:
+  Commit 45adb952 is titled as a direction fix but introduces regressions on all three
+  changed pins. It does not repair any of the three original bugs. The result is worse
+  than the baseline it claims to improve.
+
+Safety or compatibility impact:
+  adcout.value/enable regression (HIGH): if 45adb952 is ever imported, any attempt to
+    connect an external HAL_OUT command producer to adcout.J.value or adcout.J.enable
+    would fail with "signal already has a source" from hal_link. Analog output would
+    become non-functional from a wiring perspective.
+  digin.in-not regression (MEDIUM): pin changes from a declared writer (HAL_OUT) to a
+    reader (HAL_IN), removing the valid signal-source declaration for the inverted state.
+
+Required action:
+  Do NOT cherry-pick or import commit 45adb952.
+  A correct fix must change ONLY:
+  - digin.in from HAL_IN to HAL_OUT
+  - digout.out from HAL_OUT to HAL_IN
+  - adcin.value from HAL_IN to HAL_OUT
+  adcout.value, adcout.enable, and digin.in-not must remain at their current (correct)
+  values in the embedded tree.
+Status: unresolved
+```
