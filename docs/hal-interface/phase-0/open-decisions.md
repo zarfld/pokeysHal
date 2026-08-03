@@ -138,8 +138,7 @@ definitive naming convention.
 
 **Context:** Installed LinuxCNC 2.9.10: `HAL_NAME_LEN = 47` (confirmed, `/usr/include/linuxcnc/hal.h`;
 source A-001). LinuxCNC upstream/master: `HAL_NAME_LEN = 55` at commit
-`71bf88009d64fa15edbebf9250b65ee4454f9a05` `src/hal/hal.h` (source A-001b;
-UNVERIFIED-BY-FETCH). With `pokeys-async.0` prefix (14 chars), current
+`71bf88009d64fa15edbebf9250b65ee4454f9a05` `src/hal/hal.h` (source A-001b). With `pokeys-async.0` prefix (14 chars), current
 names are ≤46 chars. With device index ≥10, borderline for the 47 limit.
 
 **Required decision:**

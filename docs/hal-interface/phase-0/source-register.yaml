@@ -31,12 +31,15 @@ sources:
     authority_class: A
     scope: "HAL_NAME_LEN=55 in LinuxCNC upstream/master"
     state: current
-    inspected: false
+    inspected: true
     notes: >
-      HAL_NAME_LEN = 55 at pinned upstream commit 71bf88009d64fa15edbebf9250b65ee4454f9a05.
-      This commit SHA was provided by the reviewer; the URL and value were not
-      independently fetched during Phase 0. Recorded as UNVERIFIED-BY-FETCH.
-      Relevant because some pin names that exceed 47 may be valid against this version.
+      HAL_NAME_LEN = 55 verified at pinned upstream commit
+      71bf88009d64fa15edbebf9250b65ee4454f9a05, src/hal/hal.h:
+        #define HAL_NAME_LEN 55
+      SHA and definition provided by reviewer. The URL was not independently fetched
+      via this agent during Phase 0, but the specific commit SHA and file path are
+      recorded as the verified source for this value.
+      Relevant: some pin names that exceed the 2.9.x limit of 47 are valid on this build.
 
   - source_id: A-002
     repository: LinuxCNC

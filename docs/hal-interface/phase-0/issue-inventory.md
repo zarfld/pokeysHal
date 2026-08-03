@@ -54,12 +54,12 @@ LinuxCnc_PokeysLibComp@0c058e6c. Inspected: 2026-08-03.
 | #29 | modularized userspace implementation | not inspected | HIGH | n/a | n/a | None | YES |
 | #69 | modular architecture | not inspected | MEDIUM | n/a | n/a | None | YES |
 | #73 | LinuxCNC build alignment | not inspected | MEDIUM | n/a | n/a | None | YES |
-| #79 | conformity with LinuxCNC guidelines and canonical device interface | not inspected | HIGH | n/a | n/a | None | YES — directly relevant to Phase 1 |
+| #79 | conformity with LinuxCNC guidelines and canonical device interface | OPEN | HIGH | n/a | Inspected: body requires CDI conformity for digital/analog I/O, motion control (PEv2), and communication protocols; references canonical naming rules in LinuxCNC HAL handbook | None | YES — directly relevant to Phase 1 |
 | #129 | realtime clock HAL interface | not inspected | LOW | n/a | n/a | None | Maybe |
 | #157 | common pin I/O handling | not inspected | HIGH | n/a | n/a | None | YES |
 | #213 | encoder modularization and manual HAL export | not inspected | HIGH | n/a | n/a | None | YES |
-| #216 | missing PEv2 homing pin | not inspected | HIGH | n/a | n/a | CONFLICT-002 | YES |
-| #222 | physical pin-function setup | not inspected | HIGH | n/a | n/a | None | YES |
+| #216 | missing PEv2 homing pin | OPEN | HIGH | n/a | Inspected: reports "Pin 'pokeys.0.PEv2.0.joint-in-homing' does not exist" running Pokeys57CNC_DM542_XXYZ_mill example; also confirms HAL param name exceeding 50 chars for UltraFastEncoder (fixed locally by shortening) | CONFLICT-002, CONFLICT-005 | YES |
+| #222 | physical pin-function setup | CLOSED | HIGH | n/a | Inspected: setting pokeys.0.digout.33.out had no effect because the pin had not been configured as digital output via PinFunction first; confirms that PK_PinFunctionsSet (PinFunction setup) is a prerequisite for digital I/O operation | None | YES |
 | #223 | PEv2 limit override | not inspected | HIGH | n/a | n/a | None | YES |
 | #264 | analog output in userspace component | not inspected | HIGH | n/a | n/a | CONFLICT-004 | YES |
 | #310 | missing PEv2 AxesState and HAL name length | CLOSED | HIGH | Fixed in legacy component (name shortened) | Confirmed: name length violation was real | CONFLICT-005 | YES — evidence of real name-length problem |

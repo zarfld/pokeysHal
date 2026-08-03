@@ -89,9 +89,7 @@ by comparing file contents against the upstream repository.
       (`/usr/include/linuxcnc/hal.h` on target system, confirmed).
     - LinuxCNC upstream/master: `HAL_NAME_LEN = 55`
       (pinned commit `71bf88009d64fa15edbebf9250b65ee4454f9a05`,
-      `src/hal/hal.h`; URL and value provided by reviewer,
-      not independently fetched during Phase 0 — recorded as UNVERIFIED-BY-FETCH;
-      source A-001b in source-register.yaml).
+      `src/hal/hal.h`; `#define HAL_NAME_LEN 55`; source A-001b).
 11. `hal-canon/hal_digital.c` and `hal-canon/hal_analog.c` read in full to
     determine actual HAL directions used by each export helper.
 
@@ -198,13 +196,15 @@ by comparing file contents against the upstream repository.
    signal source (MEDIUM priority). See CONFLICT-009 for per-bug impact analysis.
 4. Which `nrOfAxes == 0` behaviour is authoritative: the requirement (no pins)
    or the ADR (8 axes fallback)?
-5. Is `HAL_NAME_LEN = 55` on LinuxCNC upstream confirmed by a verifiable commit
-   SHA? If so, does the project target 2.9 or upstream/master?
-5. Is PEv2 issue #33 actually complete (closed status) despite many specified
+5. Does the project target LinuxCNC 2.9.x (`HAL_NAME_LEN = 47`) or upstream/master
+   (`HAL_NAME_LEN = 55` at commit `71bf88009d64fa15edbebf9250b65ee4454f9a05`,
+   `src/hal/hal.h`; source A-001b)? The constraint differs by 8 characters and
+   affects borderline pin names.
+6. Is PEv2 issue #33 actually complete (closed status) despite many specified
    pins being absent?
-6. What is the upstream commit SHA for the embedded `hal-canon` files? This
+7. What is the upstream commit SHA for the embedded `hal-canon` files? This
    cannot be determined from the main repository alone.
-7. Which PEv2 pins from issue #33 are required for LinuxCNC homing compatibility
+8. Which PEv2 pins from issue #33 are required for LinuxCNC homing compatibility
    vs. optional PoKeys-specific extensions?
 
 ## Completion Status
