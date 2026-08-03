@@ -156,7 +156,7 @@ sources:
     state: open
     inspected: true
     notes: >
-      Specifies 35+ pins and parameters for device identity and capability
+      Specifies approximately 35 pins and parameters for device identity and capability
       reporting. Only devSerial and alive are currently created.
 
   - source_id: C-002
@@ -272,7 +272,7 @@ sources:
     state: open
     inspected: true
     notes: >
-      Body retrieved. Duplicate of #39. Body references #39 for specification.
+      Body retrieved. Issue #37 is a cross-reference issue pointing to #39 as the specification.
       Canonical adcout objects ARE exported via hal_export_adcout (PoKeysLibIOAsync.c:110).
       Propagation path IMPLEMENTED per C4 trace (PK_PWMUpdateAsync at 100ms).
 
@@ -357,7 +357,9 @@ sources:
     scope: "ADR-PEV2-001: HAL Pin Naming Convention for PEv2 Interface"
     state: open
     inspected: true
-    notes: "Not fully inspected. Naming convention governs %s.PEv2.%01d.* format."
+    notes: >
+      Body retrieved (complete). ADR-PEV2-001: Accepted. Specifies naming convention
+      %s.PEv2.N.* for per-axis and %s.PEv2.* for global pins. No comments on issue.
 
   - source_id: D-003
     repository: zarfld/pokeysHal
@@ -823,7 +825,7 @@ sources:
 
   - source_id: B-005
     repository: zarfld/linuxcnc-hal-canon
-    revision: "45adb952627ab07cac9e5467e49c25e35aa6cd4a"
+    revision: "45adb952627ab07cac9e5467e49c25e35ea6cd4a"
     path_or_issue: "hal_digital.c, hal_analog.c"
     url: "https://github.com/zarfld/linuxcnc-hal-canon/commit/45adb952"
     source_type: library_implementation
@@ -851,8 +853,8 @@ sources:
         joint.jno.PEv2.AxesState (HAL_IN u32) — reads PEv2 state from pokeysHal
         joint.jno.PEv2.AxesCommand (HAL_OUT u32) — writes homing command to pokeysHal
         joint.jno.homing (HAL_OUT bit), joint.jno.homed (HAL_OUT bit)
-        joint.jno.home_state (HAL_OUT s32), joint.jno.index_enable (HAL_IO bit)
-        joint.jno.home_sw (HAL_IN bit).
+        joint.jno.home-state (HAL_OUT s32), joint.jno.index-enable (HAL_IO bit)
+        joint.jno.home-sw-in (HAL_IN bit).
       AxisCommand enum (pokeys_home_command_t): IDLE=0, HOMINGSTART=1, HOMINGCANCEL=2,
       HOMINGFINALIZE=3. AxisState enum (pokeys_home_state_t): STOPPED=0, READY=1,
       RUNNING=2, HOMING_RESETTING=8, HOMING_BACKING_OFF=9, HOME=10, HOMINGSTART=11,

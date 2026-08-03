@@ -137,7 +137,7 @@ PoKeys-specific requirement:
   → joint-pos-cmd, joint-pos-fb, joint-vel-cmd: implemented
   → AxesState, AxesCommand, CurrentPosition: implemented
   → digin.LimitN/LimitP/Home.in/.in-not: implemented
-  → HomingStatus, index-enable: implemented
+  → HomingStatus, index-enable: implemented (both pokeysHal PEv2.I.index-enable and homecomp joint.N.index-enable)
   ✗ digout.AxisEnable.out: ABSENT [CONFLICT-002]
   ✗ stepgen.* parameters: ABSENT [CONFLICT-007]
   ✗ HomingSpeed, HomingReturnSpeed, HomingAlgorithm, HomeOffsets: ABSENT
@@ -187,7 +187,7 @@ PoKeys-specific stakeholder requirement:
   issue #32 (pokeysHal, OPEN): PoKeys device information [C-001]
   ✗ no ADR/SDD found
   ✗ implementation: devSerial (HAL_IN u32), alive (HAL_OUT bit) — partial only
-  ✗ connected, err, info.* (35+ pins) ABSENT
+  ✗ connected, err, info.* (~35 pins) ABSENT
   ✗ future verification target: none linked
 ```
 
@@ -214,7 +214,7 @@ PoKeys-specific requirement:
 | PEv2 global | Requirement→Implementation (many pins from #33 absent) |
 | PEv2 per-axis | Requirement→Implementation (digout.AxisEnable.out, stepgen.*, homing params) |
 | PEv2 conditional creation | Requirement↔ADR conflict (#118 vs #128) |
-| Device info | Requirement→Implementation (35+ info.* pins absent) |
+| Device info | Requirement→Implementation (info.* pins absent) |
 | PoExtBus | Requirement→Implementation (entirely absent) |
 | All subsystems | Implementation→Test (no TEST issues linked to any subsystem) |
 | hal-canon submodule | .gitmodules↔git-object-model (CONFLICT-008); upstream commit now known (995d705) |

@@ -447,7 +447,7 @@ Source A: LinuxCNC HAL data-flow semantics and hal_link rules (Authority A):
     can read it. If adcout.value were HAL_OUT, any external command-source (also HAL_OUT)
     would be rejected by hal_link as a second writer.
 
-Source B: Observed changes in upstream commit 45adb952627ab07cac9e5467e49c25e35aa6cd4a
+Source B: Observed changes in upstream commit 45adb952627ab07cac9e5467e49c25e35ea6cd4a
   (zarfld/linuxcnc-hal-canon, 2025-06-09, 'Fix pin direction for adcout and digin
   parameters in hal_analog.c and hal_digital.c'). Changes verified by diff:
   - adcout.value : HAL_IN  → HAL_OUT   REGRESSION (was correct; now wrong)

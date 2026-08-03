@@ -85,7 +85,7 @@ LinuxCnc_PokeysLibComp@0c058e6c.
 | `devSerial` (u32, HAL_IN) | not canonical | implemented in legacy .comp | implemented | **PoKeys-specific extension** | Keep |
 | `alive` (bit, HAL_OUT) | not canonical | implemented in legacy .comp | implemented | **PoKeys-specific extension** | Keep |
 | `connected` (bit, HAL_OUT) | not canonical | issue #32 | **ABSENT** | **PoKeys-specific — missing** | Add |
-| `info.*` (u32, HAL_OUT × 35+) | not canonical | issue #32 | **ABSENT** | **PoKeys-specific — missing** | Decision on exposure scope |
+| `info.*` (u32, HAL_OUT × ~35) | not canonical | issue #32 | **ABSENT** | **PoKeys-specific — missing** | Decision on exposure scope |
 
 ---
 

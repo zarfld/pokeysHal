@@ -159,8 +159,8 @@ by comparing file contents against the upstream repository.
 
 8. **HAL name length (version-dependent):** Installed LinuxCNC 2.9.10:
    `HAL_NAME_LEN = 47` (confirmed, `/usr/include/linuxcnc/hal.h`). Reviewer
-   states LinuxCNC upstream/master uses `HAL_NAME_LEN = 55`; the corresponding
-   upstream commit SHA was **not independently verified** in Phase 0. With prefix
+   Upstream `HAL_NAME_LEN = 55` at commit `71bf88009d64fa15edbebf9250b65ee4454f9a05`
+   (independently verified via GitHub API, blob sha 17372ccd). With prefix
    `pokeys-async.0`, current pin names appear ≤46 chars. With `pokeys-async.10`
    (+1 char), borderline cases near 47. The legacy component had a confirmed
    violation (`pokeys.0.encoder.UltraFastEncoder.Enable4xSampling` = 50 chars;

@@ -36,7 +36,7 @@ requirements:
 
   - interface_id: LIFE-002
     subsystem: lifecycle
-    name_pattern: "n/a"
+    name_pattern: "hal_malloc (memory allocation)"
     object_kind: lifecycle-rule
     hal_type: "n/a"
     direction_or_access: "n/a"
@@ -211,7 +211,7 @@ requirements:
     enumeration: "n/a"
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: PoKeys-specific extension
-    legacy_compatibility_status: "Issue #32 specifies all 35+ info.* fields."
+    legacy_compatibility_status: "Issue #32 specifies approximately 35 info.* capability fields."
     current_implementation_status: "ABSENT. None of the info.* pins are exported."
     requirement_sources: [C-001]
     implementation_sources: []
@@ -674,7 +674,7 @@ requirements:
     pokeyslib_function: "PK_EncoderValuesGetAsync"
     enumeration: "n/a"
     bitmap_definition: "n/a"
-    linuxcnc_canonical_status: canonical (encoder.position)
+    linuxcnc_canonical_status: "hal-canon convention (hal_encoder_t.position); NOT official LinuxCNC CDI"
     legacy_compatibility_status: compatible
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:48."
     requirement_sources: [B-004]
@@ -699,7 +699,7 @@ requirements:
     pokeyslib_function: "PK_EncoderValuesGetAsync"
     enumeration: "n/a"
     bitmap_definition: "n/a"
-    linuxcnc_canonical_status: canonical (encoder.velocity)
+    linuxcnc_canonical_status: "hal-canon convention (hal_encoder_t.velocity); NOT official LinuxCNC CDI"
     legacy_compatibility_status: compatible
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:53."
     requirement_sources: [B-004]
@@ -724,7 +724,7 @@ requirements:
     pokeyslib_function: "n/a"
     enumeration: "n/a"
     bitmap_definition: "n/a"
-    linuxcnc_canonical_status: canonical (encoder.reset)
+    linuxcnc_canonical_status: "hal-canon convention (hal_encoder_t.reset); NOT official LinuxCNC CDI"
     legacy_compatibility_status: compatible
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:58."
     requirement_sources: [B-004]
@@ -749,7 +749,7 @@ requirements:
     pokeyslib_function: "n/a"
     enumeration: "n/a"
     bitmap_definition: "n/a"
-    linuxcnc_canonical_status: canonical (encoder.index-enable)
+    linuxcnc_canonical_status: "hal-canon convention (hal_encoder_t.index-enable); NOT official LinuxCNC CDI"
     legacy_compatibility_status: compatible
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:64."
     requirement_sources: [B-004]
@@ -774,7 +774,7 @@ requirements:
     pokeyslib_function: "n/a"
     enumeration: "n/a"
     bitmap_definition: "n/a"
-    linuxcnc_canonical_status: canonical (encoder.scale)
+    linuxcnc_canonical_status: "hal-canon convention (hal_encoder_t.scale); NOT official LinuxCNC CDI"
     legacy_compatibility_status: compatible
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:71."
     requirement_sources: [B-004]
@@ -835,31 +835,6 @@ requirements:
     implementation_sources: [F-005]
     conflicts: []
     evidence: "PoKeysLibPulseEngine_v2Async.c:438; issue #33"
-
-  - interface_id: PEV2G-002
-    subsystem: pev2_global
-    name_pattern: "<prefix>.PEv2.PulseEngineState"
-    object_kind: pin
-    hal_type: hal_u32_t
-    direction_or_access: HAL_OUT
-    cardinality: "1"
-    creation_condition: "unconditional"
-    units: "n/a — see ePoKeysPEState enum"
-    scaling_formula: "n/a"
-    default_value: "0"
-    initialization_phase: "export_pev2_pins"
-    update_phase: "device→HAL"
-    device_field: "device->PEv2.PulseEngineState"
-    pokeyslib_function: "PK_PEv2_StatusGetAsync"
-    enumeration: "ePoKeysPEState (not inspected in detail)"
-    bitmap_definition: "n/a"
-    linuxcnc_canonical_status: PoKeys-specific extension
-    legacy_compatibility_status: "Referenced in pokeys_homing.hal (E-002)."
-    current_implementation_status: "Implemented. PoKeysLibPulseEngine_v2Async.c:470."
-    requirement_sources: [C-002]
-    implementation_sources: [F-005]
-    conflicts: []
-    evidence: "PoKeysLibPulseEngine_v2Async.c:470"
 
   - interface_id: PEV2G-003
     subsystem: pev2_global
@@ -1003,7 +978,7 @@ requirements:
     update_phase: "device→HAL"
     device_field: "device->PEv2.AxesState[i]"
     pokeyslib_function: "PK_PEv2_StatusGetAsync"
-    enumeration: "ePK_PEAxisState: STOPPED=0, READY=1, RUNNING=2, HOMING_RESETTING=8, HOME=10, HOMINGSTART=11, HOMINGSEARCH=12, HOMINGBACK=13, PROBED=14, PROBESTART=15, PROBESEARCH=16, ERROR=20, LIMIT=30"
+    enumeration: "ePK_PEAxisState: STOPPED=0, READY=1, RUNNING=2, HOMING_RESETTING=8, HOMING_BACKING_OFF=9, HOME=10, HOMINGSTART=11, HOMINGSEARCH=12, HOMINGBACK=13, PROBED=14, PROBESTART=15, PROBESEARCH=16, ERROR=20, LIMIT=30"
     bitmap_definition: "n/a — single-value enum, not bitmap"
     linuxcnc_canonical_status: PoKeys-specific extension
     legacy_compatibility_status: "Referenced in pokeys_homing.hal and DM542 HAL file."
@@ -1179,6 +1154,184 @@ requirements:
     implementation_sources: [F-003]
     conflicts: []
     evidence: "PoKeysLibIOAsync.c:703-734; experimental/pokeys_async.c:1338"
+
+
+  # ── pokeys_homecomp.comp per-joint interface ────────────────────────────────
+
+  - interface_id: HOMECOMP-001
+    subsystem: homecomp
+    name_pattern: "joint.<N>.home-sw-in"
+    object_kind: pin
+    hal_type: hal_bit_t
+    direction_or_access: HAL_IN
+    cardinality: "1 per joint"
+    creation_condition: "unconditional (per joint jno=0..8)"
+    units: "n/a"
+    scaling_formula: "n/a"
+    default_value: "0"
+    initialization_phase: "pokeys_homecomp hal_pin_bit_newf"
+    update_phase: "read each homing cycle by homecomp"
+    device_field: "addr->home_sw (pokeys_homecomp local)"
+    pokeyslib_function: "n/a — homing component reads from external pokeysHal pins"
+    enumeration: "n/a"
+    bitmap_definition: "n/a"
+    linuxcnc_canonical_status: LinuxCNC homemod convention (not CDI)
+    legacy_compatibility_status: "defined in pokeys_homecomp.comp (E-010); must be connected to pokeysHal digin or PEv2 limit pin"
+    current_implementation_status: "Not exported by pokeysHal. Expected to be wired from pokeysHal digin.J.in or PEv2.I.digin.Home.in."
+    requirement_sources: [E-010]
+    implementation_sources: []
+    conflicts: []
+    evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_bit_newf(HAL_IN, &(addr->home_sw), id, joint.jno.home-sw-in)"
+
+  - interface_id: HOMECOMP-002
+    subsystem: homecomp
+    name_pattern: "joint.<N>.homing"
+    object_kind: pin
+    hal_type: hal_bit_t
+    direction_or_access: HAL_OUT
+    cardinality: "1 per joint"
+    creation_condition: "unconditional"
+    units: "n/a"
+    scaling_formula: "n/a"
+    default_value: "0"
+    initialization_phase: "pokeys_homecomp hal_pin_bit_newf"
+    update_phase: "written by homecomp each cycle"
+    device_field: "addr->homing"
+    pokeyslib_function: "n/a"
+    enumeration: "n/a"
+    bitmap_definition: "n/a"
+    linuxcnc_canonical_status: LinuxCNC homemod convention
+    legacy_compatibility_status: "defined in E-010"
+    current_implementation_status: "Not exported by pokeysHal."
+    requirement_sources: [E-010]
+    implementation_sources: []
+    conflicts: []
+    evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_bit_newf(HAL_OUT, &(addr->homing), id, joint.jno.homing)"
+
+  - interface_id: HOMECOMP-003
+    subsystem: homecomp
+    name_pattern: "joint.<N>.homed"
+    object_kind: pin
+    hal_type: hal_bit_t
+    direction_or_access: HAL_OUT
+    cardinality: "1 per joint"
+    creation_condition: "unconditional"
+    units: "n/a"
+    scaling_formula: "n/a"
+    default_value: "0"
+    initialization_phase: "pokeys_homecomp hal_pin_bit_newf"
+    update_phase: "written by homecomp when joint is homed"
+    device_field: "addr->homed"
+    pokeyslib_function: "n/a"
+    enumeration: "n/a"
+    bitmap_definition: "n/a"
+    linuxcnc_canonical_status: LinuxCNC homemod convention
+    legacy_compatibility_status: "defined in E-010"
+    current_implementation_status: "Not exported by pokeysHal."
+    requirement_sources: [E-010]
+    implementation_sources: []
+    conflicts: []
+    evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_bit_newf(HAL_OUT, &(addr->homed), id, joint.jno.homed)"
+
+  - interface_id: HOMECOMP-004
+    subsystem: homecomp
+    name_pattern: "joint.<N>.home-state"
+    object_kind: pin
+    hal_type: hal_s32_t
+    direction_or_access: HAL_OUT
+    cardinality: "1 per joint"
+    creation_condition: "unconditional"
+    units: "n/a — see pokeys_home_state_t enum"
+    scaling_formula: "n/a"
+    default_value: "0"
+    initialization_phase: "pokeys_homecomp hal_pin_s32_newf"
+    update_phase: "written by homecomp state machine each cycle"
+    device_field: "addr->home_state (local home state machine)"
+    pokeyslib_function: "n/a"
+    enumeration: "pokeys_home_state_t (alias of ePK_PEAxisState in homecomp): STOPPED=0, READY=1, RUNNING=2, HOMING_RESETTING=8, HOMING_BACKING_OFF=9, HOME=10, HOMINGSTART=11, HOMINGSEARCH=12, HOMINGBACK=13, PROBED=14, PROBESTART=15, PROBESEARCH=16, ERROR=20, LIMIT=30"
+    bitmap_definition: "n/a — single-value enum"
+    linuxcnc_canonical_status: LinuxCNC homemod convention
+    legacy_compatibility_status: "defined in E-010"
+    current_implementation_status: "Not exported by pokeysHal."
+    requirement_sources: [E-010]
+    implementation_sources: []
+    conflicts: []
+    evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_s32_newf(HAL_OUT, &(addr->home_state), id, joint.jno.home-state)"
+
+  - interface_id: HOMECOMP-005
+    subsystem: homecomp
+    name_pattern: "joint.<N>.index-enable"
+    object_kind: pin
+    hal_type: hal_bit_t
+    direction_or_access: HAL_IO
+    cardinality: "1 per joint"
+    creation_condition: "unconditional"
+    units: "n/a"
+    scaling_formula: "n/a"
+    default_value: "0"
+    initialization_phase: "pokeys_homecomp hal_pin_bit_newf"
+    update_phase: "read and written by homecomp"
+    device_field: "addr->index_enable"
+    pokeyslib_function: "n/a"
+    enumeration: "n/a"
+    bitmap_definition: "n/a"
+    linuxcnc_canonical_status: LinuxCNC homemod convention
+    legacy_compatibility_status: "defined in E-010"
+    current_implementation_status: "Also exported by pokeysHal PoKeysLibPulseEngine_v2Async.c as PEv2.I.index-enable (HAL_IO)."
+    requirement_sources: [E-010]
+    implementation_sources: [F-005]
+    conflicts: []
+    evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_bit_newf(HAL_IO, &(addr->index_enable), id, joint.jno.index-enable)"
+
+  - interface_id: HOMECOMP-006
+    subsystem: homecomp
+    name_pattern: "joint.<N>.PEv2.AxesState"
+    object_kind: pin
+    hal_type: hal_u32_t
+    direction_or_access: HAL_IN
+    cardinality: "1 per joint"
+    creation_condition: "unconditional"
+    units: "n/a — see pokeys_home_state_t enum (same as ePK_PEAxisState)"
+    scaling_formula: "n/a"
+    default_value: "0"
+    initialization_phase: "pokeys_homecomp hal_pin_u32_newf"
+    update_phase: "homecomp reads; must be connected to pokeysHal PEv2.I.AxesState"
+    device_field: "addr->PEv2_AxesState (homecomp local)"
+    pokeyslib_function: "n/a — wired from pokeysHal output"
+    enumeration: "pokeys_home_state_t: STOPPED=0, READY=1, RUNNING=2, HOMING_RESETTING=8, HOMING_BACKING_OFF=9, HOME=10, HOMINGSTART=11, HOMINGSEARCH=12, HOMINGBACK=13, PROBED=14, PROBESTART=15, PROBESEARCH=16, ERROR=20, LIMIT=30"
+    bitmap_definition: "n/a"
+    linuxcnc_canonical_status: LinuxCNC homemod/PoKeys convention
+    legacy_compatibility_status: "defined in E-010; wired from pokeysHal PEv2.I.AxesState"
+    current_implementation_status: "Requires wiring: pokeysHal exports PEv2.I.AxesState (HAL_OUT); homecomp reads joint.N.PEv2.AxesState (HAL_IN). Compatible."
+    requirement_sources: [E-010, C-002]
+    implementation_sources: [F-005]
+    conflicts: []
+    evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_u32_newf(HAL_IN, &(addr->PEv2_AxesState), id, joint.jno.PEv2.AxesState)"
+
+  - interface_id: HOMECOMP-007
+    subsystem: homecomp
+    name_pattern: "joint.<N>.PEv2.AxesCommand"
+    object_kind: pin
+    hal_type: hal_u32_t
+    direction_or_access: HAL_OUT
+    cardinality: "1 per joint"
+    creation_condition: "unconditional"
+    units: "n/a — see pokeys_home_command_t enum"
+    scaling_formula: "n/a"
+    default_value: "0 (IDLE)"
+    initialization_phase: "pokeys_homecomp hal_pin_u32_newf"
+    update_phase: "homecomp writes command each cycle; must be connected to pokeysHal PEv2.I.AxesCommand"
+    device_field: "addr->PEv2_AxesCommand (homecomp local)"
+    pokeyslib_function: "n/a — wired to pokeysHal input"
+    enumeration: "pokeys_home_command_t: IDLE=0, HOMINGSTART=1, HOMINGCANCEL=2, HOMINGFINALIZE=3"
+    bitmap_definition: "n/a"
+    linuxcnc_canonical_status: LinuxCNC homemod/PoKeys convention
+    legacy_compatibility_status: "defined in E-010; wired to pokeysHal PEv2.I.AxesCommand"
+    current_implementation_status: "Requires wiring: homecomp writes joint.N.PEv2.AxesCommand (HAL_OUT); pokeysHal reads PEv2.I.AxesCommand (HAL_IN). Compatible."
+    requirement_sources: [E-010, C-002]
+    implementation_sources: [F-005]
+    conflicts: []
+    evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_u32_newf(HAL_OUT, &(addr->PEv2_AxesCommand), id, joint.jno.PEv2.AxesCommand)"
 
   - interface_id: NAMELEN-001
     subsystem: cross_cutting
