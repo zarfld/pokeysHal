@@ -88,8 +88,10 @@ by comparing file contents against the upstream repository.
     - LinuxCNC 2.9.x (installed: 2.9.10): `HAL_NAME_LEN = 47`
       (`/usr/include/linuxcnc/hal.h` on target system, confirmed).
     - LinuxCNC upstream/master: `HAL_NAME_LEN = 55`
-      (stated by reviewer; upstream commit SHA not independently verified
-      in Phase 0 — this claim is recorded as UNVERIFIED).
+      (pinned commit `71bf88009d64fa15edbebf9250b65ee4454f9a05`,
+      `src/hal/hal.h`; URL and value provided by reviewer,
+      not independently fetched during Phase 0 — recorded as UNVERIFIED-BY-FETCH;
+      source A-001b in source-register.yaml).
 11. `hal-canon/hal_digital.c` and `hal-canon/hal_analog.c` read in full to
     determine actual HAL directions used by each export helper.
 
@@ -190,9 +192,10 @@ by comparing file contents against the upstream repository.
 2. Should the non-canonical supplementary pins (`adcin.J.in.hw`, `adcin.J.in.raw`,
    `adcin.J.ReferenceVoltage`, `adcout.J.PWMduty`, `adcout.J.max_voltage`,
    `adcout.pwm.period`) coexist with the canonical exports, or be deprecated?
-3. Must the hal-canon direction mismatches be fixed before pokeysHal can be
-   used in production? (`digin.in` as HAL_IN, `digout.out` as HAL_OUT, and
-   `adcin.value` as HAL_IN are all incorrect.)
+3. In what order must the hal-canon direction bugs be fixed?
+   `digout.out` as HAL_OUT blocks any HAL_OUT command source (HIGH priority).
+   `digin.in` and `adcin.value` as HAL_IN are unsupported writers with no declared
+   signal source (MEDIUM priority). See CONFLICT-009 for per-bug impact analysis.
 4. Which `nrOfAxes == 0` behaviour is authoritative: the requirement (no pins)
    or the ADR (8 axes fallback)?
 5. Is `HAL_NAME_LEN = 55` on LinuxCNC upstream confirmed by a verifiable commit

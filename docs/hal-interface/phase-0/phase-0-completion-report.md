@@ -12,7 +12,7 @@ Repository: zarfld/pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | 1. Both repositories inspected | PASS | pokeysHal inspected locally; LinuxCnc_PokeysLibComp accessed via GitHub API | LinuxCnc_PokeysLibComp not cloned; some files not inspected |
 | 2. Open and closed issues searched | PARTIAL | pokeysHal: all issues listed; selected issues inspected (#24, #32-#39, #116-#133). LinuxCnc_PokeysLibComp: #310, #326 inspected; others in issue-inventory.md listed but bodies not read | ~15 LinuxCnc_PokeysLibComp issues not body-inspected |
 | 3. Issue comments inspected where relevant | PARTIAL | Issue bodies inspected for selected issues in both repos. No issue comments were inspected in either repo. | Comments for #33, #35, #36, #38 may contain implementation evidence |
-| 4. Official LinuxCNC rules recorded | PASS | HAL_NAME_LEN=47 confirmed from /usr/include/linuxcnc/hal.h. CDI rules recorded via hal-canon README and hal_canon.h documentation. | LinuxCNC canonical-devices.html not fetched directly |
+| 4. Official LinuxCNC rules recorded | PARTIAL | HAL_NAME_LEN=47 confirmed (/usr/include/linuxcnc/hal.h; source A-001). Upstream HAL_NAME_LEN=55 at commit 71bf88009d64fa15edbebf9250b65ee4454f9a05 (source A-001b; UNVERIFIED-BY-FETCH). CDI rules recorded via hal-canon README/hal_canon.h; canonical-devices.html not fetched directly. | canonical-devices.html and upstream hal.h not independently fetched; encoder canonical status asserted without primary source |
 | 5. Exact hal-canon provenance recorded | PARTIAL | Tree SHA deed4c10535530ce0383fb357ea8427896226c70 recorded. Upstream commit from linuxcnc-hal-canon.git not determined. See CONFLICT-008. | Upstream SHA unknown |
 | 6. Legacy HAL interface extracted from source | PASS | Integration HAL files read (DM542 HAL, pokeys_homing.hal). Python digital_io.py read. Pin names catalogued. | Not all legacy component C source inspected |
 | 7. Current HAL interface extracted from source | PASS | All PoKeysLib*Async.c files searched. hal_export_adcin and hal_export_adcout calls confirmed by full read of PoKeysLibIOAsync.c. hal-canon/hal_digital.c and hal_analog.c read in full; direction mismatches documented. | No automated enumeration tool |
@@ -75,8 +75,11 @@ Commands that could not be run:
 - Direct clone of LinuxCnc_PokeysLibComp (not needed; API access sufficient for Phase 0 scope)
 - Running `make` or `halcompile` to verify build (not run — out of scope for Phase 0)
 
-YAML validity: All YAML files parsed without error during authoring. Python-based
-YAML validation was not run; structure follows the schema specified in the prompt.
+YAML validity: Both YAML files validated using Python 3 and PyYAML:
+  python3 -c "import yaml; [yaml.safe_load(open(f)) for f in [
+    'docs/hal-interface/phase-0/source-register.yaml',
+    'docs/hal-interface/phase-0/requirement-catalogue.yaml']]"
+  Both files parsed successfully with no errors.
 
 No source, build, test, fixture or submodule files were changed.
 
@@ -112,7 +115,7 @@ All files are in `docs/hal-interface/phase-0/`:
 8. `issue-inventory.md` — 31 pokeysHal issues + 17 LinuxCnc_PokeysLibComp issues
 9. `open-decisions.md` — 19 decisions grouped by topic (DEC-HALCANON-001 added)
 10. `phase-0-completion-report.md` — this file
-11. `.github/prompts/HAL-compatibility_Phase 0 — Establish the HAL-interface knowledge baseline.prompt.md` — the executing prompt (committed in 3ac906d)
+11. `.github/prompts/HAL-compatibility_Phase 0 — Establish the HAL-interface knowledge baseline.prompt.md` — the executing prompt (committed in 3ac906d, part of hal-compatibility branch)
 
 ---
 
@@ -154,9 +157,12 @@ All files are in `docs/hal-interface/phase-0/`:
 
 Review the Phase 0 findings as a team. Specifically:
 
-1. Resolve the 8 conflicts in `conflict-register.md`, starting with the 3 flagged
-   as HIGH impact (CONFLICT-002, CONFLICT-004, CONFLICT-006).
-2. Make the 18 open decisions in `open-decisions.md`, in priority order.
+1. Resolve the 9 conflicts in `conflict-register.md`. Priority order:
+   CONFLICT-009 (hal-canon directions), CONFLICT-006 (component naming),
+   CONFLICT-002 (AxisEnable missing), CONFLICT-001 (nrOfAxes), CONFLICT-007
+   (issue #33 incomplete).
+2. Make the 19 open decisions in `open-decisions.md`, starting with
+   DEC-HALCANON-001 (Phase 1 blocker), DEC-COMPAT-001, DEC-CARD-001.
 3. Only then begin Phase 1 (compatibility test design).
 
 ---
@@ -169,8 +175,9 @@ PHASE 0 BASELINE INCOMPLETE
 
 1. hal-canon upstream commit SHA (from `linuxcnc-hal-canon.git`) not recorded;
    current embedding is a tree, not a submodule commit pointer (CONFLICT-008).
-2. LinuxCNC upstream/master `HAL_NAME_LEN = 55` claim not verified with a
-   pinned commit SHA (DEC-NAME-003).
+2. LinuxCNC upstream/master `HAL_NAME_LEN = 55` at commit
+   `71bf88009d64fa15edbebf9250b65ee4454f9a05` (source A-001b): SHA provided by reviewer
+   but not independently fetched during Phase 0 — recorded as UNVERIFIED-BY-FETCH.
 3. Issue comments not inspected for #33, #35, #36, #38, #118, #128 in pokeysHal;
    potential implementation evidence missed.
 4. pokeysHal issue bodies not inspected: #37, #39, #119–#126.

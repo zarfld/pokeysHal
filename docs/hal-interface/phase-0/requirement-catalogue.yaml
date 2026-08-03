@@ -292,8 +292,8 @@ requirements:
     enumeration: "n/a"
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: "canonical (digin.in) — direction mismatch: hal-canon exports HAL_IN; spec requires HAL_OUT"
-    legacy_compatibility_status: "name compatible; direction bug in hal-canon prevents correct HAL wiring"
-    current_implementation_status: "Implemented via hal_export_digin (PoKeysLibIOAsync.c:35). DIRECTION BUG: digin.in is HAL_IN, should be HAL_OUT. See CONFLICT-009."
+    legacy_compatibility_status: "name compatible; incorrect ownership metadata (HAL_IN reader declared, component writes)"
+    current_implementation_status: "Implemented via hal_export_digin (PoKeysLibIOAsync.c:35). DIRECTION BUG: digin.in is HAL_IN, should be HAL_OUT. Unsupported writer behaviour. See CONFLICT-009."
     requirement_sources: [A-002, C-007, B-002]
     implementation_sources: [F-003]
     conflicts: [CONFLICT-009]
@@ -344,8 +344,8 @@ requirements:
     enumeration: "n/a"
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: "canonical (digout.out) — direction mismatch: hal-canon exports HAL_OUT; spec requires HAL_IN"
-    legacy_compatibility_status: "name compatible; direction bug in hal-canon prevents correct HAL wiring"
-    current_implementation_status: "Implemented via hal_export_digout (PoKeysLibIOAsync.c:53). DIRECTION BUG: digout.out is HAL_OUT, should be HAL_IN. See CONFLICT-009."
+    legacy_compatibility_status: "name compatible; component declared as driver (HAL_OUT); blocks command source wiring"
+    current_implementation_status: "Implemented via hal_export_digout (PoKeysLibIOAsync.c:53). DIRECTION BUG: digout.out is HAL_OUT, should be HAL_IN. Blocks HAL_OUT command source. See CONFLICT-009."
     requirement_sources: [A-002, C-005, B-002]
     implementation_sources: [F-003]
     conflicts: [CONFLICT-009]
@@ -458,7 +458,7 @@ requirements:
     current_implementation_status: >
       IMPLEMENTED with direction mismatch. hal_export_adcin called at
       PoKeysLibIOAsync.c:85. adcin.value created as HAL_IN (bug: should be HAL_OUT).
-      Prevents correct HAL wiring as a data source.
+      Unsupported writer: component writes to a pin declared as HAL_IN reader.
     requirement_sources: [C-004, A-002, B-003]
     implementation_sources: [F-003]
     conflicts: ["CONFLICT-003", "CONFLICT-009"]

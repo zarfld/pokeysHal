@@ -105,8 +105,8 @@ Why the sources conflict:
 Safety or compatibility impact:
   LOW for canonical pins (present). MEDIUM for the 'value-raw' name: any HAL
   file referencing adcin.J.value-raw will fail to connect (pin is 'in.raw').
-  Critical: adcin.value direction mismatch (HAL_IN instead of HAL_OUT) prevents
-  correct data flow until hal-canon is corrected (see CONFLICT-009).
+  Note: adcin.value direction mismatch (HAL_IN instead of HAL_OUT) means the
+  component is an unsupported writer — see CONFLICT-009 for full impact analysis.
 Authority assessment:
   Canonical pins are exported. The name conflict between 'value-raw' (issue #35)
   and 'in.raw' (implementation) is unresolved. Direction mismatch is a hal-canon
@@ -310,16 +310,15 @@ Status: unresolved
 Conflict ID: CONFLICT-009
 Subject: hal-canon export helpers use incorrect HAL directions
 Source A: LinuxCNC HAL data-flow semantics (Authority A):
-  - Digital input device (hardware → HAL): component writes to HAL.
-    digin.in must be HAL_OUT (component is the driver/writer).
+  - Digital input device (hardware → HAL): component writes hardware state to HAL.
+    digin.in must be HAL_OUT (component is the authoritative writer).
     digin.in-not must be HAL_OUT.
-  - Digital output device (HAL → hardware): LinuxCNC writes to component.
-    digout.out must be HAL_IN (component is the reader).
-  - Analog input (hardware → HAL): component writes to HAL.
+  - Digital output device (HAL → hardware): LinuxCNC writes command to component.
+    digout.out must be HAL_IN (component reads the commanded value).
+  - Analog input (hardware → HAL): component writes scaled value to HAL.
     adcin.value must be HAL_OUT.
-  - Analog output (HAL → hardware): LinuxCNC writes to component.
-    adcout.value must be HAL_IN (correct).
-    adcout.enable must be HAL_IN (correct).
+  - Analog output (HAL → hardware): HAL_IN is correct.
+    adcout.value HAL_IN, adcout.enable HAL_IN — both correct.
 Source B: Observed hal-canon implementation (hal-canon/hal_digital.c,
   hal-canon/hal_analog.c):
   - hal_export_digin: digin.in created with HAL_IN   ← WRONG (should be HAL_OUT)
@@ -329,33 +328,53 @@ Source B: Observed hal-canon implementation (hal-canon/hal_digital.c,
   - hal_export_adcout: adcout.value HAL_IN, adcout.enable HAL_IN ← both correct
 Observed implementation:
   pokeysHal calls hal_export_digin, hal_export_digout, hal_export_adcin, and
-  hal_export_adcout. It therefore inherits all three direction bugs. The pins
-  digin.J.in, digout.J.out, and adcin.J.value are created with the wrong
-  direction in every running instance of the component.
+  hal_export_adcout, inheriting all three direction bugs.
+LinuxCNC hal_link semantics (required for correct impact analysis):
+  - A signal can have at most ONE HAL_OUT writer; hal_link rejects a second HAL_OUT.
+  - Multiple HAL_IN pins can be linked to one signal without error.
+  - HAL_IN + HAL_IN does not itself cause a wiring-time direction error.
 Why the sources conflict:
-  The LinuxCNC HAL direction convention is unambiguous: HAL_OUT means the
-  component writes the value; HAL_IN means the component reads it. The
-  hal-canon implementation reverses the convention for digin.in, digout.out,
-  and adcin.value.
+  The hal-canon implementation declares wrong directions for three pins.
+  Per-bug impact using hal_link semantics:
+  a) digin.in as HAL_IN (should be HAL_OUT):
+     Incorrect ownership metadata. The component code (PK_DigitalIOGetParse)
+     writes the hardware state to pin memory in software, but the pin is
+     declared as a reader (HAL_IN), meaning the HAL signal has no declared
+     HAL_OUT writer. This is unsupported writer behaviour: the component
+     writes a value to a pin it is not the declared driver of. If any external
+     HAL_OUT source is connected to the same signal, it continuously overwrites
+     the hardware-read value. HAL wiring succeeds without direction error
+     (HAL_IN pins do not reject connections), but signal ownership is wrong.
+  b) digout.out as HAL_OUT (should be HAL_IN):
+     The component is declared as the driver of the signal. When LinuxCNC’s
+     motion controller or any other component tries to connect an HAL_OUT
+     command source to the same signal, hal_link rejects the connection
+     because the signal already has a source. This directly blocks the normal
+     use case of commanding a digital output from LinuxCNC.
+  c) adcin.value as HAL_IN (should be HAL_OUT):
+     Same unsupported writer situation as digin.in. Component code writes the
+     scaled analog reading but is not the declared HAL driver. Signal has no
+     HAL_OUT source. If an external HAL_OUT source is connected, it overwrites
+     the hardware reading. No wiring-time direction error unless a second
+     HAL_OUT is added.
 Safety or compatibility impact:
-  HIGH. A pin with the wrong direction will fail to connect with compatible
-  signals in HAL. For example, attempting to net digin.J.in to a motion-controller
-  input will fail at HAL wiring time because both end-points would be HAL_IN.
-  LinuxCNC halcmd reports "pin direction mismatch" and refuses the connection.
-  This renders the digital input and analog input interfaces non-functional.
+  digout.out (HAL_OUT instead of HAL_IN): HIGH — blocks any HAL_OUT command
+    source from being connected; hal_link rejects the second writer.
+  digin.in and adcin.value (HAL_IN instead of HAL_OUT): MEDIUM — incorrect
+    ownership metadata; no declared signal source; hardware state is written
+    to the pin in code but may be overwritten by an external HAL_OUT source.
+    HAL wiring succeeds without direction error.
 Authority assessment:
   Authority A (LinuxCNC HAL API and canonical device specification) governs.
   hal-canon (Authority B) contains implementation bugs contradicting Authority A.
-  Phase 0 scope prohibits modifying hal-canon. The conflict must be recorded
-  and a decision made before Phase 1.
+  Phase 0 scope prohibits modifying hal-canon.
 Required decision:
   1. Correct hal-canon/hal_digital.c: change digin.in to HAL_OUT and
      digout.out to HAL_IN.
   2. Correct hal-canon/hal_analog.c: change adcin.value to HAL_OUT.
-  3. Verify that digin.in-not (HAL_OUT) and adcout.value/enable (HAL_IN)
-     remain unchanged — these are correct.
-  Note: This requires modifying hal-canon, which is out of scope for Phase 0.
-  It must be the first technical action in Phase 1 before any compatibility
-  testing can produce meaningful results.
+  3. digin.in-not (HAL_OUT) and adcout.value/enable (HAL_IN) are correct;
+     do not change them.
+  Priority: digout.out fix is HIGH (blocks digital output command wiring).
+  digin.in and adcin.value fixes are MEDIUM (should be done in same pass).
 Status: unresolved
 ```

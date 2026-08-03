@@ -72,7 +72,9 @@ which is out of scope for Phase 0 but **must be the first action in Phase 1**.
 Any compatibility test that exercises digin, digout, or adcin will produce incorrect
 results (pin-direction mismatch at HAL wiring time) until these bugs are fixed.
 
-**Blocking:** ALL functional tests for digital I/O and analog input.
+**Blocking:**
+- digout.out (HIGH): blocks any HAL_OUT command source connection; must fix before digital output tests.
+- digin.in, adcin.value (MEDIUM): unsupported writer behaviour; should fix in same pass.
 
 ---
 
@@ -134,9 +136,10 @@ definitive naming convention.
 
 ### DEC-NAME-003: HAL name length budget
 
-**Context:** Installed LinuxCNC 2.9.10: `HAL_NAME_LEN = 47` (confirmed, `/usr/include/linuxcnc/hal.h`).
-Reviewer states LinuxCNC upstream/master uses `HAL_NAME_LEN = 55` (upstream commit SHA
-not independently verified in Phase 0). With `pokeys-async.0` prefix (14 chars), current
+**Context:** Installed LinuxCNC 2.9.10: `HAL_NAME_LEN = 47` (confirmed, `/usr/include/linuxcnc/hal.h`;
+source A-001). LinuxCNC upstream/master: `HAL_NAME_LEN = 55` at commit
+`71bf88009d64fa15edbebf9250b65ee4454f9a05` `src/hal/hal.h` (source A-001b;
+UNVERIFIED-BY-FETCH). With `pokeys-async.0` prefix (14 chars), current
 names are ≤46 chars. With device index ≥10, borderline for the 47 limit.
 
 **Required decision:**

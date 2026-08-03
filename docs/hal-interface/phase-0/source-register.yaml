@@ -9,18 +9,34 @@ sources:
 
   - source_id: A-001
     repository: LinuxCNC
-    revision: "installed on target: hal.h HAL_NAME_LEN=47"
+    revision: "2.9.10, installed on target (Debian/Raspberry Pi)"
     path_or_issue: "/usr/include/linuxcnc/hal.h"
     url: "https://linuxcnc.org/docs/html/hal/canonical-devices.html"
     source_type: normative_standard
     authority_class: A
-    scope: "HAL pin/param/funct creation API, HAL_NAME_LEN, lifecycle rules"
+    scope: "HAL pin/param/funct creation API, HAL_NAME_LEN=47, lifecycle rules"
     state: current
     inspected: true
     notes: >
-      HAL_NAME_LEN = 47 confirmed on target system (LinuxCNC 2.9 Debian).
+      HAL_NAME_LEN = 47 confirmed on target system LinuxCNC 2.9.10 (Debian).
       hal_init, hal_malloc, hal_pin_*_newf, hal_param_*_newf, hal_export_funct,
       hal_ready, hal_exit all declared. hal_free does NOT exist.
+
+  - source_id: A-001b
+    repository: LinuxCNC
+    revision: "upstream/master commit 71bf88009d64fa15edbebf9250b65ee4454f9a05"
+    path_or_issue: "src/hal/hal.h"
+    url: "https://github.com/LinuxCNC/linuxcnc/blob/71bf88009d64fa15edbebf9250b65ee4454f9a05/src/hal/hal.h"
+    source_type: normative_standard
+    authority_class: A
+    scope: "HAL_NAME_LEN=55 in LinuxCNC upstream/master"
+    state: current
+    inspected: false
+    notes: >
+      HAL_NAME_LEN = 55 at pinned upstream commit 71bf88009d64fa15edbebf9250b65ee4454f9a05.
+      This commit SHA was provided by the reviewer; the URL and value were not
+      independently fetched during Phase 0. Recorded as UNVERIFIED-BY-FETCH.
+      Relevant because some pin names that exceed 47 may be valid against this version.
 
   - source_id: A-002
     repository: LinuxCNC
