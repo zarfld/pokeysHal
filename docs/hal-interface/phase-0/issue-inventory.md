@@ -47,21 +47,21 @@ LinuxCnc_PokeysLibComp@0c058e6c. Inspected: 2026-08-03.
 
 | # | Title | State | Relevance | Claimed implementation | Evidence found | Conflicts | Use as source? |
 |---|---|---|---|---|---|---|---|
-| #16 | pokeys_py | not inspected | LOW — Python layer only | n/a | n/a | None | Limited |
-| #21 | custom homing interface | not inspected | MEDIUM — homing integration | n/a | Legacy homing HAL files inspected (E-002) | None | YES for homing context |
+| #16 | pokeys_py | OPEN | LOW | n/a | Body retrieved (partial): Software Requirements Specification for pokeys_py covering digital I/O, analog I/O, PEv2, PoNET, PWM, homing support | None | Limited |
+| #21 | custom homing interface | CLOSED | MEDIUM | n/a | Body retrieved: defines interface for pokeys_homecomp.comp; standardises communication between homing procedure and PoKeys components via PEv2 AxesState/AxesCommand | None | YES for homing context |
 | #24 | homecomp compatibility | not inspected | MEDIUM | n/a | n/a | None | YES for homing context |
-| #28 | userspace functional equivalence | not inspected | HIGH | n/a | n/a | None | YES |
-| #29 | modularized userspace implementation | not inspected | HIGH | n/a | n/a | None | YES |
-| #69 | modular architecture | not inspected | MEDIUM | n/a | n/a | None | YES |
+| #28 | userspace functional equivalence | CLOSED | HIGH | n/a | Body retrieved: verify pokeys_userspace contains all functionality of pokeys.comp; modularized to reduce comp size | None | YES |
+| #29 | modularized userspace implementation | MERGED | HIGH | n/a | Body retrieved: adds PWM, digital I/O, and other missing functionalities to pokeys_userspace; references PoKeysLib public interface | None | YES |
+| #69 | modular architecture | OPEN | MEDIUM | n/a | Body retrieved: refactor codebase into modular components; isolate functionality per subsystem | None | YES |
 | #73 | LinuxCNC build alignment | not inspected | MEDIUM | n/a | n/a | None | YES |
 | #79 | conformity with LinuxCNC guidelines and canonical device interface | OPEN | HIGH | n/a | Inspected: body requires CDI conformity for digital/analog I/O, motion control (PEv2), and communication protocols; references canonical naming rules in LinuxCNC HAL handbook | None | YES — directly relevant to Phase 1 |
-| #129 | realtime clock HAL interface | not inspected | LOW | n/a | n/a | None | Maybe |
-| #157 | common pin I/O handling | not inspected | HIGH | n/a | n/a | None | YES |
-| #213 | encoder modularization and manual HAL export | not inspected | HIGH | n/a | n/a | None | YES |
-| #216 | missing PEv2 homing pin | OPEN | HIGH | n/a | Inspected: reports "Pin 'pokeys.0.PEv2.0.joint-in-homing' does not exist" running Pokeys57CNC_DM542_XXYZ_mill example; also confirms HAL param name exceeding 50 chars for UltraFastEncoder (fixed locally by shortening) | CONFLICT-002, CONFLICT-005 | YES |
+| #129 | realtime clock HAL interface | CLOSED | LOW | n/a | Body retrieved: specifies rtc.sec/min/hour/dow/dom/doy/month/year pins; matches current pokeysHal implementation | None | Maybe |
+| #157 | common pin I/O handling | CLOSED | HIGH | n/a | Body retrieved: combine common Pin I/O handling in hal components; references PoKeysLib public interface for pin functions | None | YES |
+| #213 | encoder modularization and manual HAL export | CLOSED | HIGH | n/a | Body retrieved: pin declarations from pokeys.comp header section; manual creation of count/position/velocity/reset/index-enable/scale pins in C; confirms encoder naming convention | None | YES |
+| #216 | missing PEv2 homing pin | OPEN | HIGH | n/a | Inspected: reports "Pin 'pokeys.0.PEv2.0.joint-in-homing' does not exist" running Pokeys57CNC_DM542_XXYZ_mill example | CONFLICT-002 | YES |
 | #222 | physical pin-function setup | CLOSED | HIGH | n/a | Inspected: setting pokeys.0.digout.33.out had no effect because the pin had not been configured as digital output via PinFunction first; confirms that PK_PinFunctionsSet (PinFunction setup) is a prerequisite for digital I/O operation | None | YES |
-| #223 | PEv2 limit override | not inspected | HIGH | n/a | n/a | None | YES |
-| #264 | analog output in userspace component | not inspected | HIGH | n/a | n/a | CONFLICT-004 | YES |
+| #223 | PEv2 limit override | OPEN | HIGH | n/a | Body retrieved (partial): LimitOverride should be linked to Override Limits checkbox in AXIS view; references PoKeysLib PEv2 LimitOverride and LimitOverrideSetup | None | YES |
+| #264 | analog output in userspace component | CLOSED | HIGH | n/a | Body empty via API | CONFLICT-004 | YES |
 | #310 | missing PEv2 AxesState and HAL name length | CLOSED | HIGH | Fixed in legacy component (name shortened) | Confirmed: name length violation was real | CONFLICT-005 | YES — evidence of real name-length problem |
 | #326 | HAL parameter name longer than LinuxCNC limit | OPEN | HIGH | Unfixed | Confirmed: 50-char name against limit of 47 | CONFLICT-005 | YES |
 

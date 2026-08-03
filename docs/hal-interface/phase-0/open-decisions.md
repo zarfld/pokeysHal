@@ -60,21 +60,30 @@ directly; it has additional PoKeys-specific options.
 
 **Blocking:** Not blocking for compatibility — encoder canonical pins are mostly present.
 
-### DEC-HALCANON-001: Fix hal-canon direction bugs before any functional testing
+### DEC-HALCANON-001: Fix hal-canon direction bugs before canonical compatibility can be claimed
 
 **Context:** Three direction bugs identified in the embedded hal-canon code (CONFLICT-009):
 - `hal_export_digin`: `digin.in` exported as `HAL_IN` (should be `HAL_OUT`)
 - `hal_export_digout`: `digout.out` exported as `HAL_OUT` (should be `HAL_IN`)
 - `hal_export_adcin`: `adcin.value` exported as `HAL_IN` (should be `HAL_OUT`)
 
-Fixing these requires modifying `hal-canon/hal_digital.c` and `hal-canon/hal_analog.c`,
-which is out of scope for Phase 0 but **must be the first action in Phase 1**.
-Any compatibility test that exercises digin, digout, or adcin will produce incorrect
-results (pin-direction mismatch at HAL wiring time) until these bugs are fixed.
+Fixing these requires modifying `hal-canon/hal_digital.c` and `hal-canon/hal_analog.c`.
+
+**Specific impact per bug:**
+- `digout.out` as `HAL_OUT`: blocks normal external `HAL_OUT` command-source wiring;
+  any attempt to connect a motion-controller or other `HAL_OUT` source to the same
+  signal is rejected by `hal_link` because the signal already has a writer.
+- `digin.in` and `adcin.value` as `HAL_IN`: incorrect writer ownership — the component
+  writes hardware state to pins declared as readers; the signal has no declared
+  `HAL_OUT` source and may be overwritten if an external `HAL_OUT` is connected.
+
+**Test implications:**
+- Structural and characterization tests (pin existence, type, cardinality) remain possible.
+- Canonical HAL compatibility cannot be claimed until these bugs are corrected.
 
 **Blocking:**
-- digout.out (HIGH): blocks any HAL_OUT command source connection; must fix before digital output tests.
-- digin.in, adcin.value (MEDIUM): unsupported writer behaviour; should fix in same pass.
+- digout.out (HIGH): blocks normal external HAL_OUT command-source wiring.
+- digin.in, adcin.value (MEDIUM): incorrect ownership; should fix in same pass.
 
 ---
 

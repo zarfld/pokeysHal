@@ -42,21 +42,25 @@ sources:
       Relevant: some pin names that exceed the 2.9.x limit of 47 are valid on this build.
 
   - source_id: A-002
-    repository: LinuxCNC
-    revision: "https://linuxcnc.org/docs/html/hal/canonical-devices.html"
-    path_or_issue: canonical-devices.html
-    url: "https://linuxcnc.org/docs/html/hal/canonical-devices.html"
+    repository: LinuxCNC/linuxcnc
+    revision: "71bf88009d64fa15edbebf9250b65ee4454f9a05"
+    path_or_issue: "docs/src/hal/canonical-devices.adoc"
+    url: "https://github.com/LinuxCNC/linuxcnc/blob/71bf88009d64fa15edbebf9250b65ee4454f9a05/docs/src/hal/canonical-devices.adoc"
     source_type: normative_standard
     authority_class: A
     scope: >
-      Canonical device interface (CDI): digin, digout, adcin, adcout, encoder
-      pin names, types, directions, and parameter names.
+      Official Canonical Device Interfaces: digin, digout, adcin, adcout only.
+      Encoder is NOT defined in this document. Defines pin names, types,
+      directions, and parameter names for the four canonical device types.
     state: current
-    inspected: false
+    inspected: true
     notes: >
-      Not fetched directly; content is reflected in hal-canon README and
-      hal_canon.h documentation. Authoritative for canonical pin names and
-      the meaning of scale, offset, bit-weight, hw-offset, etc.
+      Inspected at pinned commit 71bf88009d64fa15edbebf9250b65ee4454f9a05.
+      The official CDI document defines exactly four interfaces:
+      digin (in, in-not), digout (out, invert), adcin (value, scale, offset,
+      bit-weight, hw-offset), adcout (value, enable, offset, scale, high-limit,
+      low-limit, bit-weight, hw-offset). Encoder is not a Canonical Device
+      Interface; it is a hal-canon convention (see B-004).
 
   # ── B. Pinned Dependency Authority ───────────────────────────────────────────
 
@@ -188,10 +192,12 @@ sources:
     state: closed
     inspected: true
     notes: >
-      Specifies adcin.J.value-raw (float, raw hardware reading) and
-      adcin.J.value (float, scaled). Implementation exports adcin.J.in.hw (u32)
-      and adcin.J.in.raw (float) instead. Canonical parameters scale and offset
-      not exported.
+      Specifies adcin.J.value-raw (float) and adcin.J.value (float, scaled).
+      Canonical objects ARE exported via hal_export_adcin (PoKeysLibIOAsync.c:85):
+      value (HAL_IN — direction defect per CONFLICT-009), scale, offset,
+      bit-weight, hw-offset. Supplementary PoKeys-specific pins also exported:
+      adcin.J.in.hw (u32), adcin.J.in.raw (float), adcin.J.ReferenceVoltage.
+      Name mismatch: issue specifies value-raw; implementation uses in.raw.
 
   - source_id: C-005
     repository: zarfld/pokeysHal
@@ -200,10 +206,16 @@ sources:
     url: "https://github.com/zarfld/pokeysHal/issues/36"
     source_type: requirement_issue
     authority_class: C
-    scope: "HAL-Interface: Digital Output"
+    scope: "HAL-Interface: Digital Output — digout.J.out, PoExtBus digout, PEv2 digout.AxisEnabled.out, LimitOverride.out"
     state: open
-    inspected: false
-    notes: "Body not fully inspected; digout pins are exported via hal_export_digout."
+    inspected: true
+    notes: >
+      Body retrieved. Specifies digout.J.out (55 pins), PoExtBus digout,
+      PEv2 digout.AxisEnabled.out and digout.LimitOverride.out, ExternalRelay,
+      ExternalOC, kbd48CNC LED, digout invert parameter.
+      digout.J.out exported via hal_export_digout (direction bug: HAL_OUT,
+      should be HAL_IN; CONFLICT-009). PEv2 AxisEnabled.out absent.
+      PoExtBus digout absent. LimitOverride.out absent.
 
   - source_id: C-006
     repository: zarfld/pokeysHal
@@ -215,7 +227,7 @@ sources:
     scope: "HAL-Interface: Analog Output"
     state: open
     inspected: false
-    notes: "Duplicate of #39. Non-canonical adcout interface currently implemented."
+    notes: "Duplicate of #39. Canonical adcout objects ARE exported via hal_export_adcout. Functional value-to-PWM propagation remains unverified. Body not retrieved."
 
   - source_id: C-007
     repository: zarfld/pokeysHal
@@ -224,10 +236,15 @@ sources:
     url: "https://github.com/zarfld/pokeysHal/issues/38"
     source_type: requirement_issue
     authority_class: C
-    scope: "HAL-Interface: Digital Input"
+    scope: "HAL-Interface: Digital Input — digin.J.in and digin.J.in-not"
     state: open
-    inspected: false
-    notes: "digin pins are exported via hal_export_digin plus extra invert param."
+    inspected: true
+    notes: >
+      Body retrieved. Specifies digin.J.in (bit, hardware input state) and
+      digin.J.in-not (bit, inverted). Also references PK_PinConfigurationGet
+      for pin function setup. digin.J.in and digin.J.in-not exported via
+      hal_export_digin. digin.in has direction bug (HAL_IN instead of HAL_OUT;
+      CONFLICT-009). Extra non-canonical digin.J.invert param also exported.
 
   - source_id: C-008
     repository: zarfld/pokeysHal
@@ -239,7 +256,7 @@ sources:
     scope: "HAL-Interface: Analog Output"
     state: open
     inspected: false
-    notes: "Canonical adcout interface required. Implementation uses PWM-based non-canonical export."
+    notes: "Canonical adcout objects ARE exported via hal_export_adcout (PoKeysLibIOAsync.c:110). Supplementary PWM objects also present. Functional value/enable-to-PWM-duty propagation remains unverified. Body not retrieved."
 
   - source_id: C-009
     repository: zarfld/pokeysHal
@@ -504,18 +521,30 @@ sources:
     url: "https://github.com/zarfld/pokeysHal/blob/main/PoKeysLibIOAsync.c"
     source_type: implementation_source
     authority_class: F
-    scope: "export_IO_pins: PinFunction params, digin/digout via hal-canon, adcin non-canonical, adcout PWM-based"
+    scope: "export_IO_pins: PinFunction params; digin/digout via hal_export_digin/hal_export_digout; adcin via hal_export_adcin; adcout via hal_export_adcout; supplementary PoKeys/PWM objects alongside canonical exports"
     state: current
     inspected: true
     notes: >
-      Exports pins.J.PinFunction (param, HAL_RW u32) for all pins,
-      digin.J.* via hal_export_digin (conditional on PK_PinCap_digitalInput),
-      digin.J.invert (extra non-canonical param),
-      digout.J.* via hal_export_digout (conditional on PK_PinCap_digitalOutput),
-      adcin.J.in.hw (HAL_OUT u32), adcin.J.in.raw (HAL_OUT float),
-      adcin.J.ReferenceVoltage (param, HAL_RO float),
-      adcout.J.max_voltage (param, HAL_RW float),
-      adcout.J.PWMduty (HAL_OUT u32), adcout.pwm.period (param, HAL_RW u32).
+      Canonical exports (via embedded hal-canon tree):
+        hal_export_digin (PoKeysLibIOAsync.c:35): digin.J.in (HAL_IN — direction
+          bug, CONFLICT-009), digin.J.in-not (HAL_OUT); conditional on
+          PK_PinCap_digitalInput.
+        hal_export_digout (PoKeysLibIOAsync.c:53): digout.J.out (HAL_OUT — direction
+          bug, CONFLICT-009), digout.J.invert (PARAM); conditional on
+          PK_PinCap_digitalOutput.
+        hal_export_adcin (PoKeysLibIOAsync.c:85): adcin.J.value (HAL_IN — direction
+          bug, CONFLICT-009), adcin.J.scale, offset, bit-weight, hw-offset.
+        hal_export_adcout (PoKeysLibIOAsync.c:110): adcout.J.value (HAL_IN),
+          adcout.J.enable (HAL_IN), adcout params (offset, scale, limits, etc.).
+      Supplementary PoKeys-specific objects (not canonical):
+        pins.J.PinFunction (PARAM, HAL_RW u32),
+        digin.J.invert (extra PARAM, HAL_RW bit),
+        adcin.J.in.hw (HAL_OUT u32 — raw ADC counts),
+        adcin.J.in.raw (HAL_OUT float — voltage-scaled),
+        adcin.J.ReferenceVoltage (PARAM, HAL_RO float),
+        adcout.J.max_voltage (PARAM, HAL_RW float),
+        adcout.J.PWMduty (HAL_OUT u32),
+        adcout.pwm.period (PARAM, HAL_RW u32).
 
   - source_id: F-004
     repository: zarfld/pokeysHal
