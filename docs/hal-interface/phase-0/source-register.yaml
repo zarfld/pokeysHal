@@ -1,0 +1,599 @@
+---
+# Source Register — Phase 0 HAL-Interface Baseline
+# Format: one entry per important source inspected.
+# Inspected: 2026-08-03
+
+sources:
+
+  # ── A. Normative External Authority ──────────────────────────────────────────
+
+  - source_id: A-001
+    repository: LinuxCNC
+    revision: "installed on target: hal.h HAL_NAME_LEN=47"
+    path_or_issue: "/usr/include/linuxcnc/hal.h"
+    url: "https://linuxcnc.org/docs/html/hal/canonical-devices.html"
+    source_type: normative_standard
+    authority_class: A
+    scope: "HAL pin/param/funct creation API, HAL_NAME_LEN, lifecycle rules"
+    state: current
+    inspected: true
+    notes: >
+      HAL_NAME_LEN = 47 confirmed on target system (LinuxCNC 2.9 Debian).
+      hal_init, hal_malloc, hal_pin_*_newf, hal_param_*_newf, hal_export_funct,
+      hal_ready, hal_exit all declared. hal_free does NOT exist.
+
+  - source_id: A-002
+    repository: LinuxCNC
+    revision: "https://linuxcnc.org/docs/html/hal/canonical-devices.html"
+    path_or_issue: canonical-devices.html
+    url: "https://linuxcnc.org/docs/html/hal/canonical-devices.html"
+    source_type: normative_standard
+    authority_class: A
+    scope: >
+      Canonical device interface (CDI): digin, digout, adcin, adcout, encoder
+      pin names, types, directions, and parameter names.
+    state: current
+    inspected: false
+    notes: >
+      Not fetched directly; content is reflected in hal-canon README and
+      hal_canon.h documentation. Authoritative for canonical pin names and
+      the meaning of scale, offset, bit-weight, hw-offset, etc.
+
+  # ── B. Pinned Dependency Authority ───────────────────────────────────────────
+
+  - source_id: B-001
+    repository: zarfld/linuxcnc-hal-canon
+    revision: "tree deed4c10535530ce0383fb357ea8427896226c70 (embedded in main repo)"
+    path_or_issue: hal-canon/hal_canon.h
+    url: "https://github.com/zarfld/linuxcnc-hal-canon"
+    source_type: library_header
+    authority_class: B
+    scope: >
+      Public types: hal_digin_t, hal_digout_t, hal_adcin_t, hal_adcout_t,
+      hal_encoder_t. Export functions: hal_export_digin, hal_export_digout,
+      hal_export_adcin, hal_export_adcout, hal_export_encoder.
+      Registration functions (RTAPI only): hal_register_*_func.
+    state: current
+    inspected: true
+    notes: >
+      Embedded as a regular git tree (040000), not a proper git submodule
+      commit (160000). Upstream commit SHA unknown from the main repository.
+      .gitmodules references url https://github.com/zarfld/linuxcnc-hal-canon.git
+      but git-submodule-status shows no entry for hal-canon.
+
+  - source_id: B-002
+    repository: zarfld/linuxcnc-hal-canon
+    revision: same as B-001
+    path_or_issue: hal-canon/hal_digital.c
+    url: "https://github.com/zarfld/linuxcnc-hal-canon"
+    source_type: library_implementation
+    authority_class: B
+    scope: "Implementation of hal_export_digin and hal_export_digout"
+    state: current
+    inspected: true
+    notes: >
+      hal_export_digin creates pins: <prefix>.digin.<index>.in (HAL_OUT bit),
+      <prefix>.digin.<index>.in-not (HAL_OUT bit).
+      hal_export_digout creates: <prefix>.digout.<index>.out (HAL_IN bit),
+      parameter: <prefix>.digout.<index>.invert (HAL_RW bit).
+
+  - source_id: B-003
+    repository: zarfld/linuxcnc-hal-canon
+    revision: same as B-001
+    path_or_issue: hal-canon/hal_analog.c
+    url: "https://github.com/zarfld/linuxcnc-hal-canon"
+    source_type: library_implementation
+    authority_class: B
+    scope: "Implementation of hal_export_adcin, hal_export_adcout, hal_adcin_applyScaling, hal_adcout_getscaledvalue"
+    state: current
+    inspected: true
+    notes: >
+      hal_export_adcin creates: <prefix>.adcin.<index>.value (HAL_OUT float),
+      parameters: scale, offset, bit-weight, hw-offset (all HAL_RW float).
+      hal_export_adcout creates: <prefix>.adcout.<index>.value (HAL_IN float),
+      <prefix>.adcout.<index>.enable (HAL_IN bit),
+      parameters: offset, scale, high-limit, low-limit, bit-weight, hw-offset.
+
+  - source_id: B-004
+    repository: zarfld/linuxcnc-hal-canon
+    revision: same as B-001
+    path_or_issue: hal-canon/hal_encoder.c
+    url: "https://github.com/zarfld/linuxcnc-hal-canon"
+    source_type: library_implementation
+    authority_class: B
+    scope: "Implementation of hal_export_encoder"
+    state: current
+    inspected: true
+    notes: >
+      hal_export_encoder creates: <prefix>.encoder.<index>.count (HAL_OUT s32),
+      position (HAL_OUT float), velocity (HAL_OUT float), reset (HAL_IN bit),
+      index-enable (HAL_IN bit), parameter scale (HAL_RW float),
+      max_index_vel (HAL_RW float), velocity_resolution (HAL_RW float).
+
+  # ── C. Explicit Repository Requirements ──────────────────────────────────────
+
+  - source_id: C-001
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #32"
+    url: "https://github.com/zarfld/pokeysHal/issues/32"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "HAL Interface: PoKeys device information — pins for devSerial, alive, connected, err, and info.* capabilities"
+    state: open
+    inspected: true
+    notes: >
+      Specifies 35+ pins and parameters for device identity and capability
+      reporting. Only devSerial and alive are currently created.
+
+  - source_id: C-002
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #33"
+    url: "https://github.com/zarfld/pokeysHal/issues/33"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "HAL Interface: PEv2 — complete per-global and per-axis pin specification"
+    state: closed
+    inspected: true
+    notes: >
+      CLOSED but many specified pins absent from implementation.
+      Specifies PulseEngineEnabled, PulseGeneratorType, MiscInputStatus,
+      LimitOverride, AxisEnabledMask, HomingStartMaskSetup, ProbeStartMaskSetup,
+      ProbeSpeed, BacklashCompensationEnabled, per-axis stepgen.*, HomingSpeed,
+      HomingReturnSpeed, HomingAlgorithm, HomeOffsets, HomeBackOffDistance,
+      SoftLimitMaximum, SoftLimitMinimum. None found in current implementation.
+
+  - source_id: C-003
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #34"
+    url: "https://github.com/zarfld/pokeysHal/issues/34"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "HAL Interface: PoExtBus"
+    state: open
+    inspected: false
+    notes: "Body not inspected. No PoExtBus HAL pins found in any *Async.c file."
+
+  - source_id: C-004
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #35"
+    url: "https://github.com/zarfld/pokeysHal/issues/35"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "HAL-Interface: Analog Input — value-raw, value, scale, offset"
+    state: closed
+    inspected: true
+    notes: >
+      Specifies adcin.J.value-raw (float, raw hardware reading) and
+      adcin.J.value (float, scaled). Implementation exports adcin.J.in.hw (u32)
+      and adcin.J.in.raw (float) instead. Canonical parameters scale and offset
+      not exported.
+
+  - source_id: C-005
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #36"
+    url: "https://github.com/zarfld/pokeysHal/issues/36"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "HAL-Interface: Digital Output"
+    state: open
+    inspected: false
+    notes: "Body not fully inspected; digout pins are exported via hal_export_digout."
+
+  - source_id: C-006
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #37"
+    url: "https://github.com/zarfld/pokeysHal/issues/37"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "HAL-Interface: Analog Output"
+    state: open
+    inspected: false
+    notes: "Duplicate of #39. Non-canonical adcout interface currently implemented."
+
+  - source_id: C-007
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #38"
+    url: "https://github.com/zarfld/pokeysHal/issues/38"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "HAL-Interface: Digital Input"
+    state: open
+    inspected: false
+    notes: "digin pins are exported via hal_export_digin plus extra invert param."
+
+  - source_id: C-008
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #39"
+    url: "https://github.com/zarfld/pokeysHal/issues/39"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "HAL-Interface: Analog Output"
+    state: open
+    inspected: false
+    notes: "Canonical adcout interface required. Implementation uses PWM-based non-canonical export."
+
+  - source_id: C-009
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #116"
+    url: "https://github.com/zarfld/pokeysHal/issues/116"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-F-PEV2-001: Global PEv2 HAL Pin Export"
+    state: open
+    inspected: false
+    notes: "Global PEv2 pins partially implemented."
+
+  - source_id: C-010
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #117"
+    url: "https://github.com/zarfld/pokeysHal/issues/117"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-F-PEV2-002: Per-Axis PEv2 HAL Pin Export"
+    state: open
+    inspected: false
+    notes: "Per-axis pins exported unconditionally for all 8 axes."
+
+  - source_id: C-011
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #118"
+    url: "https://github.com/zarfld/pokeysHal/issues/118"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "REQ-F-PEV2-003: Conditional Pin Creation — Only for Required and Enabled Axes"
+    state: open
+    inspected: true
+    notes: >
+      Scenario 3 states: nrOfAxes==0 → no per-axis pins, emit warning.
+      Conflicts with ADR #128 (fallback = 8 axes) and actual implementation
+      (always 8 axes unconditionally). Evidence: PoKeysLibPulseEngine_v2Async.c:380.
+
+  - source_id: C-012
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #24"
+    url: "https://github.com/zarfld/pokeysHal/issues/24"
+    source_type: requirement_issue
+    authority_class: C
+    scope: "There is no hal_free — issue documenting absence of hal_free"
+    state: closed
+    inspected: true
+    notes: "CLOSED. Correctly resolved: hal_free does not exist in LinuxCNC HAL API."
+
+  # ── D. Architecture and Design Records ────────────────────────────────────────
+
+  - source_id: D-001
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #128"
+    url: "https://github.com/zarfld/pokeysHal/issues/128"
+    source_type: architecture_decision_record
+    authority_class: D
+    scope: "ADR-PEV2-002: Axis-Conditional Pin Creation Based on nrOfAxes"
+    state: open
+    inspected: true
+    notes: >
+      Decision: use nrOfAxes as upper bound. Fallback when nrOfAxes==0: create
+      all 8 with warning. Conflicts with REQ-F-PEV2-003 (#118) scenario 3.
+
+  - source_id: D-002
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #127"
+    url: "https://github.com/zarfld/pokeysHal/issues/127"
+    source_type: architecture_decision_record
+    authority_class: D
+    scope: "ADR-PEV2-001: HAL Pin Naming Convention for PEv2 Interface"
+    state: open
+    inspected: false
+    notes: "Not fully inspected. Naming convention governs %s.PEv2.%01d.* format."
+
+  - source_id: D-003
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #129"
+    url: "https://github.com/zarfld/pokeysHal/issues/129"
+    source_type: architecture_decision_record
+    authority_class: D
+    scope: "ADR-PEV2-003: Bitmapped-to-HAL-Pin Decomposition Strategy"
+    state: open
+    inspected: false
+    notes: >
+      Strategy for decomposing PEv2 bitmap fields (AxesConfig, AxesSwitchConfig)
+      into individual hal_bit_t members. Struct fields defined in PoKeysLibHal.h
+      but not exported as HAL pins.
+
+  - source_id: D-004
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #130"
+    url: "https://github.com/zarfld/pokeysHal/issues/130"
+    source_type: architecture_decision_record
+    authority_class: D
+    scope: "ADR-PEV2-004: Read/Write Phase Separation in PEv2 Servo Cycle"
+    state: open
+    inspected: false
+    notes: "Not inspected in Phase 0."
+
+  - source_id: D-005
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #131"
+    url: "https://github.com/zarfld/pokeysHal/issues/131"
+    source_type: architecture_decision_record
+    authority_class: D
+    scope: "ADR-PEV2-005: sPoKeysHalPEv2 Global vs Per-Axis Struct Organisation"
+    state: open
+    inspected: false
+    notes: "Not inspected in Phase 0."
+
+  - source_id: D-006
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #132"
+    url: "https://github.com/zarfld/pokeysHal/issues/132"
+    source_type: architecture_component
+    authority_class: D
+    scope: "ARC-C-PEV2: PulseEngine v2 HAL Interface Component"
+    state: open
+    inspected: false
+    notes: "Not inspected in Phase 0."
+
+  - source_id: D-007
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: "issue #133"
+    url: "https://github.com/zarfld/pokeysHal/issues/133"
+    source_type: software_design_description
+    authority_class: D
+    scope: "SDD-PEV2: Software Design Description — PulseEngine v2 HAL Interface"
+    state: open
+    inspected: false
+    notes: "Not inspected in Phase 0."
+
+  # ── E. Legacy Compatibility Implementation ────────────────────────────────────
+
+  - source_id: E-001
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246 (main HEAD, GitHub API)"
+    path_or_issue: DM542_XXYZ_mill/Pokeys_DM542_XXYZ_mill.hal
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/main/DM542_XXYZ_mill/Pokeys_DM542_XXYZ_mill.hal"
+    source_type: integration_example
+    authority_class: E
+    scope: >
+      Demonstrates legacy pin naming: pokeys.0.PEv2.N.digin.LimitN.in,
+      pokeys.0.PEv2.N.digin.LimitP.in, pokeys.0.PEv2.N.digin.Home.in,
+      pokeys.0.PEv2.N.joint-pos-cmd, pokeys.0.PEv2.N.joint-pos-fb,
+      pokeys.0.PEv2.N.joint-vel-cmd, pokeys.0.PEv2.N.joint-in-position,
+      pokeys.0.PEv2.N.digout.AxisEnable.out, pokeys.0.encoder.0.count,
+      pokeys.0.adcout.0.value, pokeys.0.adcout.0.enable,
+      pokeys.0.PEv2.digout.Emergency.out, pokeys.0.PEv2.digin.Probed.in,
+      pokeys.0.machine-is-on
+    state: current
+    inspected: true
+    notes: >
+      Component name in legacy files is "pokeys" not "pokeys-async".
+      pokeys.0.PEv2.N.digout.AxisEnable.out is referenced but not found
+      in current implementation.
+
+  - source_id: E-002
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: DM542_XXYZ_mill/pokeys_homing.hal
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/main/DM542_XXYZ_mill/pokeys_homing.hal"
+    source_type: integration_example
+    authority_class: E
+    scope: >
+      Homing integration via joint.N.PEv2.AxesState and joint.N.PEv2.AxesCommand
+      (pokeys_homecomp custom homing component). References PulseEngineState,
+      HomingStatus pins.
+    state: current
+    inspected: true
+    notes: >
+      Issue #310 (LinuxCnc_PokeysLibComp) reports "Pin 'joint.0.PEv2.AxesState'
+      does not exist" — evidence that the homing interface in the legacy
+      component is fragile.
+
+  - source_id: E-003
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: pokeys_py/digital_io.py
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/main/pokeys_py/digital_io.py"
+    source_type: legacy_implementation
+    authority_class: E
+    scope: "Python-layer HAL interface: pokeys.{devid}.digin.{pinid}.in and .in-not; pokeys.{devid}.digout.{pinid}.out and .out-not"
+    state: current
+    inspected: true
+    notes: >
+      digout.out-not not observed in C implementation export functions.
+
+  - source_id: E-004
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: "issue #310"
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/310"
+    source_type: defect_report
+    authority_class: E
+    scope: "Missing PEv2.AxesState pin; HAL param name exceeds 50 chars for UltraFastEncoder"
+    state: closed
+    inspected: true
+    notes: >
+      Evidence: "hal_param_bit_newf 'pokeys[0].encoder.UltraFastEncoder.Enable4xSampling'
+      exceeds length of 50." — confirms HAL name length is a real production issue
+      in the legacy component.
+
+  - source_id: E-005
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: "issue #326"
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/326"
+    source_type: defect_report
+    authority_class: E
+    scope: "HAL parameter name length > 47/50 chars for UltraFastEncoder params"
+    state: open
+    inspected: true
+    notes: >
+      Reported on LinuxCNC 2.9.4. HAL_NAME_LEN=47 on target system.
+      Confirmed by E-004.
+
+  # ── F. Current Implementation ─────────────────────────────────────────────────
+
+  - source_id: F-001
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: PoKeysLibHal.h
+    url: "https://github.com/zarfld/pokeysHal/blob/main/PoKeysLibHal.h"
+    source_type: implementation_header
+    authority_class: F
+    scope: >
+      All HAL-type struct fields: sPoKeysPinData, sPoKeysAnalogData,
+      sPoKeysEncoder, sPoKeysPEv2HAL, sPoKeysDevice, sPoKeysRTC.
+      Export function declarations.
+    state: current
+    inspected: true
+    notes: "2138 lines. Contains all HAL-compatible type definitions."
+
+  - source_id: F-002
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: PoKeysLib.h
+    url: "https://github.com/zarfld/pokeysHal/blob/main/PoKeysLib.h"
+    source_type: implementation_header
+    authority_class: F
+    scope: "ePK_PinCap, ePK_AllPinCap, ePK_PEAxisState, ePK_PEv2_AxisConfig, ePK_PulseEngineV2_AxisSwitchOptions enumerations"
+    state: current
+    inspected: true
+    notes: "PK_PinCap_digitalInput=2, PK_PinCap_digitalOutput=4, PK_PinCap_analogInput=8, PK_PinCap_digitalCounter=64, PK_PinCap_invertPin=128"
+
+  - source_id: F-003
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: PoKeysLibIOAsync.c
+    url: "https://github.com/zarfld/pokeysHal/blob/main/PoKeysLibIOAsync.c"
+    source_type: implementation_source
+    authority_class: F
+    scope: "export_IO_pins: PinFunction params, digin/digout via hal-canon, adcin non-canonical, adcout PWM-based"
+    state: current
+    inspected: true
+    notes: >
+      Exports pins.J.PinFunction (param, HAL_RW u32) for all pins,
+      digin.J.* via hal_export_digin (conditional on PK_PinCap_digitalInput),
+      digin.J.invert (extra non-canonical param),
+      digout.J.* via hal_export_digout (conditional on PK_PinCap_digitalOutput),
+      adcin.J.in.hw (HAL_OUT u32), adcin.J.in.raw (HAL_OUT float),
+      adcin.J.ReferenceVoltage (param, HAL_RO float),
+      adcout.J.max_voltage (param, HAL_RW float),
+      adcout.J.PWMduty (HAL_OUT u32), adcout.pwm.period (param, HAL_RW u32).
+
+  - source_id: F-004
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: PoKeysLibEncodersAsync.c
+    url: "https://github.com/zarfld/pokeysHal/blob/main/PoKeysLibEncodersAsync.c"
+    source_type: implementation_source
+    authority_class: F
+    scope: "export_encoder_pins: basic encoder pins, fast encoder params, ultrafast encoder params"
+    state: current
+    inspected: true
+    notes: >
+      Basic encoder (per iEncodersCount): count (s32, OUT), position (float, OUT),
+      velocity (float, OUT), reset (bit, IN), index-enable (bit, IN),
+      scale (float, PARAM_RW), encoderOptions (u32, PARAM_RW), enable (bit, PARAM_RW),
+      x4_sampling (bit, PARAM_RW), x2_sampling (bit, PARAM_RW),
+      channelApin/channelBpin (u32, PARAM_RW).
+      Fast encoder params: Configuration, Options, enable, invert_E1/E2/E3, disable_4x.
+      UltraFast params: Configuration, Options, Filter.
+
+  - source_id: F-005
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: PoKeysLibPulseEngine_v2Async.c
+    url: "https://github.com/zarfld/pokeysHal/blob/main/PoKeysLibPulseEngine_v2Async.c"
+    source_type: implementation_source
+    authority_class: F
+    scope: "export_pev2_pins: all PEv2 HAL pin creation"
+    state: current
+    inspected: true
+    notes: >
+      All per-axis pins created unconditionally in loop for i=0..7 (line 380).
+      Does not check nrOfAxes or PK_AC_ENABLED.
+
+  - source_id: F-006
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: PoKeysLibRTCAsync.c
+    url: "https://github.com/zarfld/pokeysHal/blob/main/PoKeysLibRTCAsync.c"
+    source_type: implementation_source
+    authority_class: F
+    scope: "export_rtc_pins: RTC sec/min/hour/dow/dom/doy/month/year"
+    state: current
+    inspected: true
+    notes: "All HAL_OUT u32 pins."
+
+  - source_id: F-007
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: PoKeysLibPoNETHal.c
+    url: "https://github.com/zarfld/pokeysHal/blob/main/PoKeysLibPoNETHal.c"
+    source_type: implementation_source
+    authority_class: F
+    scope: "export_ponet_pins: statusIn, statusOut, PoNETstatus, moduleType, moduleID, lightValue, PWMduty"
+    state: current
+    inspected: true
+    notes: "All u32 pins. No canonical mapping documented."
+
+  - source_id: F-008
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: experimental/pokeys_async.c
+    url: "https://github.com/zarfld/pokeysHal/blob/main/experimental/pokeys_async.c"
+    source_type: integration_shell
+    authority_class: F
+    scope: >
+      hal_init, hal_ready, hal_exit, hal_export_funct lifecycle.
+      Component prefix: pokeys-async.N. MODULE_INFO declares: in-#[55],
+      ain-#[3], err, devSerial, alive. Calls export_rtc_pins, export_encoder_pins,
+      export_IO_pins, export_ponet_pins, export_pev2_pins.
+    state: current
+    inspected: true
+    notes: >
+      Component name is "pokeys_async" per hal_init("pokeys_async") at line 156.
+      Prefix for pins is "pokeys-async.N" per rtapi_snprintf at line 165.
+      Only one HAL function exported: buf (the component prefix itself).
+
+  # ── G. Integration Examples ───────────────────────────────────────────────────
+
+  - source_id: G-001
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: DM542_XXYZ_mill/Pokeys_DM542_XXYZ_mill.hal
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/main/DM542_XXYZ_mill/Pokeys_DM542_XXYZ_mill.hal"
+    source_type: integration_example
+    authority_class: G
+    scope: "Machine configuration HAL: demonstrates expected pin names for a 3+1 axis machine"
+    state: current
+    inspected: true
+    notes: "Uses loadusr -W pokeys (legacy). References pokeys.0.PEv2.N.stepgen.* parameters not found in current implementation."
+
+  - source_id: G-002
+    repository: zarfld/pokeysHal
+    revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd
+    path_or_issue: test_configs/
+    url: "https://github.com/zarfld/pokeysHal/tree/main/test_configs"
+    source_type: integration_example
+    authority_class: G
+    scope: "Test configuration HAL/INI files"
+    state: unknown
+    inspected: false
+    notes: "Not inspected in Phase 0."
