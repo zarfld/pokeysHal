@@ -157,7 +157,7 @@ Required decision:
      to PWM duty cycle is functionally complete.
   2. Decide whether adcout.J.PWMduty and adcout.J.max_voltage remain supplementary.
   3. Close or update issues #37 and #39 with evidence of actual conversion behavior.
-Status: unresolved
+Status: code path verified (C4 trace); HIL execution pending. See ADCOUT-005.
 ```
 
 ---
@@ -319,16 +319,17 @@ Source A: LinuxCNC HAL data-flow semantics (Authority A):
     adcin.value must be HAL_OUT.
   - Analog output (HAL → hardware): HAL_IN is correct.
     adcout.value HAL_IN, adcout.enable HAL_IN — both correct.
-Source B: Observed hal-canon implementation (hal-canon/hal_digital.c,
-  hal-canon/hal_analog.c):
+Source B: Embedded hal-canon tree at 995d7057 (hal-canon/hal_digital.c,
+  hal-canon/hal_analog.c), independently verified:
   - hal_export_digin: digin.in created with HAL_IN   ← WRONG (should be HAL_OUT)
-                      digin.in-not created with HAL_OUT ← correct
+                      digin.in-not created with HAL_OUT ← CORRECT
   - hal_export_digout: digout.out created with HAL_OUT ← WRONG (should be HAL_IN)
   - hal_export_adcin: adcin.value created with HAL_IN  ← WRONG (should be HAL_OUT)
-  - hal_export_adcout: adcout.value HAL_IN, adcout.enable HAL_IN ← both correct
+  - hal_export_adcout: adcout.value HAL_IN, adcout.enable HAL_IN ← BOTH CORRECT
 Observed implementation:
-  pokeysHal calls hal_export_digin, hal_export_digout, hal_export_adcin, and
-  hal_export_adcout, inheriting all three direction bugs.
+  pokeysHal embeds tree at 995d7057 and inherits three direction bugs.
+  Current upstream zarfld/linuxcnc-hal-canon main has SIX bugs due to regression
+  commit 45adb952 — see CONFLICT-011.
 LinuxCNC hal_link semantics (required for correct impact analysis):
   - A signal can have at most ONE HAL_OUT writer; hal_link rejects a second HAL_OUT.
   - Multiple HAL_IN pins can be linked to one signal without error.

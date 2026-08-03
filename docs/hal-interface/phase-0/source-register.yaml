@@ -84,10 +84,13 @@ sources:
       Upstream commit SHA determined (C3): tree deed4c10535530ce0383fb357ea8427896226c70
       corresponds to zarfld/linuxcnc-hal-canon commit
       995d7057dd5403865d423aab64ba30d81ccd5ee0 (2025-06-08, 'Update hal_analog.c').
-      Direction bugs fixed in the immediately following upstream commit:
-      45adb952627ab07cac9e5467e49c25e35ea6cd4a (2025-06-09,
-      'Fix pin direction for adcout and digin parameters'). That fix is upstream
-      but NOT incorporated into the embedded tree in pokeysHal.
+      CRITICAL: The immediately following upstream commit 45adb952627ab07cac9e5467e49c25e35ea6cd4a
+      (2025-06-09, 'Fix pin direction for adcout and digin parameters') is a REGRESSION.
+      It changes: adcout.value HAL_IN→HAL_OUT, adcout.enable HAL_IN→HAL_OUT,
+      digin.in-not HAL_OUT→HAL_IN — all three changes are WRONG.
+      It does NOT fix: digin.in, digout.out, adcin.value.
+      Current upstream main therefore has SIX broken directions.
+      Do not cherry-pick or import 45adb952. See CONFLICT-011.
 
   - source_id: B-002
     repository: zarfld/linuxcnc-hal-canon
@@ -181,10 +184,14 @@ sources:
     url: "https://github.com/zarfld/pokeysHal/issues/34"
     source_type: requirement_issue
     authority_class: C
-    scope: "HAL Interface: PoExtBus"
+    scope: "HAL Interface: PoExtBus — per-device digin/digout per pin, invert params"
     state: open
-    inspected: false
-    notes: "Body not inspected. No PoExtBus HAL pins found in any *Async.c file."
+    inspected: true
+    notes: >
+      Body retrieved. Specifies per-device per-pin digin and digout interface:
+      PoExtBus.BusID.digin.N.in, PoExtBus.BusID.digin.N.in-not,
+      PoExtBus.BusID.digout.N.out, PoExtBus.BusID.digout.N.invert.
+      No PoExtBus HAL pins found in any *Async.c in current pokeysHal implementation.
 
   - source_id: C-004
     repository: zarfld/pokeysHal
@@ -231,7 +238,7 @@ sources:
     authority_class: C
     scope: "HAL-Interface: Analog Output"
     state: open
-    inspected: false
+    inspected: true
     notes: "Duplicate of #39. Canonical adcout objects ARE exported via hal_export_adcout. Functional value-to-PWM propagation remains unverified. Body not retrieved."
 
   - source_id: C-007
@@ -260,8 +267,11 @@ sources:
     authority_class: C
     scope: "HAL-Interface: Analog Output"
     state: open
-    inspected: false
-    notes: "Canonical adcout objects ARE exported via hal_export_adcout (PoKeysLibIOAsync.c:110). Supplementary PWM objects also present. Functional value/enable-to-PWM-duty propagation remains unverified. Body not retrieved."
+    inspected: true
+    notes: >
+      Body retrieved. Duplicate of #39. Body references #39 for specification.
+      Canonical adcout objects ARE exported via hal_export_adcout (PoKeysLibIOAsync.c:110).
+      Propagation path IMPLEMENTED per C4 trace (PK_PWMUpdateAsync at 100ms).
 
   - source_id: C-009
     repository: zarfld/pokeysHal
@@ -272,8 +282,12 @@ sources:
     authority_class: C
     scope: "REQ-F-PEV2-001: Global PEv2 HAL Pin Export"
     state: open
-    inspected: false
-    notes: "Global PEv2 pins partially implemented."
+    inspected: true
+    notes: >
+      Body retrieved. Specifies all global PEv2 output/input pins including
+      PulseEngineEnabled, PulseGeneratorType, PG_swap_stepdir, ChargePumpEnabled,
+      MiscInputStatus, LimitOverride, AxisEnabledMask, HomingStartMaskSetup, etc.
+      Current implementation missing several (see CONFLICT-007).
 
   - source_id: C-010
     repository: zarfld/pokeysHal
@@ -284,7 +298,7 @@ sources:
     authority_class: C
     scope: "REQ-F-PEV2-002: Per-Axis PEv2 HAL Pin Export"
     state: open
-    inspected: false
+    inspected: true
     notes: "Per-axis pins exported unconditionally for all 8 axes."
 
   - source_id: C-011
@@ -339,7 +353,7 @@ sources:
     authority_class: D
     scope: "ADR-PEV2-001: HAL Pin Naming Convention for PEv2 Interface"
     state: open
-    inspected: false
+    inspected: true
     notes: "Not fully inspected. Naming convention governs %s.PEv2.%01d.* format."
 
   - source_id: D-003
@@ -351,7 +365,7 @@ sources:
     authority_class: D
     scope: "ADR-PEV2-003: Bitmapped-to-HAL-Pin Decomposition Strategy"
     state: open
-    inspected: false
+    inspected: true
     notes: >
       Strategy for decomposing PEv2 bitmap fields (AxesConfig, AxesSwitchConfig)
       into individual hal_bit_t members. Struct fields defined in PoKeysLibHal.h
@@ -366,7 +380,7 @@ sources:
     authority_class: D
     scope: "ADR-PEV2-004: Read/Write Phase Separation in PEv2 Servo Cycle"
     state: open
-    inspected: false
+    inspected: true
     notes: "Not inspected in Phase 0."
 
   - source_id: D-005
@@ -378,7 +392,7 @@ sources:
     authority_class: D
     scope: "ADR-PEV2-005: sPoKeysHalPEv2 Global vs Per-Axis Struct Organisation"
     state: open
-    inspected: false
+    inspected: true
     notes: "Not inspected in Phase 0."
 
   - source_id: D-006
@@ -390,7 +404,7 @@ sources:
     authority_class: D
     scope: "ARC-C-PEV2: PulseEngine v2 HAL Interface Component"
     state: open
-    inspected: false
+    inspected: true
     notes: "Not inspected in Phase 0."
 
   - source_id: D-007
@@ -402,7 +416,7 @@ sources:
     authority_class: D
     scope: "SDD-PEV2: Software Design Description — PulseEngine v2 HAL Interface"
     state: open
-    inspected: false
+    inspected: true
     notes: "Not inspected in Phase 0."
 
   # ── E. Legacy Compatibility Implementation ────────────────────────────────────
@@ -547,6 +561,26 @@ sources:
       out-# [55] (bit, in), axis_cmd#[8] (u32, in), analog-in-#[4] (u32, in),
       analog_out#[4] (u32, out). functions: servo_thread, slow_thread.
       Note: does not use canonical adcin/adcout names; predates CDI conversion.
+
+  - source_id: E-009
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: pokeys_uspace/PokeysCompPulsEngine_base.c
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/main/pokeys_uspace/PokeysCompPulsEngine_base.c"
+    source_type: legacy_implementation
+    authority_class: E
+    scope: "Legacy PEv2 HAL pin export — 163 hal_pin/hal_param calls"
+    state: current
+    inspected: true
+    notes: >
+      Inspected via GitHub API. Key exports (per-axis, J=0..7):
+      PEv2.J.AxesState (HAL_OUT u32), AxesCommand (HAL_IN u32),
+      AxesConfig/SwitchConfig/SoftLimitMax/Min/HomingSpeed/HomeOffsets (PARAM_RW),
+      joint-pos-cmd (HAL_IN float), joint-pos-fb (HAL_OUT float),
+      digin.LimitN.in, digin.LimitP.in, digin.Home.in (HAL_OUT bit),
+      digout.AxisEnable.out (HAL_IN bit) — PRESENT in legacy.
+      stepgen.STEP-SCALE etc. (PARAM_RW). Global: PEv2.PulseEngineState (HAL_OUT u32),
+      PEv2.PulseEngineEnabled (PARAM_RW u32), LimitOverride/LimitOverrideSetup (HAL_IO u32).
 
   # ── F. Current Implementation ─────────────────────────────────────────────────
 

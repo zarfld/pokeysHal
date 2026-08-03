@@ -77,7 +77,9 @@ Name differences vs legacy must be reconciled.
 - `hal_export_digout`: `digout.out` exported as `HAL_OUT` (should be `HAL_IN`)
 - `hal_export_adcin`: `adcin.value` exported as `HAL_IN` (should be `HAL_OUT`)
 
-Fixing these requires modifying `hal-canon/hal_digital.c` and `hal-canon/hal_analog.c`.
+Fixing these requires modifying the embedded `hal-canon/hal_digital.c` and `hal-canon/hal_analog.c`.
+NOTE: Do NOT import upstream commit 45adb952 — it is a regression introducing three new
+wrong directions (see CONFLICT-011). A fresh correct fix is needed.
 
 **Specific impact per bug:**
 - `digout.out` as `HAL_OUT`: blocks normal external `HAL_OUT` command-source wiring;

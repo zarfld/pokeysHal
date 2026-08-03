@@ -51,8 +51,9 @@ LinuxCnc_PokeysLibComp@0c058e6c. Inspected: 2026-08-03.
 | #21 | custom homing interface | CLOSED | MEDIUM | n/a | Body retrieved: defines interface for pokeys_homecomp.comp; standardises communication between homing procedure and PoKeys components via PEv2 AxesState/AxesCommand | None | YES for homing context |
 | #24 | homecomp compatibility | CLOSED | MEDIUM | n/a | Body retrieved: verify pokeys_homecomp.comp is compatible with pokeys.comp; checks devSerial, PulseEngineState, homing, homed, home_state, index_enable, PEv2_AxesState/Command/Config/SwitchConfig pin mappings | Body retrieved; comments not inspected | None | YES for homing context |
 | #28 | userspace functional equivalence | CLOSED | HIGH | n/a | Body retrieved: verify pokeys_userspace contains all functionality of pokeys.comp; modularized to reduce comp size | None | YES |
-| #29 | modularized userspace implementation | MERGED | HIGH | n/a | Body retrieved: adds PWM, digital I/O, and other missing functionalities to pokeys_userspace; references PoKeysLib public interface | None | YES |
 | PR#29 | Add missing functionalities to pokeys_userspace | MERGED | HIGH (PR) | Body retrieved: adds PWM (pokeys_pwm.comp), PoExtBus (pokeys_poextbus.comp), and other missing modules; merged 2024-09-27 | Body retrieved; PR comments not inspected | None | YES — confirms userspace modularization complete |
+| #30 | Create Tests for Currently Implemented Features | OPEN | LOW | n/a | Body retrieved: test scope covers pokeys.comp, pokeys_userspace, pokeys_homecomp; digital/analog I/O, PEv2, encoders; confirms expected legacy HAL pin names | Body retrieved; comments not inspected | None | YES — useful for Phase 1 compatibility test design |
+| #31 | Create Tests for `pokeys_py` Component | OPEN | LOW | n/a | Body retrieved: test scope for pokeys_py digital I/O, analog I/O, PEv2 | Body retrieved; comments not inspected | None | YES for Phase 1 reference |
 | #69 | modular architecture | OPEN | MEDIUM | n/a | Body retrieved: refactor codebase into modular components; isolate functionality per subsystem | None | YES |
 | #73 | LinuxCNC build alignment | OPEN | MEDIUM | n/a | Body retrieved: align pokeys_py and components with LinuxCNC 2.8.x/2.9.x build environment; refactor code for Debian compatibility; set up modular CMakeLists/Makefiles | None | YES |
 | #79 | conformity with LinuxCNC guidelines and canonical device interface | OPEN | HIGH | n/a | Inspected: body requires CDI conformity for digital/analog I/O, motion control (PEv2), and communication protocols; references canonical naming rules in LinuxCNC HAL handbook | None | YES — directly relevant to Phase 1 |
@@ -71,7 +72,7 @@ LinuxCnc_PokeysLibComp@0c058e6c. Inspected: 2026-08-03.
 ## Notes
 
 1. Most LinuxCnc_PokeysLibComp issue bodies were retrieved in Phase 0;
-   uninspected bodies: comments on most issues not inspected.
+   comments on most issues not inspected.
    to time constraints. Their titles and seed-issue descriptions are recorded above.
    Phase 1 compatibility work should inspect bodies and comments for all HIGH-relevance
    issues.
