@@ -378,3 +378,43 @@ Required decision:
   digin.in and adcin.value fixes are MEDIUM (should be done in same pass).
 Status: unresolved
 ```
+---
+
+```
+Conflict ID: CONFLICT-010
+Subject: Issue #79 extends "Canonical Device Interface" terminology beyond official LinuxCNC CDI scope
+Source A: Official LinuxCNC CDI (Authority A, source A-002):
+  docs/src/hal/canonical-devices.adoc at commit 71bf88009d64fa15edbebf9250b65ee4454f9a05
+  defines exactly four canonical device interfaces: digin, digout, adcin, adcout.
+  No other device types are defined as canonical in the official specification.
+Source B: LinuxCnc_PokeysLibComp issue #79 (Authority E):
+  "Ensure Conformity with LinuxCNC Guidelines and Canonical Device Interface"
+  Body extends the term to include:
+  - motion/PEv2 pins (pos-cmd, vel-cmd, amp-enable-out)
+  - counters and PWM
+  - PoNET
+  - encoder (not an official CDI type)
+Observed implementation:
+  Phase 0 documentation inherited this extended usage in several places,
+  classifying encoder and PEv2 as "canonical" without primary-source support.
+  These have been corrected in round 4.
+Why the sources conflict:
+  Using "canonical" for non-CDI device types conflates the official standard with
+  PoKeys-specific or established-by-convention interfaces. This makes compatibility
+  claims imprecise: satisfying "canonical" could mean four things or many more
+  depending on which source is referenced.
+Safety or compatibility impact:
+  MEDIUM. Incorrect classification leads to test-design errors: applying CDI
+  compliance tests to non-CDI interfaces, or missing CDI obligations. Integrators
+  reading requirements may be misled about what standard must be followed.
+Authority assessment:
+  Authority A (A-002) is normative. Only digin, digout, adcin, adcout are CDI.
+  PEv2 and encoder follow established LinuxCNC or project conventions, not the CDI spec.
+Required decision:
+  1. For each non-CDI interface: identify the actual governing standard or convention.
+  2. Rename "canonical" classification in requirements and tests to the accurate
+     authority (e.g., "LinuxCNC motion-interface convention", "hal-canon convention",
+     "PoKeys-specific extension", "project compatibility contract").
+  See DEC-CONFLICT010 in open-decisions.md.
+Status: unresolved
+```

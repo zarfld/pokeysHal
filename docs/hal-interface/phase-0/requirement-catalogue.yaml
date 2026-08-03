@@ -1121,6 +1121,65 @@ requirements:
 
   # ── HAL Name Length ───────────────────────────────────────────────────────────
 
+
+  - interface_id: PEV2G-006
+    subsystem: pev2_global
+    name_pattern: "<prefix>.PEv2.PulseEngineState"
+    object_kind: pin
+    hal_type: hal_u32_t
+    direction_or_access: HAL_OUT
+    cardinality: "1"
+    creation_condition: "unconditional"
+    units: "n/a — see ePK_PEState enumeration"
+    scaling_formula: "n/a"
+    default_value: "0"
+    initialization_phase: "export_pev2_pins"
+    update_phase: "device→HAL via PK_PEv2_StatusGetAsync"
+    device_field: "device->PEv2.PulseEngineState"
+    pokeyslib_function: "PK_PEv2_StatusGetAsync"
+    enumeration: >
+      ePK_PEState (PoKeysLib.h:221): STOPPED=0, INTERNAL=1, BUFFER=2, RUNNING=3,
+      JOGGING=10, STOPPING=11, HOME=20, HOMING=21, PROBECOMPLETE=30, PROBE=31,
+      PROBEERROR=32, HYBRIDPROBE_STOPPING=40, HYBRIDPROBE_COMPLETE=41,
+      STOP_LIMIT=100, STOP_EMERGENCY=101.
+    bitmap_definition: "n/a — single-value enum"
+    linuxcnc_canonical_status: PoKeys-specific extension
+    legacy_compatibility_status: "Referenced in pokeys_homing.hal (E-002)"
+    current_implementation_status: "Implemented. PoKeysLibPulseEngine_v2Async.c:470."
+    requirement_sources: [C-002]
+    implementation_sources: [F-005]
+    conflicts: []
+    evidence: "PoKeysLibPulseEngine_v2Async.c:470; PoKeysLib.h:221-243"
+
+  - interface_id: ADCOUT-005
+    subsystem: analog_output
+    name_pattern: "adcout.J.value → PWM propagation path"
+    object_kind: configuration-rule
+    hal_type: "n/a — traced implementation path"
+    direction_or_access: "n/a"
+    cardinality: "n/a"
+    creation_condition: "n/a"
+    units: "n/a"
+    scaling_formula: "val = hal_adcout_getscaledvalue(PWManalogOutputs[j]); PWMduty = (val/max_Voltage)*PWMperiod"
+    default_value: "n/a"
+    initialization_phase: "n/a"
+    update_phase: "PK_PWMUpdateAsync registered at 100ms via async scheduler"
+    device_field: "device->PWM.PWMduty[j] → CMD 0xCB payload"
+    pokeyslib_function: "PK_PWMUpdateAsync (PoKeysLibIOAsync.c:703)"
+    enumeration: "n/a"
+    bitmap_definition: "n/a"
+    linuxcnc_canonical_status: "Implementation-only (C4 trace result)"
+    legacy_compatibility_status: "n/a"
+    current_implementation_status: >
+      IMPLEMENTED (code inspection, Phase 0). Path: adcout.J.value
+      → hal_adcout_getscaledvalue → val/max_Voltage*PWMperiod → PWMduty[j]
+      → PK_PWMUpdateAsync (CMD 0xCB) → hardware. Registered in async scheduler
+      at 100ms (experimental/pokeys_async.c:1338). HIL execution outside Phase 0.
+    requirement_sources: [C-006, C-008]
+    implementation_sources: [F-003]
+    conflicts: []
+    evidence: "PoKeysLibIOAsync.c:703-734; experimental/pokeys_async.c:1338"
+
   - interface_id: NAMELEN-001
     subsystem: cross_cutting
     name_pattern: "all pin and parameter names"

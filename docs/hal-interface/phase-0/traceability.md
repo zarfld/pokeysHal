@@ -216,5 +216,21 @@ PoKeys-specific requirement:
 | Device info | Requirement→Implementation (35+ info.* pins absent) |
 | PoExtBus | Requirement→Implementation (entirely absent) |
 | All subsystems | Implementation→Test (no TEST issues linked to any subsystem) |
-| hal-canon submodule | .gitmodules↔git-object-model (CONFLICT-008) |
+| hal-canon submodule | .gitmodules↔git-object-model (CONFLICT-008); upstream commit now known (995d705) |
 | Component naming | Legacy integration↔Current implementation (CONFLICT-006) |
+| CDI terminology | Issue #79 extends CDI scope beyond official 4 types (CONFLICT-010) |
+
+---
+
+## 12. CDI Terminology Scope (CONFLICT-010)
+
+```
+Official LinuxCNC CDI (A-002, commit 71bf88009d64fa15edbebf9250b65ee4454f9a05):
+  digin, digout, adcin, adcout — exactly four types.
+  ?→ LinuxCnc_PokeysLibComp issue #79 extends the term to PEv2, encoders,
+     counters, PWM, PoNET — no primary source supports these as CDI types.
+  ✗ Phase 0 documents corrected in round 4 to remove encoder from CDI scope.
+  ✗ PEv2 pins classified as PoKeys-specific or project compatibility contracts.
+  ✗ future verification: CDI compliance test scope must be limited to four types.
+  → CONFLICT-010 and DEC-CONFLICT010 registered.
+```

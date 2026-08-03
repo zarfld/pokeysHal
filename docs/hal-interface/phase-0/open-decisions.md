@@ -13,7 +13,8 @@ Phase 1 planning review.
 **Context:** `hal_export_adcin` IS called (PoKeysLibIOAsync.c:85). Canonical pins
 `adcin.J.value`, `scale`, `offset`, `bit-weight`, `hw-offset` ARE present. However:
 - `adcin.J.value` is exported as `HAL_IN` (bug in hal-canon) instead of `HAL_OUT`
-  — this prevents HAL wiring (CONFLICT-009).
+  — invalid writer ownership: component writes the value but declares itself as a reader.
+  The HAL signal has no declared HAL_OUT source. (CONFLICT-009).
 - Supplementary pins `adcin.J.in.hw`, `adcin.J.in.raw`, `adcin.J.ReferenceVoltage`
   coexist.
 - Issue #35 specified 'value-raw' but implementation uses 'in.raw' (CONFLICT-003).
@@ -23,8 +24,10 @@ Phase 1 planning review.
      rename 'in.raw' to 'value-raw'; keep supplementary as PoKeys extension.
 - B: Keep current, document direction bug as known issue.
 
-**Blocking:** HAL wiring of adcin.J.value to motion controller inputs will fail
-until the direction bug is fixed. This is Phase 1 blocker #1.
+**Impact:** adcin.J.value has invalid writer ownership (no declared HAL_OUT source).
+If an external HAL_OUT source is connected, it overwrites the hardware reading.
+Structural and characterization tests remain possible. Canonical compatibility
+cannot be claimed until the direction bug is fixed. This is a Phase 1 action item.
 
 ---
 
@@ -36,29 +39,36 @@ canonical parameters are present. Supplementary PWM pins also coexist.
 Issues #37 and #39 remain OPEN, likely because the functional conversion from
 `adcout.J.value` to actual PWM hardware output is unverified.
 
-**Required decision:**
-- Determine whether the `hal_adcout_getscaledvalue` path is wired through to the
-  PWM duty cycle register in `PK_PWMAsync`.
-- If not, implement the conversion or document the gap.
-- Decide whether `adcout.J.PWMduty` remains as a supplementary raw output.
+**Evidence (C4 trace):** The conversion path IS implemented:
+  adcout.J.value → hal_adcout_getscaledvalue → val/max_Voltage*PWMperiod → PWMduty[j]
+  → PK_PWMUpdateAsync (CMD 0xCB) → hardware (PoKeysLibIOAsync.c:703–734).
+  PK_PWMUpdateAsync is registered via the async scheduler at 100ms period
+  (experimental/pokeys_async.c:1338). Status: IMPLEMENTED (code inspection only;
+  HIL execution outside Phase 0 scope).
 
-**Blocking:** Cannot close issues #37 and #39 or claim adcout is functional
-without evidence that the conversion path works.
+**Required decision:**
+- Decide whether `adcout.J.PWMduty` (raw supplementary) coexists or is deprecated.
+- Close issues #37 and #39 with reference to this C4 propagation evidence once HIL
+  confirms end-to-end functional correctness.
 
 ---
 
 ### DEC-CANON-003: Shall encoder use hal_export_encoder or continue manual export?
 
-**Context:** `hal_export_encoder` from hal-canon creates canonical pins including
-`velocity_resolution` and `max_index_vel`. Current implementation manually creates
-a subset. The encoder struct in `sPoKeysEncoder` does not match `hal_encoder_t`
+**Context:** `hal_export_encoder` is a **hal-canon convention** (B-004); encoder is
+NOT part of the official LinuxCNC CDI specification (A-002 covers only digin, digout,
+adcin, adcout). Current implementation manually creates a subset of the hal-canon
+encoder pins. The encoder struct in `sPoKeysEncoder` does not match `hal_encoder_t`
 directly; it has additional PoKeys-specific options.
+Legacy PoKeysCompEncoders.c uses different names: 4x_sampling (not x4_sampling),
+FastEncoders.Options (not encoder.fast.Options).
 
 **Options:**
-- A: Adopt `hal_export_encoder` for the canonical subset; keep extra params manually.
-- B: Keep entirely manual export.
+- A: Adopt `hal_export_encoder` for the hal-canon encoder subset; keep extra params manually.
+- B: Keep entirely manual export; align names with legacy E-007 for compatibility.
 
-**Blocking:** Not blocking for compatibility — encoder canonical pins are mostly present.
+**Blocking:** Not blocking for compatibility — hal-canon encoder convention pins are mostly present.
+Name differences vs legacy must be reconciled.
 
 ### DEC-HALCANON-001: Fix hal-canon direction bugs before canonical compatibility can be claimed
 
@@ -84,6 +94,21 @@ Fixing these requires modifying `hal-canon/hal_digital.c` and `hal-canon/hal_ana
 **Blocking:**
 - digout.out (HIGH): blocks normal external HAL_OUT command-source wiring.
 - digin.in, adcin.value (MEDIUM): incorrect ownership; should fix in same pass.
+
+---
+
+### DEC-CONFLICT010: How to resolve the CDI terminology overloading in issue #79
+
+**Context:** LinuxCnc_PokeysLibComp issue #79 uses the term 'Canonical Device Interface'
+to cover motion/PEv2, counters/PWM and PoNET in addition to the four official CDI device
+types (digin, digout, adcin, adcout). The official LinuxCNC CDI source (A-002) defines
+only the four types. See CONFLICT-010.
+
+**Required decision:**
+- Separate concerns: official CDI conformity for the four defined device types;
+  established LinuxCNC conventions (e.g. encoder, motion pins) where primary sources exist;
+  project/legacy compatibility contracts; PoKeys-specific extensions.
+- Do not call motion/PEv2 pins 'canonical' unless a primary source supports it.
 
 ---
 

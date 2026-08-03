@@ -8,19 +8,22 @@ sources:
   # ── A. Normative External Authority ──────────────────────────────────────────
 
   - source_id: A-001
-    repository: LinuxCNC
-    revision: "2.9.10, installed on target (Debian/Raspberry Pi)"
-    path_or_issue: "/usr/include/linuxcnc/hal.h"
-    url: "https://linuxcnc.org/docs/html/hal/canonical-devices.html"
+    repository: LinuxCNC/linuxcnc
+    revision: "v2.9.10 (tag commit 86cdca76fa2a36274c432caa21952b23c267989a)"
+    path_or_issue: "src/hal/hal.h"
+    url: "https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/hal/hal.h"
     source_type: normative_standard
     authority_class: A
     scope: "HAL pin/param/funct creation API, HAL_NAME_LEN=47, lifecycle rules"
     state: current
     inspected: true
     notes: >
-      HAL_NAME_LEN = 47 confirmed on target system LinuxCNC 2.9.10 (Debian).
+      Independently verified via GitHub API: blob sha
+      5480d937fc3310e5a87482acabd9ea551683bcdb at v2.9.10.
+      HAL_NAME_LEN = 47 confirmed: '#define HAL_NAME_LEN     47'.
       hal_init, hal_malloc, hal_pin_*_newf, hal_param_*_newf, hal_export_funct,
       hal_ready, hal_exit all declared. hal_free does NOT exist.
+      Installed on target: /usr/include/linuxcnc/hal.h also confirmed HAL_NAME_LEN=47.
 
   - source_id: A-001b
     repository: LinuxCNC
@@ -33,13 +36,11 @@ sources:
     state: current
     inspected: true
     notes: >
-      HAL_NAME_LEN = 55 verified at pinned upstream commit
+      HAL_NAME_LEN = 55 independently verified via GitHub API at pinned commit
       71bf88009d64fa15edbebf9250b65ee4454f9a05, src/hal/hal.h:
-        #define HAL_NAME_LEN 55
-      SHA and definition provided by reviewer. The URL was not independently fetched
-      via this agent during Phase 0, but the specific commit SHA and file path are
-      recorded as the verified source for this value.
-      Relevant: some pin names that exceed the 2.9.x limit of 47 are valid on this build.
+        '#define HAL_NAME_LEN     55'
+      File blob sha: 17372ccd3d1648a1078785751b2b2737f5e4dcbb (fetched 2026-08-03).
+      Relevant: some pin names borderline at 47 are valid at 55.
 
   - source_id: A-002
     repository: LinuxCNC/linuxcnc
@@ -79,10 +80,14 @@ sources:
     state: current
     inspected: true
     notes: >
-      Embedded as a regular git tree (040000), not a proper git submodule
-      commit (160000). Upstream commit SHA unknown from the main repository.
-      .gitmodules references url https://github.com/zarfld/linuxcnc-hal-canon.git
-      but git-submodule-status shows no entry for hal-canon.
+      Embedded as a regular git tree (040000), not a proper git submodule commit.
+      Upstream commit SHA determined (C3): tree deed4c10535530ce0383fb357ea8427896226c70
+      corresponds to zarfld/linuxcnc-hal-canon commit
+      995d7057dd5403865d423aab64ba30d81ccd5ee0 (2025-06-08, 'Update hal_analog.c').
+      Direction bugs fixed in the immediately following upstream commit:
+      45adb952627ab07cac9e5467e49c25e35ea6cd4a (2025-06-09,
+      'Fix pin direction for adcout and digin parameters'). That fix is upstream
+      but NOT incorporated into the embedded tree in pokeysHal.
 
   - source_id: B-002
     repository: zarfld/linuxcnc-hal-canon
@@ -484,6 +489,64 @@ sources:
     notes: >
       Reported on LinuxCNC 2.9.4. HAL_NAME_LEN=47 on target system.
       Confirmed by E-004.
+
+  # ── Legacy component source evidence (C2 inspection 2026-08-03) ───────────────
+
+  - source_id: E-006
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246 (GitHub API)"
+    path_or_issue: pokeys_uspace/PoKeysCompIO.c
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/main/pokeys_uspace/PoKeysCompIO.c"
+    source_type: legacy_implementation
+    authority_class: E
+    scope: "Legacy digital/analog I/O pin export — correct HAL directions"
+    state: current
+    inspected: true
+    notes: >
+      Inspected via GitHub API. Exports with CORRECT directions (unlike embedded hal-canon):\n
+      digin.J.in (HAL_OUT), digin.J.in-not (HAL_OUT), digout.J.out (HAL_IN).\n
+      adcin.J.value-raw (HAL_OUT float), adcin.J.value (HAL_OUT float),
+      adcin.J.scale and adcin.J.offset (PARAM_RW float).
+      adcout.J.value (HAL_IN float), adcout.J.enable (HAL_IN bit),
+      adcout.J.offset/scale/high-limit/low-limit (PARAM_RW float),
+      adcout.J.max-v (PARAM_RW float — dash, not underscore as in pokeysHal),
+      adcout.pwm.period (PARAM_RW u32).
+      digin.J.invert, digout.J.invert (PARAM_RW bit), pins.J.PinFunction (PARAM_RW u32),
+      counter.J.value (HAL_OUT u32).
+
+  - source_id: E-007
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: pokeys_uspace/PoKeysCompEncoders.c
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/main/pokeys_uspace/PoKeysCompEncoders.c"
+    source_type: legacy_implementation
+    authority_class: E
+    scope: "Legacy encoder pin export"
+    state: current
+    inspected: true
+    notes: >
+      encoder.J.count (HAL_OUT s32), position (HAL_OUT float), velocity (HAL_OUT float),
+      reset (HAL_IN bit), index-enable (HAL_IN bit), scale (PARAM_RW float).
+      Name differences vs pokeysHal: 4x_sampling (not x4_sampling),
+      2x_sampling (not x2_sampling), FastEncoders.Options (not encoder.fast.Options),
+      FastEncoders.InvertE1/E2/E3 (not encoder.fast.invert_E1/E2/E3).
+
+  - source_id: E-008
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: pokeys_rt/pokeys.comp
+    url: "https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/main/pokeys_rt/pokeys.comp"
+    source_type: legacy_implementation
+    authority_class: E
+    scope: "Legacy RT .comp pin declarations"
+    state: current
+    inspected: true
+    notes: >
+      RT .comp declares: connected (bit, out), err (bit, out), alive (bit, out),
+      devSerial (u32, param rw), machine_is_on (bit, in), in-# [55] (bit, out),
+      out-# [55] (bit, in), axis_cmd#[8] (u32, in), analog-in-#[4] (u32, in),
+      analog_out#[4] (u32, out). functions: servo_thread, slow_thread.
+      Note: does not use canonical adcin/adcout names; predates CDI conversion.
 
   # ── F. Current Implementation ─────────────────────────────────────────────────
 

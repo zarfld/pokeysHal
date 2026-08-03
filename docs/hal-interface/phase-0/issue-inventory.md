@@ -15,9 +15,9 @@ LinuxCnc_PokeysLibComp@0c058e6c. Inspected: 2026-08-03.
 | #34 | HAL Interface: PoExtBus | OPEN | MEDIUM — specifies PoExtBus HAL interface | None | No PoExtBus HAL pins found anywhere | None | YES — unimplemented |
 | #35 | HAL-Interface: Analog Input | CLOSED | HIGH | Canonical adcin objects (value, scale, offset, bit-weight, hw-offset) ARE exported via hal_export_adcin (PoKeysLibIOAsync.c:85) | adcin.value has direction mismatch (HAL_IN, should be HAL_OUT; CONFLICT-009); name mismatch: issue specifies value-raw, implementation uses in.raw (CONFLICT-003) | CONFLICT-003, CONFLICT-009 | YES |
 | #36 | HAL-Interface: Digital Output | OPEN | HIGH — specifies digout.J.out, PoExtBus digout, PEv2 digout.AxisEnabled.out, digout.LimitOverride.out | Partial | digout.J.out, digout.invert exported; PEv2.AxisEnabled.out ABSENT; PoExtBus digout ABSENT; LimitOverride.out not found | None | YES |
-| #37 | HAL-Interface: Analog Output | OPEN | HIGH | Canonical adcout objects (value, enable, scale, offset, high-limit, low-limit, bit-weight, hw-offset) ARE exported via hal_export_adcout (PoKeysLibIOAsync.c:110) | Functional PWM propagation (adcout.value → PWM duty cycle) remains unverified; issues #37/#39 remain OPEN | CONFLICT-004 | YES |
+| #37 | HAL-Interface: Analog Output | OPEN | HIGH | Body retrieved: documentation update for issue #39; body references #39 | Body retrieved (references #39); comments not inspected | CONFLICT-004 | YES |
 | #38 | HAL-Interface: Digital Input | OPEN | HIGH — specifies digin.J.in and digin.J.in-not | Partial | digin.in and digin.in-not exported via hal_export_digin but with direction mismatch (CONFLICT-009); extra non-canonical invert param | CONFLICT-009 | YES |
-| #39 | HAL-Interface: Analog Output | OPEN | HIGH | Same as #37 | Same as #37 — canonical objects present, functional conversion unverified | CONFLICT-004 | YES |
+| #39 | HAL-Interface: Analog Output | OPEN | HIGH | Body retrieved: specifies adcout.J.value (HAL_IN float), adcout.J.enable (HAL_IN bit), adcout.J.offset/scale/high_limit/low_limit (params), adcout.J.max_v, adcout.pwm.period; Count 6 channels | Body retrieved; comments not inspected | CONFLICT-004 | YES |
 | #41 | PEv2 async implementation to be able to run it in RT | OPEN | HIGH | Partial | export_pev2_pins exists but incomplete vs. #33 | CONFLICT-001,007 | YES — implementation status unclear |
 | #97 | Async Scheduler optimizations | OPEN | LOW for HAL interface | None | Not inspected | None | Maybe |
 | #99–#107 | REQ-F/NF-SCHED-*: Async Scheduler requirements | OPEN | LOW for HAL interface (scheduler not HAL pins) | None | Not inspected | None | NO for HAL interface phase |
@@ -25,14 +25,14 @@ LinuxCnc_PokeysLibComp@0c058e6c. Inspected: 2026-08-03.
 | #116 | REQ-F-PEV2-001: Global PEv2 HAL Pin Export | OPEN | HIGH | Partial | Global pins partially implemented | CONFLICT-007 | YES |
 | #117 | REQ-F-PEV2-002: Per-Axis PEv2 HAL Pin Export | OPEN | HIGH | Partial | Per-axis pins always create 8 | CONFLICT-001 | YES |
 | #118 | REQ-F-PEV2-003: Conditional Pin Creation — Only for Required and Enabled Axes | OPEN | HIGH | Not implemented | Implementation always creates 8 unconditionally | CONFLICT-001 | YES |
-| #119 | REQ-F-PEV2-004: Input Pin Update — HAL Input Pins Written to PoKeysLib Pointers | OPEN | HIGH | Unknown | Not inspected in detail | None | YES |
-| #120 | REQ-F-PEV2-005: Output Pin Update | OPEN | HIGH | Unknown | Not inspected in detail | None | YES |
-| #121 | REQ-F-PEV2-006: Bitmapped Field Decomposition | OPEN | HIGH | Not implemented | Struct fields defined (PoKeysLibHal.h:405-422) but not exported | None | YES |
-| #122 | REQ-F-PEV2-007: HAL Parameter Export for Pin Assignments and Invert Flags | OPEN | HIGH | Unknown | Not inspected | None | YES |
-| #123 | REQ-F-PEV2-008: PoKeysLib Async Function Call Sequence for PEv2 | OPEN | MEDIUM | Unknown | Not inspected | None | YES |
-| #124 | REQ-NF-PEV2-001: Real-Time Safety — No Blocking Calls in PEv2 RT Path | OPEN | HIGH (RT safety) | Unknown | Not validated in Phase 0 (RT validation requires hardware) | None | YES |
-| #125 | REQ-NF-PEV2-002: Interface Completeness — 100% of Specified PEv2 Pins Present | OPEN | HIGH | Not met | Many pins absent | CONFLICT-007 | YES |
-| #126 | REQ-NF-PEV2-003: Correct Enumeration Usage | OPEN | MEDIUM | Unknown | Not inspected | None | YES |
+| #119 | REQ-F-PEV2-004: Input Pin Update | OPEN | HIGH | Body retrieved: specifies HAL→PoKeysLib pointer mapping table for all HAL_IN PEv2 pins | Body retrieved; comments not inspected | None | YES |
+| #120 | REQ-F-PEV2-005: Output Pin Update | OPEN | HIGH | Body retrieved: specifies PoKeysLib pointer→HAL_OUT mapping table for all PEv2 output pins | Body retrieved; comments not inspected | None | YES |
+| #121 | REQ-F-PEV2-006: Bitmapped Field Decomposition | OPEN | HIGH | Body retrieved: specifies AxesConfig[N] and AxesSwitchConfig[N] decomposition using ePK_PEv2_AxisConfig and ePK_PulseEngineV2_AxisSwitchOptions | Body retrieved; comments not inspected | None | YES |
+| #122 | REQ-F-PEV2-007: HAL Parameter Export for Pin Assignments | OPEN | HIGH | Body retrieved: specifies global/per-axis params for emergency pin, probe pin, soft limits, home offset, limit pin IDs | Body retrieved; comments not inspected | None | YES |
+| #123 | REQ-F-PEV2-008: PoKeysLib Async Function Call Sequence | OPEN | HIGH | Body retrieved: specifies per-cycle read/write sequence (StatusGet, Status2Get, etc.) | Body retrieved; comments not inspected | None | YES |
+| #124 | REQ-NF-PEV2-001: Real-Time Safety | OPEN | HIGH | Body retrieved: <2µs worst-case per function; no blocking calls, malloc, or mutex in RT path | Body retrieved; comments not inspected | None | YES |
+| #125 | REQ-NF-PEV2-002: Interface Completeness — 100% Parity | OPEN | HIGH | Body retrieved: 100% of specified PEv2 pins must be present | Body retrieved; comments not inspected | None | YES |
+| #126 | REQ-NF-PEV2-003: Correct Enumeration Usage | OPEN | MEDIUM | Body retrieved | Body retrieved; comments not inspected | None | YES |
 | #127 | ADR-PEV2-001: HAL Pin Naming Convention | OPEN | HIGH | n/a (ADR) | Not fully inspected | CONFLICT-006 | YES |
 | #128 | ADR-PEV2-002: Axis-Conditional Pin Creation Based on nrOfAxes | OPEN | HIGH | n/a (ADR) | Inspected: fallback=8 but conflicts with REQ #118 | CONFLICT-001 | YES |
 | #129 | ADR-PEV2-003: Bitmapped-to-HAL-Pin Decomposition Strategy | OPEN | HIGH | n/a (ADR) | Not fully inspected | None directly | YES |
@@ -49,17 +49,18 @@ LinuxCnc_PokeysLibComp@0c058e6c. Inspected: 2026-08-03.
 |---|---|---|---|---|---|---|---|
 | #16 | pokeys_py | OPEN | LOW | n/a | Body retrieved (partial): Software Requirements Specification for pokeys_py covering digital I/O, analog I/O, PEv2, PoNET, PWM, homing support | None | Limited |
 | #21 | custom homing interface | CLOSED | MEDIUM | n/a | Body retrieved: defines interface for pokeys_homecomp.comp; standardises communication between homing procedure and PoKeys components via PEv2 AxesState/AxesCommand | None | YES for homing context |
-| #24 | homecomp compatibility | not inspected | MEDIUM | n/a | n/a | None | YES for homing context |
+| #24 | homecomp compatibility | CLOSED | MEDIUM | n/a | Body retrieved: verify pokeys_homecomp.comp is compatible with pokeys.comp; checks devSerial, PulseEngineState, homing, homed, home_state, index_enable, PEv2_AxesState/Command/Config/SwitchConfig pin mappings | Body retrieved; comments not inspected | None | YES for homing context |
 | #28 | userspace functional equivalence | CLOSED | HIGH | n/a | Body retrieved: verify pokeys_userspace contains all functionality of pokeys.comp; modularized to reduce comp size | None | YES |
 | #29 | modularized userspace implementation | MERGED | HIGH | n/a | Body retrieved: adds PWM, digital I/O, and other missing functionalities to pokeys_userspace; references PoKeysLib public interface | None | YES |
+| PR#29 | Add missing functionalities to pokeys_userspace | MERGED | HIGH (PR) | Body retrieved: adds PWM (pokeys_pwm.comp), PoExtBus (pokeys_poextbus.comp), and other missing modules; merged 2024-09-27 | Body retrieved; PR comments not inspected | None | YES — confirms userspace modularization complete |
 | #69 | modular architecture | OPEN | MEDIUM | n/a | Body retrieved: refactor codebase into modular components; isolate functionality per subsystem | None | YES |
-| #73 | LinuxCNC build alignment | not inspected | MEDIUM | n/a | n/a | None | YES |
+| #73 | LinuxCNC build alignment | OPEN | MEDIUM | n/a | Body retrieved: align pokeys_py and components with LinuxCNC 2.8.x/2.9.x build environment; refactor code for Debian compatibility; set up modular CMakeLists/Makefiles | None | YES |
 | #79 | conformity with LinuxCNC guidelines and canonical device interface | OPEN | HIGH | n/a | Inspected: body requires CDI conformity for digital/analog I/O, motion control (PEv2), and communication protocols; references canonical naming rules in LinuxCNC HAL handbook | None | YES — directly relevant to Phase 1 |
 | #129 | realtime clock HAL interface | CLOSED | LOW | n/a | Body retrieved: specifies rtc.sec/min/hour/dow/dom/doy/month/year pins; matches current pokeysHal implementation | None | Maybe |
 | #157 | common pin I/O handling | CLOSED | HIGH | n/a | Body retrieved: combine common Pin I/O handling in hal components; references PoKeysLib public interface for pin functions | None | YES |
 | #213 | encoder modularization and manual HAL export | CLOSED | HIGH | n/a | Body retrieved: pin declarations from pokeys.comp header section; manual creation of count/position/velocity/reset/index-enable/scale pins in C; confirms encoder naming convention | None | YES |
 | #216 | missing PEv2 homing pin | OPEN | HIGH | n/a | Inspected: reports "Pin 'pokeys.0.PEv2.0.joint-in-homing' does not exist" running Pokeys57CNC_DM542_XXYZ_mill example | CONFLICT-002 | YES |
-| #222 | physical pin-function setup | CLOSED | HIGH | n/a | Inspected: setting pokeys.0.digout.33.out had no effect because the pin had not been configured as digital output via PinFunction first; confirms that PK_PinFunctionsSet (PinFunction setup) is a prerequisite for digital I/O operation | None | YES |
+| #222 | physical pin-function setup | CLOSED | HIGH | n/a | Inspected: issue proposes PK_PinConfigurationSet(dev) to apply PinFunction settings; setting pokeys.0.digout.33.out had no effect without prior PinFunction setup. Comments confirmed: PinFunction param at 0 means device values override; non-zero causes function to be applied on device | None | YES |
 | #223 | PEv2 limit override | OPEN | HIGH | n/a | Body retrieved (partial): LimitOverride should be linked to Override Limits checkbox in AXIS view; references PoKeysLib PEv2 LimitOverride and LimitOverrideSetup | None | YES |
 | #264 | analog output in userspace component | CLOSED | HIGH | n/a | Body empty via API | CONFLICT-004 | YES |
 | #310 | missing PEv2 AxesState and HAL name length | CLOSED | HIGH | Fixed in legacy component (name shortened) | Confirmed: name length violation was real | CONFLICT-005 | YES — evidence of real name-length problem |
@@ -69,7 +70,8 @@ LinuxCnc_PokeysLibComp@0c058e6c. Inspected: 2026-08-03.
 
 ## Notes
 
-1. Many LinuxCnc_PokeysLibComp issues were not body-inspected in Phase 0 due
+1. Most LinuxCnc_PokeysLibComp issue bodies were retrieved in Phase 0;
+   uninspected bodies: comments on most issues not inspected.
    to time constraints. Their titles and seed-issue descriptions are recorded above.
    Phase 1 compatibility work should inspect bodies and comments for all HIGH-relevance
    issues.
