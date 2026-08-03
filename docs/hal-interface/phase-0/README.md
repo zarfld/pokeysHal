@@ -77,10 +77,21 @@ by comparing file contents against the upstream repository.
    `ePK_PEv2_AxisConfig`, `ePK_PulseEngineV2_AxisSwitchOptions`).
 7. `LinuxCnc_PokeysLibComp` accessed via GitHub API:
    integration HAL files, Python modules, and selected issue bodies inspected.
-8. `zarfld/pokeysHal` GitHub issues #24, #32–#39, #116–#133 fetched.
-9. `zarfld/LinuxCnc_PokeysLibComp` GitHub issues #310 and #326 fetched.
-10. HAL name lengths computed against `HAL_NAME_LEN = 47`
-    (`/usr/include/linuxcnc/hal.h` on target system).
+8. `zarfld/pokeysHal` GitHub issues #24, #30, #32–#39, #116–#133 fetched;
+   issue bodies inspected for #24, #30, #32, #33, #35, #36, #38, #118, #128;
+   remaining HIGH-relevance issue bodies (#37, #39, #119–#126) not body-inspected.
+9. `zarfld/LinuxCnc_PokeysLibComp` GitHub issues #16, #21, #24, #28, #29, #30,
+   #31, #69, #79, #129, #157, #213, #216, #222, #223, #264, #310, #326 fetched;
+   bodies inspected for #21, #24, #28, #29, #30, #31, #69, #79, #129, #157,
+   #213, #216, #222, #223, #310, #326; body of #264 was empty.
+10. HAL name lengths computed. Two relevant constraints exist:
+    - LinuxCNC 2.9.x (installed: 2.9.10): `HAL_NAME_LEN = 47`
+      (`/usr/include/linuxcnc/hal.h` on target system, confirmed).
+    - LinuxCNC upstream/master: `HAL_NAME_LEN = 55`
+      (stated by reviewer; upstream commit SHA not independently verified
+      in Phase 0 — this claim is recorded as UNVERIFIED).
+11. `hal-canon/hal_digital.c` and `hal-canon/hal_analog.c` read in full to
+    determine actual HAL directions used by each export helper.
 
 ## Principal Findings
 
@@ -95,19 +106,34 @@ by comparing file contents against the upstream repository.
    (`PoKeysLibPulseEngine_v2Async.c:380`) always loops `for (int i = 0; i < 8; i++)`
    regardless of `nrOfAxes`, matching neither source precisely.
 
-3. **Analog input interface is non-canonical:** Issue #35 specifies `value` and
-   `value-raw` following the canonical `adcin` interface. The implementation
-   exports `adcin.J.in.hw` (u32, raw ADC counts) and `adcin.J.in.raw` (float,
-   voltage-scaled), omitting the canonical `value` pin and all canonical
-   parameters (`scale`, `offset`, `bit-weight`, `hw-offset`). A partial
-   canonical `adcin` struct (`Canon.value`, `Canon.scale`, `Canon.offset`) is
-   updated internally but never exported to HAL.
+3. **Canonical analog helpers ARE called; supplementary non-canonical pins added:**
+   `export_IO_pins()` (`PoKeysLibIOAsync.c`) calls `hal_export_adcin` for each
+   of 7 channels and `hal_export_adcout` for each PWM channel. The canonical
+   pins `adcin.J.value`, `adcin.J.scale`, `adcin.J.offset`, `adcin.J.bit-weight`,
+   `adcin.J.hw-offset`, `adcout.J.value`, `adcout.J.enable`, and all `adcout`
+   parameters are therefore present. In addition, non-canonical supplementary
+   pins are exported alongside: `adcin.J.in.hw` (u32, raw ADC counts),
+   `adcin.J.in.raw` (float, voltage-scaled), `adcin.J.ReferenceVoltage` (param,
+   float), `adcout.J.max_voltage` (param, float), `adcout.J.PWMduty` (u32),
+   and `adcout.pwm.period` (param, u32). The residual issue is in the hal-canon
+   implementation itself (see finding 4).
+   Evidence: `PoKeysLibIOAsync.c:85` (`hal_export_adcin`), `:110` (`hal_export_adcout`).
 
-4. **Analog output interface is non-canonical:** Issues #37 and #39 reference
-   the canonical `adcout` interface. The current implementation provides only
-   `adcout.J.PWMduty` (u32) and `adcout.J.max_voltage` (param, float), using
-   the PWM peripheral. The canonical `value`, `enable`, `scale`, `offset`,
-   `high-limit`, `low-limit`, `bit-weight`, `hw-offset` objects are absent.
+4. **hal-canon direction mismatches (CONFLICT-009):** Inspection of
+   `hal-canon/hal_digital.c` and `hal-canon/hal_analog.c` reveals that the
+   embedded hal-canon helpers export pins with incorrect HAL directions:
+   - `digin.in`: exported as `HAL_IN` — should be `HAL_OUT` (component writes
+     hardware state; LinuxCNC reads it). Evidence: `hal_digital.c` line with
+     `hal_pin_bit_newf(HAL_IN, &(digin->in), ...)`.
+   - `digout.out`: exported as `HAL_OUT` — should be `HAL_IN` (LinuxCNC writes
+     command; component reads it). Evidence: `hal_digital.c` line with
+     `hal_pin_bit_newf(HAL_OUT, &(digout->out), ...)`.
+   - `adcin.value`: exported as `HAL_IN` — should be `HAL_OUT` (component
+     writes scaled hardware value; LinuxCNC reads it). Evidence: `hal_analog.c`
+     line with `hal_pin_float_newf(HAL_IN, &(adcin->value), ...)`.
+   These are hal-canon bugs. Production code that uses these helpers inherits
+   the incorrect directions. `adcout.value` and `adcout.enable` are correctly
+   `HAL_IN`. `digin.in-not` is correctly `HAL_OUT`.
 
 5. **PoExtBus entirely absent:** Issue #34 specifies a HAL interface for
    PoExtBus digital outputs. No `hal_pin_*_newf` or `hal_export_*` calls for
@@ -118,20 +144,29 @@ by comparing file contents against the upstream repository.
    fields). Only `devSerial` (HAL_IN u32) and `alive` (HAL_OUT bit) are
    declared in the `__comp_state`; the 30+ `info.*` capability pins are absent.
 
-7. **hal-canon partially followed:** `digin` and `digout` use `hal_export_digin`
-   and `hal_export_digout` from hal-canon. `adcin` and `adcout` define a `Canon`
-   sub-struct in `sPoKeysAnalogData` (using `hal_adcin_t`/`hal_adcout_t`) but
-   never call `hal_export_adcin` or `hal_export_adcout`; they export a different
-   set of non-canonical pins instead. The encoder canonical struct
-   (`hal_encoder_t`) is not used; encoder pins are exported manually.
+7. **hal-canon usage:** `digin`, `digout`, `adcin`, and `adcout` all use the
+   corresponding hal-canon export helpers. `hal_export_digin` and
+   `hal_export_digout` are called per digital-capable pin; `hal_export_adcin`
+   is called for 7 analog input channels; `hal_export_adcout` is called for
+   each PWM channel. Encoder pins are exported manually; `hal_export_encoder`
+   is not called. The encoder interface in hal-canon (`hal_encoder_t`,
+   `hal_export_encoder`) is a hal-canon convention — it is **not** part of
+   the official LinuxCNC Canonical Device Interfaces specification, which
+   covers only `digin`, `digout`, `adcin`, and `adcout`. Encoder pin names
+   used in `PoKeysLibEncodersAsync.c` follow the same pattern as the
+   legacy `pokeys.comp` declarations (LinuxCnc_PokeysLibComp issue #213)
+   but are not normatively required by LinuxCNC Authority A.
 
-8. **HAL name length:** `HAL_NAME_LEN = 47` on the target system. Several pin
-   name format strings, when rendered with a two-character prefix index, produce
-   names of 43–46 characters — within the limit. However, multi-digit device IDs
-   (e.g., `pokeys-async.10`) push some names over the limit. The legacy
-   component (`LinuxCnc_PokeysLibComp`) had a confirmed name-length violation
-   (`pokeys.0.encoder.UltraFastEncoder.Enable4xSampling` = 50 chars,
-   reported in issues #310 and #326).
+8. **HAL name length (version-dependent):** Installed LinuxCNC 2.9.10:
+   `HAL_NAME_LEN = 47` (confirmed, `/usr/include/linuxcnc/hal.h`). Reviewer
+   states LinuxCNC upstream/master uses `HAL_NAME_LEN = 55`; the corresponding
+   upstream commit SHA was **not independently verified** in Phase 0. With prefix
+   `pokeys-async.0`, current pin names appear ≤46 chars. With `pokeys-async.10`
+   (+1 char), borderline cases near 47. The legacy component had a confirmed
+   violation (`pokeys.0.encoder.UltraFastEncoder.Enable4xSampling` = 50 chars;
+   LinuxCnc_PokeysLibComp issues #310, #326). With HAL_NAME_LEN = 55 (if the
+   upstream claim is verified), most current names would be within limit even
+   for double-digit device indices.
 
 9. **PEv2 incomplete vs. issue #33:** The closed issue #33 specifies many pins
    not present in the current implementation, including `PulseEngineEnabled`,
@@ -152,12 +187,16 @@ by comparing file contents against the upstream repository.
 1. What is the intended canonical component name — `pokeys` (legacy) or
    `pokeys-async` (current)? The choice affects every HAL signal file written
    by integrators.
-2. Should the analog input interface follow the `hal-canon` `adcin` contract
-   exactly, or expose raw hardware values in addition?
-3. Is the partially-canonical `Canon` sub-struct (`sPoKeysAnalogData.Canon`)
-   intended to eventually replace the current non-canonical export, or to coexist?
+2. Should the non-canonical supplementary pins (`adcin.J.in.hw`, `adcin.J.in.raw`,
+   `adcin.J.ReferenceVoltage`, `adcout.J.PWMduty`, `adcout.J.max_voltage`,
+   `adcout.pwm.period`) coexist with the canonical exports, or be deprecated?
+3. Must the hal-canon direction mismatches be fixed before pokeysHal can be
+   used in production? (`digin.in` as HAL_IN, `digout.out` as HAL_OUT, and
+   `adcin.value` as HAL_IN are all incorrect.)
 4. Which `nrOfAxes == 0` behaviour is authoritative: the requirement (no pins)
    or the ADR (8 axes fallback)?
+5. Is `HAL_NAME_LEN = 55` on LinuxCNC upstream confirmed by a verifiable commit
+   SHA? If so, does the project target 2.9 or upstream/master?
 5. Is PEv2 issue #33 actually complete (closed status) despite many specified
    pins being absent?
 6. What is the upstream commit SHA for the embedded `hal-canon` files? This

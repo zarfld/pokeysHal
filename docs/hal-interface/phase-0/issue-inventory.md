@@ -14,9 +14,9 @@ LinuxCnc_PokeysLibComp@0c058e6c. Inspected: 2026-08-03.
 | #33 | HAL Interface: PEv2 | CLOSED | HIGH — specifies full PEv2 global and per-axis pin set | Presumably complete (CLOSED) | Many specified pins absent (CONFLICT-007) | CONFLICT-007 | YES — but treat as incomplete; verify each pin |
 | #34 | HAL Interface: PoExtBus | OPEN | MEDIUM — specifies PoExtBus HAL interface | None | No PoExtBus HAL pins found anywhere | None | YES — unimplemented |
 | #35 | HAL-Interface: Analog Input | CLOSED | HIGH — specifies adcin.value, value-raw, scale, offset | Presumably complete (CLOSED) | Non-canonical names used; canonical interface absent (CONFLICT-003) | CONFLICT-003 | YES — treat as incomplete |
-| #36 | HAL-Interface: Digital Output | OPEN | HIGH — specifies digout interface | Partial (hal_export_digout used) | digout.out and digout.invert exported | None | YES |
+| #36 | HAL-Interface: Digital Output | OPEN | HIGH — specifies digout.J.out, PoExtBus digout, PEv2 digout.AxisEnabled.out, digout.LimitOverride.out | Partial | digout.J.out, digout.invert exported; PEv2.AxisEnabled.out ABSENT; PoExtBus digout ABSENT; LimitOverride.out not found | None | YES |
 | #37 | HAL-Interface: Analog Output | OPEN | HIGH — specifies adcout interface | None | Non-canonical PWM-based interface instead | CONFLICT-004 | YES |
-| #38 | HAL-Interface: Digital Input | OPEN | HIGH — specifies digin interface | Partial (hal_export_digin used) | digin.in and digin.in-not exported; extra non-canonical invert param | None | YES |
+| #38 | HAL-Interface: Digital Input | OPEN | HIGH — specifies digin.J.in and digin.J.in-not | Partial | digin.in and digin.in-not exported via hal_export_digin but with direction mismatch (CONFLICT-009); extra non-canonical invert param | CONFLICT-009 | YES |
 | #39 | HAL-Interface: Analog Output | OPEN | HIGH — duplicate/continuation of #37 | None | Same as #37 | CONFLICT-004 | YES |
 | #41 | PEv2 async implementation to be able to run it in RT | OPEN | HIGH | Partial | export_pev2_pins exists but incomplete vs. #33 | CONFLICT-001,007 | YES — implementation status unclear |
 | #97 | Async Scheduler optimizations | OPEN | LOW for HAL interface | None | Not inspected | None | Maybe |

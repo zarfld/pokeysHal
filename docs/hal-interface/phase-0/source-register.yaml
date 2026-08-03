@@ -72,10 +72,11 @@ sources:
     state: current
     inspected: true
     notes: >
-      hal_export_digin creates pins: <prefix>.digin.<index>.in (HAL_OUT bit),
-      <prefix>.digin.<index>.in-not (HAL_OUT bit).
-      hal_export_digout creates: <prefix>.digout.<index>.out (HAL_IN bit),
-      parameter: <prefix>.digout.<index>.invert (HAL_RW bit).
+      hal_export_digin creates: <prefix>.digin.<index>.in (HAL_IN bit -- BUG:
+      should be HAL_OUT), <prefix>.digin.<index>.in-not (HAL_OUT bit -- correct).
+      hal_export_digout creates: <prefix>.digout.<index>.out (HAL_OUT bit -- BUG:
+      should be HAL_IN), parameter: <prefix>.digout.<index>.invert (HAL_RW bit).
+      See CONFLICT-009.
 
   - source_id: B-003
     repository: zarfld/linuxcnc-hal-canon
@@ -88,11 +89,12 @@ sources:
     state: current
     inspected: true
     notes: >
-      hal_export_adcin creates: <prefix>.adcin.<index>.value (HAL_OUT float),
-      parameters: scale, offset, bit-weight, hw-offset (all HAL_RW float).
-      hal_export_adcout creates: <prefix>.adcout.<index>.value (HAL_IN float),
-      <prefix>.adcout.<index>.enable (HAL_IN bit),
+      hal_export_adcin creates: <prefix>.adcin.<index>.value (HAL_IN float -- BUG:
+      should be HAL_OUT), parameters: scale, offset, bit-weight, hw-offset (HAL_RW float).
+      hal_export_adcout creates: <prefix>.adcout.<index>.value (HAL_IN float -- correct),
+      <prefix>.adcout.<index>.enable (HAL_IN bit -- correct),
       parameters: offset, scale, high-limit, low-limit, bit-weight, hw-offset.
+      See CONFLICT-009.
 
   - source_id: B-004
     repository: zarfld/linuxcnc-hal-canon

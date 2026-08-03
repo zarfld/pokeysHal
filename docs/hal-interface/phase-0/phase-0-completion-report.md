@@ -11,15 +11,15 @@ Repository: zarfld/pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 |---|---|---|---|
 | 1. Both repositories inspected | PASS | pokeysHal inspected locally; LinuxCnc_PokeysLibComp accessed via GitHub API | LinuxCnc_PokeysLibComp not cloned; some files not inspected |
 | 2. Open and closed issues searched | PARTIAL | pokeysHal: all issues listed; selected issues inspected (#24, #32-#39, #116-#133). LinuxCnc_PokeysLibComp: #310, #326 inspected; others in issue-inventory.md listed but bodies not read | ~15 LinuxCnc_PokeysLibComp issues not body-inspected |
-| 3. Issue comments inspected where relevant | PARTIAL | Issue bodies inspected for #32, #33, #35, #118, #128 (pokeysHal). No comments inspected. | Comments may contain implementation evidence not captured |
+| 3. Issue comments inspected where relevant | PARTIAL | Issue bodies inspected for selected issues in both repos. No issue comments were inspected in either repo. | Comments for #33, #35, #36, #38 may contain implementation evidence |
 | 4. Official LinuxCNC rules recorded | PASS | HAL_NAME_LEN=47 confirmed from /usr/include/linuxcnc/hal.h. CDI rules recorded via hal-canon README and hal_canon.h documentation. | LinuxCNC canonical-devices.html not fetched directly |
 | 5. Exact hal-canon provenance recorded | PARTIAL | Tree SHA deed4c10535530ce0383fb357ea8427896226c70 recorded. Upstream commit from linuxcnc-hal-canon.git not determined. See CONFLICT-008. | Upstream SHA unknown |
 | 6. Legacy HAL interface extracted from source | PASS | Integration HAL files read (DM542 HAL, pokeys_homing.hal). Python digital_io.py read. Pin names catalogued. | Not all legacy component C source inspected |
-| 7. Current HAL interface extracted from source | PASS | All PoKeysLib*Async.c files searched for hal_pin_*_newf and hal_param_*_newf. All found calls catalogued in requirement-catalogue.yaml. | Manual spot-checks only; no automated enumeration tool |
+| 7. Current HAL interface extracted from source | PASS | All PoKeysLib*Async.c files searched. hal_export_adcin and hal_export_adcout calls confirmed by full read of PoKeysLibIOAsync.c. hal-canon/hal_digital.c and hal_analog.c read in full; direction mismatches documented. | No automated enumeration tool |
 | 8. Lifecycle and ownership documented | PASS | lifecycle-ownership-matrix.md covers all subsystems. Allocation, creation, update, and cleanup paths identified with file:line evidence. | Cleanup paths not fully verified for all subsystems |
 | 9. Enumerations and bitmaps documented | PASS | ePK_PinCap, ePK_PEAxisState, ePK_PEv2_AxisConfig, ePK_PulseEngineV2_AxisSwitchOptions documented in requirement-catalogue.yaml and conflict-register.md | ePK_PEState (for PulseEngineState) not fully documented |
-| 10. Canonical and project-specific extensions distinguished | PASS | canonical-vs-legacy-matrix.md classifies ~65 HAL objects. canonical-and-compatible, canonical-but-missing, PoKeys-specific, legacy-extension, renamed categories applied. | Approximately 15 interfaces not fully classified due to missing body inspections |
-| 11. Contradictions recorded | PASS | 8 conflicts documented in conflict-register.md. Most consequential: CONFLICT-001 (nrOfAxes), CONFLICT-002 (AxisEnable missing), CONFLICT-003 (adcin non-canonical), CONFLICT-004 (adcout non-canonical), CONFLICT-006 (component naming), CONFLICT-007 (issue #33 closed but incomplete). | Additional conflicts may exist in uninspected issues |
+| 10. Canonical and project-specific extensions distinguished | PARTIAL | canonical-vs-legacy-matrix.md classifies ~72 HAL objects. Direction-mismatch category added. Encoder correctly reclassified as hal-canon convention, not official CDI canonical. | Upstream HAL_NAME_LEN (55) not independently verified with commit SHA |
+| 11. Contradictions recorded | PASS | 9 conflicts documented. CONFLICT-009 added: hal-canon direction mismatches (digin.in as HAL_IN, digout.out as HAL_OUT, adcin.value as HAL_IN). CONFLICT-003 and CONFLICT-004 corrected: analog canonical helpers ARE called; residual conflicts are name mismatch and functional-conversion gap. | Additional conflicts may exist in uninspected issues |
 | 12. No production code changed | PASS | git status --short shows only one untracked file: the .prompt.md file (user-created). No source, header, or submodule modified. | n/a |
 | 13. No compatibility tests designed | PASS | No test files created. No test specifications written. | n/a |
 | 14. No unresolved claim presented as fact | PASS | Requirements, architecture decisions, legacy behavior, current behavior, inferences, and unresolved interpretations are distinguished throughout all documents. | Minor inferences present where primary source not available |
@@ -106,12 +106,13 @@ All files are in `docs/hal-interface/phase-0/`:
 2. `source-register.yaml` — 25 source entries, classes A–G
 3. `requirement-catalogue.yaml` — 35+ interface requirement entries
 4. `lifecycle-ownership-matrix.md` — per-subsystem ownership table
-5. `canonical-vs-legacy-matrix.md` — ~65 interface items classified
-6. `conflict-register.md` — 8 conflicts documented
+5. `canonical-vs-legacy-matrix.md` — ~72 interface items classified
+6. `conflict-register.md` — 9 conflicts documented (CONFLICT-009 added)
 7. `traceability.md` — 11 traceability chains with broken links marked
 8. `issue-inventory.md` — 31 pokeysHal issues + 17 LinuxCnc_PokeysLibComp issues
-9. `open-decisions.md` — 18 decisions grouped by topic
+9. `open-decisions.md` — 19 decisions grouped by topic (DEC-HALCANON-001 added)
 10. `phase-0-completion-report.md` — this file
+11. `.github/prompts/HAL-compatibility_Phase 0 — Establish the HAL-interface knowledge baseline.prompt.md` — the executing prompt (committed in 3ac906d)
 
 ---
 
@@ -121,8 +122,8 @@ All files are in `docs/hal-interface/phase-0/`:
 |---|---|
 | Source register entries | 25 |
 | Requirement catalogue entries | 35+ |
-| Conflicts registered | 8 |
-| Open decisions required | 18 |
+| Conflicts registered | 9 |
+| Open decisions required | 19 |
 | Traceability chains | 11 |
 | Issues inventoried (pokeysHal) | 31 |
 | Issues inventoried (LinuxCnc_PokeysLibComp) | 17 |
@@ -131,20 +132,21 @@ All files are in `docs/hal-interface/phase-0/`:
 
 ## Most Consequential Unresolved Decisions
 
-1. **DEC-COMPAT-001** — Component name: `pokeys` vs `pokeys-async`. Every HAL file
+1. **DEC-HALCANON-001** — hal-canon direction bugs (digin.in as HAL_IN, digout.out
+   as HAL_OUT, adcin.value as HAL_IN) block all functional tests for I/O and analog
+   input. Must be fixed first in Phase 1. (CONFLICT-009)
+
+2. **DEC-COMPAT-001** — Component name: `pokeys` vs `pokeys-async`. Every HAL file
    and compatibility test depends on this. (CONFLICT-006)
 
-2. **DEC-CARD-001** — Conditional PEv2 axis creation: REQ #118 vs ADR #128 vs
+3. **DEC-CARD-001** — Conditional PEv2 axis creation: REQ #118 vs ADR #128 vs
    implementation (always 8). (CONFLICT-001)
 
-3. **DEC-CANON-002** — Canonical adcout: `value` and `enable` pins are referenced
-   in legacy integration files but absent. Machine spindle configurations fail. (CONFLICT-004)
-
 4. **DEC-COMPAT-002** — Which PEv2 pins from issue #33 are required for backward
-   compatibility. Without this list, compatibility cannot be validated. (CONFLICT-007)
+   compatibility. Without this list, PEv2 compatibility cannot be validated. (CONFLICT-007)
 
-5. **DEC-CANON-001** — Canonical adcin interface: `value`, `scale`, `offset` absent
-   despite `hal_adcin_t` being allocated internally. (CONFLICT-003)
+5. **DEC-CANON-001** — Fix adcin supplementary pin names ('in.raw' vs 'value-raw')
+   and correct default for scale parameter (0.0 is not useful). (CONFLICT-003)
 
 ---
 
@@ -160,5 +162,22 @@ Review the Phase 0 findings as a team. Specifically:
 ---
 
 ```
-PHASE 0 BASELINE COMPLETE
+PHASE 0 BASELINE INCOMPLETE
 ```
+
+## Missing Evidence Requiring Resolution Before Phase 1
+
+1. hal-canon upstream commit SHA (from `linuxcnc-hal-canon.git`) not recorded;
+   current embedding is a tree, not a submodule commit pointer (CONFLICT-008).
+2. LinuxCNC upstream/master `HAL_NAME_LEN = 55` claim not verified with a
+   pinned commit SHA (DEC-NAME-003).
+3. Issue comments not inspected for #33, #35, #36, #38, #118, #128 in pokeysHal;
+   potential implementation evidence missed.
+4. pokeysHal issue bodies not inspected: #37, #39, #119–#126.
+5. LinuxCnc_PokeysLibComp issue body for #264 was empty via API; body may be
+   available with different access.
+6. No primary LinuxCNC source fetched to confirm encoder is absent from the
+   official canonical-devices.html (assertion is based on reviewer instruction,
+   not independent document fetch).
+7. adcout functional conversion path (adcout.J.value → PWM duty cycle) not
+   verified by any test or code trace (issues #37, #39 remain OPEN).

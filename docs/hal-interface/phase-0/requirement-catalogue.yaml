@@ -279,7 +279,7 @@ requirements:
     name_pattern: "<prefix>.digin.<J>.in"
     object_kind: pin
     hal_type: hal_bit_t
-    direction_or_access: HAL_OUT
+    direction_or_access: "HAL_OUT (LinuxCNC spec) / HAL_IN (hal-canon actual — direction bug)"
     cardinality: "conditional: pins with PK_PinCap_digitalInput, up to iPinCount"
     creation_condition: "PK_CheckPinCapability(device, j, PK_AllPinCap_digitalInput)"
     units: "n/a"
@@ -291,13 +291,13 @@ requirements:
     pokeyslib_function: "PK_DigitalIOGetAsync / PK_DigitalIOGetParse"
     enumeration: "n/a"
     bitmap_definition: "n/a"
-    linuxcnc_canonical_status: canonical (digin.in)
-    legacy_compatibility_status: "compatible — pokeys.0.digin.J.in in legacy files"
-    current_implementation_status: "Implemented via hal_export_digin. PoKeysLibIOAsync.c:35."
+    linuxcnc_canonical_status: "canonical (digin.in) — direction mismatch: hal-canon exports HAL_IN; spec requires HAL_OUT"
+    legacy_compatibility_status: "name compatible; direction bug in hal-canon prevents correct HAL wiring"
+    current_implementation_status: "Implemented via hal_export_digin (PoKeysLibIOAsync.c:35). DIRECTION BUG: digin.in is HAL_IN, should be HAL_OUT. See CONFLICT-009."
     requirement_sources: [A-002, C-007, B-002]
     implementation_sources: [F-003]
-    conflicts: []
-    evidence: "PoKeysLibIOAsync.c:35; hal-canon/hal_digital.c; PoKeysLibIOAsync.c:479"
+    conflicts: [CONFLICT-009]
+    evidence: "PoKeysLibIOAsync.c:35; hal-canon/hal_digital.c (HAL_IN used); PoKeysLibIOAsync.c:479"
 
   - interface_id: DIGIN-002
     subsystem: digital_input
@@ -331,7 +331,7 @@ requirements:
     name_pattern: "<prefix>.digout.<J>.out"
     object_kind: pin
     hal_type: hal_bit_t
-    direction_or_access: HAL_IN
+    direction_or_access: "HAL_IN (LinuxCNC spec) / HAL_OUT (hal-canon actual — direction bug)"
     cardinality: "conditional: pins with PK_PinCap_digitalOutput"
     creation_condition: "PK_CheckPinCapability(device, j, PK_AllPinCap_digitalOutput)"
     units: "n/a"
@@ -343,13 +343,13 @@ requirements:
     pokeyslib_function: "PK_DigitalIOSetAsync"
     enumeration: "n/a"
     bitmap_definition: "n/a"
-    linuxcnc_canonical_status: canonical (digout.out)
-    legacy_compatibility_status: compatible
-    current_implementation_status: "Implemented via hal_export_digout. PoKeysLibIOAsync.c:53."
+    linuxcnc_canonical_status: "canonical (digout.out) — direction mismatch: hal-canon exports HAL_OUT; spec requires HAL_IN"
+    legacy_compatibility_status: "name compatible; direction bug in hal-canon prevents correct HAL wiring"
+    current_implementation_status: "Implemented via hal_export_digout (PoKeysLibIOAsync.c:53). DIRECTION BUG: digout.out is HAL_OUT, should be HAL_IN. See CONFLICT-009."
     requirement_sources: [A-002, C-005, B-002]
     implementation_sources: [F-003]
-    conflicts: []
-    evidence: "PoKeysLibIOAsync.c:53; PoKeysLibIOAsync.c:448"
+    conflicts: [CONFLICT-009]
+    evidence: "PoKeysLibIOAsync.c:53; hal-canon/hal_digital.c (HAL_OUT used); PoKeysLibIOAsync.c:448"
 
   - interface_id: DIGOUT-002
     subsystem: digital_output
@@ -438,30 +438,31 @@ requirements:
     name_pattern: "<prefix>.adcin.<J>.value"
     object_kind: pin
     hal_type: hal_float_t
-    direction_or_access: HAL_OUT
+    direction_or_access: "HAL_OUT (LinuxCNC spec) / HAL_IN (hal-canon actual — direction bug)"
     cardinality: "7"
-    creation_condition: "n/a — not currently exported"
-    units: "scaled: value = rawvalue * scale + offset"
-    scaling_formula: "Canon.value = rawvalue * Canon.scale + Canon.offset"
-    default_value: "n/a"
-    initialization_phase: "n/a"
-    update_phase: "computed internally in PK_AnalogIOParse but not exported"
+    creation_condition: "unconditional via hal_export_adcin"
+    units: "scaled: value = (rawvalue * scale) - offset + hw_offset"
+    scaling_formula: "hal_adcin_applyScaling: value = (rawvalue * scale) - offset + hw_offset"
+    default_value: "0.0"
+    initialization_phase: "export_IO_pins via hal_export_adcin (PoKeysLibIOAsync.c:85)"
+    update_phase: "computed internally in PK_AnalogIOParse and stored in Canon.value"
     device_field: "device->AnalogInput[j].Canon.value"
-    pokeyslib_function: "n/a (internal computation in PK_AnalogIOParse)"
+    pokeyslib_function: "PK_AnalogIOGetAsync / PK_AnalogIOParse"
     enumeration: "n/a"
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: >
-      canonical (adcin.value) — required by A-002 and B-003.
-      Internal sPoKeysAnalogData.Canon struct uses hal_adcin_t from hal-canon
-      but hal_export_adcin is never called.
-    legacy_compatibility_status: "Issue #35 specifies this pin."
+      canonical (adcin.value) — PRESENT but with direction mismatch.
+      hal-canon/hal_analog.c exports adcin.value as HAL_IN instead of HAL_OUT.
+      See CONFLICT-009.
+    legacy_compatibility_status: "Issue #35 specifies this pin. Present but wrong direction."
     current_implementation_status: >
-      ABSENT from HAL. Canon.value is computed internally
-      (PoKeysLibIOAsync.c, PK_AnalogIOParse) but hal_export_adcin is never called.
+      IMPLEMENTED with direction mismatch. hal_export_adcin called at
+      PoKeysLibIOAsync.c:85. adcin.value created as HAL_IN (bug: should be HAL_OUT).
+      Prevents correct HAL wiring as a data source.
     requirement_sources: [C-004, A-002, B-003]
-    implementation_sources: []
-    conflicts: ["CONFLICT-003"]
-    evidence: "PoKeysLibIOAsync.c PK_AnalogIOParse; PoKeysLibHal.h:740; issue #35"
+    implementation_sources: [F-003]
+    conflicts: ["CONFLICT-003", "CONFLICT-009"]
+    evidence: "PoKeysLibIOAsync.c:85; hal-canon/hal_analog.c (HAL_IN used); issue #35"
 
   - interface_id: ADCIN-004
     subsystem: analog_input
@@ -470,25 +471,25 @@ requirements:
     hal_type: hal_float_t
     direction_or_access: HAL_RW
     cardinality: "7"
-    creation_condition: "n/a — not currently exported"
+    creation_condition: "unconditional via hal_export_adcin"
     units: "n/a"
     scaling_formula: "n/a"
-    default_value: "n/a"
-    initialization_phase: "n/a"
-    update_phase: "n/a"
+    default_value: "0.0 (zeroed by memset — scale=0 is not useful)"
+    initialization_phase: "export_IO_pins via hal_export_adcin"
+    update_phase: "integrator sets; applied in PK_AnalogIOParse via Canon.scale"
     device_field: "device->AnalogInput[j].Canon.scale"
     pokeyslib_function: "n/a"
     enumeration: "n/a"
     bitmap_definition: "n/a"
-    linuxcnc_canonical_status: canonical — required by A-002 and B-003
-    legacy_compatibility_status: "Issue #35 specifies this parameter."
+    linuxcnc_canonical_status: canonical — required by A-002 and B-003. PRESENT.
+    legacy_compatibility_status: "Issue #35 specifies this parameter. IMPLEMENTED."
     current_implementation_status: >
-      ABSENT. Canon.scale field exists in struct (PoKeysLibHal.h:740) but
-      hal_export_adcin is never called so it is not exported to HAL.
+      IMPLEMENTED. Exported via hal_export_adcin at PoKeysLibIOAsync.c:85.
+      Default 0.0 from memset is not useful (scale=0 zeroes output).
     requirement_sources: [C-004, A-002, B-003]
-    implementation_sources: []
-    conflicts: ["CONFLICT-003"]
-    evidence: "PoKeysLibHal.h:740 (struct field); issue #35"
+    implementation_sources: [F-003]
+    conflicts: []
+    evidence: "PoKeysLibIOAsync.c:85; hal-canon/hal_analog.c; issue #35"
 
   - interface_id: ADCIN-005
     subsystem: analog_input
@@ -602,25 +603,27 @@ requirements:
     hal_type: hal_float_t
     direction_or_access: HAL_IN
     cardinality: "iPWMCount"
-    creation_condition: "n/a — not currently exported"
+    creation_condition: "unconditional via hal_export_adcout"
     units: "scaled output value"
-    scaling_formula: "n/a"
-    default_value: "n/a"
-    initialization_phase: "n/a"
-    update_phase: "n/a"
-    device_field: "device->AnalogOutput[j].value (hal_adcout_t allocated but not exported)"
-    pokeyslib_function: "n/a"
+    scaling_formula: "output = clamp((scale * value) + offset); 0 if enable==false"
+    default_value: "0.0"
+    initialization_phase: "export_IO_pins via hal_export_adcout (PoKeysLibIOAsync.c:110)"
+    update_phase: "HAL->device via hal_adcout_getscaledvalue; PWM conversion unverified"
+    device_field: "device->PWM.PWManalogOutputs[j].value"
+    pokeyslib_function: "PK_PWMAsync (conversion path unverified)"
     enumeration: "n/a"
     bitmap_definition: "n/a"
-    linuxcnc_canonical_status: canonical — required by A-002 and B-003
-    legacy_compatibility_status: "Referenced in legacy HAL file: pokeys.0.adcout.0.value"
+    linuxcnc_canonical_status: canonical — present with correct direction (HAL_IN)
+    legacy_compatibility_status: "Referenced in legacy HAL file: pokeys.0.adcout.0.value. PRESENT."
     current_implementation_status: >
-      ABSENT. device->AnalogOutput allocated as hal_adcout_t array
-      (PoKeysLibCoreAsync.c:618) but hal_export_adcout is never called.
+      IMPLEMENTED. hal_export_adcout called at PoKeysLibIOAsync.c:110.
+      adcout.J.value created as HAL_IN (correct direction).
+      Whether value is functionally converted to PWM duty cycle is unverified.
+      Issues #37 and #39 remain OPEN.
     requirement_sources: [C-006, C-008, A-002, B-003]
-    implementation_sources: []
+    implementation_sources: [F-003]
     conflicts: ["CONFLICT-004"]
-    evidence: "PoKeysLibCoreAsync.c:618; E-001 (legacy HAL file); issues #37, #39"
+    evidence: "PoKeysLibIOAsync.c:110; E-001 (legacy HAL file); issues #37, #39"
 
   # ── Encoders ──────────────────────────────────────────────────────────────────
 
@@ -641,10 +644,15 @@ requirements:
     pokeyslib_function: "PK_EncoderValuesGetAsync"
     enumeration: "n/a"
     bitmap_definition: "n/a"
-    linuxcnc_canonical_status: canonical (encoder.count) — matches B-004
+    linuxcnc_canonical_status: >
+      hal-canon convention (B-004) only. The official LinuxCNC CDI specification
+      (canonical-devices.html, Authority A) covers digin, digout, adcin, adcout
+      only — encoder is NOT an official canonical device type per Authority A.
+      encoder.count follows legacy pokeys.comp convention (LinuxCnc_PokeysLibComp
+      issue #213) and the hal-canon helper, but is not normatively required by A.
     legacy_compatibility_status: "compatible"
     current_implementation_status: "Implemented. PoKeysLibEncodersAsync.c:43."
-    requirement_sources: [A-002, B-004]
+    requirement_sources: [B-004]
     implementation_sources: [F-004]
     conflicts: []
     evidence: "PoKeysLibEncodersAsync.c:43"

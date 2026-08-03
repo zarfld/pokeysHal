@@ -81,36 +81,41 @@ Status: unresolved
 
 ```
 Conflict ID: CONFLICT-003
-Subject: Analog input HAL interface — non-canonical implementation vs. requirements
-Source A: Issue #35 (pokeysHal, CLOSED) and LinuxCNC CDI (Authority A):
-  Required pins: adcin.J.value-raw (float), adcin.J.value (float).
-  Required parameters: adcin.J.scale (float, RW), adcin.J.offset (float, RW).
-  (CDI also requires bit-weight and hw-offset per hal-canon Authority B.)
-Source B: Current implementation (PoKeysLibIOAsync.c):
-  Exports: adcin.J.in.hw (u32, HAL_OUT, raw ADC counts),
-           adcin.J.in.raw (float, HAL_OUT, voltage-scaled),
-           adcin.J.ReferenceVoltage (float, HAL_PARAM_RO).
-  Does NOT export: value, value-raw (per spec), scale, offset, bit-weight, hw-offset.
-  Note: sPoKeysAnalogData.Canon (hal_adcin_t) exists and Canon.value is computed
-  internally, but hal_export_adcin is never called.
+Subject: Analog input — canonical pins ARE exported but name specification mismatch
+  and supplementary non-canonical pins also present
+Source A: Issue #35 (pokeysHal, CLOSED):
+  Required: adcin.J.value-raw (float, raw hardware reading),
+            adcin.J.value (float, scaled), adcin.J.scale, adcin.J.offset.
+Source B: Current implementation (PoKeysLibIOAsync.c:85):
+  hal_export_adcin(&device->AnalogInput[j].Canon, prefix, j, comp_id) IS called.
+  This exports via hal-canon: adcin.J.value (HAL_IN per hal-canon — direction
+  mismatch, see CONFLICT-009), adcin.J.scale, adcin.J.offset,
+  adcin.J.bit-weight, adcin.J.hw-offset.
+  ADDITIONALLY exported (non-canonical supplementary):
+    adcin.J.in.hw (u32, HAL_OUT) — raw ADC counts
+    adcin.J.in.raw (float, HAL_OUT) — voltage-scaled
+    adcin.J.ReferenceVoltage (float, HAL_PARAM_RO)
 Observed implementation:
-  Non-canonical pin names; canonical interface absent despite hal_adcin_t being
-  allocated and partially populated.
+  Canonical pins (via hal_export_adcin) and non-canonical supplementary pins
+  coexist. The name 'value-raw' from issue #35 is not present; instead
+  'in.raw' is used. The 'in.hw' pin is additional.
 Why the sources conflict:
-  Issue #35 is CLOSED, implying it was resolved. But the implementation does not
-  match the specification in #35 (different pin names and missing parameters).
-  The issue may have been closed prematurely or the scope was narrowed.
+  Issue #35 specifies 'value-raw'; implementation exports 'in.raw' instead.
+  Issue #35 is CLOSED despite the name mismatch.
 Safety or compatibility impact:
-  Integration files that expect adcin.J.value (e.g., spindle speed feedback) will
-  fail to connect. scale and offset not being available prevents calibration.
+  LOW for canonical pins (present). MEDIUM for the 'value-raw' name: any HAL
+  file referencing adcin.J.value-raw will fail to connect (pin is 'in.raw').
+  Critical: adcin.value direction mismatch (HAL_IN instead of HAL_OUT) prevents
+  correct data flow until hal-canon is corrected (see CONFLICT-009).
 Authority assessment:
-  Authority C (#35, closed) and Authority A (CDI) require the canonical interface.
-  Current implementation (Authority F) does not provide it.
+  Canonical pins are exported. The name conflict between 'value-raw' (issue #35)
+  and 'in.raw' (implementation) is unresolved. Direction mismatch is a hal-canon
+  defect (Authority B), not a pokeysHal implementation defect.
 Required decision:
-  1. Reopen or supersede issue #35 to reflect what was actually implemented.
-  2. Decide whether adcin.J.in.hw and adcin.J.in.raw are to be kept supplementary
-     or replaced by canonical value/value-raw names.
-  3. Decide whether hal_export_adcin should be called to export the Canon struct.
+  1. Align 'in.raw' name with issue #35 'value-raw', or update issue #35.
+  2. Decide whether 'in.hw' and 'ReferenceVoltage' are kept as supplementary.
+  3. The hal-canon direction mismatch for adcin.value must be resolved (see
+     CONFLICT-009 and DEC-HALCANON-001 in open-decisions.md).
 Status: unresolved
 ```
 
@@ -118,35 +123,40 @@ Status: unresolved
 
 ```
 Conflict ID: CONFLICT-004
-Subject: Analog output HAL interface — non-canonical implementation vs. requirements
-Source A: Issues #37 and #39 (pokeysHal, both OPEN) and LinuxCNC CDI (Authority A):
-  Required pins: adcout.J.value (float, HAL_IN), adcout.J.enable (bit, HAL_IN).
-  Required parameters: scale, offset, high-limit, low-limit, bit-weight, hw-offset.
-  Legacy integration file: "net spindle-speed-DAC scale.0.out => pokeys.0.adcout.0.value"
-  and "net spindle-enable => pokeys.0.adcout.0.enable"
-Source B: Current implementation (PoKeysLibIOAsync.c):
-  Exports: adcout.J.PWMduty (u32, HAL_OUT), adcout.J.max_voltage (float, HAL_PARAM_RW),
-           adcout.pwm.period (u32, HAL_PARAM_RW).
-  hal_adcout_t is allocated (PoKeysLibCoreAsync.c:618) but hal_export_adcout is never called.
+Subject: Analog output — canonical pins ARE exported; supplementary non-canonical
+  pins also present; requirements still reference missing PWM mapping
+Source A: Issues #37 and #39 (pokeysHal, both OPEN) and legacy integration file:
+  Required: adcout.J.value (float, HAL_IN), adcout.J.enable (bit, HAL_IN), and
+  full parameter set. Legacy: "net spindle-speed-DAC => pokeys.0.adcout.0.value"
+  and "net spindle-enable => pokeys.0.adcout.0.enable".
+Source B: Current implementation (PoKeysLibIOAsync.c:110):
+  hal_export_adcout(&device->PWM.PWManalogOutputs[j], prefix, j, comp_id) IS called.
+  This exports via hal-canon: adcout.J.value (HAL_IN — correct), adcout.J.enable
+  (HAL_IN — correct), adcout.J.offset, adcout.J.scale, adcout.J.high-limit,
+  adcout.J.low-limit, adcout.J.bit-weight, adcout.J.hw-offset.
+  ADDITIONALLY exported (non-canonical supplementary):
+    adcout.J.max_voltage (float, HAL_PARAM_RW)
+    adcout.J.PWMduty (u32, HAL_OUT)
+    adcout.pwm.period (u32, HAL_PARAM_RW)
 Observed implementation:
-  Non-canonical PWM-based output. Legacy integration files reference canonical names
-  that do not exist.
+  Canonical adcout pins (via hal_export_adcout) are present. Supplementary PWM
+  raw pins also exported. Issues #37 and #39 remain OPEN, suggesting the
+  scaling from canonical value to PWM duty cycle is not yet complete or tested.
 Why the sources conflict:
-  Integration files (Authority G, E-001) already reference adcout.0.value and
-  adcout.0.enable. Requirements #37 and #39 are OPEN. Implementation provides
-  different and incompatible pins.
+  Issues #37 and #39 are OPEN despite canonical pins being exported. The
+  conflict may be that the functional link — converting adcout.J.value to a
+  PWM duty cycle via the analog output hardware — is unimplemented or unverified.
 Safety or compatibility impact:
-  HIGH. Machine configurations requiring spindle speed output via DAC/PWM will fail
-  to connect. The `enable` pin absence means HAL cannot force the output to zero.
+  MEDIUM. Canonical pin names present for HAL wiring. PWM conversion logic
+  may not be implemented, so writing adcout.J.value may not affect hardware.
 Authority assessment:
-  Authority A (CDI) and Authority C (#37, #39) require canonical interface.
-  Authority G (integration files) demonstrates expected usage.
-  Current implementation is Authority F and does not satisfy any of the above.
+  Canonical object export is implemented. The open issues likely refer to the
+  unresolved question of whether the conversion path (value → PWM duty) works.
 Required decision:
-  1. Decide whether hal_export_adcout should be called for each PWM channel.
-  2. Decide whether adcout.J.PWMduty remains as a supplementary raw output or
-     is removed in favour of the canonical interface.
-  3. Determine the scaling formula from canonical value to PWM duty cycle.
+  1. Determine whether the PWManalogOutputs[j] conversion path from adcout.value
+     to PWM duty cycle is functionally complete.
+  2. Decide whether adcout.J.PWMduty and adcout.J.max_voltage remain supplementary.
+  3. Close or update issues #37 and #39 with evidence of actual conversion behavior.
 Status: unresolved
 ```
 
@@ -291,5 +301,61 @@ Required decision:
   1. Decide: properly initialize hal-canon as a submodule (removing the tree),
      or declare it an embedded subtree and update .gitmodules accordingly.
   2. Record the upstream commit SHA if hal-canon is to remain as a subtree.
+Status: unresolved
+```
+
+---
+
+```
+Conflict ID: CONFLICT-009
+Subject: hal-canon export helpers use incorrect HAL directions
+Source A: LinuxCNC HAL data-flow semantics (Authority A):
+  - Digital input device (hardware → HAL): component writes to HAL.
+    digin.in must be HAL_OUT (component is the driver/writer).
+    digin.in-not must be HAL_OUT.
+  - Digital output device (HAL → hardware): LinuxCNC writes to component.
+    digout.out must be HAL_IN (component is the reader).
+  - Analog input (hardware → HAL): component writes to HAL.
+    adcin.value must be HAL_OUT.
+  - Analog output (HAL → hardware): LinuxCNC writes to component.
+    adcout.value must be HAL_IN (correct).
+    adcout.enable must be HAL_IN (correct).
+Source B: Observed hal-canon implementation (hal-canon/hal_digital.c,
+  hal-canon/hal_analog.c):
+  - hal_export_digin: digin.in created with HAL_IN   ← WRONG (should be HAL_OUT)
+                      digin.in-not created with HAL_OUT ← correct
+  - hal_export_digout: digout.out created with HAL_OUT ← WRONG (should be HAL_IN)
+  - hal_export_adcin: adcin.value created with HAL_IN  ← WRONG (should be HAL_OUT)
+  - hal_export_adcout: adcout.value HAL_IN, adcout.enable HAL_IN ← both correct
+Observed implementation:
+  pokeysHal calls hal_export_digin, hal_export_digout, hal_export_adcin, and
+  hal_export_adcout. It therefore inherits all three direction bugs. The pins
+  digin.J.in, digout.J.out, and adcin.J.value are created with the wrong
+  direction in every running instance of the component.
+Why the sources conflict:
+  The LinuxCNC HAL direction convention is unambiguous: HAL_OUT means the
+  component writes the value; HAL_IN means the component reads it. The
+  hal-canon implementation reverses the convention for digin.in, digout.out,
+  and adcin.value.
+Safety or compatibility impact:
+  HIGH. A pin with the wrong direction will fail to connect with compatible
+  signals in HAL. For example, attempting to net digin.J.in to a motion-controller
+  input will fail at HAL wiring time because both end-points would be HAL_IN.
+  LinuxCNC halcmd reports "pin direction mismatch" and refuses the connection.
+  This renders the digital input and analog input interfaces non-functional.
+Authority assessment:
+  Authority A (LinuxCNC HAL API and canonical device specification) governs.
+  hal-canon (Authority B) contains implementation bugs contradicting Authority A.
+  Phase 0 scope prohibits modifying hal-canon. The conflict must be recorded
+  and a decision made before Phase 1.
+Required decision:
+  1. Correct hal-canon/hal_digital.c: change digin.in to HAL_OUT and
+     digout.out to HAL_IN.
+  2. Correct hal-canon/hal_analog.c: change adcin.value to HAL_OUT.
+  3. Verify that digin.in-not (HAL_OUT) and adcout.value/enable (HAL_IN)
+     remain unchanged — these are correct.
+  Note: This requires modifying hal-canon, which is out of scope for Phase 0.
+  It must be the first technical action in Phase 1 before any compatibility
+  testing can produce meaningful results.
 Status: unresolved
 ```

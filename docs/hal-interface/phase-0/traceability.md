@@ -49,13 +49,15 @@ LinuxCNC CDI: adcin.value (float, HAL_OUT), adcin.scale, adcin.offset,
   → hal-canon hal_export_adcin, hal_adcin_t [B-003]
   → issue #35: HAL-Interface: Analog Input [C-004] (CLOSED)
   ✗ ADR/SDD: none found
-  ✗ implementation: hal_export_adcin never called [CONFLICT-003]
-      hal_adcin_t allocated (PoKeysLibCoreAsync.c:618) but not exported
-      Canon.value computed internally (PK_AnalogIOParse) but not in HAL
-  ✗ non-canonical pins exported instead:
-      adcin.J.in.hw (u32) — PoKeysLibIOAsync.c:76
-      adcin.J.in.raw (float) — PoKeysLibIOAsync.c:83
-  ✗ future verification target: none
+  → implementation: hal_export_adcin IS called at PoKeysLibIOAsync.c:85
+      adcin.J.value PRESENT (but as HAL_IN — direction bug in hal-canon, CONFLICT-009)
+      adcin.J.scale, offset, bit-weight, hw-offset: PRESENT via hal_export_adcin
+  ???? non-canonical supplementary pins also exported:
+      adcin.J.in.hw (u32, HAL_OUT) — PoKeysLibIOAsync.c:76
+      adcin.J.in.raw (float, HAL_OUT) — PoKeysLibIOAsync.c:83
+      adcin.J.ReferenceVoltage (param, HAL_RO) — PoKeysLibIOAsync.c:90
+  ✗ 'value-raw' name from issue #35 not present; 'in.raw' used instead (CONFLICT-003)
+  ✗ future verification target: none linked
 ```
 
 ---
@@ -68,23 +70,28 @@ LinuxCNC CDI: adcout.value (float, HAL_IN), adcout.enable (bit, HAL_IN),
   → hal-canon hal_export_adcout, hal_adcout_t [B-003]
   → issues #37, #39: HAL-Interface: Analog Output [C-006, C-008] (both OPEN)
   ✗ ADR/SDD: none found
-  ✗ implementation: hal_export_adcout never called [CONFLICT-004]
-      hal_adcout_t allocated (PoKeysLibCoreAsync.c:618) but not exported
-      Non-canonical pins exported instead:
-        adcout.J.PWMduty (u32) — PoKeysLibIOAsync.c:124
-        adcout.J.max_voltage (param) — PoKeysLibIOAsync.c:117
-        adcout.pwm.period (param) — PoKeysLibIOAsync.c:132
+  → implementation: hal_export_adcout IS called at PoKeysLibIOAsync.c:110
+      adcout.J.value (HAL_IN — correct), adcout.J.enable (HAL_IN — correct)
+      all canonical parameters PRESENT via hal_export_adcout
+  ???? non-canonical supplementary pins also exported:
+        adcout.J.PWMduty (u32, HAL_OUT) — PoKeysLibIOAsync.c:124
+        adcout.J.max_voltage (param, HAL_RW) — PoKeysLibIOAsync.c:117
+        adcout.pwm.period (param, HAL_RW) — PoKeysLibIOAsync.c:132
+  ✗ whether adcout.J.value is functionally converted to PWM duty cycle: unverified
+  ✗ issues #37 and #39 remain OPEN (functional conversion unverified)
   ✗ legacy integration files reference adcout.0.value and adcout.0.enable (E-001)
+      These names ARE now present.
   ✗ future verification target: none
 ```
 
 ---
 
-## 5. Encoder (canonical)
+## 5. Encoder (hal-canon convention, not official CDI)
 
 ```
-LinuxCNC CDI: encoder.count, position, velocity, reset, index-enable, scale [A-002]
-  → hal-canon hal_export_encoder, hal_encoder_t [B-004]
+Official LinuxCNC CDI (canonical-devices.html, Authority A): does NOT define encoder
+  as a canonical device type. CDI covers digin, digout, adcin, adcout only.
+  hal-canon hal_export_encoder, hal_encoder_t [B-004] is a hal-canon convention.
   → issue #42 (CLOSED): Encoder — body not inspected
   ✗ no ADR/SDD found
   → manually exported (not via hal_export_encoder):

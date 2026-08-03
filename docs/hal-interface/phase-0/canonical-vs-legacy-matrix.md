@@ -21,36 +21,36 @@ LinuxCnc_PokeysLibComp@0c058e6c.
 
 | Interface item | Official LinuxCNC (A) | Legacy LinuxCnc_PokeysLibComp (E) | Current pokeysHal (F) | Classification | Decision required |
 |---|---|---|---|---|---|
-| `digin.<J>.in` (bit, HAL_OUT) | canonical digin.in | `pokeys.0.digin.N.in` | `pokeys-async.0.digin.N.in` via `hal_export_digin` | **canonical and compatible** — but component prefix differs | Decide canonical component name: `pokeys` or `pokeys-async` |
+| `digin.<J>.in` (bit, HAL_OUT spec) | canonical digin.in | `pokeys.0.digin.N.in` | `pokeys-async.0.digin.N.in` via `hal_export_digin` | **direction mismatch** — hal-canon exports HAL_IN; spec requires HAL_OUT (CONFLICT-009) | Fix hal-canon direction bug first |
 | `digin.<J>.in-not` (bit, HAL_OUT) | canonical digin.in-not | `pokeys.0.digin.N.in-not` (implied) | `pokeys-async.0.digin.N.in-not` via `hal_export_digin` | **canonical and compatible** | Same prefix decision |
 | `digin.<J>.invert` (bit, HAL_PARAM_RW) | not canonical (canonical digin has no invert) | `pokeys.0.digin.N.invert` (via Python layer) | `pokeys-async.0.digin.N.invert` via `hal_param_bit_newf` | **PoKeys-specific extension** | Decide whether to keep or remove |
-| `digout.<J>.out` (bit, HAL_IN) | canonical digout.out | `pokeys.0.digout.N.out` | `pokeys-async.0.digout.N.out` via `hal_export_digout` | **canonical and compatible** | Prefix decision |
+| `digout.<J>.out` (bit, HAL_IN spec) | canonical digout.out | `pokeys.0.digout.N.out` | `pokeys-async.0.digout.N.out` via `hal_export_digout` | **direction mismatch** — hal-canon exports HAL_OUT; spec requires HAL_IN (CONFLICT-009) | Fix hal-canon direction bug first |
 | `digout.<J>.invert` (bit, HAL_PARAM_RW) | canonical digout.invert parameter | `pokeys.0.digout.N.invert` | `pokeys-async.0.digout.N.invert` via `hal_export_digout` | **canonical and compatible** | Prefix decision |
-| `adcin.<J>.value` (float, HAL_OUT) | canonical adcin.value | `pokeys.0.adcin.J.value` (issue #35) | **ABSENT** (Canon.value computed internally but never exported) | **canonical but missing** | Must decide: export canonical value via `hal_export_adcin` or continue non-canonical export |
+| `adcin.<J>.value` (float, HAL_OUT spec) | canonical adcin.value | `pokeys.0.adcin.J.value` (issue #35) | PRESENT via `hal_export_adcin` (PoKeysLibIOAsync.c:85) BUT exported as HAL_IN (bug) | **direction mismatch** — hal-canon exports HAL_IN; spec requires HAL_OUT (CONFLICT-009) | Fix hal-canon adcin.value direction bug |
 | `adcin.<J>.value-raw` (float, HAL_OUT) | not canonical | issue #35 specifies `adcin.J.value-raw` | `adcin.J.in.raw` (float, HAL_OUT) — **different name** | **renamed** (name mismatch with issue #35 spec) | Align name with issue #35 or use canonical `value` only |
 | `adcin.<J>.in.hw` (u32, HAL_OUT) | not canonical | not in legacy spec | implemented in pokeysHal as raw ADC count | **PoKeys-specific extension** (non-canonical name and type) | Decide: keep as supplementary, rename, or remove |
-| `adcin.<J>.scale` (float, HAL_PARAM_RW) | canonical adcin.scale | specified in issue #35 | **ABSENT** | **canonical but missing** | Must be added with `hal_export_adcin` |
-| `adcin.<J>.offset` (float, HAL_PARAM_RW) | canonical adcin.offset | specified in issue #35 | **ABSENT** | **canonical but missing** | Must be added with `hal_export_adcin` |
-| `adcin.<J>.bit-weight` (float, HAL_PARAM_RW) | canonical adcin.bit-weight | not specified in issue #35 | **ABSENT** | **canonical but missing** | Decide: required by CDI spec, include with `hal_export_adcin` |
-| `adcin.<J>.hw-offset` (float, HAL_PARAM_RW) | canonical adcin.hw-offset | not specified in issue #35 | **ABSENT** | **canonical but missing** | Same as bit-weight |
+| `adcin.<J>.scale` (float, HAL_PARAM_RW) | canonical adcin.scale | specified in issue #35 | PRESENT via `hal_export_adcin` | **canonical and compatible** | Default 0.0 from memset is not useful |
+| `adcin.<J>.offset` (float, HAL_PARAM_RW) | canonical adcin.offset | specified in issue #35 | PRESENT via `hal_export_adcin` | **canonical and compatible** | |
+| `adcin.<J>.bit-weight` (float, HAL_PARAM_RW) | canonical adcin.bit-weight | not specified in issue #35 | PRESENT via `hal_export_adcin` | **canonical and compatible** | |
+| `adcin.<J>.hw-offset` (float, HAL_PARAM_RW) | canonical adcin.hw-offset | not specified in issue #35 | PRESENT via `hal_export_adcin` | **canonical and compatible** | |
 | `adcin.<J>.ReferenceVoltage` (float, HAL_PARAM_RO) | not canonical | not in legacy | implemented | **PoKeys-specific extension** | Decide: keep or integrate into hw-offset semantics |
-| `adcout.<J>.value` (float, HAL_IN) | canonical adcout.value | `pokeys.0.adcout.0.value` (legacy HAL file) | **ABSENT** (hal_adcout_t allocated, hal_export_adcout never called) | **canonical but missing** | Critical: referenced in integration files |
-| `adcout.<J>.enable` (bit, HAL_IN) | canonical adcout.enable | `pokeys.0.adcout.0.enable` (legacy HAL file) | **ABSENT** | **canonical but missing** | Critical: referenced in integration files |
-| `adcout.<J>.scale` (float, HAL_PARAM_RW) | canonical adcout.scale | not confirmed | **ABSENT** | **canonical but missing** | Must add with `hal_export_adcout` |
-| `adcout.<J>.offset` (float, HAL_PARAM_RW) | canonical adcout.offset | not confirmed | **ABSENT** | **canonical but missing** | Must add |
-| `adcout.<J>.high-limit` (float, HAL_PARAM_RW) | canonical adcout.high-limit | not confirmed | **ABSENT** | **canonical but missing** | Must add |
-| `adcout.<J>.low-limit` (float, HAL_PARAM_RW) | canonical adcout.low-limit | not confirmed | **ABSENT** | **canonical but missing** | Must add |
-| `adcout.<J>.bit-weight` (float, HAL_PARAM_RW) | canonical adcout.bit-weight | not confirmed | **ABSENT** | **canonical but missing** | Must add |
-| `adcout.<J>.hw-offset` (float, HAL_PARAM_RW) | canonical adcout.hw-offset | not confirmed | **ABSENT** | **canonical but missing** | Must add |
+| `adcout.<J>.value` (float, HAL_IN) | canonical adcout.value | `pokeys.0.adcout.0.value` (legacy HAL file) | PRESENT via `hal_export_adcout` (PoKeysLibIOAsync.c:110). Correct direction (HAL_IN). | **canonical and compatible** — functional conversion to PWM unverified (issues #37, #39 OPEN) | Verify PWM conversion path |
+| `adcout.<J>.enable` (bit, HAL_IN) | canonical adcout.enable | `pokeys.0.adcout.0.enable` (legacy HAL file) | PRESENT via `hal_export_adcout`. Correct direction (HAL_IN). | **canonical and compatible** | |
+| `adcout.<J>.scale` (float, HAL_PARAM_RW) | canonical adcout.scale | not confirmed | PRESENT via `hal_export_adcout` | **canonical and compatible** | |
+| `adcout.<J>.offset` (float, HAL_PARAM_RW) | canonical adcout.offset | not confirmed | PRESENT via `hal_export_adcout` | **canonical and compatible** | |
+| `adcout.<J>.high-limit` (float, HAL_PARAM_RW) | canonical adcout.high-limit | not confirmed | PRESENT via `hal_export_adcout` | **canonical and compatible** | |
+| `adcout.<J>.low-limit` (float, HAL_PARAM_RW) | canonical adcout.low-limit | not confirmed | PRESENT via `hal_export_adcout` | **canonical and compatible** | |
+| `adcout.<J>.bit-weight` (float, HAL_PARAM_RW) | canonical adcout.bit-weight | not confirmed | PRESENT via `hal_export_adcout` | **canonical and compatible** | |
+| `adcout.<J>.hw-offset` (float, HAL_PARAM_RW) | canonical adcout.hw-offset | not confirmed | PRESENT via `hal_export_adcout` | **canonical and compatible** | |
 | `adcout.<J>.PWMduty` (u32, HAL_OUT) | not canonical | not in legacy CDI | implemented | **PoKeys-specific extension** (non-canonical PWM raw output) | Decide: keep supplementary or replace with canonical |
 | `adcout.<J>.max_voltage` (float, HAL_PARAM_RW) | not canonical | not in legacy CDI | implemented | **PoKeys-specific extension** | Decide: keep or map to canonical hw-offset/scale |
 | `adcout.pwm.period` (u32, HAL_PARAM_RW) | not canonical | not in legacy CDI | implemented | **PoKeys-specific extension** | Decide: keep |
-| `encoder.<I>.count` (s32, HAL_OUT) | canonical encoder.count | `pokeys.0.encoder.0.count` (legacy HAL) | `pokeys-async.0.encoder.I.count` | **canonical and compatible** | Prefix decision |
-| `encoder.<I>.position` (float, HAL_OUT) | canonical encoder.position | not confirmed | `pokeys-async.0.encoder.I.position` | **canonical and compatible** | Prefix decision |
-| `encoder.<I>.velocity` (float, HAL_OUT) | canonical encoder.velocity | not confirmed | `pokeys-async.0.encoder.I.velocity` | **canonical and compatible** | Prefix decision |
-| `encoder.<I>.reset` (bit, HAL_IN) | canonical encoder.reset | not confirmed | `pokeys-async.0.encoder.I.reset` | **canonical and compatible** | Prefix decision |
-| `encoder.<I>.index-enable` (bit, HAL_IN) | canonical encoder.index-enable | not confirmed | `pokeys-async.0.encoder.I.index-enable` | **canonical and compatible** | Prefix decision |
-| `encoder.<I>.scale` (float, HAL_PARAM_RW) | canonical encoder.scale | not confirmed | `pokeys-async.0.encoder.I.scale` | **canonical and compatible** | Prefix decision |
+| `encoder.<I>.count` (s32, HAL_OUT) | NOT in official LinuxCNC CDI (canonical-devices.html covers digin/digout/adcin/adcout only) | `pokeys.0.encoder.0.count` (legacy) | `pokeys-async.0.encoder.I.count` | **PoKeys-specific extension** matching hal-canon convention (B-004) — NOT Authority A canonical | Note: not normatively required by A |
+| `encoder.<I>.position` (float, HAL_OUT) | not in official CDI | not confirmed | `pokeys-async.0.encoder.I.position` | **PoKeys-specific / hal-canon convention** | |
+| `encoder.<I>.velocity` (float, HAL_OUT) | not in official CDI | not confirmed | `pokeys-async.0.encoder.I.velocity` | **PoKeys-specific / hal-canon convention** | |
+| `encoder.<I>.reset` (bit, HAL_IN) | not in official CDI | not confirmed | `pokeys-async.0.encoder.I.reset` | **PoKeys-specific / hal-canon convention** | |
+| `encoder.<I>.index-enable` (bit, HAL_IN) | not in official CDI | not confirmed | `pokeys-async.0.encoder.I.index-enable` | **PoKeys-specific / hal-canon convention** | |
+| `encoder.<I>.scale` (float, HAL_PARAM_RW) | not in official CDI | not confirmed | `pokeys-async.0.encoder.I.scale` | **PoKeys-specific / hal-canon convention** | |
 | `encoder.<I>.encoderOptions` (u32, HAL_PARAM_RW) | not canonical | not in legacy CDI | implemented | **PoKeys-specific extension** | Decide: keep |
 | `encoder.<I>.enable` (bit, HAL_PARAM_RW) | not canonical (canonical uses index-enable) | not in legacy CDI | implemented | **PoKeys-specific extension** | Decide: keep or map to index-enable semantics |
 | `encoder.<I>.x4_sampling` (bit, HAL_PARAM_RW) | not canonical | not in legacy CDI | implemented | **PoKeys-specific extension** | Decide: keep |
@@ -93,11 +93,13 @@ LinuxCnc_PokeysLibComp@0c058e6c.
 
 | Classification | Count (approximate) |
 |---|---|
-| canonical and compatible | 9 |
-| canonical but missing | 12 |
-| PoKeys-specific extension (present) | 18 |
+| canonical and compatible | ~14 |
+| direction mismatch (present, wrong direction) | 3 |
+| canonical but missing | 3 |
+| PoKeys-specific extension (present) | 20 |
+| PoKeys-specific / hal-canon convention (encoder) | 6 |
 | legacy extension (present) | 10 |
 | renamed | 2 |
 | legacy extension — missing | 10 |
 | PoKeys-specific — missing | 4 |
-| **Total HAL objects catalogued** | **~65** |
+| **Total HAL objects catalogued** | **~72** |

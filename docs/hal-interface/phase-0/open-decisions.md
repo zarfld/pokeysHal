@@ -8,38 +8,42 @@ Phase 1 planning review.
 
 ## 1. LinuxCNC Canonical Conformity
 
-### DEC-CANON-001: Shall adcin follow the canonical device interface?
+### DEC-CANON-001: What to do about adcin.value direction mismatch and supplementary pins?
 
-**Context:** The LinuxCNC CDI requires `adcin.<J>.value` (float, HAL_OUT) and
-parameters `scale`, `offset`, `bit-weight`, `hw-offset`. Issue #35 (CLOSED)
-specified these. Implementation provides non-canonical `adcin.J.in.hw` (u32)
-and `adcin.J.in.raw` (float) instead. A `hal_adcin_t` Canon struct is allocated
-and partially populated internally but never exported.
+**Context:** `hal_export_adcin` IS called (PoKeysLibIOAsync.c:85). Canonical pins
+`adcin.J.value`, `scale`, `offset`, `bit-weight`, `hw-offset` ARE present. However:
+- `adcin.J.value` is exported as `HAL_IN` (bug in hal-canon) instead of `HAL_OUT`
+  — this prevents HAL wiring (CONFLICT-009).
+- Supplementary pins `adcin.J.in.hw`, `adcin.J.in.raw`, `adcin.J.ReferenceVoltage`
+  coexist.
+- Issue #35 specified 'value-raw' but implementation uses 'in.raw' (CONFLICT-003).
 
 **Options:**
-- A: Call `hal_export_adcin` for each analog input channel; align naming with CDI.
-- B: Keep current non-canonical pins; add canonical pins in addition.
-- C: Keep current non-canonical pins; document them as the PoKeys-specific interface.
+- A: Fix hal-canon direction bug (digin.in, digout.out, adcin.value) first;
+     rename 'in.raw' to 'value-raw'; keep supplementary as PoKeys extension.
+- B: Keep current, document direction bug as known issue.
 
-**Blocking:** Any compatibility test or integration file that references adcin must
-know which pin names to use.
+**Blocking:** HAL wiring of adcin.J.value to motion controller inputs will fail
+until the direction bug is fixed. This is Phase 1 blocker #1.
 
 ---
 
-### DEC-CANON-002: Shall adcout follow the canonical device interface?
+### DEC-CANON-002: Verify adcout functional conversion path
 
-**Context:** CDI requires `adcout.<J>.value` (float, HAL_IN) and `adcout.<J>.enable`
-(bit, HAL_IN). Legacy integration files already reference these. `hal_adcout_t` is
-allocated but `hal_export_adcout` is never called. Current implementation provides
-only PWM-based non-canonical pins.
+**Context:** `hal_export_adcout` IS called (PoKeysLibIOAsync.c:110). Canonical pins
+`adcout.J.value` (HAL_IN — correct), `adcout.J.enable` (HAL_IN — correct), and all
+canonical parameters are present. Supplementary PWM pins also coexist.
+Issues #37 and #39 remain OPEN, likely because the functional conversion from
+`adcout.J.value` to actual PWM hardware output is unverified.
 
-**Options:**
-- A: Call `hal_export_adcout`; add canonical value/enable pins; keep PWMduty as supplementary.
-- B: Replace PWMduty-based interface entirely with canonical interface.
-- C: Keep current; document as PoKeys-specific.
+**Required decision:**
+- Determine whether the `hal_adcout_getscaledvalue` path is wired through to the
+  PWM duty cycle register in `PK_PWMAsync`.
+- If not, implement the conversion or document the gap.
+- Decide whether `adcout.J.PWMduty` remains as a supplementary raw output.
 
-**Blocking:** Integration files reference `adcout.0.value` and `adcout.0.enable`.
-Without decision, machine configurations for spindle speed output fail.
+**Blocking:** Cannot close issues #37 and #39 or claim adcout is functional
+without evidence that the conversion path works.
 
 ---
 
@@ -55,6 +59,20 @@ directly; it has additional PoKeys-specific options.
 - B: Keep entirely manual export.
 
 **Blocking:** Not blocking for compatibility — encoder canonical pins are mostly present.
+
+### DEC-HALCANON-001: Fix hal-canon direction bugs before any functional testing
+
+**Context:** Three direction bugs identified in the embedded hal-canon code (CONFLICT-009):
+- `hal_export_digin`: `digin.in` exported as `HAL_IN` (should be `HAL_OUT`)
+- `hal_export_digout`: `digout.out` exported as `HAL_OUT` (should be `HAL_IN`)
+- `hal_export_adcin`: `adcin.value` exported as `HAL_IN` (should be `HAL_OUT`)
+
+Fixing these requires modifying `hal-canon/hal_digital.c` and `hal-canon/hal_analog.c`,
+which is out of scope for Phase 0 but **must be the first action in Phase 1**.
+Any compatibility test that exercises digin, digout, or adcin will produce incorrect
+results (pin-direction mismatch at HAL wiring time) until these bugs are fixed.
+
+**Blocking:** ALL functional tests for digital I/O and analog input.
 
 ---
 
@@ -116,12 +134,16 @@ definitive naming convention.
 
 ### DEC-NAME-003: HAL name length budget
 
-**Context:** `HAL_NAME_LEN = 47`. Prefix `pokeys-async.N` (with N a single digit)
-is 14 chars, leaving 33 chars for the subsystem path. With N = two digits (10+),
-prefix is 15 chars, leaving 32. Some current names near the limit.
+**Context:** Installed LinuxCNC 2.9.10: `HAL_NAME_LEN = 47` (confirmed, `/usr/include/linuxcnc/hal.h`).
+Reviewer states LinuxCNC upstream/master uses `HAL_NAME_LEN = 55` (upstream commit SHA
+not independently verified in Phase 0). With `pokeys-async.0` prefix (14 chars), current
+names are ≤46 chars. With device index ≥10, borderline for the 47 limit.
 
-**Required decision:** If the component is renamed (DEC-COMPAT-001), recompute the
-budget. Define a maximum prefix length and a review process for long pin names.
+**Required decision:**
+1. Determine the target LinuxCNC version (2.9.x or upstream/master) and confirm
+   the applicable `HAL_NAME_LEN` with a pinned commit SHA.
+2. If targeting 2.9 (HAL_NAME_LEN = 47), audit all format strings for device indices > 9.
+3. If targeting upstream (HAL_NAME_LEN = 55), current names are safe for indices ≤ 9.
 
 ---
 
