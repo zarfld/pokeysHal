@@ -158,15 +158,14 @@ by comparing file contents against the upstream repository.
    but are not normatively required by LinuxCNC Authority A.
 
 8. **HAL name length (version-dependent):** Installed LinuxCNC 2.9.10:
-   `HAL_NAME_LEN = 47` (confirmed, `/usr/include/linuxcnc/hal.h`). Reviewer
-   Upstream `HAL_NAME_LEN = 55` at commit `71bf88009d64fa15edbebf9250b65ee4454f9a05`
-   (independently verified via GitHub API, blob sha 17372ccd). With prefix
-   `pokeys-async.0`, current pin names appear ≤46 chars. With `pokeys-async.10`
+   `HAL_NAME_LEN = 47` (confirmed, `/usr/include/linuxcnc/hal.h`). LinuxCNC
+   upstream/master `HAL_NAME_LEN = 55` at commit `71bf88009d64fa15edbebf9250b65ee4454f9a05`
+   was independently verified via GitHub API (blob sha 17372ccd; source A-001b).
+   With prefix `pokeys-async.0`, current pin names appear ≤46 chars. With `pokeys-async.10`
    (+1 char), borderline cases near 47. The legacy component had a confirmed
    violation (`pokeys.0.encoder.UltraFastEncoder.Enable4xSampling` = 50 chars;
-   LinuxCnc_PokeysLibComp issues #310, #326). With HAL_NAME_LEN = 55 (if the
-   upstream claim is verified), most current names would be within limit even
-   for double-digit device indices.
+   LinuxCnc_PokeysLibComp issues #310, #326). With HAL_NAME_LEN = 55 (upstream/master),
+   most current names would be within limit even for double-digit device indices.
 
 9. **PEv2 incomplete vs. issue #33:** The closed issue #33 specifies many pins
    not present in the current implementation, including `PulseEngineEnabled`,
@@ -216,6 +215,12 @@ for every finding is referenced by file and line number or issue number. No
 production code was modified, no tests were designed, and no compatibility plan
 was created. Criteria 2, 3, 8, and 14 remain PARTIAL (see
 `phase-0-completion-report.md` for details).
+
+**pokeys_homecomp is a separate counterpart component.** It is not implemented
+by pokeysHal. Its `joint.N.*` pins are connected to PoKeys-side endpoints through
+HAL configuration by the machine integrator. See lifecycle-ownership-matrix.md
+Section B and integration-links.yaml for the counterpart ABI and integration
+contracts.
 
 ## No Compatibility Design Created
 

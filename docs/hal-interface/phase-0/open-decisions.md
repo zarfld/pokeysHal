@@ -135,8 +135,10 @@ been fully verified. Runtime impact remains unresolved.
 **Recommendation:** Option A is the safest change. Option B is acceptable only if
 Phase 1 tracing confirms the LinuxCNC homing module invariant.
 
-**Blocking:** Criterion 8 (lifecycle/initialization ownership) remains PARTIAL
-until this is resolved.
+**Blocking:** Criterion 8 (end-to-end integration lifecycle) remains PARTIAL
+until this is resolved. Note: this is a defect in the counterpart component
+(`pokeys_homecomp`, E-010); it does not affect pokeysHal internal lifecycle
+correctness.
 
 ### DEC-AXESCMD-001: Resolve AxesCommand semantic mismatch (CONFLICT-013)
 

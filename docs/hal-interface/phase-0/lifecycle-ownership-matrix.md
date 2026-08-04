@@ -2,7 +2,11 @@
 
 Evidence from pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 
-## Notes on Column Definitions
+---
+
+## A. pokeysHal Component Lifecycle and Ownership
+
+### Column Definitions
 
 - **HAL storage**: where HAL-visible memory is allocated
 - **Allocation**: which function calls `hal_malloc`
@@ -38,11 +42,7 @@ Evidence from pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | **PEv2 per-axis** | arrays within `device->PEv2`: `pin_joint_pos_cmd[8]` etc. | struct arrays within device | `PoKeysLibPulseEngine_v2Async.c:380` (loop `i=0..7`, unconditional) | zeroed by `memset` | `PK_PEv2_StatusGetAsync` reads position, state; parsed into `pin_joint_pos_fb`, `pin_CurrentPosition`, `pin_AxesState` | `PK_PEv2_PulseEngineMovePVAsync` reads `pin_joint_pos_cmd`, `pin_joint_vel_cmd` | `PK_PEv2_AxisConfigurationGet/SetAsync` | before `hal_ready` | none found | `PoKeysLibPulseEngine_v2Async.c:380-435` |
 | **PoExtBus** | `device->PoExtBusData` via `hal_malloc` | `PoKeysLibCoreAsync.c:172` | **ABSENT** — no `hal_pin_*_newf` calls | n/a | n/a | n/a | n/a | n/a | n/a | `PoKeysLibCoreAsync.c:172; issue #34` |
 
-| **pokeys_homecomp (homecomp-owned pins)** | HAL shared-memory (zeroed by hal_malloc) | `makepins(id, n_joints)` in `homing_init()` | `pokeys_rt/pokeys_homecomp.comp:251-288` | 0 from rtapi_shmem_new zeroed allocation (hal_malloc does not memset; shmem is zeroed by OS at rtapi_shmem_new); explicit init loop at lines 366-397 is unreachable (return precedes it; CONFLICT-012; volatile_home=1 not applied) | Homecomp read function per LinuxCNC servo thread | Homecomp write function per LinuxCNC servo thread | n/a — homecomp owns its own pins | hal_ready called by LinuxCNC runtime | hal_exit called by LinuxCNC runtime | `pokeys_rt/pokeys_homecomp.comp`; CONFLICT-012 |
-
----
-
-## Key Observations
+### Key Observations (pokeysHal component)
 
 1. **All HAL memory is allocated via `hal_malloc`**, which is correct per A-001.
    There are no `malloc`/`calloc` calls for HAL-visible structures.
@@ -61,23 +61,54 @@ Evidence from pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
    structs (e.g., `encoder.scale`) are also zeroed, which may not match
    sensible defaults (scale=0 is not useful).
 
-5. **Cleanup** is handled by `hal_exit(comp_id)` only (pokeysHal component) or by
-   the LinuxCNC runtime (for homecomp). All HAL-malloc memory is reclaimed at exit.
-   Per-subsystem cleanup is component-level, not subsystem-specific.
+5. **Cleanup** is handled by `hal_exit(comp_id)`. All HAL-malloc memory is
+   reclaimed at exit. Per-subsystem cleanup is component-level.
 
 6. **PoExtBus** has allocated storage (`hal_malloc` at `PoKeysLibCoreAsync.c:172`)
-but no HAL pin export — the most significant remaining ownership gap.
+   but no HAL pin export — the most significant remaining ownership gap.
    **Canonical adcin and adcout** are exported via `hal_export_adcin` and
    `hal_export_adcout` respectively. The adcin direction bug (value as HAL_IN)
    is a hal-canon implementation defect inherited by all callers (CONFLICT-009).
 
-7. **CONFLICT-012**: `homing_init()` has an unreachable initialization block.
-   All homecomp HAL pin defaults are zero from HAL shared-memory initialization.
-   `volatile_home=1` from the unreachable block is never applied; actual initial
-   value is 0. No runtime read of `volatile_home` was found in the inspected
-   source. External or generated consumers have not been fully verified.
-   Runtime impact remains unresolved (see CONFLICT-012, DEC-LIFE-002).
+---
 
-8. **Integration boundaries** between pokeysHal and pokeys_homecomp are recorded
-   in `integration-links.yaml` (IK-001..IK-004). The AxesCommand integration
-   (IK-003) is classified INCOMPATIBLE due to CONFLICT-013 and CONFLICT-014.
+## B. External Counterpart Evidence: pokeys_homecomp
+
+**Source:** E-010 (`pokeys_rt/pokeys_homecomp.comp` in `zarfld/LinuxCnc_PokeysLibComp@0c058e6c`)
+
+`pokeys_homecomp` is a **separate, independently loaded LinuxCNC component**.
+It is not a subsystem of pokeysHal.
+It is not implemented by pokeysHal.
+It owns the `joint.N.*` pins exclusively.
+Its lifecycle (hal_init, hal_ready, hal_exit) is external to pokeysHal and
+managed by the LinuxCNC runtime.
+
+| Property | Value |
+|---|---|
+| Component | `pokeys_homecomp` |
+| Repository | `zarfld/LinuxCnc_PokeysLibComp` (E-010) |
+| Pins owned | `joint.N.home-sw-in`, `joint.N.homing`, `joint.N.homed`, `joint.N.home-state`, `joint.N.index-enable`, `joint.N.PEv2.AxesState`, `joint.N.PEv2.AxesCommand`, etc. |
+| HAL memory | Fresh RTAPI shared memory (`rtapi_shmem_new`) is initially zeroed by the OS. `hal_malloc`/`shmalloc_up` reserves from that region and does not itself memset each allocation. |
+| Initialization | `homing_init()` calls `makepins()` at line 364, then returns. The explicit init loop at lines 366–397 is unreachable dead code. All pin defaults are 0 from zeroed shmem. |
+| CONFLICT-012 | `volatile_home=1` from the unreachable block is never applied; actual initial value is 0. No runtime read of `volatile_home` was found in the inspected source. External or generated consumers have not been fully verified. Runtime impact remains unresolved (DEC-LIFE-002). CONFLICT-012 is a defect in the counterpart component; it is irrelevant to pokeysHal internal lifecycle correctness but relevant to end-to-end integration. |
+| Lifecycle owner | LinuxCNC runtime (loads/unloads `pokeys_homecomp` independently) |
+
+---
+
+## C. Integration Lifecycle
+
+The end-to-end system requires both components to be loaded and connected through
+HAL configuration. Neither component creates or owns the other's pins.
+
+| Aspect | Description |
+|---|---|
+| Load requirement | Both `pokeys_async` (or legacy pokeys component) and `pokeys_homecomp` must be loaded |
+| Pin ownership | Each component creates and owns its own pins; no shared ownership |
+| Signal creation | HAL configuration (`net` statements in the machine HAL file) connects endpoints |
+| Joint-to-axis mapping | Configuration-specific; not generated by pokeysHal |
+| Load order | Both components must complete `hal_ready` before HAL signals can be fully connected |
+| Integration catalogue | `integration-links.yaml` (IK-001..IK-004) is the authoritative link record |
+
+Integration links IK-001..IK-004 record the producer/consumer endpoints, HAL
+types, pin directions, semantic contracts, and known incompatibilities (IK-003:
+CONFLICT-013, CONFLICT-014).

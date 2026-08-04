@@ -14,15 +14,15 @@ Repository: zarfld/pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | 3. Issue comments inspected where relevant | PARTIAL | pokeysHal: #32,34,36-38,41,116-133 have 0 comments (confirmed); #33 (3 inspected: PEv2 example, lifecycle issues, PoKeysLib ref); #35 (1 inspected: confirms adcin value-raw/value/scale/offset names); #39 (2 inspected: adcout/PWM implementation evidence). LinuxCnc_PokeysLibComp: #28,30,31,79,157,213,223 have 0-2 (confirmed); #21,24,28,79,157: 0-1 inspected; #216 (21), #222 (5), #264 (1), #310 (14): partially inspected. | LinuxCnc_PokeysLibComp #310 (14) and #326 (12) not fully inspected |
 | 4. Official LinuxCNC rules recorded | PASS | HAL_NAME_LEN=47 confirmed (/usr/include/linuxcnc/hal.h; source A-001). HAL_NAME_LEN=55 confirmed at commit 71bf88009d64fa15edbebf9250b65ee4454f9a05 src/hal/hal.h (source A-001b). Official CDI source inspected at 71bf88009d64fa15edbebf9250b65ee4454f9a05 docs/src/hal/canonical-devices.adoc (source A-002): defines digin, digout, adcin, adcout only. Upstream hal.h independently verified via GitHub API: #define HAL_NAME_LEN 55 at 71bf8800 (blob 17372ccd); #define HAL_NAME_LEN 47 at v2.9.10 (blob 5480d937). | hal-canon/hal_canon.h consulted for pin-level detail beyond CDI adoc scope |
 | 5. Exact hal-canon provenance recorded | PASS | Embedded tree deed4c10535530ce0383fb357ea8427896226c70 matches upstream commit 995d7057dd5403865d423aab64ba30d81ccd5ee0 (zarfld/linuxcnc-hal-canon, 2025-06-08). Independently verified by cloning and comparing tree SHAs. See CONFLICT-008 for dependency-tracking status. | None |
-| 6. Legacy HAL interface extracted from source | PASS | Integration HAL files, Python layer, PoKeysCompIO.c (E-006), PoKeysCompEncoders.c (E-007), pokeys_rt/pokeys.comp (E-008), PokeysCompPulsEngine_base.c (E-009), pokeys_homecomp.comp (E-010) all inspected. Full PEv2 parity table in E-009 (56 patterns). CONFLICT-012: homecomp initialization block unreachable (return before init loop). homecomp-owned pins documented as out-of-scope for pokeysHal. | E-009 parity table: 'absent' patterns from CONFLICT-007 not individually tracked as requirements; homecomp CONFLICT-012 unresolved |
+| 6. Legacy HAL interface extracted from source | PASS | Integration HAL files, Python layer, PoKeysCompIO.c (E-006), PoKeysCompEncoders.c (E-007), pokeys_rt/pokeys.comp (E-008), PokeysCompPulsEngine_base.c (E-009), pokeys_homecomp.comp (E-010) all inspected. Full PEv2 parity table in E-009 (163 parity rows, 162 active exports, 1 commented export; exact tuple validator passes; see legacy-pev2-parity.yaml). homecomp-owned pins documented as separate counterpart ABI (out-of-scope for pokeysHal). | E-009 parity table: 'absent' patterns from CONFLICT-007 not individually tracked as requirements; CONFLICT-012 is a counterpart defect, not a pokeysHal extraction gap |
 | 7. Current HAL interface extracted from source | PASS | All PoKeysLib*Async.c files searched. hal_export_adcin and hal_export_adcout calls confirmed by full read of PoKeysLibIOAsync.c. hal-canon/hal_digital.c and hal_analog.c read in full; direction mismatches documented. | No automated enumeration tool |
-| 8. Lifecycle and ownership documented | PARTIAL | lifecycle-ownership-matrix.md covers all subsystems including homecomp and adcout. CONFLICT-012 (homecomp unreachable init) means initialization ownership is unresolved for homecomp-owned pins. pokeysHal cleanup: hal_exit(comp_id) confirmed. | CONFLICT-012: homecomp makepins() returns before explicit init loop; actual defaults rely on HAL zero-init, not the unreachable explicit values |
+| 8. Lifecycle and ownership documented | PARTIAL | pokeysHal internal lifecycle (Section A): all subsystems documented; hal_malloc, export_*_pins(), hal_ready, hal_exit confirmed. External counterpart (Section B): pokeys_homecomp is a separate component; CONFLICT-012 (unreachable init) is a counterpart defect unrelated to pokeysHal internal correctness. End-to-end integration lifecycle (Section C): integration-links.yaml is authoritative. | PARTIAL because CONFLICT-012 in the counterpart component remains unresolved; end-to-end integration lifecycle cannot be fully assessed |
 | 9. Enumerations and bitmaps documented | PASS | ePK_PinCap, ePK_PEAxisState (14 values: {0,1,2,8,9,10,11,12,13,14,15,16,20,30}), ePK_PEv2_AxisConfig, ePK_PulseEngineV2_AxisSwitchOptions, ePK_PEState (15 values in PEV2G-006: PulseEngineState enum), pokeys_home_command_t (4 values in HOMECOMP-007) all documented in requirement-catalogue.yaml. | None |
 | 10. Canonical and project-specific extensions distinguished | PASS | canonical-vs-legacy-matrix.md classifies ~72 HAL objects. Encoder reclassified as hal-canon convention (not CDI). adcout status updated to reflect implemented conversion path. HAL_NAME_LEN target version is an open decision (DEC-NAME-003), not missing evidence. | None |
 | 11. Contradictions recorded | PASS | 14 conflicts documented. CONFLICT-009 added: hal-canon direction mismatches — digout.out as HAL_OUT blocks normal external HAL_OUT command-source wiring; digin.in and adcin.value have invalid writer ownership. Structural and characterization tests remain possible. Canonical compatibility cannot be claimed until corrected. CONFLICT-003/004 corrected. CONFLICT-010 added. | Additional conflicts may exist in uninspected issues |
 | 12. No production code changed | PASS | Branch hal-compatibility contains ten Phase 0 documentation files plus the committed prompt (.github/prompts/HAL-compatibility_Phase 0 — Establish the HAL-interface knowledge baseline.prompt.md). No production source (.c, .h), test, fixture, submodule, or hal-canon file was modified. git diff --check passes with no whitespace errors. | n/a |
 | 13. No compatibility tests designed | PASS | No test files created. No test specifications written. | n/a |
-| 14. No unresolved claim presented as fact | PARTIAL | All 14 conflicts have supporting evidence (including CONFLICT-012 for homecomp unreachable init). CONFLICT-011 documents 45adb952 regression with verified diff. adcout conversion path verified by code inspection. Encoder reclassified away from CDI. Legacy PEv2 interface fully extracted. | None |
+| 14. No unresolved claim presented as fact | PARTIAL | All 14 conflicts documented with evidence. Direction/type errors in traceability corrected. Issue-inventory cross-repo source-ID contamination corrected. HOMECOMP-007 conflicts field populated. | CONFLICT-013 and CONFLICT-014 remain unresolved; counterpart and current component AxesCommand semantics are not functionally compatible |
 
 ---
 
@@ -74,11 +74,9 @@ Commands that could not be run:
 - Direct clone of LinuxCnc_PokeysLibComp (not needed; API access sufficient for Phase 0 scope)
 - Running `make` or `halcompile` to verify build (not run — out of scope for Phase 0)
 
-YAML validity: Both YAML files validated using Python 3 and PyYAML:
-  python3 -c "import yaml; [yaml.safe_load(open(f)) for f in [
-    'docs/hal-interface/phase-0/source-register.yaml',
-    'docs/hal-interface/phase-0/requirement-catalogue.yaml']]"
-  Both files parsed successfully with no errors.
+YAML validity: All four YAML artifacts validated using Python 3 and PyYAML:
+  source-register.yaml, requirement-catalogue.yaml, legacy-pev2-parity.yaml,
+  integration-links.yaml — all parsed successfully with no errors.
 
 No source, build, test, fixture or submodule files were changed.
 
@@ -110,7 +108,7 @@ All files are in `docs/hal-interface/phase-0/`:
 4. `lifecycle-ownership-matrix.md` — per-subsystem ownership table
 5. `canonical-vs-legacy-matrix.md` — ~72 interface items classified
 6. `conflict-register.md` — 14 conflicts documented
-7. `traceability.md` — 12 traceability chains
+7. `traceability.md` — 14 traceability chains
 8. `issue-inventory.md` — issue and PR inventory
 9. `open-decisions.md` — 23 decisions grouped by topic
 10. `phase-0-completion-report.md` — this file
@@ -126,9 +124,10 @@ All files are in `docs/hal-interface/phase-0/`:
 | Requirement catalogue entries | 51 |
 | Conflicts registered | 14 |
 | Open decisions required | 23 |
-| Traceability chains | 11 |
-| Issues inventoried (pokeysHal) | 31 |
-| Issues inventoried (LinuxCnc_PokeysLibComp) | 17 |
+| Traceability chains | 14 |
+| Issues inventoried (pokeysHal) | 45 |
+| Issues inventoried (LinuxCnc_PokeysLibComp) | 18 |
+| Pull requests inventoried | 1 |
 
 ---
 

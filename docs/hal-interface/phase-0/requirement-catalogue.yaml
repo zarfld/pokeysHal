@@ -1291,10 +1291,17 @@ requirements:
     linuxcnc_canonical_status: LinuxCNC homemod convention
     legacy_compatibility_status: "defined in E-010"
     owner: pokeys_homecomp
-    integration_role: coupled signal via HAL net — pokeysHal peer endpoint is PEV2-index-enable
-    current_implementation_status: "Two separate pins on distinct components. Integrate by: net pev2-axis-index-enable <= pokeys-async.0.PEv2.N.index-enable => joint.N.index-enable"
+    pokeysHal_requirement: out-of-scope
+    integration_role: counterpart signal endpoint — pokeysHal peer is <prefix>.PEv2.I.index-enable (E-009/LA-022, F-005)
+    peer_pokeys_endpoint: "<prefix>.PEv2.I.index-enable"
+    integration_link: IK-002
+    current_implementation_status: >-
+      Homecomp exports joint.N.index-enable (HAL_IO, E-010). This is the
+      homecomp-side endpoint. The peer pokeysHal endpoint is
+      <prefix>.PEv2.I.index-enable (F-005). Connection via HAL net in
+      machine configuration.
     requirement_sources: [E-010]
-    implementation_sources: [F-005]
+    implementation_sources: [E-010]
     conflicts: []
     evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_bit_newf(HAL_IO, &(addr->index_enable), id, joint.jno.index-enable)"
 
@@ -1317,12 +1324,18 @@ requirements:
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: LinuxCNC homemod/PoKeys convention
     legacy_compatibility_status: "defined in E-010; wired from pokeysHal PEv2.I.AxesState"
-    owner: "LinuxCnc_PokeysLibComp/pokeys_homecomp"
+    owner: pokeys_homecomp
     pokeysHal_requirement: out-of-scope
-    integration_role: signal endpoint (reads from pokeysHal PEv2.I.AxesState via HAL net)
-    current_implementation_status: "Homecomp reads via HAL signal connected to pokeysHal PEv2.I.AxesState (HAL_OUT). Compatible."
-    requirement_sources: [E-010, C-002]
-    implementation_sources: [F-005]
+    integration_role: counterpart signal endpoint (reads from pokeysHal PEv2.I.AxesState via HAL net)
+    peer_pokeys_endpoint: "<prefix>.PEv2.I.AxesState"
+    integration_link: IK-004
+    current_implementation_status: >-
+      Homecomp exports joint.N.PEv2.AxesState (HAL_IN, E-010). This is the
+      homecomp-side endpoint. The peer pokeysHal endpoint is
+      <prefix>.PEv2.I.AxesState (HAL_OUT, F-005). Connection via HAL net in
+      machine configuration.
+    requirement_sources: [E-010]
+    implementation_sources: [E-010]
     conflicts: []
     evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_u32_newf(HAL_IN, &(addr->PEv2_AxesState), id, joint.jno.PEv2.AxesState)"
 
@@ -1345,17 +1358,19 @@ requirements:
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: LinuxCNC homemod/PoKeys convention
     legacy_compatibility_status: "defined in E-010; wired to pokeysHal PEv2.I.AxesCommand"
-    owner: "LinuxCnc_PokeysLibComp/pokeys_homecomp"
+    owner: pokeys_homecomp
     pokeysHal_requirement: out-of-scope
-    integration_role: signal endpoint (writes to pokeysHal PEv2.I.AxesCommand via HAL net)
-    current_implementation_status: >
-      Homecomp exports joint.N.PEv2.AxesCommand (HAL_OUT). When netted to
-      pokeysHal PEv2.I.AxesCommand (HAL_IN), the signal is received by
-      pokeysHal, but no reachable call path in FUNCTION(_) forwards it to
-      hardware (CONFLICT-014). Additionally the homecomp 4-value enum is
-      incompatible with the legacy 7-value enum (CONFLICT-013). Not compatible.
-    requirement_sources: [E-010, C-002]
-    implementation_sources: [F-005]
+    integration_role: counterpart signal endpoint (writes to pokeysHal PEv2.I.AxesCommand via HAL net)
+    peer_pokeys_endpoint: "<prefix>.PEv2.I.AxesCommand"
+    integration_link: IK-003
+    current_implementation_status: >-
+      Homecomp exports joint.N.PEv2.AxesCommand (HAL_OUT, E-010). This is the
+      homecomp-side endpoint. The peer pokeysHal endpoint is
+      <prefix>.PEv2.I.AxesCommand (HAL_IN, F-005). Enum incompatibility:
+      CONFLICT-013. No reachable forwarding path in pokeysHal FUNCTION(_):
+      CONFLICT-014.
+    requirement_sources: [E-010]
+    implementation_sources: [E-010]
     conflicts: [CONFLICT-013, CONFLICT-014]
     evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_u32_newf(HAL_OUT, &(addr->PEv2_AxesCommand), id, joint.jno.PEv2.AxesCommand)"
 
