@@ -16,13 +16,13 @@ Repository: zarfld/pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | 5. Exact hal-canon provenance recorded | PASS | Embedded tree deed4c10535530ce0383fb357ea8427896226c70 matches upstream commit 995d7057dd5403865d423aab64ba30d81ccd5ee0 (zarfld/linuxcnc-hal-canon, 2025-06-08). Independently verified by cloning and comparing tree SHAs. See CONFLICT-008 for dependency-tracking status. | None |
 | 6. Legacy HAL interface extracted from source | PASS | Integration HAL files, Python layer, PoKeysCompIO.c (E-006), PoKeysCompEncoders.c (E-007), pokeys_rt/pokeys.comp (E-008), PokeysCompPulsEngine_base.c (E-009), pokeys_homecomp.comp (E-010) all inspected. Full PEv2 parity table in E-009 (163 parity rows, 162 active exports, 1 commented export; exact tuple validator passes; see legacy-pev2-parity.yaml). homecomp-owned pins documented as separate counterpart ABI (out-of-scope for pokeysHal). | E-009 parity table: 'absent' patterns from CONFLICT-007 not individually tracked as requirements; CONFLICT-012 is a counterpart defect, not a pokeysHal extraction gap |
 | 7. Current HAL interface extracted from source | PASS | All PoKeysLib*Async.c files searched. hal_export_adcin and hal_export_adcout calls confirmed by full read of PoKeysLibIOAsync.c. hal-canon/hal_digital.c and hal_analog.c read in full; direction mismatches documented. | No automated enumeration tool |
-| 8. Lifecycle and ownership documented | PASS | pokeysHal internal lifecycle (Section A): fully documented. External counterpart (Section B): CONFLICT-012 evidence complete — volatile_home runtime impact confirmed NONE (set_joint_homing_params called at startup, no read site in inspected source; A-003, A-004, E-010). Integration lifecycle (Section C): integration-links.yaml authoritative. | None |
+| 8. Library ownership, consumer boundaries and propagation responsibilities documented | PASS | pokeysHal library data structures and HAL object creation documented (Section A, lifecycle-ownership-matrix.md). Consumer component boundary documented: experimental/pokeys_async.c obtains component ID, calls library export helpers, exports cyclic functions, owns hal_ready/hal_exit. Device→HAL and HAL→device update ownership documented per subsystem. Scheduler/callback ownership documented for PK_PWMUpdateAsync and async_dispatcher. Integration ownership: HAL/INI configuration owns signal wiring; pokeys_homecomp owns joint.N.* endpoints (Section B, C). | None |
 | 9. Enumerations and bitmaps documented | PASS | ePK_PinCap, ePK_PEAxisState (14 values: {0,1,2,8,9,10,11,12,13,14,15,16,20,30}), ePK_PEv2_AxisConfig, ePK_PulseEngineV2_AxisSwitchOptions, ePK_PEState (15 values in PEV2G-006: PulseEngineState enum), pokeys_home_command_t (4 values in HOMECOMP-007) all documented in requirement-catalogue.yaml. | None |
 | 10. Canonical and project-specific extensions distinguished | PASS | canonical-vs-legacy-matrix.md classifies ~72 HAL objects. Encoder reclassified as hal-canon convention (not CDI). adcout status updated to reflect implemented conversion path. HAL_NAME_LEN target version is an open decision (DEC-NAME-003), not missing evidence. | None |
 | 11. Contradictions recorded | PASS | 14 conflicts documented. CONFLICT-009 added: hal-canon direction mismatches — digout.out as HAL_OUT blocks normal external HAL_OUT command-source wiring; digin.in and adcin.value have invalid writer ownership. Structural and characterization tests remain possible. Canonical compatibility cannot be claimed until corrected. CONFLICT-003/004 corrected. CONFLICT-010 added. | Additional conflicts may exist in uninspected issues |
 | 12. No production code changed | PASS | Branch hal-compatibility contains ten Phase 0 documentation files plus the committed prompt (.github/prompts/HAL-compatibility_Phase 0 — Establish the HAL-interface knowledge baseline.prompt.md). No production source (.c, .h), test, fixture, submodule, or hal-canon file was modified. git diff --check passes with no whitespace errors. | n/a |
 | 13. No compatibility tests designed | PASS | No test files created. No test specifications written. | n/a |
-| 14. No unresolved claim presented as fact | PASS | All 14 conflicts evidence-backed. Direction/type errors corrected in all documents. Cross-document consistency verified for AxesState, AxesCommand, index-enable, adcin, adcout, digin, digout, component name, PEv2 cardinality, HAL_NAME_LEN. Registered conflicts (CONFLICT-013, CONFLICT-014) are accurately documented, not falsely claimed as resolved. No stale phrases remain. | None |
+| 14. No unresolved claim presented as fact | PASS | All 13 registered conflicts evidence-backed. Documents use consistent scope: pokeysHal library, consumer component, external counterpart. Homecomp internal defects excluded from pokeysHal baseline. CONFLICT-013 and CONFLICT-014 correctly document integration protocol incompatibilities. No stale parity counts. No corrupted text. All report counts match parsed artifacts. | None |
 
 ---
 
@@ -103,7 +103,7 @@ Expected output: no tracked file modifications.
 All files are in `docs/hal-interface/phase-0/`:
 
 1. `README.md` — objective, scope, methodology, principal findings
-2. `source-register.yaml` — 69 source entries, classes A–G
+2. `source-register.yaml` — 63 source entries, classes A–G
 3. `requirement-catalogue.yaml` — 51 interface requirement entries
 4. `lifecycle-ownership-matrix.md` — per-subsystem ownership table
 5. `canonical-vs-legacy-matrix.md` — ~72 interface items classified
@@ -120,10 +120,10 @@ All files are in `docs/hal-interface/phase-0/`:
 
 | Category | Count |
 |---|---|
-| Source register entries | 69 |
+| Source register entries | 63 |
 | Requirement catalogue entries | 51 |
-| Conflicts registered | 14 |
-| Open decisions required | 23 |
+| Conflicts registered | 13 |
+| Open decisions required | 22 |
 | Traceability chains | 14 |
 | Issues inventoried (pokeysHal) | 45 |
 | Issues inventoried (LinuxCnc_PokeysLibComp) | 18 |

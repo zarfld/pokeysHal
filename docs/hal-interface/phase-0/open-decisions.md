@@ -112,31 +112,6 @@ only the four types. See CONFLICT-010.
   project/legacy compatibility contracts; PoKeys-specific extensions.
 - Do not call motion/PEv2 pins 'canonical' unless a primary source supports it.
 
-### DEC-LIFE-002: Resolve unreachable pokeys_homecomp initialization (CONFLICT-012)
-
-**Evidence (Phase 0 complete):**
-- `homing_init()` returns at L364; init loop at L366-397 is unreachable dead code.
-- `volatile_home` has no runtime impact in this implementation (see CONFLICT-012):
-  - `set_joint_homing_params()` (L1344-1365, E-010) overwrites it from INI at startup
-    (called via `emcJointSetHomingParams()` in LinuxCNC v2.9.10 taskintf.cc, A-004)
-  - No read site in `pokeys_homecomp.comp`; `set_unhomed()` does not check it
-  - Evidence sources: A-003, A-004, E-010
-
-**Remaining action (Phase 1 implementation):**
-The unreachable block (L366-397) is dead code. It should be cleaned up.
-
-**Options:**
-- A: Move the initialization block before the `return makepins(...)` call.
-- B: Remove the unreachable block entirely (safe — volatile_home has no behavioral
-     impact; `set_joint_homing_params` is always called before homing begins).
-- C: Add `H[jno].volatile_home = 1` after `return makepins(...)` and remove block.
-
-**Recommendation:** Option B is clean and evidence-safe. Options A and C are
-equivalent for behavioral purposes.
-
-**Status:** Evidence complete. Runtime impact confirmed zero. Production fix is a
-code-quality improvement for Phase 1, not a behavioral requirement.
-
 ### DEC-AXESCMD-001: Resolve AxesCommand semantic mismatch (CONFLICT-013)
 
 **Context:** Legacy userspace and pokeys_homecomp use different, incompatible

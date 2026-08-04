@@ -497,82 +497,6 @@ Status: unresolved
 ---
 
 ```
-Conflict ID: CONFLICT-012
-Subject: Unreachable initialization block in pokeys_homecomp homing_init(); volatile_home=1 not applied
-Source: pokeys_rt/pokeys_homecomp.comp (E-010), function homing_init(), lines 356-398
-Evidence (inspected at E-010):
-  Line 364:  return makepins(id, n_joints);
-  Lines 366-397: // initialize jid[] and jhd[] data here
-                 for (int jno = 0; jno < EMCMOT_MAX_JOINTS; jno++) { ... }
-  The return at line 364 exits homing_init() before the initialization loop.
-  The loop at lines 366-397 is therefore unreachable dead code.
-Unreachable defaults include:
-  H[jno].volatile_home = 1   ← non-zero; conflicts with HAL zero-init
-  H[jno].home_sequence = 0, home_flags = 0, offset = 0, home = 0 etc.
-  addr->home_state = HOME_IDLE (=0), PEv2_AxesCommand = IDLE (=0), etc.
-HAL shared-memory allocation semantics:
-  rtapi_shmem_new (LinuxCNC RTAPI) supplies fresh shared memory that is
-  initially zeroed by the OS page allocator.
-  hal_malloc / shmalloc_up reserves from that region but does not itself
-  memset each allocation; the memory is already zeroed from the shmem_new call.
-  makepins() creates HAL pins (reserves pointers into zeroed shmem) but does
-  not assign explicit initial values to those pins.
-  Therefore all HAL pin values start at 0 at component startup.
-volatile_home analysis (Phase 0 evidence complete):
-  volatile_home is a C bool field in home_local_data struct (non-HAL).
-  Declaration: pokeys_homecomp.comp:204 (E-010)
-  Actual initial value at startup: 0 (from zeroed shmem via rtapi_shmem_new).
-
-  Assignments:
-    1. Unreachable init: L377 H[jno].volatile_home = 1 — dead code (after return)
-    2. set_joint_homing_params(): L1362 H[jno].volatile_home = volatile_home
-       Called by LinuxCNC at startup via emcJointSetHomingParams() in taskintf.cc
-       (A-004), which sends EMCMOT_SET_JOINT_HOMING_PARAMS → invokes
-       set_joint_homing_params() before any homing cycle. This sets the INI
-       value, overwriting the zero-init value.
-
-  Reads in pokeys_homecomp.comp (E-010):
-    No read of H[jno].volatile_home found. set_unhomed() at L1332-1335 does NOT
-    check volatile_home; it simply sets H[jno].homed=0. volatile_home appears
-    to be stored (for API compliance) but is not used to make any decision in
-    the pokeys_homecomp implementation.
-
-  Runtime impact (scoped to LinuxCNC v2.9.10 and pokeys_homecomp at 0c058e6c):
-    The unreachable assignment volatile_home=1 (L377/L852) does not affect the
-    observed v2.9.10 execution path because the active pokeys_homecomp receives
-    the INI-configured volatile_home value during joint initialization before
-    any homing sequence begins, and no earlier read of the field exists in the
-    inspected active implementation:
-    a. INI delivery chain: A-005 (inijoint.cc L191-192 reads VOLATILE_HOME,
-       default=0) → A-004 (taskintf.cc emcJointSetHomingParams) → A-006
-       (command.c EMCMOT_SET_JOINT_HOMING_PARAMS dispatch) → E-010/E-012
-       set_joint_homing_params() which stores the INI value.
-    b. No read of H[jno].volatile_home in set_unhomed() (E-010 L1332-1335,
-       E-012 L3246-3250): that function does not check volatile_home.
-    c. The initial 0 from zeroed shmem is replaced before any read occurs.
-    This conclusion is limited to the pinned LinuxCNC v2.9.10 and pinned
-    pokeys_homecomp (0c058e6c). It does not assert zero impact in all environments.
-    This is supported by evidence from A-003 (homing.c), A-004 (taskintf.cc),nd E-010 (pokeys_homecomp.comp). Full dependency graph
-    inspected for the installed LinuxCNC version (v2.9.10).
-
-Safety or compatibility impact:
-  NONE for volatile_home runtime behavior — the unreachable assignment cannot
-  affect any outcome in the inspected implementation.
-  Code quality: the unreachable block (L366-397) remains dead code that should
-  be removed or moved before the return. This is a code defect but not a
-  behavioral defect.
-  MEDIUM for documentation only: Phase 0 catalogue must cite zero-init as the
-  actual default source, not the unreachable loop.
-Required action (Phase 1):
-  Move or remove the unreachable initialization block (optional; behavioral
-  impact is confirmed zero). DEC-LIFE-002 options A or C are equivalent.
-  Option B (rely on framework) is also confirmed safe.
-Status: evidence complete — runtime impact confirmed zero
-```
-
----
-
-```
 Conflict ID: CONFLICT-013
 Subject: PEv2 AxesCommand semantic mismatch between legacy userspace component and pokeys_homecomp
 
@@ -677,3 +601,19 @@ Required action:
   4. Remove the test-mode write to a HAL_IN pin.
 Status: unresolved
 ```
+
+---
+
+## External Observations Excluded from the pokeysHal Baseline
+
+The following observations concern a separate component and are not pokeysHal conflicts.
+
+**pokeys_homecomp implementation observations** belong to `zarfld/LinuxCnc_PokeysLibComp`
+and are not part of the pokeysHal library baseline. Specifically:
+
+- The unreachable initialization block in `homing_init()` (lines 366–397) and its
+  effect on `volatile_home` is an internal defect of `pokeys_homecomp` (E-010).
+- `set_unhomed()` behavior and `VOLATILE_HOME` semantics are LinuxCNC homemod policy
+  questions, not pokeysHal library interface requirements.
+- These observations may be relevant to the `zarfld/LinuxCnc_PokeysLibComp` project
+  but must not block the pokeysHal Phase 0 baseline or Phase 1 planning.

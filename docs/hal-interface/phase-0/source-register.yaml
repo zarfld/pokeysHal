@@ -47,102 +47,8 @@ sources:
       Official CDI covers exactly four device types; all other device interfaces
       are PoKeys-specific or project-level conventions.
 
-  - source_id: A-003
-    repository: LinuxCNC/linuxcnc
-    revision: "v2.9.10 (tag commit 86cdca76fa2a36274c432caa21952b23c267989a)"
-    path_or_issue: src/emc/motion/homing.c
-    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/motion/homing.c
-    source_type: normative_implementation
-    authority_class: A
-    scope: >-
-      LinuxCNC v2.9.10 default homing module. base_homing_init() initialises
-      H[i].volatile_home=0. base_set_joint_homing_params() stores volatile_home
-      from delivered command. set_all_unhomed() reads volatile_home when
-      unhome_method==-2. Exported as set_joint_homing_params via EXPORT_SYMBOL.
-    state: current
-    inspected: true
-    notes: >-
-      Inspected via GitHub API at v2.9.10. Evidence for CONFLICT-012:
-      (1) volatile_home default=0 in homing_init; (2) set_joint_homing_params
-      stores INI value before any homing; (3) set_all_unhomed reads it for E-Stop.
-      Default module; replaced by pokeys_homecomp when HOMEMOD is set.
 
-  - source_id: A-004
-    repository: LinuxCNC/linuxcnc
-    revision: "v2.9.10 (tag commit 86cdca76fa2a36274c432caa21952b23c267989a)"
-    path_or_issue: src/emc/task/taskintf.cc
-    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/task/taskintf.cc
-    source_type: normative_implementation
-    authority_class: A
-    scope: >-
-      LinuxCNC v2.9.10 task interface. emcJointSetHomingParams() constructs
-      EMCMOT_SET_JOINT_HOMING_PARAMS command, copies volatile_home from caller
-      (inijoint.cc A-005) into emcmotCommand.volatile_home, calls
-      usrmotWriteEmcmotCommand(). Command builder and transport; not INI reader.
-    state: current
-    inspected: true
-    notes: >-
-      Inspected via GitHub API at v2.9.10. emcJointSetHomingParams() copies
-      volatile_home into emcmotCommand and sends via usrmotWriteEmcmotCommand().
-      Caller is inijoint.cc (A-005).
 
-  - source_id: A-005
-    repository: LinuxCNC/linuxcnc
-    revision: "v2.9.10 (tag commit 86cdca76fa2a36274c432caa21952b23c267989a)"
-    path_or_issue: src/emc/ini/inijoint.cc
-    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/ini/inijoint.cc
-    source_type: normative_implementation
-    authority_class: A
-    scope: >-
-      LinuxCNC v2.9.10 INI reader for [JOINT_N] section. iniJoint() reads
-      VOLATILE_HOME: default=0 (L191), finds value at L192. Calls
-      emcJointSetHomingParams() at L198-207 passing volatile_home. Called from
-      emcJointInit() at startup before any motion command.
-    state: current
-    inspected: true
-    notes: >-
-      Inspected via GitHub raw URL at v2.9.10.
-      L191: volatile_home = 0;
-      L192: jointIniFile->Find(&volatile_home, "VOLATILE_HOME", jointString);
-      L198-207: emcJointSetHomingParams(..., volatile_home, ...).
-      Delivers INI-configured value to active homing module at startup.
-
-  - source_id: A-006
-    repository: LinuxCNC/linuxcnc
-    revision: "v2.9.10 (tag commit 86cdca76fa2a36274c432caa21952b23c267989a)"
-    path_or_issue: src/emc/motion/command.c
-    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/motion/command.c
-    source_type: normative_implementation
-    authority_class: A
-    scope: >-
-      LinuxCNC v2.9.10 motion command dispatcher. case EMCMOT_SET_JOINT_HOMING_PARAMS
-      at L642 calls set_joint_homing_params() with emcmotCommand->volatile_home.
-      Dispatch reaches active homing module (A-003 by default, or pokeys_homecomp
-      E-010/E-012 when HOMEMOD is configured).
-    state: current
-    inspected: true
-    notes: >-
-      Inspected via GitHub raw URL at v2.9.10. Lines L642-660: case
-      EMCMOT_SET_JOINT_HOMING_PARAMS calls set_joint_homing_params(jno, ...,
-      emcmotCommand->volatile_home). Delivers volatile_home to active homemod callback.
-
-  - source_id: A-007
-    repository: linuxcnc.org
-    revision: "official documentation (LinuxCNC 2.x)"
-    path_or_issue: docs/html/config/ini-config.html
-    url: https://linuxcnc.org/docs/html/config/ini-config.html
-    source_type: normative_documentation
-    authority_class: A
-    scope: >-
-      Official LinuxCNC homing parameter reference. VOLATILE_HOME in [JOINT_N]:
-      default=0; set to 1 to unhome joint when Machine Power is off or E-Stop
-      is active. Consistent with inijoint.cc default=0 (A-005).
-    state: current
-    inspected: true
-    notes: >-
-      Confirmed in both current docs and LinuxCNC 2.5 homing docs. Semantics:
-      volatile_home=1 means the joint loses its homed state on power-off/E-Stop.
-      Consistent with set_all_unhomed() logic in A-003.
 
   - source_id: B-001
     repository: zarfld/linuxcnc-hal-canon
@@ -658,7 +564,7 @@ sources:
     inspected: true
     notes: >
       Inspected via GitHub API (0c058e6c). Full parity table as separate artifact:
-      docs/hal-interface/phase-0/legacy-pev2-parity.yaml (140 rows: 139 active,
+      docs/hal-interface/phase-0/legacy-pev2-parity.yaml (163 rows: 162 active,
       1 commented). Per-axis loop: fixed j=0..7. PulseEngineEnabled pin commented out;
       param active (L424). HomeOffsets is hal_u32_t. AxesCommand (LA-013) not mapped
       to PEV2A-003. index-enable (LA-022) is integration-coupling only.
@@ -926,9 +832,8 @@ sources:
     notes: >
       Body retrieved (complete, E-010). Inspected at 0c058e6c.
       Cardinality: jno=0..n_joints-1 (set at LinuxCNC startup).
-      CONFLICT-012: homing_init() returns at line 364 before explicit init loop;
-        defaults come from zeroed rtapi_shmem_new; volatile_home=1 unreachable;
-        no runtime read of volatile_home found in inspected source.
+      Note: homing_init() has an unreachable init block (L366-397) — this is an
+        internal counterpart defect, not a pokeysHal library issue.
       joint.N.home-state: HAL_OUT s32; local_home_state_t values 0..25.
       joint.N.PEv2.AxesState: HAL_IN u32; hardware ePK_PEAxisState values
         {0,1,2,8,9,10,11,12,13,14,15,16,20,30}. Legacy userspace also defines
@@ -1025,26 +930,7 @@ sources:
       noted. No referenced commits required separate inspection.
       CONFLICT-002 evidence confirmed.
 
-  - source_id: E-012
-    repository: zarfld/LinuxCnc_PokeysLibComp
-    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
-    path_or_issue: pokeys_rt/pokeys_homecomp.c
-    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/0c058e6c/pokeys_rt/pokeys_homecomp.c
-    source_type: implementation_source
-    authority_class: E
-    scope: >-
-      Hand-written C implementation of pokeys_homecomp RTAPI module (3380 lines).
-      Not halcompile-generated (contains MODULE_LICENSE, rtapi_app_main, manual
-      EXPORT_SYMBOLs). volatile_home: declared L587, unreachable init L852,
-      set_joint_homing_params L3300-3316 (H[jno].volatile_home=volatile_home),
-      set_unhomed L3246-3250 (does NOT read volatile_home). Parallel to E-010 (.comp).
-    state: current
-    inspected: true
-    notes: >-
-      Inspected via GitHub API at pinned revision. No autogenerated markers.
-      volatile_home handling identical to E-010: stored by set_joint_homing_params,
-      not read by set_unhomed. Confirms zero-impact conclusion scoped to pinned
-      revision. Either .comp or .c may be built depending on build path.
+
   - source_id: E-013
     repository: zarfld/LinuxCnc_PokeysLibComp
     revision: "inspected during Phase 0"

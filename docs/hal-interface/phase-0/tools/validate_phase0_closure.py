@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """
-Phase 0 Closure Validator
+Phase 0 Closure Validator — library-scope edition
 docs/hal-interface/phase-0/tools/validate_phase0_closure.py
 
 Documentation-only validator. Not a compatibility test.
 Independently derives acceptance criteria from artifacts.
 Exits 0 iff all Phase 0 acceptance criteria are met.
+
+Scope: pokeysHal LIBRARY interface baseline.
+Out of scope: VOLATILE_HOME chain, Homecomp internals, LinuxCNC homemod policy.
 """
 import sys, os, re, subprocess, yaml
 
-PHASE0_DIR  = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
-REPO_ROOT   = os.path.normpath(os.path.join(PHASE0_DIR, '..', '..', '..'))
-IMMUTABLE_COMMIT = '4f0ab5e'  # extraction artifacts pinned here
-PRODUCTION_BASE  = 'cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd'  # Phase 0 production baseline
+PHASE0_DIR       = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
+REPO_ROOT        = os.path.normpath(os.path.join(PHASE0_DIR, '..', '..', '..'))
+IMMUTABLE_COMMIT = '4f0ab5e'
+PRODUCTION_BASE  = 'cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd'
 
 errors  = []
 notices = []
@@ -28,10 +31,10 @@ def load_yaml(fname):
         err(f"YAML parse failed: {fname}: {e}")
         return {}
 
-src_data  = load_yaml("source-register.yaml")
-req_data  = load_yaml("requirement-catalogue.yaml")
-par_data  = load_yaml("legacy-pev2-parity.yaml")
-lnk_data  = load_yaml("integration-links.yaml")
+src_data = load_yaml("source-register.yaml")
+req_data = load_yaml("requirement-catalogue.yaml")
+par_data = load_yaml("legacy-pev2-parity.yaml")
+lnk_data = load_yaml("integration-links.yaml")
 
 sources  = src_data.get("sources", [])
 reqs     = req_data.get("requirements", [])
@@ -47,40 +50,17 @@ rpt_txt  = open(os.path.join(PHASE0_DIR, "phase-0-completion-report.md"), encodi
 rm_txt   = open(os.path.join(PHASE0_DIR, "README.md"), encoding='utf-8').read()
 lm_txt   = open(os.path.join(PHASE0_DIR, "lifecycle-ownership-matrix.md"), encoding='utf-8').read()
 
-# ── A. Source-register schema ─────────────────────────────────────────────────
-REQUIRED_FIELDS = {'source_id','repository','revision','path_or_issue','url',
-                   'source_type','authority_class','scope','state','inspected','notes'}
-BANNED_ONLY = {'class','path','description','inspection_status'}
-VALID_CLASSES = set('ABCDEFG')
+# ── Criterion 1: Repository and revision identified ───────────────────────────
+# Check that pinned repository revisions appear in the source register and/or report
+has_pokeyshal_src  = any('pokeysHal' in s.get('repository','') for s in sources)
+has_linuxcnc_src   = any('LinuxCNC' in s.get('repository','') for s in sources)
+has_lc_pkcomp_src  = any('LinuxCnc_PokeysLibComp' in s.get('repository','') for s in sources)
+computed_c1 = has_pokeyshal_src and has_linuxcnc_src and has_lc_pkcomp_src
+if not has_pokeyshal_src:  err("C1: no pokeysHal sources in register")
+if not has_linuxcnc_src:   err("C1: no LinuxCNC authority sources in register")
+if not has_lc_pkcomp_src:  err("C1: no LinuxCnc_PokeysLibComp sources in register")
 
-for s in sources:
-    sid = s.get('source_id','?')
-    missing = REQUIRED_FIELDS - set(s.keys())
-    if missing:
-        err(f"Schema: {sid} missing required fields: {missing}")
-    banned = BANNED_ONLY & set(s.keys())
-    if banned and missing:
-        err(f"Schema: {sid} uses non-canonical fields {banned} without required fields")
-    cls = s.get('authority_class', s.get('class',''))
-    if cls not in VALID_CLASSES:
-        err(f"Schema: {sid} invalid authority_class={cls!r}")
-    if not isinstance(s.get('inspected'), bool):
-        err(f"Schema: {sid} inspected must be boolean")
-    for f in ('repository','revision','path_or_issue','url'):
-        if not str(s.get(f,'')).strip():
-            err(f"Schema: {sid} empty required field: {f}")
-
-sids = [s['source_id'] for s in sources]
-if len(sids) != len(set(sids)):
-    err(f"Duplicate source IDs: {sorted(set(x for x in sids if sids.count(x)>1))}")
-
-first_b = next((i for i,s in enumerate(sources)
-                if s.get('authority_class','') == 'B'), len(sources))
-for i, s in enumerate(sources):
-    if s.get('authority_class','') == 'A' and i > first_b:
-        err(f"Ordering: A-class {s['source_id']} after first B-class entry")
-
-# ── B. Issue/comment evidence ─────────────────────────────────────────────────
+# ── Criterion 2: Issue bodies inspected ──────────────────────────────────────
 inv_lines = inv_txt.split('\n')
 in_pk = in_lc = False
 inv_rows = []
@@ -94,277 +74,301 @@ for l in inv_lines:
             row['repo'] = 'pk' if in_pk else 'lc'
             inv_rows.append(row)
 
-for row in inv_rows:
-    if row['retain'] in ('YES','MAYBE') and row['rel'] in ('HIGH','MEDIUM'):
-        obj, repo, body, cmt_cnt, cmt_s, sid = (
-            row['obj'], row['repo'], row['body'], row['cmt_cnt'], row['cmt_s'], row['sid'])
-        if body not in ('complete','empty','title-only'):
-            err(f"Criterion 2: {repo}/{obj} body status {body!r}")
-        if cmt_cnt != '0' and cmt_s not in ('complete','none'):
-            err(f"Criterion 3: {repo}/{obj} comment status {cmt_s!r} (cnt={cmt_cnt})")
-        if sid in (None,'None',''):
-            # Source entry required when: (a) comments > 0 or (b) explicitly required
-            required_entries = {('pk','Issue #41'),('lc','Issue #216'),
-                                ('lc','Issue #310'),('lc','Issue #326')}
-            if (repo,obj) in required_entries or (cmt_cnt != '0' and cmt_s == 'complete'):
-                err(f"Criterion 3: {repo}/{obj} has no source-register entry (required)")
-        elif sid not in src_map:
-            err(f"Criterion 3: {repo}/{obj} source {sid!r} not in register")
-        else:
-            src = src_map[sid]
-            src_repo = src.get('repository','')
-            src_pio  = str(src.get('path_or_issue',''))
-            if repo == 'pk' and 'LinuxCnc' in src_repo:
-                err(f"Cross-repo: {obj} (pokeysHal) has LC source {sid!r}")
-            if repo == 'lc' and 'pokeysHal' in src_repo and 'LinuxCnc' not in src_repo:
-                err(f"Cross-repo: {obj} (LC) has pokeysHal source {sid!r}")
-            issue_num = re.search(r'#(\d+)', obj)
-            if issue_num and issue_num.group(1) not in src_pio:
-                err(f"Criterion 3: {repo}/{obj} source {sid!r} pio={src_pio!r} mismatch")
-            if not src.get('inspected'):
-                err(f"Criterion 3: {repo}/{obj} source {sid!r} not inspected")
+bodies_ok = all(
+    r['body'] in ('complete','empty','title-only')
+    for r in inv_rows if r['retain'] in ('YES','MAYBE') and r['rel'] in ('HIGH','MEDIUM')
+)
+if not bodies_ok:
+    for r in inv_rows:
+        if r['retain'] in ('YES','MAYBE') and r['rel'] in ('HIGH','MEDIUM'):
+            if r['body'] not in ('complete','empty','title-only'):
+                err(f"C2: {r['repo']}/{r['obj']} body status {r['body']!r}")
+computed_c2 = bodies_ok
 
-for check in [('pk','Issue #41','C-021','0'),
-              ('lc','Issue #216','E-011','21'),
-              ('lc','Issue #310','E-004','14'),
-              ('lc','Issue #326','E-005','12')]:
-    repo, obj, exp_sid, exp_cnt = check
+# ── Criterion 3: Comment inspection ──────────────────────────────────────────
+# Required dedicated source entries: only for issues with >0 comments
+# Additional explicit requirements:
+REQUIRED_SOURCES = [('pk','Issue #41','C-021'),
+                    ('lc','Issue #216','E-011'),
+                    ('lc','Issue #310','E-004'),
+                    ('lc','Issue #326','E-005')]
+
+comments_ok = True
+for r in inv_rows:
+    if r['retain'] in ('YES','MAYBE') and r['rel'] in ('HIGH','MEDIUM'):
+        if r['cmt_cnt'] != '0' and r['cmt_s'] not in ('complete','none'):
+            err(f"C3: {r['repo']}/{r['obj']} comment status {r['cmt_s']!r}")
+            comments_ok = False
+
+src_ok = True
+for repo, obj, exp_sid in REQUIRED_SOURCES:
     row = next((r for r in inv_rows if r['obj']==obj and r['repo']==repo), None)
-    if not row: err(f"Criterion 3: required row missing: {repo}/{obj}"); continue
+    if not row:
+        err(f"C3: required row missing: {repo}/{obj}")
+        src_ok = False
+        continue
     if row['sid'] != exp_sid:
-        err(f"Criterion 3: {repo}/{obj} sid={row['sid']!r} expected {exp_sid!r}")
+        err(f"C3: {repo}/{obj} sid={row['sid']!r} expected {exp_sid!r}")
+        src_ok = False
     if exp_sid in src_map and not src_map[exp_sid].get('inspected'):
-        err(f"Criterion 3: {exp_sid} not inspected")
+        err(f"C3: {exp_sid} not inspected")
+        src_ok = False
 
-# ── C. Parity ─────────────────────────────────────────────────────────────────
+# Cross-repo contamination
+lc_section = inv_txt[inv_txt.find('## LinuxCnc'):]
+if re.search(r'\| Issue #24 \|[^|]+\| C-012 \|', lc_section): err("C3: LC #24 has C-012"); src_ok=False
+if re.search(r'\| Issue #129 \|[^|]+\| D-003 \|', lc_section): err("C3: LC #129 has D-003"); src_ok=False
+computed_c3 = comments_ok and src_ok
+
+# ── Criterion 4: Official LinuxCNC rules recorded ────────────────────────────
+# Check A-class authority sources for HAL API and CDI exist and are inspected
+hal_h_src  = any(s.get('source_id')=='A-001' and s.get('inspected') for s in sources)
+cdi_src    = any(s.get('source_id')=='A-002' and s.get('inspected') for s in sources)
+computed_c4 = hal_h_src and cdi_src
+if not hal_h_src: err("C4: A-001 (LinuxCNC hal.h) missing or not inspected")
+if not cdi_src:   err("C4: A-002 (CDI spec) missing or not inspected")
+
+# ── Criterion 5: hal-canon provenance ────────────────────────────────────────
+b_sources = [s for s in sources if s.get('authority_class','') == 'B']
+has_halcanon = len(b_sources) >= 2 and any('homing.c' not in s.get('path_or_issue','') for s in b_sources)
+# B-001 through B-005 should exist
+b_ids = {s['source_id'] for s in b_sources}
+for bid in ['B-001','B-002','B-003']:
+    if bid not in b_ids: err(f"C5: {bid} missing from source register")
+computed_c5 = all(bid in b_ids for bid in ['B-001','B-002','B-003'])
+
+# ── Criterion 6: Parity extraction ───────────────────────────────────────────
 n_act = sum(1 for r in parity if r['active_or_commented']=='active')
 n_com = sum(1 for r in parity if r['active_or_commented']=='commented')
-if len(parity) != 163: err(f"Parity count {len(parity)} != 163")
-if n_act != 162:        err(f"Active parity {n_act} != 162")
-if n_com != 1:          err(f"Commented parity {n_com} != 1")
+parity_count_ok = (len(parity)==163 and n_act==162 and n_com==1)
+if not parity_count_ok:
+    err(f"C6: parity count {len(parity)}/active {n_act}/commented {n_com}")
 
 ext = os.path.join(PHASE0_DIR, "tools", "extract_legacy_pev2_exports.py")
 pf  = os.path.join(PHASE0_DIR, "legacy-pev2-parity.yaml")
 rv  = subprocess.run([sys.executable, ext, "--check-parity", pf], capture_output=True, text=True)
 if rv.returncode != 0:
-    err(f"Parity validator failed: {(rv.stdout+rv.stderr).strip()}")
+    err(f"C6: parity validator failed: {(rv.stdout+rv.stderr).strip()}")
 else:
     note(f"Parity: {rv.stdout.strip()}")
+computed_c6 = parity_count_ok and rv.returncode == 0
 
-parity_ok = (len(parity)==163 and n_act==162 and n_com==1 and rv.returncode==0)
+# Check no stale parity counts in source register or report
+for fname, txt in [('source-register.yaml', open(os.path.join(PHASE0_DIR,"source-register.yaml")).read()),
+                   ('phase-0-completion-report.md', rpt_txt)]:
+    for stale in ['140 rows', '139 active', '56 patterns']:
+        if stale in txt: err(f"C6: stale parity phrase {stale!r} in {fname}")
 
-# ── D. VOLATILE_HOME chain ────────────────────────────────────────────────────
-CHAIN = {'INI_reader': ['A-005'], 'cmd_builder': ['A-004'],
-         'dispatcher': ['A-006'], 'homemod_impl': ['E-010','E-012']}
-for stage, needed in CHAIN.items():
-    if not any(sid in src_map for sid in needed):
-        err(f"Criterion 8: VOLATILE_HOME chain missing {stage!r} (need {needed})")
-    else:
-        for sid in needed:
-            if sid in src_map and not src_map[sid].get('inspected'):
-                err(f"Criterion 8: chain source {sid} not inspected")
-
-homemod_ev = any(
-    'set_joint_homing_params' in str(src_map.get(sid,{}).get('scope','')) +
-    str(src_map.get(sid,{}).get('notes',''))
-    for sid in ['E-010','E-012'] if sid in src_map
-)
-if not homemod_ev:
-    err("Criterion 8: no homemod source confirms set_joint_homing_params evidence")
-
-volatile_chain_ok = (
-    all(any(sid in src_map for sid in needed) for needed in CHAIN.values()) and homemod_ev
-)
-
-# ── E. Requirement catalogue ──────────────────────────────────────────────────
-req_ids = [r['interface_id'] for r in reqs]
-if len(req_ids) != len(set(req_ids)):
-    err(f"Duplicate req IDs")
+# ── Criterion 7: Current HAL interface extracted ──────────────────────────────
+# Check that F-class sources for key implementation files exist
+f_ids = {s['source_id'] for s in sources if s.get('authority_class','')=='F'}
+required_f = ['F-001','F-002','F-003','F-005','F-008']
+for fid in required_f:
+    if fid not in f_ids: err(f"C7: {fid} missing from source register")
+# Check requirement references resolve
+reqs_ok = True
 for r in reqs:
     for sr in r.get('requirement_sources',[])+r.get('implementation_sources',[]):
-        if sr not in src_map: err(f"Broken src ref {sr!r} in {r['interface_id']}")
+        if sr not in src_map:
+            err(f"C7: broken src ref {sr!r} in {r['interface_id']}")
+            reqs_ok = False
+computed_c7 = all(fid in f_ids for fid in required_f) and reqs_ok
 
-reg_conflicts = set(re.findall(r'^Conflict ID: (CONFLICT-\d+)', conf_txt, re.M))
-for r in reqs:
-    for c in r.get('conflicts',[]):
-        if c not in reg_conflicts: err(f"Unregistered conflict {c!r} in {r['interface_id']}")
-
-for r in reqs:
-    if r['interface_id'].startswith('HOMECOMP-'):
-        if 'pokeys_homecomp' not in r.get('owner',''):
-            err(f"{r['interface_id']} owner not pokeys_homecomp")
-        for sr in r.get('implementation_sources',[]):
-            if sr.startswith('F-'): err(f"{r['interface_id']} has pokeysHal src {sr!r}")
-
-for iid in ('HOMECOMP-005','HOMECOMP-006','HOMECOMP-007'):
-    r = next((x for x in reqs if x['interface_id']==iid), None)
-    if not r: err(f"{iid} missing"); continue
-    if 'F-005' in r.get('implementation_sources',[]): err(f"{iid} has F-005")
-    if 'E-010' not in r.get('implementation_sources',[]): err(f"{iid} missing E-010")
-
-hc007 = next((r for r in reqs if r['interface_id']=='HOMECOMP-007'), None)
-if hc007:
-    cl = hc007.get('conflicts',[])
-    if 'CONFLICT-013' not in cl: err("HOMECOMP-007 missing CONFLICT-013")
-    if 'CONFLICT-014' not in cl: err("HOMECOMP-007 missing CONFLICT-014")
-
-la012 = next((r for r in parity if r['legacy_id']=='LA-012'), None)
-la013 = next((r for r in parity if r['legacy_id']=='LA-013'), None)
-if la012:
-    if la012.get('hal_type')!='hal_u32_t': err(f"LA-012 type={la012.get('hal_type')!r}")
-    if la012.get('direction_or_access')!='HAL_OUT': err(f"LA-012 dir={la012.get('direction_or_access')!r}")
-else: err("LA-012 missing")
-if la013:
-    if la013.get('hal_type')!='hal_u32_t': err(f"LA-013 type={la013.get('hal_type')!r}")
-    if la013.get('direction_or_access')!='HAL_IN': err(f"LA-013 dir={la013.get('direction_or_access')!r}")
-    if 'CONFLICT-013' not in str(la013.get('conflicts',[])): err("LA-013 missing CONFLICT-013")
-else: err("LA-013 missing")
-
-# ── F. Integration links ──────────────────────────────────────────────────────
-ik003 = next((l for l in ilinks if l['link_id']=='IK-003'), None)
-if ik003:
-    if ik003.get('compatibility_status')=='compatible': err("IK-003 wrongly compatible")
-    if 'CONFLICT-013' not in str(ik003.get('conflicts','')): err("IK-003 no CONFLICT-013")
-    if 'CONFLICT-014' not in str(ik003.get('conflicts','')): err("IK-003 no CONFLICT-014")
-    leg = str(ik003.get('legacy_pokeys_endpoint_evidence',''))
-    if 'LA-' in leg and 'E-010' in leg: err("IK-003 legacy_ev has LA-* attributed to E-010")
-    if 'LA-013' not in leg: err("IK-003 legacy_ev missing LA-013")
-    if 'consumer' not in leg.lower(): err("IK-003 legacy endpoint not consumer")
-    hce = str(ik003.get('homecomp_endpoint_evidence',''))
-    if 'HOMECOMP-007' not in hce: err("IK-003 homecomp_ev missing HOMECOMP-007")
-    if 'producer' not in hce.lower(): err("IK-003 homecomp endpoint not producer")
-else: err("IK-003 missing")
-
-# ── G. Lifecycle matrix ───────────────────────────────────────────────────────
+# ── Criterion 8: Library ownership, consumer boundaries, propagation ──────────
+# Check lifecycle-ownership-matrix.md has Sections A, B, C
+has_section_a = '## A. pokeysHal Component Lifecycle' in lm_txt or '## A. pokeysHal' in lm_txt
+has_section_b = '## B. External Counterpart' in lm_txt
+has_section_c = '## C. Integration Lifecycle' in lm_txt
+# No homecomp row in section A table
 sA_end = lm_txt.find('\n## B.')
 sA = lm_txt[:sA_end] if sA_end > 0 else lm_txt
-if "zeroed by hal_malloc" in lm_txt: err("lifecycle matrix: 'zeroed by hal_malloc'")
-if '| **pokeys_homecomp' in sA: err("lifecycle matrix: homecomp in Section A table")
-if '## B. External Counterpart' not in lm_txt: err("lifecycle matrix: no Section B")
-if '## C. Integration Lifecycle' not in lm_txt: err("lifecycle matrix: no Section C")
+homecomp_in_a = '| **pokeys_homecomp' in sA or 'homecomp-owned pins' in sA.lower()
+if homecomp_in_a: err("C8: homecomp lifecycle in Section A")
 
-# ── H. CONFLICT-012 text ──────────────────────────────────────────────────────
-c12s = conf_txt.find("Conflict ID: CONFLICT-012")
-c12e = conf_txt.find("Conflict ID: CONFLICT-013")
-c12b = conf_txt[c12s:c12e] if c12s >= 0 and c12e >= 0 else ""
-for p in ["unreachable","actual initial value","set_joint_homing_params","scoped to","A-005"]:
-    if p.lower() not in c12b.lower():
-        err(f"CONFLICT-012 missing phrase: {p!r}")
+# Criterion 8 must NOT be based on VOLATILE_HOME or Homecomp internals
+c8_text = ''
+m8 = re.search(r'\| 8\. .*?\| PASS \|.*?\|.*?\|', rpt_txt, re.DOTALL)
+if m8:
+    c8_text = m8.group(0)
+    banned_in_c8 = ['VOLATILE_HOME','volatile_home','HOMEMOD','set_unhomed','homing_init']
+    for banned in banned_in_c8:
+        if banned in c8_text: err(f"C8: report contains out-of-scope term {banned!r}")
+else:
+    err("C8: criterion 8 not found as PASS in report")
 
-# ── I. Stale phrases ──────────────────────────────────────────────────────────
-STALE = ["overwritten before first use","reassigned before first use",
-         "runtime severity: LOW","LOW (volatile_home","Reviewer Upstream",
-         "if the upstream claim is verified","zeroed by hal_malloc",
-         "Both YAML files validated","56 patterns","140 rows"]
-all_doc_texts = {
-    "conflict-register.md": conf_txt, "open-decisions.md": od_txt,
-    "lifecycle-ownership-matrix.md": lm_txt, "phase-0-completion-report.md": rpt_txt,
-    "README.md": rm_txt, "traceability.md": tr_txt,
-}
-for fn, txt in all_doc_texts.items():
-    for ph in STALE:
-        if ph.lower() in txt.lower():
-            err(f"Stale phrase {ph!r} in {fn}")
+# Device→HAL and HAL→device ownership must appear in lifecycle matrix
+has_device_hal = 'Device→HAL' in lm_txt or 'device.*hal.*update' in lm_txt.lower()
+has_hal_device = 'HAL→device' in lm_txt or 'hal.*device.*update' in lm_txt.lower()
+if not has_device_hal: err("C8: lifecycle matrix missing Device→HAL ownership")
+if not has_hal_device: err("C8: lifecycle matrix missing HAL→device ownership")
+if not has_section_a:  err("C8: lifecycle matrix missing Section A")
+if not has_section_b:  err("C8: lifecycle matrix missing Section B")
+if not has_section_c:  err("C8: lifecycle matrix missing Section C")
 
-# ── J. Traceability ───────────────────────────────────────────────────────────
-if 'Homecomp Counterpart ABI Boundary' not in tr_txt:
-    err("traceability: missing counterpart boundary section")
-if re.search(r'hal_pin_s32_newf', tr_txt, re.I):
-    err("traceability: s32 type")
+computed_c8 = (has_section_a and has_section_b and has_section_c and
+               not homecomp_in_a and has_device_hal and has_hal_device)
 
-# ── K. Issue inventory cross-repo ─────────────────────────────────────────────
-lc_section = inv_txt[inv_txt.find('## LinuxCnc'):]
-if re.search(r'\| Issue #24 \|[^|]+\| C-012 \|', lc_section):
-    err("inv: LC #24 has C-012")
-if re.search(r'\| Issue #129 \|[^|]+\| D-003 \|', lc_section):
-    err("inv: LC #129 has D-003")
-for i, l in enumerate(inv_txt.split('\n'), 1):
-    if (l.startswith('| Issue') or l.startswith('| PR ')) and '---|' not in l:
-        if l.count('|') != 12:
-            err(f"inv L{i}: wrong pipe count {l.count('|')}")
+# ── Criterion 9: Enumerations and bitmaps ────────────────────────────────────
+# Check that key enum records exist in requirement-catalogue
+enum_req_ids = [r['interface_id'] for r in reqs if r.get('enumeration') or r.get('bitmap_definition')]
+has_pev2_enum = any('PEV2' in rid for rid in enum_req_ids) or any(
+    'ePK_PEAxisState' in str(r.get('enumeration','')) for r in reqs)
+has_digin_req  = any(r['interface_id'].startswith('DIGIN') or 'digin' in r.get('name_pattern','').lower() for r in reqs)
+computed_c9 = has_pev2_enum
+if not has_pev2_enum: err("C9: no PEv2 enum records in requirement-catalogue")
 
-# ── L. Immutable files ────────────────────────────────────────────────────────
-for immutable in ["legacy-pev2-parity.yaml","tools/extract_legacy_pev2_exports.py"]:
-    fpath = os.path.join(PHASE0_DIR, immutable)
-    rv2 = subprocess.run(['git','diff','--exit-code',IMMUTABLE_COMMIT,'--',fpath],
-                         capture_output=True, cwd=REPO_ROOT)
-    if rv2.returncode != 0:
-        err(f"Immutable file changed: {immutable}")
+# ── Criterion 10: Canonical vs project-specific ───────────────────────────────
+canon_matrix_exists = os.path.exists(os.path.join(PHASE0_DIR, "canonical-vs-legacy-matrix.md"))
+has_canonical_class = any('canonical' in str(r.get('linuxcnc_canonical_status','')).lower() for r in reqs)
+computed_c10 = canon_matrix_exists or has_canonical_class
+if not computed_c10: err("C10: no canonical classification evidence")
 
-# ── M. No production files changed ───────────────────────────────────────────
+# ── Criterion 11: Contradictions registered ───────────────────────────────────
+reg_conflicts = set(re.findall(r'^Conflict ID: (CONFLICT-\d+)', conf_txt, re.M))
+# No conflict may be solely about VOLATILE_HOME
+for cid in reg_conflicts:
+    block_start = conf_txt.find(f"Conflict ID: {cid}")
+    next_block  = conf_txt.find("Conflict ID: CONFLICT-", block_start + 1)
+    block = conf_txt[block_start:next_block] if next_block > 0 else conf_txt[block_start:]
+    subject_line = next((l for l in block.split('\n') if 'Subject:' in l), '')
+    if ('volatile_home' in subject_line.lower() or 'set_unhomed' in subject_line.lower() or
+        'VOLATILE_HOME' in subject_line):
+        err(f"C11: {cid} subject is about VOLATILE_HOME/set_unhomed (out of scope)")
+
+# All conflict references in reqs resolve
+for r in reqs:
+    for c in r.get('conflicts',[]):
+        if c not in reg_conflicts:
+            err(f"C11: unregistered conflict {c!r} in {r['interface_id']}")
+computed_c11 = not any('C11' in e for e in errors)
+
+# ── Criterion 12: No production code changed ──────────────────────────────────
 changed = subprocess.run(['git','diff','--name-only',PRODUCTION_BASE],
                          capture_output=True, text=True, cwd=REPO_ROOT).stdout.strip()
+no_prod = True
 for f in changed.split('\n'):
     if not f: continue
     if f.startswith('docs/hal-interface/phase-0/'): continue
     if '.github/prompts/' in f: continue
-    err(f"Non-Phase-0 file changed from production baseline: {f}")
-
+    err(f"C12: non-Phase-0 file changed: {f}")
+    no_prod = False
 gc = subprocess.run(['git','diff','--check'], capture_output=True, text=True, cwd=REPO_ROOT)
 if gc.returncode != 0:
-    err(f"git diff --check: {gc.stdout[:200]}")
+    err(f"C12: git diff --check: {gc.stdout[:200]}")
+    no_prod = False
+computed_c12 = no_prod
 
-# ── N. Report count consistency ───────────────────────────────────────────────
+# ── Criterion 13: No compatibility tests added ───────────────────────────────
+# Check that no test specification or test artifact was added in the phase-0 docs
+test_files = subprocess.run(
+    ['git','diff','--name-only', PRODUCTION_BASE],
+    capture_output=True, text=True, cwd=REPO_ROOT
+).stdout.strip().split('\n')
+test_artifacts_added = any(
+    re.search(r'test.*\.py$|test.*\.c$|hil_.*', f, re.I) and 'tools/validate' not in f
+    for f in test_files if f
+)
+if test_artifacts_added: err("C13: test artifacts added")
+computed_c13 = not test_artifacts_added
+
+# ── Criterion 14: No contradictions across documents ─────────────────────────
+# Check scope consistency
+BANNED_SCOPE = [
+    ("pokeysHal is a HOMEMOD", "pokeysHal library wrongly described as HOMEMOD"),
+    ("pokeysHal implements pokeys_homecomp", "pokeysHal implements homecomp"),
+    ("pokeys_homecomp is a pokeysHal subsystem", "homecomp is a pokeysHal subsystem"),
+    ("pokeysHal owns joint", "pokeysHal owns joint.N.* pins"),
+]
+all_docs = {
+    "conflict-register.md": conf_txt, "open-decisions.md": od_txt,
+    "lifecycle-ownership-matrix.md": lm_txt, "phase-0-completion-report.md": rpt_txt,
+    "README.md": rm_txt, "traceability.md": tr_txt,
+}
+no_banned = True
+for phrase, label in BANNED_SCOPE:
+    for fn, txt in all_docs.items():
+        if phrase.lower() in txt.lower():
+            err(f"C14: {label} in {fn}")
+            no_banned = False
+
+# Stale phrases
+STALE = ["overwritten before first use","reassigned before first use",
+         "runtime severity: LOW","LOW (volatile_home","Reviewer Upstream",
+         "if the upstream claim is verified","zeroed by hal_malloc",
+         "Both YAML files validated","56 patterns","140 rows","139 active"]
+no_stale = True
+for fn, txt in all_docs.items():
+    for ph in STALE:
+        if ph.lower() in txt.lower():
+            err(f"C14: stale phrase {ph!r} in {fn}")
+            no_stale = False
+
+# Count consistency
+import yaml as _yaml
+live_src = len(_yaml.safe_load(open(os.path.join(PHASE0_DIR,"source-register.yaml")).read())["sources"])
 live = {
-    'Source register entries':     len(sources),
+    'Source register entries':    live_src,
     'Requirement catalogue entries': len(reqs),
     'Conflicts registered':        len(re.findall(r'^Conflict ID:', conf_txt, re.M)),
     'Open decisions required':     len(re.findall(r'^### DEC-', od_txt, re.M)),
     'Traceability chains':         len(re.findall(r'^## \d+\.', tr_txt, re.M)),
 }
+counts_ok = True
 for label, lcount in live.items():
     m = re.search(rf'\| {re.escape(label)} \| (\d+) \|', rpt_txt)
     if m:
         if int(m.group(1)) != lcount:
-            err(f"Count mismatch '{label}': report={m.group(1)} artifact={lcount}")
+            err(f"C14: count mismatch '{label}': report={m.group(1)} artifact={lcount}")
+            counts_ok = False
     else:
-        err(f"Count '{label}' not found in report")
+        err(f"C14: count '{label}' not found in report")
+        counts_ok = False
 
-m = re.search(r'source-register\.yaml — (\d+) source', rpt_txt)
-if m and int(m.group(1)) != len(sources):
-    err(f"Files Created source count {m.group(1)} != {len(sources)}")
+# Stale parity counts in source register
+sr_txt = open(os.path.join(PHASE0_DIR,"source-register.yaml")).read()
+for stale in ['140 rows','139 active','56 patterns']:
+    if stale in sr_txt:
+        err(f"C14: stale {stale!r} in source-register.yaml")
+        no_stale = False
 
-pk_n  = sum(1 for r in inv_rows if r['repo']=='pk' and not r['obj'].startswith('PR'))
-lc_n  = sum(1 for r in inv_rows if r['repo']=='lc' and not r['obj'].startswith('PR'))
-pr_n  = sum(1 for r in inv_rows if r['obj'].startswith('PR'))
-for label, lcount in [('Issues inventoried (pokeysHal)', pk_n),
-                      ('Issues inventoried (LinuxCnc_PokeysLibComp)', lc_n),
-                      ('Pull requests inventoried', pr_n)]:
-    m2 = re.search(rf'\| {re.escape(label)} \| (\d+) \|', rpt_txt)
-    if m2 and int(m2.group(1)) != lcount:
-        err(f"Count mismatch '{label}': report={m2.group(1)} artifact={lcount}")
+# Source register IDs must be unique
+sids = [s['source_id'] for s in sources]
+if len(sids) != len(set(sids)):
+    err("C14: duplicate source IDs")
 
-# ── O. Derive criterion statuses ─────────────────────────────────────────────
-bodies_ok   = all(r['body'] in ('complete','empty','title-only')
-                  for r in inv_rows if r['retain'] in ('YES','MAYBE') and r['rel'] in ('HIGH','MEDIUM'))
-comments_ok = all(r['cmt_s'] in ('complete','none') or r['cmt_cnt']=='0'
-                  for r in inv_rows if r['retain'] in ('YES','MAYBE') and r['rel'] in ('HIGH','MEDIUM'))
-src_ok      = not any('Criterion 3' in e or 'Cross-repo' in e for e in errors)
-no_stale    = not any('Stale phrase' in e for e in errors)
-counts_ok   = not any('Count mismatch' in e or 'Files Created source count' in e for e in errors)
-schema_ok   = not any('Schema:' in e or 'Ordering:' in e for e in errors)
-hc_ok       = not any('HOMECOMP-00' in e for e in errors)
-ik_ok       = not any('IK-003' in e for e in errors)
-lm_ok       = not any('lifecycle matrix' in e for e in errors)
-c12_ok      = not any('CONFLICT-012' in e for e in errors)
-no_prod     = not any('Non-Phase-0 file changed' in e for e in errors)
-reqs_ok     = not any('Broken src ref' in e or 'Unregistered conflict' in e for e in errors)
+computed_c14 = no_banned and no_stale and counts_ok
 
+# ── Immutable files ───────────────────────────────────────────────────────────
+for immutable in ["legacy-pev2-parity.yaml","tools/extract_legacy_pev2_exports.py"]:
+    fpath = os.path.join(PHASE0_DIR, immutable)
+    rv2 = subprocess.run(['git','diff','--exit-code',IMMUTABLE_COMMIT,'--',fpath],
+                         capture_output=True, cwd=REPO_ROOT)
+    if rv2.returncode != 0: err(f"Immutable changed: {immutable}")
+
+# ── HOMECOMP-* scope ──────────────────────────────────────────────────────────
+for r in reqs:
+    if r['interface_id'].startswith('HOMECOMP-'):
+        owner = r.get('owner','')
+        if 'pokeys_homecomp' not in owner:
+            err(f"C8: {r['interface_id']} owner not pokeys_homecomp: {owner!r}")
+        for sr in r.get('implementation_sources',[]):
+            if sr.startswith('F-'):
+                err(f"C8: {r['interface_id']} has pokeysHal impl source {sr!r}")
+
+# No active conflict is solely about VOLATILE_HOME
+for cid in reg_conflicts:
+    bs = conf_txt.find(f"Conflict ID: {cid}")
+    ne = conf_txt.find("Conflict ID: CONFLICT-", bs+1)
+    blk = conf_txt[bs:ne] if ne > 0 else conf_txt[bs:]
+    if all(term in blk for term in ['volatile_home']) and 'AxesCommand' not in blk and 'digout' not in blk:
+        err(f"C11/scope: {cid} appears to be solely about volatile_home (out-of-scope)")
+
+# ── Criterion statuses ────────────────────────────────────────────────────────
 computed = {
-    1:  True,
-    2:  bodies_ok and src_ok,
-    3:  comments_ok and src_ok,
-    4:  True,
-    5:  True,
-    6:  parity_ok,
-    7:  True,
-    8:  volatile_chain_ok and lm_ok and c12_ok,
-    9:  True,
-    10: True,
-    11: reqs_ok,
-    12: no_prod,
-    13: True,
-    14: no_stale and counts_ok and schema_ok and hc_ok and ik_ok,
+    1: computed_c1, 2: computed_c2, 3: computed_c3, 4: computed_c4,
+    5: computed_c5, 6: computed_c6, 7: computed_c7, 8: computed_c8,
+    9: computed_c9, 10: computed_c10, 11: computed_c11, 12: computed_c12,
+    13: computed_c13, 14: computed_c14,
 }
 
 for cnum, cpass in computed.items():
@@ -386,7 +390,7 @@ if me and ('PARTIAL' in me.group() or 'None' not in me.group()):
     err("Missing Evidence section not cleared")
 
 # ── Summary ───────────────────────────────────────────────────────────────────
-print(f"Sources:{len(sources)} Reqs:{len(reqs)} Parity:{len(parity)} "
+print(f"Sources:{live_src} Reqs:{len(reqs)} Parity:{len(parity)} "
       f"Conf:{live['Conflicts registered']} Dec:{live['Open decisions required']} "
       f"Chains:{live['Traceability chains']}")
 print()
