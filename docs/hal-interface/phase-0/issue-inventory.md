@@ -5,7 +5,7 @@ Inspected: 2026-08-03 through 2026-08-04.
 
 ---
 
-## pokeysHal Issues (45 issues)
+## pokeysHal Issues (46 issues)
 
 | Object | Title | State | Source ID | Relevance | Body status | Comment count | Comment status | Evidence summary | Conflicts | Retain |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -20,6 +20,7 @@ Inspected: 2026-08-03 through 2026-08-04.
 | Issue #38 | HAL-Interface: Digital Input | OPEN | C-007 | HIGH | complete | 0 | none | digin.J.in/in-not; direction mismatch CONFLICT-009 | CONFLICT-009 | YES |
 | Issue #39 | HAL-Interface: Analog Output (spec) | OPEN | C-008 | HIGH | complete | 2 | complete | Specifies canonical adcout; comments confirm PK_PWMConfigurationSetAsync | CONFLICT-004 | YES |
 | Issue #41 | PEv2 async RT | OPEN | C-021 | HIGH | empty | 0 | none | Body null; 0 comments; no HAL ABI content (C-021) | CONFLICT-001 | YES |
+| Issue #42 | Encoder | CLOSED | C-022 | HIGH | complete | 0 | none | Specifies encoder HAL interface: count (S32), position (FLOAT), reset (BIT), scale (FLOAT param); strikethrough velocity and index-enable → excluded | None | YES |
 | Issue #97 | Async Scheduler opts | OPEN | None | LOW | not-inspected | 0 | not-inspected | scheduler, not HAL pins | None | NO |
 | Issue #99 | REQ-F-SCHED-001 | OPEN | None | LOW | not-inspected | 0 | not-inspected | scheduler | None | NO |
 | Issue #100 | REQ-F-SCHED-002 | OPEN | None | LOW | not-inspected | 0 | not-inspected | scheduler | None | NO |

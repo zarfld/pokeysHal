@@ -1159,6 +1159,73 @@ requirements:
 
   # ── pokeys_homecomp.comp per-joint interface ────────────────────────────────
 
+  - interface_id: PEV2A-006
+    subsystem: pev2_per_axis
+    name_pattern: "<prefix>.PEv2.<I>.AxesCommand"
+    object_kind: pin
+    hal_type: hal_u32_t
+    direction_or_access: HAL_IN
+    cardinality: always 8
+    creation_condition: unconditional
+    units: "n/a — see PK_PEAxisCommand enum"
+    scaling_formula: "n/a"
+    default_value: 0
+    initialization_phase: export_pev2_pins
+    update_phase: "HAL→device (consumer writes, library reads)"
+    device_field: device->PEv2.AxesCommand[i]
+    pokeyslib_function: PK_PEv2_PulseEngineMovePVAsync (planned; CONFLICT-014 notes no reachable path)
+    enumeration: >-
+      Legacy pokeys component uses PK_PEAxisCommand: IDLE=0, HOMINGSTART=1, ARMENCODER=2,
+      HOMINGWaitFinalMove=3, HOMINGFinalMove=4, HOMINGCancel=5, HOMINGFinalize=6 (7 values).
+      External homecomp (HOMECOMP-007) uses 4-value enum (CONFLICT-013).
+    bitmap_definition: "n/a — single enum value"
+    linuxcnc_canonical_status: PoKeys-specific extension
+    legacy_compatibility_status: >-
+      Legacy export: LA-013 (E-009). HAL_IN u32. External command source required.
+      Current pokeysHal: pin exported by library helper (F-005 L421), HAL_IN.
+      No reachable normal-cycle forwarding path (CONFLICT-014).
+    owner: pokeysHal
+    current_implementation_status: >-
+      EXPORTED. PoKeysLibPulseEngine_v2Async.c:421 (F-005) exports via
+      hal_pin_u32_newf(HAL_IN, &pev2->pin_AxesCommand[i], comp_id,
+      "%s.PEv2.%01d.AxesCommand", prefix, i). Pin is HAL_IN (consumer reads).
+      No reachable normal-cycle forwarding to hardware demonstrated (CONFLICT-014).
+    requirement_sources: [C-002, C-009]
+    implementation_sources: [F-005]
+    conflicts: [CONFLICT-013, CONFLICT-014]
+    evidence: "PoKeysLibPulseEngine_v2Async.c:421; legacy-pev2-parity.yaml LA-013"
+
+  - interface_id: PEV2A-007
+    subsystem: pev2_per_axis
+    name_pattern: "<prefix>.PEv2.<I>.index-enable"
+    object_kind: pin
+    hal_type: hal_bit_t
+    direction_or_access: HAL_IO
+    cardinality: always 8
+    creation_condition: unconditional
+    units: "n/a — bidirectional boolean"
+    scaling_formula: "n/a"
+    default_value: 0
+    initialization_phase: export_pev2_pins
+    update_phase: "bidirectional; encoder driver clears on index pulse"
+    device_field: n/a — via encoder index mechanism
+    pokeyslib_function: PK_EncoderValuesGetAsync
+    enumeration: "n/a — binary bit"
+    bitmap_definition: "n/a"
+    linuxcnc_canonical_status: LinuxCNC convention (not official CDI)
+    legacy_compatibility_status: >-
+      Legacy export: LA-022 (E-009). HAL_IO bit. Same naming convention.
+      External homecomp (HOMECOMP-005) owns joint.N.index-enable (HAL_IO).
+      Integration via HAL net (IK-002).
+    owner: pokeysHal
+    current_implementation_status: >-
+      EXPORTED. PoKeysLibPulseEngine_v2Async.c exports pin_index_enable per axis.
+      HAL_IO bit. Netted to homecomp joint.N.index-enable via machine HAL file.
+    requirement_sources: [C-002]
+    implementation_sources: [F-005]
+    conflicts: []
+    evidence: "PoKeysLibPulseEngine_v2Async.c; legacy-pev2-parity.yaml LA-022"
+
   - interface_id: HOMECOMP-001
     subsystem: homecomp
     name_pattern: "joint.<N>.home-sw-in"

@@ -708,6 +708,24 @@ sources:
 
   # ── C-013 through C-020: PEv2 requirement issues #119-#126 ──────────────────
 
+  - source_id: C-022
+    repository: zarfld/pokeysHal
+    revision: "inspected 2026-08-05"
+    path_or_issue: "issue #42"
+    url: https://github.com/zarfld/pokeysHal/issues/42
+    source_type: issue_body
+    authority_class: C
+    scope: >-
+      pokeysHal issue #42: Encoder HAL interface specification. CLOSED. Specifies
+      encoder pins: count (S32), position (FLOAT), reset (BIT); strikethrough items
+      velocity and index-enable are explicitly excluded. Parameter: scale (FLOAT).
+      Encoder count=29. Governs encoder export in PoKeysLibEncodersAsync.c.
+    state: closed
+    inspected: true
+    notes: >-
+      Body inspected. 0 comments. Strikethrough items (velocity, index-enable) are
+      explicitly not required. Reference for requirement ENCODER-* entries.
+
   - source_id: C-013
     repository: zarfld/pokeysHal
     revision: cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd

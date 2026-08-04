@@ -77,7 +77,7 @@ LinuxCNC CDI: adcout.value (float, HAL_IN), adcout.enable (bit, HAL_IN),
         adcout.J.PWMduty (u32, HAL_OUT) — PoKeysLibIOAsync.c:124
         adcout.J.max_voltage (param, HAL_RW) — PoKeysLibIOAsync.c:117
         adcout.pwm.period (param, HAL_RW) — PoKeysLibIOAsync.c:132
-  ✗ whether adcout.J.value is functionally converted to PWM duty cycle: unverified
+  ✓ adcout.J.value functional conversion path IMPLEMENTED (code inspection); HIL hardware pending
   ✓ canonical adcout objects exported; conversion IMPLEMENTED per C4 trace
   ?→ issues #37/#39 remain OPEN; HIL confirmation pending
   ✓ legacy integration files reference adcout.0.value and adcout.0.enable (E-001)
