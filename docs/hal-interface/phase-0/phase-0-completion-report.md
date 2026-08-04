@@ -103,7 +103,7 @@ Expected output: no tracked file modifications.
 All files are in `docs/hal-interface/phase-0/`:
 
 1. `README.md` — objective, scope, methodology, principal findings
-2. `source-register.yaml` — 56 source entries, classes A–G
+2. `source-register.yaml` — 69 source entries, classes A–G
 3. `requirement-catalogue.yaml` — 51 interface requirement entries
 4. `lifecycle-ownership-matrix.md` — per-subsystem ownership table
 5. `canonical-vs-legacy-matrix.md` — ~72 interface items classified
@@ -120,7 +120,7 @@ All files are in `docs/hal-interface/phase-0/`:
 
 | Category | Count |
 |---|---|
-| Source register entries | 58 |
+| Source register entries | 69 |
 | Requirement catalogue entries | 51 |
 | Conflicts registered | 14 |
 | Open decisions required | 23 |

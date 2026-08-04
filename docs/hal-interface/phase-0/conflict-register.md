@@ -537,14 +537,22 @@ volatile_home analysis (Phase 0 evidence complete):
     to be stored (for API compliance) but is not used to make any decision in
     the pokeys_homecomp implementation.
 
-  Runtime impact:
-    The unreachable volatile_home=1 (L377) has NO runtime impact because:
-    a. set_joint_homing_params() (L1344-1365) is called at startup and assigns
-       the INI-configured value regardless.
-    b. volatile_home is never read by any decision-making code in the inspected
-       source.
-    This is supported by evidence from A-003 (LinuxCNC homing.c), A-004
-    (taskintf.cc), and E-010 (pokeys_homecomp.comp). Full dependency graph
+  Runtime impact (scoped to LinuxCNC v2.9.10 and pokeys_homecomp at 0c058e6c):
+    The unreachable assignment volatile_home=1 (L377/L852) does not affect the
+    observed v2.9.10 execution path because the active pokeys_homecomp receives
+    the INI-configured volatile_home value during joint initialization before
+    any homing sequence begins, and no earlier read of the field exists in the
+    inspected active implementation:
+    a. INI delivery chain: A-005 (inijoint.cc L191-192 reads VOLATILE_HOME,
+       default=0) → A-004 (taskintf.cc emcJointSetHomingParams) → A-006
+       (command.c EMCMOT_SET_JOINT_HOMING_PARAMS dispatch) → E-010/E-012
+       set_joint_homing_params() which stores the INI value.
+    b. No read of H[jno].volatile_home in set_unhomed() (E-010 L1332-1335,
+       E-012 L3246-3250): that function does not check volatile_home.
+    c. The initial 0 from zeroed shmem is replaced before any read occurs.
+    This conclusion is limited to the pinned LinuxCNC v2.9.10 and pinned
+    pokeys_homecomp (0c058e6c). It does not assert zero impact in all environments.
+    This is supported by evidence from A-003 (homing.c), A-004 (taskintf.cc),nd E-010 (pokeys_homecomp.comp). Full dependency graph
     inspected for the installed LinuxCNC version (v2.9.10).
 
 Safety or compatibility impact:

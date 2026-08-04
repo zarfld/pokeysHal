@@ -1,69 +1,148 @@
 ---
-# Source Register — Phase 0 HAL-Interface Baseline
-# Format: one entry per important source inspected.
-# Inspected: 2026-08-03
-
 sources:
-
-  # ── A. Normative External Authority ──────────────────────────────────────────
 
   - source_id: A-001
     repository: LinuxCNC/linuxcnc
     revision: "v2.9.10 (tag commit 86cdca76fa2a36274c432caa21952b23c267989a)"
-    path_or_issue: "src/hal/hal.h"
-    url: "https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/hal/hal.h"
+    path_or_issue: src/hal/hal.h
+    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/hal/hal.h
     source_type: normative_standard
     authority_class: A
-    scope: "HAL pin/param/funct creation API, HAL_NAME_LEN=47, lifecycle rules"
+    scope: HAL pin/param/funct creation API, HAL_NAME_LEN=47, lifecycle rules
     state: current
     inspected: true
-    notes: >
-      Independently verified via GitHub API: blob sha
-      5480d937fc3310e5a87482acabd9ea551683bcdb at v2.9.10.
-      HAL_NAME_LEN = 47 confirmed: '#define HAL_NAME_LEN     47'.
-      hal_init, hal_malloc, hal_pin_*_newf, hal_param_*_newf, hal_export_funct,
-      hal_ready, hal_exit all declared. hal_free does NOT exist.
-      Installed on target: /usr/include/linuxcnc/hal.h also confirmed HAL_NAME_LEN=47.
+    notes: >-
+      Independently verified via GitHub API: blob sha 5480d937fc3310e5a87482acabd9ea55.
+      HAL_NAME_LEN=47 confirmed at v2.9.10.
 
   - source_id: A-001b
     repository: LinuxCNC
     revision: "upstream/master commit 71bf88009d64fa15edbebf9250b65ee4454f9a05"
-    path_or_issue: "src/hal/hal.h"
-    url: "https://github.com/LinuxCNC/linuxcnc/blob/71bf88009d64fa15edbebf9250b65ee4454f9a05/src/hal/hal.h"
+    path_or_issue: src/hal/hal.h
+    url: https://github.com/LinuxCNC/linuxcnc/blob/71bf88009d64fa15edbebf9250b65ee4454f9a05/src/hal/hal.h
     source_type: normative_standard
     authority_class: A
-    scope: "HAL_NAME_LEN=55 in LinuxCNC upstream/master"
+    scope: HAL_NAME_LEN=55 in LinuxCNC upstream/master
     state: current
     inspected: true
-    notes: >
-      HAL_NAME_LEN = 55 independently verified via GitHub API at pinned commit
-      71bf88009d64fa15edbebf9250b65ee4454f9a05, src/hal/hal.h:
-        '#define HAL_NAME_LEN     55'
-      File blob sha: 17372ccd3d1648a1078785751b2b2737f5e4dcbb (fetched 2026-08-03).
-      Relevant: some pin names borderline at 47 are valid at 55.
+    notes: >-
+      HAL_NAME_LEN = 55 independently verified via GitHub API at pinned commit 71bf88009d64fa15edbebf9250b65ee4454f9a05.
+      blob sha 17372ccd.
 
   - source_id: A-002
     repository: LinuxCNC/linuxcnc
     revision: "71bf88009d64fa15edbebf9250b65ee4454f9a05"
-    path_or_issue: "docs/src/hal/canonical-devices.adoc"
-    url: "https://github.com/LinuxCNC/linuxcnc/blob/71bf88009d64fa15edbebf9250b65ee4454f9a05/docs/src/hal/canonical-devices.adoc"
+    path_or_issue: docs/src/hal/canonical-devices.adoc
+    url: https://github.com/LinuxCNC/linuxcnc/blob/71bf88009d64fa15edbebf9250b65ee4454f9a05/docs/src/hal/canonical-devices.adoc
     source_type: normative_standard
     authority_class: A
-    scope: >
+    scope: >-
       Official Canonical Device Interfaces: digin, digout, adcin, adcout only.
-      Encoder is NOT defined in this document. Defines pin names, types,
-      directions, and parameter names for the four canonical device types.
+      Encoder and PEv2 are NOT part of the official CDI. Defines normative pin
+      names, directions, and types for the four canonical subsystems.
     state: current
     inspected: true
-    notes: >
+    notes: >-
       Inspected at pinned commit 71bf88009d64fa15edbebf9250b65ee4454f9a05.
-      The official CDI document defines exactly four interfaces:
-      digin (in, in-not), digout (out, invert), adcin (value, scale, offset,
-      bit-weight, hw-offset), adcout (value, enable, offset, scale, high-limit,
-      low-limit, bit-weight, hw-offset). Encoder is not a Canonical Device
-      Interface; it is a hal-canon convention (see B-004).
+      Official CDI covers exactly four device types; all other device interfaces
+      are PoKeys-specific or project-level conventions.
 
-  # ── B. Pinned Dependency Authority ───────────────────────────────────────────
+  - source_id: A-003
+    repository: LinuxCNC/linuxcnc
+    revision: "v2.9.10 (tag commit 86cdca76fa2a36274c432caa21952b23c267989a)"
+    path_or_issue: src/emc/motion/homing.c
+    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/motion/homing.c
+    source_type: normative_implementation
+    authority_class: A
+    scope: >-
+      LinuxCNC v2.9.10 default homing module. base_homing_init() initialises
+      H[i].volatile_home=0. base_set_joint_homing_params() stores volatile_home
+      from delivered command. set_all_unhomed() reads volatile_home when
+      unhome_method==-2. Exported as set_joint_homing_params via EXPORT_SYMBOL.
+    state: current
+    inspected: true
+    notes: >-
+      Inspected via GitHub API at v2.9.10. Evidence for CONFLICT-012:
+      (1) volatile_home default=0 in homing_init; (2) set_joint_homing_params
+      stores INI value before any homing; (3) set_all_unhomed reads it for E-Stop.
+      Default module; replaced by pokeys_homecomp when HOMEMOD is set.
+
+  - source_id: A-004
+    repository: LinuxCNC/linuxcnc
+    revision: "v2.9.10 (tag commit 86cdca76fa2a36274c432caa21952b23c267989a)"
+    path_or_issue: src/emc/task/taskintf.cc
+    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/task/taskintf.cc
+    source_type: normative_implementation
+    authority_class: A
+    scope: >-
+      LinuxCNC v2.9.10 task interface. emcJointSetHomingParams() constructs
+      EMCMOT_SET_JOINT_HOMING_PARAMS command, copies volatile_home from caller
+      (inijoint.cc A-005) into emcmotCommand.volatile_home, calls
+      usrmotWriteEmcmotCommand(). Command builder and transport; not INI reader.
+    state: current
+    inspected: true
+    notes: >-
+      Inspected via GitHub API at v2.9.10. emcJointSetHomingParams() copies
+      volatile_home into emcmotCommand and sends via usrmotWriteEmcmotCommand().
+      Caller is inijoint.cc (A-005).
+
+  - source_id: A-005
+    repository: LinuxCNC/linuxcnc
+    revision: "v2.9.10 (tag commit 86cdca76fa2a36274c432caa21952b23c267989a)"
+    path_or_issue: src/emc/ini/inijoint.cc
+    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/ini/inijoint.cc
+    source_type: normative_implementation
+    authority_class: A
+    scope: >-
+      LinuxCNC v2.9.10 INI reader for [JOINT_N] section. iniJoint() reads
+      VOLATILE_HOME: default=0 (L191), finds value at L192. Calls
+      emcJointSetHomingParams() at L198-207 passing volatile_home. Called from
+      emcJointInit() at startup before any motion command.
+    state: current
+    inspected: true
+    notes: >-
+      Inspected via GitHub raw URL at v2.9.10.
+      L191: volatile_home = 0;
+      L192: jointIniFile->Find(&volatile_home, "VOLATILE_HOME", jointString);
+      L198-207: emcJointSetHomingParams(..., volatile_home, ...).
+      Delivers INI-configured value to active homing module at startup.
+
+  - source_id: A-006
+    repository: LinuxCNC/linuxcnc
+    revision: "v2.9.10 (tag commit 86cdca76fa2a36274c432caa21952b23c267989a)"
+    path_or_issue: src/emc/motion/command.c
+    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/motion/command.c
+    source_type: normative_implementation
+    authority_class: A
+    scope: >-
+      LinuxCNC v2.9.10 motion command dispatcher. case EMCMOT_SET_JOINT_HOMING_PARAMS
+      at L642 calls set_joint_homing_params() with emcmotCommand->volatile_home.
+      Dispatch reaches active homing module (A-003 by default, or pokeys_homecomp
+      E-010/E-012 when HOMEMOD is configured).
+    state: current
+    inspected: true
+    notes: >-
+      Inspected via GitHub raw URL at v2.9.10. Lines L642-660: case
+      EMCMOT_SET_JOINT_HOMING_PARAMS calls set_joint_homing_params(jno, ...,
+      emcmotCommand->volatile_home). Delivers volatile_home to active homemod callback.
+
+  - source_id: A-007
+    repository: linuxcnc.org
+    revision: "official documentation (LinuxCNC 2.x)"
+    path_or_issue: docs/html/config/ini-config.html
+    url: https://linuxcnc.org/docs/html/config/ini-config.html
+    source_type: normative_documentation
+    authority_class: A
+    scope: >-
+      Official LinuxCNC homing parameter reference. VOLATILE_HOME in [JOINT_N]:
+      default=0; set to 1 to unhome joint when Machine Power is off or E-Stop
+      is active. Consistent with inijoint.cc default=0 (A-005).
+    state: current
+    inspected: true
+    notes: >-
+      Confirmed in both current docs and LinuxCNC 2.5 homing docs. Semantics:
+      volatile_home=1 means the joint loses its homed state on power-off/E-Stop.
+      Consistent with set_all_unhomed() logic in A-003.
 
   - source_id: B-001
     repository: zarfld/linuxcnc-hal-canon
@@ -910,29 +989,141 @@ sources:
       pokeys_minimal.ini: JOINTS=3; no HOMEMOD; does not load pokeys_homecomp.
       Component: pokeys-async; prefix: pokeys-async.0.
       JOINTS=3 does not establish PEv2 export cardinality.
-  - source_id: A-003
-    class: A
-    repository: LinuxCNC/linuxcnc
-    revision: v2.9.10
-    path: src/emc/motion/homing.c
-    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/motion/homing.c
-    description: >-
-      LinuxCNC v2.9.10 default homing module. Inspected for CONFLICT-012
-      volatile_home analysis. base_homing_init() initialises H[i].volatile_home=0;
-      base_set_joint_homing_params() sets H[jno].volatile_home=volatile_home from
-      INI; set_all_unhomed() reads H[jno].volatile_home when unhome_method==-2.
-    inspection_status: complete
+  - source_id: C-021
+    repository: zarfld/pokeysHal
+    revision: "inspected 2026-08-05"
+    path_or_issue: "issue #41"
+    url: https://github.com/zarfld/pokeysHal/issues/41
+    source_type: issue_body
+    authority_class: C
+    scope: >-
+      pokeysHal issue #41: PEv2 async implementation to be able to run it in RT.
+      Body null/empty (retrieved via GitHub API 2026-08-05). 0 comments.
+      No HAL ABI specification content.
+    state: open
+    inspected: true
+    notes: >-
+      Body: null. Comments: 0. No HAL interface requirements found.
+      Title indicates RT implementation intent; tracked by F-008.
 
-  - source_id: A-004
-    class: A
-    repository: LinuxCNC/linuxcnc
-    revision: v2.9.10
-    path: src/emc/task/taskintf.cc
-    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/task/taskintf.cc
-    description: >-
-      LinuxCNC v2.9.10 task interface. emcJointSetHomingParams() sends
-      EMCMOT_SET_JOINT_HOMING_PARAMS with volatile_home from INI via
-      usrmotWriteEmcmotCommand(). Called during emcJointInit() at startup before
-      any homing sequence. This delivers the INI volatile_home value to
-      set_joint_homing_params() in the active homing module.
-    inspection_status: complete
+  - source_id: E-011
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "inspected 2026-08-05"
+    path_or_issue: "issue #216"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/216
+    source_type: issue_body_and_comments
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #216: Missing PEv2 homing pin. All 21 comments retrieved
+      (pagination complete). Confirms joint.0.PEv2.AxesState pin naming in
+      integration; homecomp load-order dependency; CONFLICT-002 (joint-in-homing
+      absent). No new HAL ABI requirements beyond documented.
+    state: open
+    inspected: true
+    notes: >-
+      21 of 21 comments retrieved and inspected. No deleted/minimised comments
+      noted. No referenced commits required separate inspection.
+      CONFLICT-002 evidence confirmed.
+
+  - source_id: E-012
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: pokeys_rt/pokeys_homecomp.c
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/blob/0c058e6c/pokeys_rt/pokeys_homecomp.c
+    source_type: implementation_source
+    authority_class: E
+    scope: >-
+      Hand-written C implementation of pokeys_homecomp RTAPI module (3380 lines).
+      Not halcompile-generated (contains MODULE_LICENSE, rtapi_app_main, manual
+      EXPORT_SYMBOLs). volatile_home: declared L587, unreachable init L852,
+      set_joint_homing_params L3300-3316 (H[jno].volatile_home=volatile_home),
+      set_unhomed L3246-3250 (does NOT read volatile_home). Parallel to E-010 (.comp).
+    state: current
+    inspected: true
+    notes: >-
+      Inspected via GitHub API at pinned revision. No autogenerated markers.
+      volatile_home handling identical to E-010: stored by set_joint_homing_params,
+      not read by set_unhomed. Confirms zero-impact conclusion scoped to pinned
+      revision. Either .comp or .c may be built depending on build path.
+  - source_id: E-013
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "inspected during Phase 0"
+    path_or_issue: "issue #21"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/21
+    source_type: issue_body_and_comments
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #21: Custom homing interface. CLOSED. Body and 1 comment
+      inspected. Defines homecomp interface requirement; comment confirms pokeys.comp
+      not yet updated. No new HAL ABI requirements beyond homecomp integration.
+    state: closed
+    inspected: true
+    notes: >-
+      1 of 1 comments retrieved and inspected. Confirms homecomp interface
+      context for HOMECOMP requirements.
+
+  - source_id: E-014
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "inspected during Phase 0"
+    path_or_issue: "issue #24"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/24
+    source_type: issue_body_and_comments
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #24: homecomp compatibility. CLOSED. Body and 1 comment
+      inspected. Verify homecomp vs pokeys.comp; comment: split to userspace.
+      No new HAL ABI requirements.
+    state: closed
+    inspected: true
+    notes: >-
+      1 of 1 comments retrieved and inspected. No material HAL interface additions.
+
+  - source_id: E-015
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "inspected during Phase 0"
+    path_or_issue: "issue #213"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/213
+    source_type: issue_body_and_comments
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #213: Encoder modularization. CLOSED. Body and 2 comments
+      inspected. Encoder pin declarations and PoKeysLib struct relationships.
+      No new HAL ABI requirements beyond existing encoder documentation.
+    state: closed
+    inspected: true
+    notes: >-
+      2 of 2 comments retrieved and inspected. No material HAL interface additions
+      beyond already documented encoder interface.
+
+  - source_id: E-016
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "inspected during Phase 0"
+    path_or_issue: "issue #222"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/222
+    source_type: issue_body_and_comments
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #222: Physical pin-function setup. CLOSED. Body and 5
+      comments inspected. PK_PinConfigurationSet; PinFunction=0 device override.
+      No new HAL ABI requirements beyond existing PinFunction documentation.
+    state: closed
+    inspected: true
+    notes: >-
+      5 of 5 comments retrieved and inspected. No material HAL interface additions.
+
+  - source_id: E-017
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "inspected during Phase 0"
+    path_or_issue: "issue #264"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/264
+    source_type: issue_body_and_comments
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #264: Analog output userspace. CLOSED. Body empty via API.
+      1 comment inspected. Comment confirms userspace supports analog output.
+      Supports ADCOUT implementation evidence (CONFLICT-004).
+    state: closed
+    inspected: true
+    notes: >-
+      Body empty. 1 of 1 comments retrieved and inspected. Comment provides
+      analog output implementation context. CONFLICT-004 evidence.

@@ -19,7 +19,7 @@ Inspected: 2026-08-03 through 2026-08-04.
 | Issue #37 | HAL-Interface: Analog Output (ref) | OPEN | C-006 | HIGH | complete | 0 | none | References #39 | CONFLICT-004 | YES |
 | Issue #38 | HAL-Interface: Digital Input | OPEN | C-007 | HIGH | complete | 0 | none | digin.J.in/in-not; direction mismatch CONFLICT-009 | CONFLICT-009 | YES |
 | Issue #39 | HAL-Interface: Analog Output (spec) | OPEN | C-008 | HIGH | complete | 2 | complete | Specifies canonical adcout; comments confirm PK_PWMConfigurationSetAsync | CONFLICT-004 | YES |
-| Issue #41 | PEv2 async RT | OPEN | None | HIGH | empty | 0 | none | Body null (no HAL ABI content); title only: PEv2 async impl to run in RT; 0 comments | CONFLICT-001 | YES |
+| Issue #41 | PEv2 async RT | OPEN | C-021 | HIGH | empty | 0 | none | Body null; 0 comments; no HAL ABI content (C-021) | CONFLICT-001 | YES |
 | Issue #97 | Async Scheduler opts | OPEN | None | LOW | not-inspected | 0 | not-inspected | scheduler, not HAL pins | None | NO |
 | Issue #99 | REQ-F-SCHED-001 | OPEN | None | LOW | not-inspected | 0 | not-inspected | scheduler | None | NO |
 | Issue #100 | REQ-F-SCHED-002 | OPEN | None | LOW | not-inspected | 0 | not-inspected | scheduler | None | NO |
@@ -62,8 +62,8 @@ Inspected: 2026-08-03 through 2026-08-04.
 | Object | Title | State | Source ID | Relevance | Body status | Comment count | Comment status | Evidence summary | Conflicts | Retain |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Issue #16 | pokeys_py SRS | OPEN | None | LOW | partial | 0 | none | SRS for pokeys_py; digital/analog I/O, PEv2 | None | LIMITED |
-| Issue #21 | Custom homing interface | CLOSED | None | MEDIUM | complete | 1 | complete | Defines homecomp interface; comment: pokeys.comp not yet updated | None | YES |
-| Issue #24 | homecomp compatibility | CLOSED | None | MEDIUM | complete | 1 | complete | Verify homecomp vs pokeys.comp; comment: split to userspace | None | YES |
+| Issue #21 | Custom homing interface | CLOSED | E-013 | MEDIUM | complete | 1 | complete | Defines homecomp interface; comment: pokeys.comp not yet updated | None | YES |
+| Issue #24 | homecomp compatibility | CLOSED | E-014 | MEDIUM | complete | 1 | complete | Verify homecomp vs pokeys.comp; comment: split to userspace | None | YES |
 | Issue #28 | userspace equivalence | CLOSED | None | HIGH | complete | 0 | none | Verify pokeys_userspace == pokeys.comp | None | YES |
 | PR #29 | Add missing userspace functions | MERGED | None | HIGH | complete | 0 | none | Adds PWM, PoExtBus to userspace; merged 2024-09-27 | None | YES |
 | Issue #30 | Tests for main branch | OPEN | None | LOW | complete | 0 | none | Test scope for pokeys.comp and userspace | None | YES |
@@ -73,13 +73,13 @@ Inspected: 2026-08-03 through 2026-08-04.
 | Issue #79 | CDI conformity | OPEN | None | HIGH | complete | 0 | none | CDI conformity; CONFLICT-010 on CDI scope | CONFLICT-010 | YES |
 | Issue #129 | HAL-Interface: RTC | CLOSED | None | LOW | complete | 0 | none | rtc.* pins; matches pokeysHal | None | MAYBE |
 | Issue #157 | Common pin I/O handling | CLOSED | None | HIGH | complete | 0 | none | Combine I/O handling | None | YES |
-| Issue #213 | Encoder modularization | CLOSED | None | HIGH | complete | 2 | complete | Encoder pin declarations; PoKeysLib struct | None | YES |
-| Issue #216 | Missing PEv2 homing pin | OPEN | None | HIGH | complete | 21 | complete | joint-in-homing absent; all 21 comments read; confirms homecomp load-order; joint.0.PEv2.AxesState pin naming confirmed | CONFLICT-002 | YES |
-| Issue #222 | Physical pin-function setup | CLOSED | None | HIGH | complete | 5 | complete | PK_PinConfigurationSet; PinFunction=0 device override | None | YES |
+| Issue #213 | Encoder modularization | CLOSED | E-015 | HIGH | complete | 2 | complete | Encoder pin declarations; PoKeysLib struct | None | YES |
+| Issue #216 | Missing PEv2 homing pin | OPEN | E-011 | HIGH | complete | 21 | complete | joint-in-homing absent; all 21 comments read (E-011); confirms homecomp load-order; pin naming | CONFLICT-002 | YES |
+| Issue #222 | Physical pin-function setup | CLOSED | E-016 | HIGH | complete | 5 | complete | PK_PinConfigurationSet; PinFunction=0 device override | None | YES |
 | Issue #223 | PEv2 LimitOverride | OPEN | None | HIGH | complete | 0 | none | LimitOverride linked to AXIS Override | None | YES |
-| Issue #264 | Analog output userspace | CLOSED | None | HIGH | empty | 1 | complete | Body empty; uspace supports analog output | CONFLICT-004 | YES |
-| Issue #310 | PEv2 AxesState and name length | CLOSED | None | HIGH | complete | 14 | complete | All 14 comments read; exact error: length 50 > 47 for pokeys.0.encoder.UltraFastEncoder.Enable4xSampling; confirms CONFLICT-005; fix = rename | CONFLICT-002,CONFLICT-005 | YES |
-| Issue #326 | HAL param name > limit | OPEN | None | HIGH | complete | 12 | complete | All 12 comments read; same name-length issue; CI failures; rename fix confirmed; CONFLICT-005 confirmed | CONFLICT-005 | YES |
+| Issue #264 | Analog output userspace | CLOSED | E-017 | HIGH | empty | 1 | complete | Body empty; uspace supports analog output | CONFLICT-004 | YES |
+| Issue #310 | PEv2 AxesState and name length | CLOSED | E-004 | HIGH | complete | 14 | complete | All 14 comments read (E-004); exact error: length 50>47 for Enable4xSampling; CONFLICT-005 | CONFLICT-002,CONFLICT-005 | YES |
+| Issue #326 | HAL param name > limit | OPEN | E-005 | HIGH | complete | 12 | complete | All 12 comments read (E-005); same name-length issue; CI failures; rename fix; CONFLICT-005 | CONFLICT-005 | YES |
 
 ---
 
