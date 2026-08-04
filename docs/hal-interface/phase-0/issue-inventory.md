@@ -19,7 +19,7 @@ Inspected: 2026-08-03 through 2026-08-04.
 | Issue #37 | HAL-Interface: Analog Output (ref) | OPEN | C-006 | HIGH | complete | 0 | none | References #39 | CONFLICT-004 | YES |
 | Issue #38 | HAL-Interface: Digital Input | OPEN | C-007 | HIGH | complete | 0 | none | digin.J.in/in-not; direction mismatch CONFLICT-009 | CONFLICT-009 | YES |
 | Issue #39 | HAL-Interface: Analog Output (spec) | OPEN | C-008 | HIGH | complete | 2 | complete | Specifies canonical adcout; comments confirm PK_PWMConfigurationSetAsync | CONFLICT-004 | YES |
-| Issue #41 | PEv2 async RT | OPEN | None | HIGH | not-inspected | 0 | not-inspected | body not retrieved | CONFLICT-001 | YES |
+| Issue #41 | PEv2 async RT | OPEN | F-008 | HIGH | not-inspected | 0 | not-inspected | body not retrieved | CONFLICT-001 | YES |
 | Issue #97 | Async Scheduler opts | OPEN | None | LOW | not-inspected | 0 | not-inspected | scheduler, not HAL pins | None | NO |
 | Issue #99 | REQ-F-SCHED-001 | OPEN | None | LOW | not-inspected | 0 | not-inspected | scheduler | None | NO |
 | Issue #100 | REQ-F-SCHED-002 | OPEN | None | LOW | not-inspected | 0 | not-inspected | scheduler | None | NO |
@@ -63,7 +63,7 @@ Inspected: 2026-08-03 through 2026-08-04.
 |---|---|---|---|---|---|---|---|---|---|---|
 | Issue #16 | pokeys_py SRS | OPEN | None | LOW | partial | 0 | none | SRS for pokeys_py; digital/analog I/O, PEv2 | None | LIMITED |
 | Issue #21 | Custom homing interface | CLOSED | None | MEDIUM | complete | 1 | complete | Defines homecomp interface; comment: pokeys.comp not yet updated | None | YES |
-| Issue #24 | homecomp compatibility | CLOSED | None | MEDIUM | complete | 1 | complete | Verify homecomp vs pokeys.comp; comment: split to userspace | None | YES |
+| Issue #24 | homecomp compatibility | CLOSED | C-012 | MEDIUM | complete | 1 | complete | Verify homecomp vs pokeys.comp; comment: split to userspace | None | YES |
 | Issue #28 | userspace equivalence | CLOSED | None | HIGH | complete | 0 | none | Verify pokeys_userspace == pokeys.comp | None | YES |
 | PR #29 | Add missing userspace functions | MERGED | None | HIGH | complete | 0 | none | Adds PWM, PoExtBus to userspace; merged 2024-09-27 | None | YES |
 | Issue #30 | Tests for main branch | OPEN | None | LOW | complete | 0 | none | Test scope for pokeys.comp and userspace | None | YES |
@@ -71,7 +71,7 @@ Inspected: 2026-08-03 through 2026-08-04.
 | Issue #69 | Modular architecture | OPEN | None | MEDIUM | complete | 0 | none | Refactor codebase modular | None | YES |
 | Issue #73 | Align with LinuxCNC builds | OPEN | None | MEDIUM | complete | 0 | none | Build environment 2.8.x/2.9.x | None | YES |
 | Issue #79 | CDI conformity | OPEN | None | HIGH | complete | 0 | none | CDI conformity; CONFLICT-010 on CDI scope | CONFLICT-010 | YES |
-| Issue #129 | HAL-Interface: RTC | CLOSED | None | LOW | complete | 0 | none | rtc.* pins; matches pokeysHal | None | MAYBE |
+| Issue #129 | HAL-Interface: RTC | CLOSED | D-003 | LOW | complete | 0 | none | rtc.* pins; matches pokeysHal | None | MAYBE |
 | Issue #157 | Common pin I/O handling | CLOSED | None | HIGH | complete | 0 | none | Combine I/O handling | None | YES |
 | Issue #213 | Encoder modularization | CLOSED | None | HIGH | complete | 2 | complete | Encoder pin declarations; PoKeysLib struct | None | YES |
 | Issue #216 | Missing PEv2 homing pin | OPEN | None | HIGH | complete | 21 | partial | joint-in-homing absent; 21 comments | CONFLICT-002 | YES |

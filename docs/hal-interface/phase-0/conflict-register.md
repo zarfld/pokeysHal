@@ -595,3 +595,57 @@ Required decision:
   4. Integration link IK-003 (AxesCommand) must not be classified compatible until resolved.
 Status: unresolved
 ```
+
+---
+
+```
+Conflict ID: CONFLICT-014
+Subject: Current pokeysHal AxesCommand pin has no traced normal-cycle consumer;
+  test mode writes a HAL_IN pin with a bitmask
+
+Source A: experimental/pokeys_async.c FUNCTION(_) active RT function (F-008):
+  The active FUNCTION(_) calls:
+    PK_ReceiveAndDispatch() and PK_TimeoutAndRetryCheck()  — Phase 1
+    async_dispatcher()  — Phase 2 (scheduler tasks)
+    PK_ReceiveAndDispatch() again  — Phase 3
+    update_ponet_hal_pins()
+  None of the following helper functions are called from FUNCTION(_):
+    rt_read_command_pins()        — DEFINED-BUT-UNREACHED from active path
+    rt_update_motion_commands()   — DEFINED-BUT-UNREACHED from active path
+    rt_read_device_cache()        — DEFINED-BUT-UNREACHED from active path
+    rt_handle_homing_commands()   — DEFINED-BUT-UNREACHED from active path
+    rt_update_external_outputs()  — DEFINED-BUT-UNREACHED from active path
+  rt_handle_homing_commands() reads HomingStatus (not AxesCommand) to detect
+  homing start requests.
+
+Source B: experimental/pokeys_async.c test-mode code (~L891-892):
+  if (inst->dev->PEv2.pin_AxesCommand && inst->dev->PEv2.pin_AxesCommand[0]) {
+      *(inst->dev->PEv2.pin_AxesCommand[0]) |= 0x01;  // Set enable bit
+  }
+  This writes to a HAL_IN pin (incorrect: component should not drive HAL_IN)
+  and treats the value as a bitmask, not the standard command enum.
+
+Observed state:
+  The current pokeysHal example component exports AxesCommand as HAL_IN,
+  meaning it is declared as a consumer (reader) of external AxesCommand values.
+  No code path from FUNCTION(_) was found that reads AxesCommand and sends
+  the value to the PoKeys hardware. The test-mode code writes to the pin
+  incorrectly and uses bitmask semantics.
+
+Why this matters:
+  Any integration expecting the current component to forward AxesCommand
+  from a homecomp producer to the hardware will not work as expected —
+  the RT path does not implement this forwarding.
+
+Safety or compatibility impact:
+  HIGH. Homing and motion commands relying on AxesCommand propagation
+  to hardware may silently fail. Integration link IK-003 cannot be classified
+  as implemented until a reachable call path is identified.
+
+Required action:
+  1. Determine whether AxesCommand forwarding is intended or out of scope.
+  2. If intended: implement a reachable call path from FUNCTION(_).
+  3. If out of scope: remove the AxesCommand pin or document explicitly.
+  4. Remove the test-mode write to a HAL_IN pin.
+Status: unresolved
+```

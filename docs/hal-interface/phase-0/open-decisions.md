@@ -135,6 +135,34 @@ Phase 1 tracing confirms the LinuxCNC homing module invariant.
 **Blocking:** Criterion 8 (lifecycle/initialization ownership) remains PARTIAL
 until this is resolved.
 
+### DEC-AXESCMD-001: Resolve AxesCommand semantic mismatch (CONFLICT-013)
+
+**Context:** Legacy userspace and pokeys_homecomp use different, incompatible
+AxesCommand enums. Value 2 means ARMENCODER in legacy but HOMINGCANCEL in homecomp.
+
+**Options:**
+- A: Adopt the homecomp 4-value enum as the HAL contract; update legacy component.
+- B: Adopt the 7-value legacy enum; update homecomp to match.
+- C: Define a new shared enum header imported by both; migrate both components.
+
+**Blocking:** IK-003 cannot be classified compatible until resolved.
+
+---
+
+### DEC-AXESCMD-002: Implement or remove current pokeysHal AxesCommand forwarding (CONFLICT-014)
+
+**Context:** The current pokeysHal example component exports AxesCommand as HAL_IN
+but has no reachable call path from FUNCTION(_) that forwards the value to hardware.
+The rt_read_command_pins() and related helpers are defined but not called from the
+active RT path.
+
+**Options:**
+- A: Add a call to rt_read_command_pins() (or equivalent) from FUNCTION(_).
+- B: Remove the AxesCommand pin if homing is not managed by AxesCommand in this component.
+- C: Document that AxesCommand forwarding is intentionally deferred to Phase 1.
+
+**Blocking:** Criterion 14 remains PARTIAL while this is unresolved.
+
 ---
 
 ## 2. Backward Compatibility

@@ -64,11 +64,16 @@ Evidence from pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 5. **Cleanup** is handled by `hal_exit(comp_id)` only (pokeysHal component) or by
    the LinuxCNC runtime (for homecomp). All HAL-malloc memory is reclaimed at exit.
    Per-subsystem cleanup is component-level, not subsystem-specific.
-7. **CONFLICT-012**: `homing_init()` has an unreachable initialization block.
-   All homecomp HAL pin defaults are zero from HAL shared-memory initialization.
 
 6. **PoExtBus** has allocated storage (`hal_malloc` at `PoKeysLibCoreAsync.c:172`)
-   but no HAL pin export — the most significant remaining ownership gap.
+but no HAL pin export — the most significant remaining ownership gap.
    **Canonical adcin and adcout** are exported via `hal_export_adcin` and
    `hal_export_adcout` respectively. The adcin direction bug (value as HAL_IN)
    is a hal-canon implementation defect inherited by all callers (CONFLICT-009).
+
+7. **CONFLICT-012**: `homing_init()` has an unreachable initialization block.
+   All homecomp HAL pin defaults are zero from HAL shared-memory initialization.
+
+8. **Integration boundaries** between pokeysHal and pokeys_homecomp are recorded
+   in `integration-links.yaml` (IK-001..IK-004). The AxesCommand integration
+   (IK-003) is classified INCOMPATIBLE due to CONFLICT-013 and CONFLICT-014.

@@ -1290,10 +1290,8 @@ requirements:
     bitmap_definition: "n/a"
     linuxcnc_canonical_status: LinuxCNC homemod convention
     legacy_compatibility_status: "defined in E-010"
-    owner_homecomp: "homecomp exports joint.N.index-enable (HAL_IO)"
-    owner_pokeyshal: "pokeysHal exports PEv2.I.index-enable (HAL_IO)"
-    pokeysHal_requirement: signal endpoint wiring
-    integration_role: coupled signal — both endpoints must be netted via HAL configuration
+    owner: pokeys_homecomp
+    integration_role: coupled signal via HAL net — pokeysHal peer endpoint is PEV2-index-enable
     current_implementation_status: "Two separate pins on distinct components. Integrate by: net pev2-axis-index-enable <= pokeys-async.0.PEv2.N.index-enable => joint.N.index-enable"
     requirement_sources: [E-010]
     implementation_sources: [F-005]
@@ -1350,7 +1348,12 @@ requirements:
     owner: "LinuxCnc_PokeysLibComp/pokeys_homecomp"
     pokeysHal_requirement: out-of-scope
     integration_role: signal endpoint (writes to pokeysHal PEv2.I.AxesCommand via HAL net)
-    current_implementation_status: "Homecomp drives via HAL signal connected to pokeysHal PEv2.I.AxesCommand (HAL_IN). Compatible."
+    current_implementation_status: >
+      Homecomp exports joint.N.PEv2.AxesCommand (HAL_OUT). When netted to
+      pokeysHal PEv2.I.AxesCommand (HAL_IN), the signal is received by
+      pokeysHal, but no reachable call path in FUNCTION(_) forwards it to
+      hardware (CONFLICT-014). Additionally the homecomp 4-value enum is
+      incompatible with the legacy 7-value enum (CONFLICT-013). Not compatible.
     requirement_sources: [E-010, C-002]
     implementation_sources: [F-005]
     conflicts: []

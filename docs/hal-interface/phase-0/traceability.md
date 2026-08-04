@@ -235,3 +235,53 @@ Official LinuxCNC CDI (A-002, commit 71bf88009d64fa15edbebf9250b65ee4454f9a05):
   ✗ future verification: CDI compliance test scope must be limited to four types.
   → CONFLICT-010 and DEC-CONFLICT010 registered.
 ```
+
+---
+
+## 13. AxesState Traceability
+
+```
+Normative basis:
+  E-010 (pokeys_homecomp.comp): HAL_OUT per-joint u32, name "hm2_[HOSTMOT2].0.PokeysAxisState.[jno]"
+  E-009 (legacy, PokeysCompPulsEngine_base.c LA-012): HAL_IN per-axis s32,
+    name fmt "PoKeys.%d.PEv2.%d.AxesState", 14 device enum values {0,1,2,8..16,20,30}
+    + PEAxisStateEx extended values {3,4,17,18,19}; source B-003 PoKeysLib.h
+  F-001 (pokeysHal): HAL_IN per-axis s32 "pokeys-async.%d.PEv2.%d.AxesState"
+
+State-value reconciliation:
+  Device values {0,1,2,8,9,10,11,12,13,14,15,16,20,30} — ePK_PEAxisState
+  Extended values {3,4,17,18,19} — ePK_PEAxisStateEx (hal-canon / homecomp)
+  → PEAxisStateEx extends PEAxisState; numeric overlap is absent; value set union is safe
+  → No conflict on AxesState values; naming mismatch only (CONFLICT-001, CONFLICT-006)
+```
+
+---
+
+## 14. AxesCommand Traceability
+
+```
+(A) Legacy userspace — PokeysCompPulsEngine_base.c (E-009, LA-013):
+  hal_pin_s32_newf(HAL_OUT, ..., "PoKeys.%d.PEv2.%d.AxesCommand")
+  Enum: 0=IDLE 1=DONOTHING 2=ARMENCODER 3=WaitFinalMove 4=HOMING 5=INDEX 6=HOMINGFinalize
+  Producer: LinuxCNC motion controller (HAL_OUT)
+  Consumer: PoKeysCompPulsEngine_base.c reads HAL_OUT value and calls PK_PEv2_PulseEngineMove2/SetParameter
+
+(B) pokeys_homecomp.comp (E-010):
+  hal_pin_u32_newf(HAL_IN, ..., "hm2_[HOSTMOT2].0.PokeysAxis.[jno].AxisCommand")
+  Enum: 0=IDLE 1=GOHOME 2=HOMINGCANCEL 3=FINALIZE
+  Producer: homecomp FUNCTION(_) writes values 0,1,3 in normal paths; value 2 never seen
+  Consumer: hm2/hardware interface reads HAL_IN
+  Conflict: value 2 = ARMENCODER (legacy) vs HOMINGCANCEL (homecomp) → CONFLICT-013
+
+(C) Current pokeysHal — experimental/pokeys_async.c (F-001):
+  hal_pin_s32_newf(HAL_IN, ..., "pokeys-async.%d.PEv2.%d.AxesCommand")
+  HAL_IN: linuxcnc writes, component reads (correct direction)
+  FUNCTION(_) calls: PK_ReceiveAndDispatch, async_dispatcher, update_ponet_hal_pins
+  → rt_handle_homing_commands and rt_read_command_pins are NOT called from FUNCTION(_)
+  → AxesCommand HAL_IN pin has no reachable consumer at runtime → CONFLICT-014
+  Test mode (L891–892): incorrectly writes |= 0x01 to HAL_IN pin (direction violation)
+  Open decisions: DEC-AXESCMD-001 (enum reconciliation), DEC-AXESCMD-002 (implement or remove)
+
+Integration link: IK-003 (incompatible, references CONFLICT-013, CONFLICT-014)
+Requirements: HOMECOMP-001..007 (see requirement-catalogue.yaml)
+```

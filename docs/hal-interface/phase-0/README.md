@@ -202,16 +202,20 @@ by comparing file contents against the upstream repository.
    affects borderline pin names.
 6. Is PEv2 issue #33 actually complete (closed status) despite many specified
    pins being absent?
-7. What is the upstream commit SHA for the embedded `hal-canon` files? This
-   cannot be determined from the main repository alone.
+7. **RESOLVED** — The upstream commit SHA for the embedded `hal-canon` files is
+   `995d7057dd5403865d423aab64ba30d81ccd5ee0` (source B-001). The upstream
+   regression `45adb952627ab07cac9e5467e49c25e35ea6cd4a` adds 3 additional
+   direction bugs and must NOT be imported (CONFLICT-009, CONFLICT-011).
 8. Which PEv2 pins from issue #33 are required for LinuxCNC homing compatibility
    vs. optional PoKeys-specific extensions?
 
 ## Completion Status
 
-All ten required deliverables have been created. Evidence for every finding is
-referenced by file and line number or issue number. No production code was
-modified, no tests were designed, and no compatibility plan was created.
+Thirteen deliverables have been created in `docs/hal-interface/phase-0/`. Evidence
+for every finding is referenced by file and line number or issue number. No
+production code was modified, no tests were designed, and no compatibility plan
+was created. Criteria 2, 3, 8, and 14 remain PARTIAL (see
+`phase-0-completion-report.md` for details).
 
 ## No Compatibility Design Created
 
