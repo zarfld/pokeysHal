@@ -118,7 +118,10 @@ only the four types. See CONFLICT-010.
 explicit initialization loop at lines 366-397 unreachable. The field `volatile_home`
 is set to 1 in the unreachable block but starts at 0 (zero-init from rtapi_shmem_new).
 All other unreachable defaults equal zero, so only `volatile_home` is a discrepancy.
-`volatile_home` is reassigned by LinuxCNC's homing module before first use.
+`volatile_home` starts at 0 (zero-init from rtapi_shmem_new).
+No runtime read of `volatile_home` was found in the inspected source.
+External or generated consumers (e.g., LinuxCNC homing module) have not
+been fully verified. Runtime impact remains unresolved.
 
 **Options:**
 - A: Move the initialization block before the `return makepins(...)` call. Ensures

@@ -181,10 +181,16 @@ Derived from criteria currently marked PARTIAL:
   partially inspected; remaining content may contain implementation evidence.
 
 8 (lifecycle/init): CONFLICT-012 unresolved — volatile_home=1 unreachable;
-  no runtime read found in inspected source; external consumers not yet checked.
+  actual initial value is 0 (zeroed shmem). No runtime read of volatile_home
+  found in inspected source; external or generated consumers (LinuxCNC homing
+  module) have not been fully verified. Runtime impact remains unresolved.
 
-14 (no contradictions): CONFLICT-013 (AxesCommand semantic mismatch) and
-  CONFLICT-014 (current AxesCommand no reachable consumer) registered but
-  unresolved. Cross-document AxesCommand contracts require reconciliation.
+14 (no contradictions): Traceability direction/type errors corrected; CONFLICT-013
+  (AxesCommand enum mismatch) and CONFLICT-014 (no reachable consumer) remain
+  unresolved. Issue-inventory cross-repo source-ID contamination corrected
+  (LC_PKComp #24 and #129 no longer carry zarfld/pokeysHal source IDs).
+  HOMECOMP-007 conflicts field now references CONFLICT-013 and CONFLICT-014.
+  Remaining contradictions: CONFLICT-013 and CONFLICT-014 are registered but not
+  resolved; they must be resolved before this criterion can be PASS.
 
 No PASS criterion appears above.

@@ -238,21 +238,71 @@ Official LinuxCNC CDI (A-002, commit 71bf88009d64fa15edbebf9250b65ee4454f9a05):
 
 ---
 
+---
+
 ## 13. AxesState Traceability
 
 ```
-Normative basis:
-  E-010 (pokeys_homecomp.comp): HAL_OUT per-joint u32, name "hm2_[HOSTMOT2].0.PokeysAxisState.[jno]"
-  E-009 (legacy, PokeysCompPulsEngine_base.c LA-012): HAL_IN per-axis s32,
-    name fmt "PoKeys.%d.PEv2.%d.AxesState", 14 device enum values {0,1,2,8..16,20,30}
-    + PEAxisStateEx extended values {3,4,17,18,19}; source B-003 PoKeysLib.h
-  F-001 (pokeysHal): HAL_IN per-axis s32 "pokeys-async.%d.PEv2.%d.AxesState"
+ESTABLISHED DECLARATIONS (authoritative sources):
 
-State-value reconciliation:
-  Device values {0,1,2,8,9,10,11,12,13,14,15,16,20,30} — ePK_PEAxisState
-  Extended values {3,4,17,18,19} — ePK_PEAxisStateEx (hal-canon / homecomp)
-  → PEAxisStateEx extends PEAxisState; numeric overlap is absent; value set union is safe
-  → No conflict on AxesState values; naming mismatch only (CONFLICT-001, CONFLICT-006)
+(A) Legacy component — PokeysCompPulsEngine_base.c (E-009, LA-012):
+    hal_pin_u32_newf(HAL_OUT, ..., "%s.PEv2.%01d.AxesState")
+    Type:      hal_u32_t
+    Direction: HAL_OUT  — legacy component is the PRODUCER
+    Source:    legacy-pev2-parity.yaml LA-012, function_name=hal_pin_u32_newf,
+               direction_or_access=HAL_OUT
+
+(B) Current pokeysHal — PoKeysLibPulseEngine_v2Async.c:414 (F-005):
+    hal_pin_u32_newf(HAL_OUT, &pev2->pin_AxesState[i], comp_id,
+                     "%s.PEv2.%01d.AxesState", prefix, i)
+    Type:      hal_u32_t
+    Direction: HAL_OUT  — current pokeysHal is the PRODUCER
+    Runtime update: *pev2->pin_AxesState[i] = pev2->AxesState[i]
+                    at PoKeysLibPulseEngine_v2Async.c:833
+    Reachability: PK_PEv2_StatusGetAsync sends request; response handler
+                  invokes the update. Reachable via async_dispatcher from
+                  FUNCTION(_). COMPILED/REFERENCED — full RT call path traced
+                  to parse handler but HAL write at line 833 inside
+                  PK_PEv2_StatusGetParse not independently confirmed as HIL-
+                  verified.
+
+(C) homecomp — pokeys_rt/pokeys_homecomp.comp (E-010, HOMECOMP-006):
+    hal_pin_u32_newf(HAL_IN, &(addr->PEv2_AxesState), id,
+                     "joint.%d.PEv2.AxesState", jno)
+    Type:      hal_u32_t
+    Direction: HAL_IN   — homecomp is the CONSUMER
+    Source:    requirement-catalogue.yaml HOMECOMP-006,
+               evidence: pokeys_rt/pokeys_homecomp.comp
+
+HAL integration wiring (expected, not inspected in pokeysHal):
+    net pev2-axes-state-J  pokeys-async.0.PEv2.J.AxesState => joint.J.PEv2.AxesState
+    Producer (HAL_OUT): pokeysHal
+    Consumer (HAL_IN):  homecomp
+    Configuration file: integration HAL file (not present in pokeysHal repo).
+    This connection is defined by the integrator; pokeysHal does not generate it.
+
+Signal flow:
+    device hardware
+    → PK_PEv2_StatusGetAsync / PK_PEv2_StatusGetParse (PoKeysLib)
+    → device->PEv2.AxesState[i] (in-memory cache)
+    → pev2->pin_AxesState[i] (pokeysHal HAL_OUT, from parse handler)
+    → HAL signal (configured by integration file)
+    → addr->PEv2_AxesState (homecomp HAL_IN, read each servo cycle)
+
+Enum compatibility:
+    Legacy enum (ePK_PEAxisState, device values):
+      {0,1,2,8,9,10,11,12,13,14,15,16,20,30}
+    Legacy userspace extended (PEAxisStateEx):
+      {3=ReadyToFinalizeHoming, 4=ReadyToArmEncoder, 17-19 extended}
+    homecomp enum (pokeys_home_state_t):
+      {0=STOPPED,1=READY,2=RUNNING,8-16=homing states,20=ERROR,30=LIMIT}
+    Numeric overlap between device values and extended values: NONE FOUND
+    in inspected sources.
+    UNVERIFIED: Whether the device firmware ever emits extended PEAxisStateEx
+    values, and whether homecomp handles values not in pokeys_home_state_t.
+    No open decision or conflict currently covers this gap; register one if
+    Phase 1 evidence shows discrepancy.
+    Name mismatch (legacy prefix vs current prefix): CONFLICT-001, CONFLICT-006.
 ```
 
 ---
@@ -260,28 +310,68 @@ State-value reconciliation:
 ## 14. AxesCommand Traceability
 
 ```
-(A) Legacy userspace — PokeysCompPulsEngine_base.c (E-009, LA-013):
-  hal_pin_s32_newf(HAL_OUT, ..., "PoKeys.%d.PEv2.%d.AxesCommand")
-  Enum: 0=IDLE 1=DONOTHING 2=ARMENCODER 3=WaitFinalMove 4=HOMING 5=INDEX 6=HOMINGFinalize
-  Producer: LinuxCNC motion controller (HAL_OUT)
-  Consumer: PoKeysCompPulsEngine_base.c reads HAL_OUT value and calls PK_PEv2_PulseEngineMove2/SetParameter
+ESTABLISHED DECLARATIONS (authoritative sources):
 
-(B) pokeys_homecomp.comp (E-010):
-  hal_pin_u32_newf(HAL_IN, ..., "hm2_[HOSTMOT2].0.PokeysAxis.[jno].AxisCommand")
-  Enum: 0=IDLE 1=GOHOME 2=HOMINGCANCEL 3=FINALIZE
-  Producer: homecomp FUNCTION(_) writes values 0,1,3 in normal paths; value 2 never seen
-  Consumer: hm2/hardware interface reads HAL_IN
-  Conflict: value 2 = ARMENCODER (legacy) vs HOMINGCANCEL (homecomp) → CONFLICT-013
+(A) Legacy component — PokeysCompPulsEngine_base.c (E-009, LA-013):
+    hal_pin_u32_newf(HAL_IN, ..., "%s.PEv2.%01d.AxesCommand")
+    Type:      hal_u32_t
+    Direction: HAL_IN   — legacy component is the CONSUMER
+    Source:    legacy-pev2-parity.yaml LA-013, function_name=hal_pin_u32_newf,
+               direction_or_access=HAL_IN
+    Enum (PK_PEAxisCommand, PoKeysComp.h L931-937):
+      IDLE=0, HOMINGSTART=1, ARMENCODER=2, HOMINGWaitFinalMove=3,
+      HOMINGFinalMove=4, HOMINGCancel=5, HOMINGFinalize=6  (7 values)
+    Export reads PEv2_data->PEv2_AxesCommand[j]; call paths from the
+    pin read to PK_PEv2_PulseEngineMove2 or SetParameter:
+    DEFINED/REFERENCED BUT REACHABILITY UNVERIFIED — inspected source
+    contains PEv2_data field reference at LA-013 creation; full update-cycle
+    call path to a PoKeysLib send function was not traced to a primary source.
 
-(C) Current pokeysHal — experimental/pokeys_async.c (F-001):
-  hal_pin_s32_newf(HAL_IN, ..., "pokeys-async.%d.PEv2.%d.AxesCommand")
-  HAL_IN: linuxcnc writes, component reads (correct direction)
-  FUNCTION(_) calls: PK_ReceiveAndDispatch, async_dispatcher, update_ponet_hal_pins
-  → rt_handle_homing_commands and rt_read_command_pins are NOT called from FUNCTION(_)
-  → AxesCommand HAL_IN pin has no reachable consumer at runtime → CONFLICT-014
-  Test mode (L891–892): incorrectly writes |= 0x01 to HAL_IN pin (direction violation)
-  Open decisions: DEC-AXESCMD-001 (enum reconciliation), DEC-AXESCMD-002 (implement or remove)
+(B) homecomp — pokeys_rt/pokeys_homecomp.comp (E-010, HOMECOMP-007):
+    hal_pin_u32_newf(HAL_OUT, &(addr->PEv2_AxesCommand), id,
+                     "joint.%d.PEv2.AxesCommand", jno)
+    Type:      hal_u32_t
+    Direction: HAL_OUT  — homecomp is the PRODUCER
+    Source:    requirement-catalogue.yaml HOMECOMP-007
+    Enum (pokeys_home_command_t):
+      IDLE=0, HOMINGSTART=1, HOMINGCANCEL=2, FINALIZE=3  (4 values)
+    Homecomp FUNCTION(_) writes values 0, 1, 3 in documented paths.
+    Value 2 (HOMINGCANCEL) is defined but its emit conditions were not
+    fully traced.
+    → CONFLICT-013: value 2 is ARMENCODER in the legacy 7-value enum;
+      value 3 maps to HOMINGWaitFinalMove (legacy) ≠ FINALIZE (homecomp).
 
-Integration link: IK-003 (incompatible, references CONFLICT-013, CONFLICT-014)
-Requirements: HOMECOMP-001..007 (see requirement-catalogue.yaml)
+(C) Current pokeysHal — PoKeysLibPulseEngine_v2Async.c:421 (F-005):
+    hal_pin_u32_newf(HAL_IN, &pev2->pin_AxesCommand[i], comp_id,
+                     "%s.PEv2.%01d.AxesCommand", prefix, i)
+    Type:      hal_u32_t
+    Direction: HAL_IN   — current pokeysHal is the CONSUMER
+    FUNCTION(_) calls: PK_ReceiveAndDispatch, PK_TimeoutAndRetryCheck,
+                       async_dispatcher, update_ponet_hal_pins
+                       (experimental/pokeys_async.c:1014–1070, inspected)
+    rt_read_command_pins and rt_handle_homing_commands are declared
+    (experimental/pokeys_async.c:356,359) but are NOT called from FUNCTION(_).
+    → AxesCommand HAL_IN pin has no reachable consumer in the normal RT cycle.
+    → CONFLICT-014: no reachable forwarding path demonstrated.
+    Test mode (experimental/pokeys_async.c:891-892): writes |= 0x01 to
+    pin_AxesCommand[0]; this violates HAL_IN direction.
+    Open decisions: DEC-AXESCMD-001 (enum reconciliation), DEC-AXESCMD-002
+                    (implement or remove forwarding path).
+
+HAL integration wiring (expected, not inspected in pokeysHal):
+    net pev2-axes-cmd-J  joint.J.PEv2.AxesCommand => pokeys-async.0.PEv2.J.AxesCommand
+    Producer (HAL_OUT): homecomp
+    Consumer (HAL_IN):  pokeysHal
+    Configuration file: integration HAL file (not present in pokeysHal repo).
+    This connection is defined by the integrator; pokeysHal does not generate it.
+
+Signal flow:
+    homecomp FUNCTION(_)
+    → addr->PEv2_AxesCommand (homecomp HAL_OUT)
+    → HAL signal (configured by integration file)
+    → pev2->pin_AxesCommand[i] (pokeysHal HAL_IN)
+    → [NO REACHABLE CONSUMER in current FUNCTION(_)] → CONFLICT-014
+
+Integration link: IK-003 (incompatible, CONFLICT-013, CONFLICT-014)
+Requirements: HOMECOMP-007 (conflicts: CONFLICT-013, CONFLICT-014)
 ```

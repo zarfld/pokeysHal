@@ -73,6 +73,10 @@ but no HAL pin export — the most significant remaining ownership gap.
 
 7. **CONFLICT-012**: `homing_init()` has an unreachable initialization block.
    All homecomp HAL pin defaults are zero from HAL shared-memory initialization.
+   `volatile_home=1` from the unreachable block is never applied; actual initial
+   value is 0. No runtime read of `volatile_home` was found in the inspected
+   source. External or generated consumers have not been fully verified.
+   Runtime impact remains unresolved (see CONFLICT-012, DEC-LIFE-002).
 
 8. **Integration boundaries** between pokeysHal and pokeys_homecomp are recorded
    in `integration-links.yaml` (IK-001..IK-004). The AxesCommand integration

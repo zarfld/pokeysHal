@@ -1356,7 +1356,7 @@ requirements:
       incompatible with the legacy 7-value enum (CONFLICT-013). Not compatible.
     requirement_sources: [E-010, C-002]
     implementation_sources: [F-005]
-    conflicts: []
+    conflicts: [CONFLICT-013, CONFLICT-014]
     evidence: "pokeys_rt/pokeys_homecomp.comp: hal_pin_u32_newf(HAL_OUT, &(addr->PEv2_AxesCommand), id, joint.jno.PEv2.AxesCommand)"
 
   - interface_id: NAMELEN-001

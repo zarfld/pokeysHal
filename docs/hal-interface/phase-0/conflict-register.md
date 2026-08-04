@@ -522,14 +522,19 @@ volatile_home analysis:
   volatile_home is a C bool field (non-HAL, not a HAL pin).
   The intended value from the unreachable code is 1 (true).
   Actual value at startup: 0 (false) — from zeroed shmem.
-  Read sites: set_joint_homing_params() at L1352-1362 assigns the value
-  passed in by LinuxCNC's homing module at each homing call.
+  Read sites: No runtime read of volatile_home was found in the inspected
+  source (pokeys_rt/pokeys_homecomp.comp, E-010). set_joint_homing_params()
+  is referenced as a possible consumer but its implementation is in external
+  LinuxCNC source that was not inspected in Phase 0.
   Conclusion: volatile_home=1 from the unreachable block is never applied
-  at startup, but the value is reassigned before first use by LinuxCNC.
-  Runtime severity: LOW — the intended default is overwritten before use.
-  However the discrepancy remains a code defect that should be fixed.
+  at startup. The actual initial value is 0 from zeroed shared memory.
+  No runtime impact classification may be asserted without tracing a read/use.
+  No runtime read was found in the inspected source;
+  external or generated consumers have not been fully verified.
+  Runtime impact remains unresolved.
 Safety or compatibility impact:
-  LOW (volatile_home overwritten before use).
+  UNRESOLVED — runtime impact cannot be assessed without confirming whether
+  volatile_home is read before the LinuxCNC homing framework assigns it.
   MEDIUM for documentation: Phase 0 catalogue must not cite the unreachable
   loop as the initialization source for any field. Defaults for HAL pins
   are 0 from zero-init. volatile_home default is 0, not the intended 1.
@@ -537,8 +542,10 @@ Required action:
   1. HOMECOMP catalogue default_value must say "0 (zeroed shmem; unreachable
      explicit init at homing_init():366-397 not executed)" not values from loop.
   2. See DEC-LIFE-002 for resolution options.
-  3. Phase 1 must move volatile_home initialization before the return or
-     document that the LinuxCNC homing framework guarantees its assignment.
+  3. Phase 1 must inspect external LinuxCNC homing module source to determine
+     whether volatile_home is always assigned before it affects behavior, then
+     either move volatile_home=1 before the return or document the invariant
+     with a primary source citation.
 Status: unresolved
 ```
 
