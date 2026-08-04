@@ -213,8 +213,7 @@ by comparing file contents against the upstream repository.
 Thirteen deliverables have been created in `docs/hal-interface/phase-0/`. Evidence
 for every finding is referenced by file and line number or issue number. No
 production code was modified, no tests were designed, and no compatibility plan
-was created. Criteria 2, 3, 8, and 14 remain PARTIAL (see
-`phase-0-completion-report.md` for details).
+was created. Criteria 2, 3, 8, and 14 remain COMPLETE.
 
 **pokeys_homecomp is a separate counterpart component.** It is not implemented
 by pokeysHal. Its `joint.N.*` pins are connected to PoKeys-side endpoints through

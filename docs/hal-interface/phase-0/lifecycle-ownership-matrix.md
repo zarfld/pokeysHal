@@ -90,7 +90,7 @@ managed by the LinuxCNC runtime.
 | Pins owned | `joint.N.home-sw-in`, `joint.N.homing`, `joint.N.homed`, `joint.N.home-state`, `joint.N.index-enable`, `joint.N.PEv2.AxesState`, `joint.N.PEv2.AxesCommand`, etc. |
 | HAL memory | Fresh RTAPI shared memory (`rtapi_shmem_new`) is initially zeroed by the OS. `hal_malloc`/`shmalloc_up` reserves from that region and does not itself memset each allocation. |
 | Initialization | `homing_init()` calls `makepins()` at line 364, then returns. The explicit init loop at lines 366–397 is unreachable dead code. All pin defaults are 0 from zeroed shmem. |
-| CONFLICT-012 | `volatile_home=1` from the unreachable block is never applied; actual initial value is 0. No runtime read of `volatile_home` was found in the inspected source. External or generated consumers have not been fully verified. Runtime impact remains unresolved (DEC-LIFE-002). CONFLICT-012 is a defect in the counterpart component; it is irrelevant to pokeysHal internal lifecycle correctness but relevant to end-to-end integration. |
+| CONFLICT-012 | `volatile_home=1` in the unreachable init block (L377) has no runtime impact. `set_joint_homing_params()` (L1362, E-010) is called by LinuxCNC at startup (via taskintf.cc emcJointSetHomingParams(), A-004), assigning the INI value before any homing. No read site for `volatile_home` exists in the inspected source — `set_unhomed()` (L1332) does not check it. Phase 0 evidence complete (sources: A-003, A-004, E-010). Code defect (dead code) with no behavioral impact. Phase 1 code cleanup only. |
 | Lifecycle owner | LinuxCNC runtime (loads/unloads `pokeys_homecomp` independently) |
 
 ---

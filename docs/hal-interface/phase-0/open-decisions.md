@@ -114,31 +114,28 @@ only the four types. See CONFLICT-010.
 
 ### DEC-LIFE-002: Resolve unreachable pokeys_homecomp initialization (CONFLICT-012)
 
-**Context:** `homing_init()` returns from `makepins()` at line 364, leaving the
-explicit initialization loop at lines 366-397 unreachable. The field `volatile_home`
-is set to 1 in the unreachable block but starts at 0 (zero-init from rtapi_shmem_new).
-All other unreachable defaults equal zero, so only `volatile_home` is a discrepancy.
-`volatile_home` starts at 0 (zero-init from rtapi_shmem_new).
-No runtime read of `volatile_home` was found in the inspected source.
-External or generated consumers (e.g., LinuxCNC homing module) have not
-been fully verified. Runtime impact remains unresolved.
+**Evidence (Phase 0 complete):**
+- `homing_init()` returns at L364; init loop at L366-397 is unreachable dead code.
+- `volatile_home` has no runtime impact in this implementation (see CONFLICT-012):
+  - `set_joint_homing_params()` (L1344-1365, E-010) overwrites it from INI at startup
+    (called via `emcJointSetHomingParams()` in LinuxCNC v2.9.10 taskintf.cc, A-004)
+  - No read site in `pokeys_homecomp.comp`; `set_unhomed()` does not check it
+  - Evidence sources: A-003, A-004, E-010
+
+**Remaining action (Phase 1 implementation):**
+The unreachable block (L366-397) is dead code. It should be cleaned up.
 
 **Options:**
-- A: Move the initialization block before the `return makepins(...)` call. Ensures
-     explicit defaults apply at startup, including `volatile_home=1`. Clean fix.
-- B: Remove the unreachable block and rely intentionally on zero-initialization plus
-     the LinuxCNC framework assignment of `volatile_home`. Requires confirmed evidence
-     that LinuxCNC always sets `volatile_home` before it affects runtime behavior.
-- C: Add `H[jno].volatile_home = 1` immediately after the `return makepins(...)` or
-     inside `makepins()` itself, while removing the full unreachable block.
+- A: Move the initialization block before the `return makepins(...)` call.
+- B: Remove the unreachable block entirely (safe — volatile_home has no behavioral
+     impact; `set_joint_homing_params` is always called before homing begins).
+- C: Add `H[jno].volatile_home = 1` after `return makepins(...)` and remove block.
 
-**Recommendation:** Option A is the safest change. Option B is acceptable only if
-Phase 1 tracing confirms the LinuxCNC homing module invariant.
+**Recommendation:** Option B is clean and evidence-safe. Options A and C are
+equivalent for behavioral purposes.
 
-**Blocking:** Criterion 8 (end-to-end integration lifecycle) remains PARTIAL
-until this is resolved. Note: this is a defect in the counterpart component
-(`pokeys_homecomp`, E-010); it does not affect pokeysHal internal lifecycle
-correctness.
+**Status:** Evidence complete. Runtime impact confirmed zero. Production fix is a
+code-quality improvement for Phase 1, not a behavioral requirement.
 
 ### DEC-AXESCMD-001: Resolve AxesCommand semantic mismatch (CONFLICT-013)
 

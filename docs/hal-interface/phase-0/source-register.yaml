@@ -910,3 +910,29 @@ sources:
       pokeys_minimal.ini: JOINTS=3; no HOMEMOD; does not load pokeys_homecomp.
       Component: pokeys-async; prefix: pokeys-async.0.
       JOINTS=3 does not establish PEv2 export cardinality.
+  - source_id: A-003
+    class: A
+    repository: LinuxCNC/linuxcnc
+    revision: v2.9.10
+    path: src/emc/motion/homing.c
+    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/motion/homing.c
+    description: >-
+      LinuxCNC v2.9.10 default homing module. Inspected for CONFLICT-012
+      volatile_home analysis. base_homing_init() initialises H[i].volatile_home=0;
+      base_set_joint_homing_params() sets H[jno].volatile_home=volatile_home from
+      INI; set_all_unhomed() reads H[jno].volatile_home when unhome_method==-2.
+    inspection_status: complete
+
+  - source_id: A-004
+    class: A
+    repository: LinuxCNC/linuxcnc
+    revision: v2.9.10
+    path: src/emc/task/taskintf.cc
+    url: https://github.com/LinuxCNC/linuxcnc/blob/v2.9.10/src/emc/task/taskintf.cc
+    description: >-
+      LinuxCNC v2.9.10 task interface. emcJointSetHomingParams() sends
+      EMCMOT_SET_JOINT_HOMING_PARAMS with volatile_home from INI via
+      usrmotWriteEmcmotCommand(). Called during emcJointInit() at startup before
+      any homing sequence. This delivers the INI volatile_home value to
+      set_joint_homing_params() in the active homing module.
+    inspection_status: complete

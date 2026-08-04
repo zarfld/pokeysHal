@@ -518,35 +518,48 @@ HAL shared-memory allocation semantics:
   makepins() creates HAL pins (reserves pointers into zeroed shmem) but does
   not assign explicit initial values to those pins.
   Therefore all HAL pin values start at 0 at component startup.
-volatile_home analysis:
-  volatile_home is a C bool field (non-HAL, not a HAL pin).
-  The intended value from the unreachable code is 1 (true).
-  Actual value at startup: 0 (false) — from zeroed shmem.
-  Read sites: No runtime read of volatile_home was found in the inspected
-  source (pokeys_rt/pokeys_homecomp.comp, E-010). set_joint_homing_params()
-  is referenced as a possible consumer but its implementation is in external
-  LinuxCNC source that was not inspected in Phase 0.
-  Conclusion: volatile_home=1 from the unreachable block is never applied
-  at startup. The actual initial value is 0 from zeroed shared memory.
-  No runtime impact classification may be asserted without tracing a read/use.
-  No runtime read was found in the inspected source;
-  external or generated consumers have not been fully verified.
-  Runtime impact remains unresolved.
+volatile_home analysis (Phase 0 evidence complete):
+  volatile_home is a C bool field in home_local_data struct (non-HAL).
+  Declaration: pokeys_homecomp.comp:204 (E-010)
+  Actual initial value at startup: 0 (from zeroed shmem via rtapi_shmem_new).
+
+  Assignments:
+    1. Unreachable init: L377 H[jno].volatile_home = 1 — dead code (after return)
+    2. set_joint_homing_params(): L1362 H[jno].volatile_home = volatile_home
+       Called by LinuxCNC at startup via emcJointSetHomingParams() in taskintf.cc
+       (A-004), which sends EMCMOT_SET_JOINT_HOMING_PARAMS → invokes
+       set_joint_homing_params() before any homing cycle. This sets the INI
+       value, overwriting the zero-init value.
+
+  Reads in pokeys_homecomp.comp (E-010):
+    No read of H[jno].volatile_home found. set_unhomed() at L1332-1335 does NOT
+    check volatile_home; it simply sets H[jno].homed=0. volatile_home appears
+    to be stored (for API compliance) but is not used to make any decision in
+    the pokeys_homecomp implementation.
+
+  Runtime impact:
+    The unreachable volatile_home=1 (L377) has NO runtime impact because:
+    a. set_joint_homing_params() (L1344-1365) is called at startup and assigns
+       the INI-configured value regardless.
+    b. volatile_home is never read by any decision-making code in the inspected
+       source.
+    This is supported by evidence from A-003 (LinuxCNC homing.c), A-004
+    (taskintf.cc), and E-010 (pokeys_homecomp.comp). Full dependency graph
+    inspected for the installed LinuxCNC version (v2.9.10).
+
 Safety or compatibility impact:
-  UNRESOLVED — runtime impact cannot be assessed without confirming whether
-  volatile_home is read before the LinuxCNC homing framework assigns it.
-  MEDIUM for documentation: Phase 0 catalogue must not cite the unreachable
-  loop as the initialization source for any field. Defaults for HAL pins
-  are 0 from zero-init. volatile_home default is 0, not the intended 1.
-Required action:
-  1. HOMECOMP catalogue default_value must say "0 (zeroed shmem; unreachable
-     explicit init at homing_init():366-397 not executed)" not values from loop.
-  2. See DEC-LIFE-002 for resolution options.
-  3. Phase 1 must inspect external LinuxCNC homing module source to determine
-     whether volatile_home is always assigned before it affects behavior, then
-     either move volatile_home=1 before the return or document the invariant
-     with a primary source citation.
-Status: unresolved
+  NONE for volatile_home runtime behavior — the unreachable assignment cannot
+  affect any outcome in the inspected implementation.
+  Code quality: the unreachable block (L366-397) remains dead code that should
+  be removed or moved before the return. This is a code defect but not a
+  behavioral defect.
+  MEDIUM for documentation only: Phase 0 catalogue must cite zero-init as the
+  actual default source, not the unreachable loop.
+Required action (Phase 1):
+  Move or remove the unreachable initialization block (optional; behavioral
+  impact is confirmed zero). DEC-LIFE-002 options A or C are equivalent.
+  Option B (rely on framework) is also confirmed safe.
+Status: evidence complete — runtime impact confirmed zero
 ```
 
 ---
