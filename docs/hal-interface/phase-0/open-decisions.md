@@ -112,6 +112,29 @@ only the four types. See CONFLICT-010.
   project/legacy compatibility contracts; PoKeys-specific extensions.
 - Do not call motion/PEv2 pins 'canonical' unless a primary source supports it.
 
+### DEC-LIFE-002: Resolve unreachable pokeys_homecomp initialization (CONFLICT-012)
+
+**Context:** `homing_init()` returns from `makepins()` at line 364, leaving the
+explicit initialization loop at lines 366-397 unreachable. The field `volatile_home`
+is set to 1 in the unreachable block but starts at 0 (zero-init from rtapi_shmem_new).
+All other unreachable defaults equal zero, so only `volatile_home` is a discrepancy.
+`volatile_home` is reassigned by LinuxCNC's homing module before first use.
+
+**Options:**
+- A: Move the initialization block before the `return makepins(...)` call. Ensures
+     explicit defaults apply at startup, including `volatile_home=1`. Clean fix.
+- B: Remove the unreachable block and rely intentionally on zero-initialization plus
+     the LinuxCNC framework assignment of `volatile_home`. Requires confirmed evidence
+     that LinuxCNC always sets `volatile_home` before it affects runtime behavior.
+- C: Add `H[jno].volatile_home = 1` immediately after the `return makepins(...)` or
+     inside `makepins()` itself, while removing the full unreachable block.
+
+**Recommendation:** Option A is the safest change. Option B is acceptable only if
+Phase 1 tracing confirms the LinuxCNC homing module invariant.
+
+**Blocking:** Criterion 8 (lifecycle/initialization ownership) remains PARTIAL
+until this is resolved.
+
 ---
 
 ## 2. Backward Compatibility

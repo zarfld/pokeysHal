@@ -578,55 +578,11 @@ sources:
     state: current
     inspected: true
     notes: >
-      Inspected via GitHub API. Full machine-readable parity table from
-      PokeysCompPulsEngine_base.c (163 hal_pin/hal_param calls). Each row:
-      name_pattern | pin/param | type | dir | cardinality | condition |
-      default | enum/bitmap | legacy-loc | pokeysHal-equiv | compatibility.
-      GLOBAL: PEv2.nrOfAxes|pin|u32|OUT|1|always|0|n/a|L438|PEV2G-001|compat;
-      PEv2.PulseEngineActivated|pin|u32|OUT|1|always|0|n/a|L469|PEV2G-001|compat;
-      PEv2.PulseEngineState|pin|u32|OUT|1|always|0|ePK_PEState|L470|PEV2G-006|compat;
-      PEv2.PulseEngineEnabled|pin+param|u32|IO+RW|1|always|0|n/a|L464|absent|CONFLICT-007;
-      PEv2.PulseGeneratorType|param|u32|RW|1|always|0|n/a|L465|absent|CONFLICT-007;
-      PEv2.MiscInputStatus|pin|u32|OUT|1|always|0|bitmap|n/a|absent|CONFLICT-007;
-      PEv2.LimitOverride|pin|u32|IO|1|always|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.LimitOverrideSetup|pin|u32|IO|1|always|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.digin.Emergency.in|pin|bit|OUT|1|always|0|n/a|n/a|PEV2G-003|compat;
-      PEv2.digin.Probed.in|pin|bit|OUT|1|always|0|n/a|n/a|PEV2G-005|compat;
-      PEv2.digout.Emergency.out|pin|bit|IN|1|always|0|n/a|n/a|PEV2G-004|compat;
-      PEv2.digin.Misc-N.in|pin|bit|OUT|8|always|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.digin.Misc-N.in-not|pin|bit|OUT|8|always|0|n/a|n/a|absent|CONFLICT-007.
-      PER-AXIS (J=0..nrOfAxes-1):
-      PEv2.J.AxesState|pin|u32|OUT|J|J<nr|0|ePK_PEAxisState|n/a|PEV2A-003|compat;
-      PEv2.J.AxesCommand|pin|u32|IN|J|J<nr|0|ePK_PEAxisCmd|n/a|PEV2A-003|compat;
-      PEv2.J.AxesConfig|param|u32|RW|J|J<nr|0|ePK_PEv2_AxisConfig|n/a|absent|CONFLICT-007;
-      PEv2.J.SoftLimitMaximum|param|u32|RW|J|J<nr|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.J.SoftLimitMinimum|param|u32|RW|J|J<nr|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.J.HomingSpeed|param|u32|RW|J|J<nr|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.J.HomingReturnSpeed|param|u32|RW|J|J<nr|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.J.HomeOffsets|param|s32|RW|J|J<nr|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.J.ProbePosition|pin|u32|IO|J|J<nr|0|n/a|n/a|similar|partial;
-      PEv2.J.HomingStatus|pin|u32|IO|J|J<nr|0|n/a|n/a|PEV2H-001|compat;
-      PEv2.J.index-enable|pin|bit|IO|J|J<nr|0|n/a|n/a|PEV2A-002|compat;
-      PEv2.J.CurrentPosition|pin|s32|OUT|J|J<nr|0|n/a|n/a|compat|compat;
-      PEv2.J.PositionSetup|pin|s32|IO|J|J<nr|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.J.joint-pos-cmd|pin|float|IN|J|J<nr|0|n/a|n/a|PEV2A-001|compat;
-      PEv2.J.joint-pos-fb|pin|float|OUT|J|J<nr|0|n/a|n/a|PEV2A-002|compat;
-      PEv2.J.joint-in-position|pin|bit|IN|J|J<nr|0|n/a|n/a|compat|compat;
-      PEv2.J.joint-vel-cmd|pin|float|IN|J|J<nr|0|n/a|n/a|compat|compat;
-      PEv2.J.digin.LimitN.in|pin|bit|OUT|J|J<nr|0|n/a|n/a|PEV2A-004|compat;
-      PEv2.J.digin.LimitN.in-not|pin|bit|OUT|J|J<nr|0|n/a|n/a|compat|compat;
-      PEv2.J.digin.LimitP.in|pin|bit|OUT|J|J<nr|0|n/a|n/a|compat|compat;
-      PEv2.J.digin.LimitP.in-not|pin|bit|OUT|J|J<nr|0|n/a|n/a|compat|compat;
-      PEv2.J.digin.Home.in|pin|bit|OUT|J|J<nr|0|n/a|n/a|compat|compat;
-      PEv2.J.digin.Home.in-not|pin|bit|OUT|J|J<nr|0|n/a|n/a|compat|compat;
-      PEv2.J.digout.AxisEnable.out|pin|bit|IN|J|J<nr|0|n/a|n/a|absent|CONFLICT-002;
-      PEv2.J.MaxSpeed|param|float|RW|J|J<nr|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.J.MaxAcceleration|param|float|RW|J|J<nr|0|n/a|n/a|absent|CONFLICT-007;
-      PEv2.J.stepgen.STEP-SCALE|param|float|RW|J|J<nr|0|n/a|n/a|absent|CONFLICT-007;
-      (12 more stepgen params per axis all param/RW/absent/CONFLICT-007);
-      PEv2.J.joint-kb-jog-active|pin|bit|IN|J|J<nr|0|n/a|n/a|compat|compat;
-      PEv2.J.joint-wheel-jog-active|pin|bit|IN|J|J<nr|0|n/a|n/a|compat|compat.
-
+      Inspected via GitHub API (0c058e6c). Full parity table as separate artifact:
+      docs/hal-interface/phase-0/legacy-pev2-parity.yaml (140 rows: 139 active,
+      1 commented). Per-axis loop: fixed j=0..7. PulseEngineEnabled pin commented out;
+      param active (L424). HomeOffsets is hal_u32_t. AxesCommand (LA-013) not mapped
+      to PEV2A-003. index-enable (LA-022) is integration-coupling only.
   # ── F. Current Implementation ─────────────────────────────────────────────────
 
   - source_id: F-001
@@ -940,10 +896,10 @@ sources:
     state: current
     inspected: true
     notes: >
-      Inspected pokeys_minimal.hal and .ini. Component name: pokeys_async
-      (loadrt pokeys_async; addf pokeys-async.0 servo-thread). Prefix: pokeys-async.0.*.
-      Pins used: pokeys-async.0.digin.0.in-not (machine-enable),
-      pokeys-async.0.digin.1.in-not (e-stop), pokeys-async.0.PEv2.0..2.* (3 axes),
-      pokeys-async.0.adcout.0.value/enable (spindle). No homecomp used.
-      Confirms: component name is pokeys-async; prefix is pokeys-async.0.
-      PEv2 cardinality: 3 axes (axes 0, 1, 2).
+      pokeys_minimal.hal: loadrt pokeys_async; addf pokeys-async.0 servo-thread;
+        uses pokeys-async.0.digin.0.in-not; NO PEv2 per-axis nets.
+      shutdown.hal: setp pokeys-async.0.adcout.0-5.enable/value;
+        setp pokeys-async.0.PEv2.digout.ExternalRelay-0-3.out (setp, not net).
+      pokeys_minimal.ini: JOINTS=3; no HOMEMOD; does not load pokeys_homecomp.
+      Component: pokeys-async; prefix: pokeys-async.0.
+      JOINTS=3 does not establish PEv2 export cardinality.

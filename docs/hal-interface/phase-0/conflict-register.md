@@ -157,7 +157,7 @@ Required decision:
      to PWM duty cycle is functionally complete.
   2. Decide whether adcout.J.PWMduty and adcout.J.max_voltage remain supplementary.
   3. Close or update issues #37 and #39 with evidence of actual conversion behavior.
-Status: code path verified (C4 trace); HIL execution pending. See ADCOUT-005.
+Status: code path verified by inspection (C4 trace). Evidence: canonical export: implemented; active function: PK_PWMUpdateAsync (PoKeysLibIOAsync.c:703); active build object: PoKeysLibIOAsync.o (Submakefile.rt F-009); conversion: implemented and reachable; scheduler: 100 ms; HIL hardware behaviour: not verified; supplementary PWM-object policy: unresolved. HIL execution pending.
 ```
 
 ---
@@ -498,43 +498,46 @@ Status: unresolved
 
 ```
 Conflict ID: CONFLICT-012
-Subject: Unreachable initialization block in pokeys_homecomp homing_init()
+Subject: Unreachable initialization block in pokeys_homecomp homing_init(); volatile_home=1 not applied
 Source: pokeys_rt/pokeys_homecomp.comp (E-010), function homing_init(), lines 356-398
 Evidence (inspected at E-010):
   Line 364:  return makepins(id, n_joints);
   Lines 366-397: // initialize jid[] and jhd[] data here
                  for (int jno = 0; jno < EMCMOT_MAX_JOINTS; jno++) { ... }
-  The return on line 364 exits the function before the initialization loop.
-  The initialization loop on lines 366-397 is therefore unreachable dead code.
-  Explicit defaults set in the unreachable block:
-    H[jno].offset = 0
-    H[jno].home = 0, home_final_vel = 0, home_search_vel = 0
-    H[jno].home_latch_vel = 0, home_flags = 0
-    H[jno].home_sequence = 0, volatile_home = 1
-    addr->home_sw = 0, addr->homing = 0, addr->homed = 0
-    addr->home_state = HOME_IDLE
-    addr->index_enable = 0
-    addr->PEv2_AxesState = PK_PEAxisState_axSTOPPED (=0)
-    addr->PEv2_AxesCommand = PK_PEAxisCommand_axIDLE (=0)
-Why this matters for Phase 0:
-  Catalogue entries for HOMECOMP default values cannot cite this unreachable
-  block as the initialization source. Actual default values come from:
-  - HAL shared-memory zero-initialization (hal_malloc fills with zeros on
-    LinuxCNC component startup);
-  - static storage-class initialization (C global/static vars initialized to 0);
-  - makepins() only creates HAL pins; it does not assign initial non-zero values.
-  Therefore all HAL pin defaults for homecomp objects are effectively 0 (or
-  HAL_TYPE zero-equivalent), not the values in the unreachable loop.
+  The return at line 364 exits homing_init() before the initialization loop.
+  The loop at lines 366-397 is therefore unreachable dead code.
+Unreachable defaults include:
+  H[jno].volatile_home = 1   ← non-zero; conflicts with HAL zero-init
+  H[jno].home_sequence = 0, home_flags = 0, offset = 0, home = 0 etc.
+  addr->home_state = HOME_IDLE (=0), PEv2_AxesCommand = IDLE (=0), etc.
+HAL shared-memory allocation semantics:
+  rtapi_shmem_new (LinuxCNC RTAPI) supplies fresh shared memory that is
+  initially zeroed by the OS page allocator.
+  hal_malloc / shmalloc_up reserves from that region but does not itself
+  memset each allocation; the memory is already zeroed from the shmem_new call.
+  makepins() creates HAL pins (reserves pointers into zeroed shmem) but does
+  not assign explicit initial values to those pins.
+  Therefore all HAL pin values start at 0 at component startup.
+volatile_home analysis:
+  volatile_home is a C bool field (non-HAL, not a HAL pin).
+  The intended value from the unreachable code is 1 (true).
+  Actual value at startup: 0 (false) — from zeroed shmem.
+  Read sites: set_joint_homing_params() at L1352-1362 assigns the value
+  passed in by LinuxCNC's homing module at each homing call.
+  Conclusion: volatile_home=1 from the unreachable block is never applied
+  at startup, but the value is reassigned before first use by LinuxCNC.
+  Runtime severity: LOW — the intended default is overwritten before use.
+  However the discrepancy remains a code defect that should be fixed.
 Safety or compatibility impact:
-  LOW for runtime (zero-default matches the explicit defaults in the dead code).
-  HIGH for documentation: any Phase 0 record claiming defaults from the
-  unreachable block is citing dead code.
+  LOW (volatile_home overwritten before use).
+  MEDIUM for documentation: Phase 0 catalogue must not cite the unreachable
+  loop as the initialization source for any field. Defaults for HAL pins
+  are 0 from zero-init. volatile_home default is 0, not the intended 1.
 Required action:
-  1. Remove "initialized to HOME_IDLE/IDLE/STOPPED" from HOMECOMP default_value
-     fields where cited from the unreachable loop; replace with "0 (zero-init
-     from HAL shared-memory; unreachable explicit init at lines 366-397)".
-  2. Correct lifecycle-ownership-matrix.md initialization phase for homecomp.
-  3. Phase 1 implementation must verify whether makepins() itself initializes
-     any pin values, or whether a fix is needed to restore the initialization.
+  1. HOMECOMP catalogue default_value must say "0 (zeroed shmem; unreachable
+     explicit init at homing_init():366-397 not executed)" not values from loop.
+  2. See DEC-LIFE-002 for resolution options.
+  3. Phase 1 must move volatile_home initialization before the return or
+     document that the LinuxCNC homing framework guarantees its assignment.
 Status: unresolved
 ```
