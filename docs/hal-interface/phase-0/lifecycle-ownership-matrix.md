@@ -56,10 +56,11 @@ Evidence from pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
    owner**: it calls `hal_init`, all export functions, `hal_export_funct`,
    `hal_ready`, and `hal_exit`. Subsystem files own their own object creation.
 
-4. **Initial defaults** are implicitly zero for all pointer-valued HAL pins
-   (via `memset(inst, 0, sz)` in `export()`). Non-pointer HAL params in the
-   structs (e.g., `encoder.scale`) are also zeroed, which may not match
-   sensible defaults (scale=0 is not useful).
+4. **Initial defaults**: The consumer component's own pin pointers in `__comp_state`
+   are zeroed by `memset(inst, 0, sz)` in `export()` (F-008, inspected). Non-pointer HAL
+   params in library structs (e.g., `encoder.scale`) are also zeroed via `memset` in
+   `PK_CreateDeviceEx`. Zeroing of the broader RTAPI shared-memory region is implementation-
+   dependent and has no registered primary source in Phase 0; do not rely on it for defaults.
 
 5. **Cleanup** is handled by `hal_exit(comp_id)`. All HAL-malloc memory is
    reclaimed at exit. Per-subsystem cleanup is component-level.
@@ -89,7 +90,7 @@ managed by the LinuxCNC runtime.
 | Repository | `zarfld/LinuxCnc_PokeysLibComp` (E-010) |
 | Pins owned | `joint.N.home-sw-in`, `joint.N.homing`, `joint.N.homed`, `joint.N.home-state`, `joint.N.index-enable`, `joint.N.PEv2.AxesState`, `joint.N.PEv2.AxesCommand`, etc. |
 | HAL memory | `hal_malloc`/`shmalloc_up` reserves from the RTAPI shared memory region. The zeroing behavior of `rtapi_shmem_new` is an implementation detail of the LinuxCNC RTAPI allocator; no primary source was registered in Phase 0 to confirm this. HAL pin pointer fields in the consumer component are zeroed via `memset(inst, 0, sz)` in `export()` (F-008). |
-| Initialization | `homing_init()` calls `makepins()` at line 364, then returns. The explicit init loop at lines 366–397 is unreachable dead code. All pin defaults are 0 from zeroed shmem. |
+| Initialization | `homing_init()` calls `makepins()` at line 364, then returns. The explicit init loop at lines 366–397 is unreachable dead code. HAL pin pointer values in __comp_state start at 0 via memset in export(). |
 | Internal defects | The counterpart `pokeys_homecomp` (E-010) has an unreachable initialization block in `homing_init()`. This is internal to `zarfld/LinuxCnc_PokeysLibComp` and is not a pokeysHal library issue. See the out-of-scope note in `conflict-register.md`. |
 | Lifecycle owner | LinuxCNC runtime (loads/unloads `pokeys_homecomp` independently) |
 

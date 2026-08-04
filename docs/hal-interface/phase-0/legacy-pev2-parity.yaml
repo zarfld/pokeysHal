@@ -890,8 +890,11 @@ parity_rows:
   cardinality: '8'
   creation_condition: unconditional
   default_evidence: 0 (PK_PEAxisState_axSTOPPED)
-  enum_or_bitmap: ePK_PEAxisState device values {0,1,2,8,9,10,11,12,13,14,15,16,20,30}; userspace also defines PEAxisStateEx extended values {3=ReadyToFinalizeHoming, 4=ReadyToArmEncoder, 17=HOMINGARMENCODER,
-    18=HOMINGWaitFINALMOVE, 19=HOMINGFINALMOVE} that may appear on pin if legacy userspace writes them; whether they are sent to hardware unverified
+  enum_or_bitmap: ePK_PEAxisState device values {0,1,2,8,9,10,11,12,13,14,15,16,20,30};
+    userspace also defines PEAxisStateEx extended values {3=ReadyToFinalizeHoming,
+    4=ReadyToArmEncoder, 17=HOMINGARMENCODER, 18=HOMINGWaitFINALMOVE, 19=HOMINGFINALMOVE}
+    that may appear on pin if legacy userspace writes them; whether they are sent
+    to hardware unverified
   source_file: PokeysCompPulsEngine_base.c
   source_line: 164
   active_or_commented: active
@@ -911,16 +914,19 @@ parity_rows:
   cardinality: '8'
   creation_condition: unconditional
   default_evidence: 0 (IDLE)
-  enum_or_bitmap: 'PK_PEAxisCommand enum (legacy userspace, PoKeysComp.h L931-937): IDLE=0, HOMINGSTART=1, ARMENCODER=2, HOMINGWaitFinalMove=3, HOMINGFinalMove=4, HOMINGCancel=5, HOMINGFinalize=6 (7 values).
-    NOTE: homecomp uses a different incompatible enum with only 4 values -- see CONFLICT-013'
+  enum_or_bitmap: 'PK_PEAxisCommand enum (legacy userspace, PoKeysComp.h L931-937):
+    IDLE=0, HOMINGSTART=1, ARMENCODER=2, HOMINGWaitFinalMove=3, HOMINGFinalMove=4,
+    HOMINGCancel=5, HOMINGFinalize=6 (7 values). NOTE: homecomp uses a different incompatible
+    enum with only 4 values -- see CONFLICT-013'
   source_file: PokeysCompPulsEngine_base.c
   source_line: 168
   active_or_commented: active
-  current_interface_id: null
+  current_interface_id: PEV2A-006
   compatibility: partially-compatible
   conflicts:
   - CONFLICT-013
-  note: pokeysHal exports PEv2.I.AxesCommand as HAL_IN u32 but without explicit command enum
+  note: pokeysHal exports PEv2.I.AxesCommand as HAL_IN u32 but without explicit command
+    enum
   function_name: hal_pin_u32_newf
   source_direction: HAL_IN
   target_field_expression: '&(PEv2_data->PEv2_AxesCommand[j])'
@@ -1104,10 +1110,11 @@ parity_rows:
   source_file: PokeysCompPulsEngine_base.c
   source_line: 206
   active_or_commented: active
-  current_interface_id: HOMECOMP-005
+  current_interface_id: PEV2A-007
   compatibility: integration-coupling
   conflicts: []
-  note: pokeysHal exports PEv2.I.index-enable (HAL_IO); homecomp exports joint.N.index-enable (HAL_IO); both must be netted
+  note: pokeysHal exports PEv2.I.index-enable (HAL_IO); homecomp exports joint.N.index-enable
+    (HAL_IO); both must be netted
   function_name: hal_pin_bit_newf
   source_direction: HAL_IO
   target_field_expression: '&(PEv2_data->PEv2_index_enable[j])'

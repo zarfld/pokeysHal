@@ -15,7 +15,7 @@ Legend:
 ```
 LinuxCNC CDI: digin.in (bit, HAL_OUT), digin.in-not (bit, HAL_OUT) [A-002]
   → hal-canon hal_export_digin, hal_digin_t [B-002]
-  → issue #38: HAL-Interface: Digital Input [C-007] (OPEN — body not fully inspected)
+  → issue #38: HAL-Interface: Digital Input [C-007] (OPEN, body=complete, 0 comments)
   ?→ no ADR/SDD found for digital input
   → hal_export_digin called: PoKeysLibIOAsync.c:35
   → update: PK_DigitalIOGetParse, PoKeysLibIOAsync.c:479-480
@@ -32,7 +32,7 @@ has no traceability chain to any requirement or ADR.
 ```
 LinuxCNC CDI: digout.out (bit, HAL_IN), digout.invert (bit, HAL_PARAM_RW) [A-002]
   → hal-canon hal_export_digout, hal_digout_t [B-002]
-  → issue #36: HAL-Interface: Digital Output [C-005] (OPEN — body not fully inspected)
+  → issue #36: HAL-Interface: Digital Output [C-005] (OPEN, body=complete, 0 comments)
   ?→ no ADR/SDD found
   → hal_export_digout called: PoKeysLibIOAsync.c:53
   → update: PK_DigitalIOSetAsync, PoKeysLibIOAsync.c:~385-465
@@ -93,7 +93,7 @@ LinuxCNC CDI: adcout.value (float, HAL_IN), adcout.enable (bit, HAL_IN),
 Official LinuxCNC CDI (canonical-devices.html, Authority A): does NOT define encoder
   as a canonical device type. CDI covers digin, digout, adcin, adcout only.
   hal-canon hal_export_encoder, hal_encoder_t [B-004] is a hal-canon convention.
-  → issue #42 (CLOSED): Encoder — body not inspected
+  → issue #42 (CLOSED): Encoder [C-022] (body=complete, 0 comments; count=29 pins specified)
   ✗ no ADR/SDD found
   → manually exported (not via hal_export_encoder):
       PoKeysLibEncodersAsync.c:43-71 (count, position, velocity, reset, index-enable, scale)
@@ -112,8 +112,8 @@ Official LinuxCNC CDI (canonical-devices.html, Authority A): does NOT define enc
 PoKeys-specific requirement:
   issue #33 (pokeysHal, CLOSED): HAL Interface: PEv2 global pins [C-002]
   → issue #116: REQ-F-PEV2-001: Global PEv2 HAL Pin Export [C-009] (OPEN)
-  → issue #132: ARC-C-PEV2 (OPEN, not inspected)
-  → issue #133: SDD-PEV2 (OPEN, not inspected)
+  → issue #132: ARC-C-PEV2 [D-006] (OPEN, body=complete, 0 comments)
+  → issue #133: SDD-PEV2 [D-007] (OPEN, body=complete, 0 comments)
   → implementation: export_pev2_pins(), PoKeysLibPulseEngine_v2Async.c:373-715
   → PEv2.nrOfAxes, PulseEngineState, PulseEngineActivated: implemented
   ✗ PulseEngineEnabled, PulseGeneratorType, MiscInputStatus, LimitOverride,

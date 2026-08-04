@@ -718,13 +718,15 @@ sources:
     scope: >-
       pokeysHal issue #42: Encoder HAL interface specification. CLOSED. Specifies
       encoder pins: count (S32), position (FLOAT), reset (BIT); strikethrough items
-      velocity and index-enable are explicitly excluded. Parameter: scale (FLOAT).
+      velocity and index-enable are struck through in the issue body and therefore
+      treated as out of scope for this specification. Parameter: scale (FLOAT).
       Encoder count=29. Governs encoder export in PoKeysLibEncodersAsync.c.
     state: closed
     inspected: true
     notes: >-
-      Body inspected. 0 comments. Strikethrough items (velocity, index-enable) are
-      explicitly not required. Reference for requirement ENCODER-* entries.
+      Body inspected 2026-08-05. 0 comments. Strikethrough items (velocity,
+      index-enable) are struck through in the original body and excluded from
+      the specified interface. Reference for encoder requirement entries.
 
   - source_id: C-013
     repository: zarfld/pokeysHal

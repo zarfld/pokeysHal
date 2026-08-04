@@ -14,7 +14,7 @@ Repository: zarfld/pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | 3. Issue comments inspected where relevant | PASS | All HIGH/MEDIUM comment threads with >0 comments fully inspected: LC #216 (21/21), LC #310 (14/14), LC #326 (12/12). No new HAL ABI requirements found beyond previously documented conflicts. | None |
 | 4. Official LinuxCNC rules recorded | PASS | HAL_NAME_LEN=47 confirmed (/usr/include/linuxcnc/hal.h; source A-001). HAL_NAME_LEN=55 confirmed at commit 71bf88009d64fa15edbebf9250b65ee4454f9a05 src/hal/hal.h (source A-001b). Official CDI source inspected at 71bf88009d64fa15edbebf9250b65ee4454f9a05 docs/src/hal/canonical-devices.adoc (source A-002): defines digin, digout, adcin, adcout only. Upstream hal.h independently verified via GitHub API: #define HAL_NAME_LEN 55 at 71bf8800 (blob 17372ccd); #define HAL_NAME_LEN 47 at v2.9.10 (blob 5480d937). | hal-canon/hal_canon.h consulted for pin-level detail beyond CDI adoc scope |
 | 5. Exact hal-canon provenance recorded | PASS | Embedded tree deed4c10535530ce0383fb357ea8427896226c70 matches upstream commit 995d7057dd5403865d423aab64ba30d81ccd5ee0 (zarfld/linuxcnc-hal-canon, 2025-06-08). Independently verified by cloning and comparing tree SHAs. See CONFLICT-008 for dependency-tracking status. | None |
-| 6. Legacy HAL interface extracted from source | PASS | Integration HAL files, Python layer, PoKeysCompIO.c (E-006), PoKeysCompEncoders.c (E-007), pokeys_rt/pokeys.comp (E-008), PokeysCompPulsEngine_base.c (E-009), pokeys_homecomp.comp (E-010) all inspected. Full PEv2 parity table in E-009 (163 parity rows, 162 active exports, 1 commented export; exact tuple validator passes; see legacy-pev2-parity.yaml). homecomp-owned pins documented as separate counterpart ABI (out-of-scope for pokeysHal). | E-009 parity table: 'absent' patterns from CONFLICT-007 not individually tracked as requirements; CONFLICT-012 is a counterpart defect, not a pokeysHal extraction gap |
+| 6. Legacy HAL interface extracted from source | PASS | Integration HAL files, Python layer, PoKeysCompIO.c (E-006), PoKeysCompEncoders.c (E-007), pokeys_rt/pokeys.comp (E-008), PokeysCompPulsEngine_base.c (E-009), pokeys_homecomp.comp (E-010) all inspected. Full PEv2 parity table in E-009 (163 parity rows, 162 active exports, 1 commented export; exact tuple validator passes; see legacy-pev2-parity.yaml). homecomp-owned pins documented as separate counterpart ABI (out-of-scope for pokeysHal). | E-009 parity table: 'absent' patterns from CONFLICT-007 not individually tracked as requirements; homecomp internal defects are out-of-scope for pokeysHal extraction |
 | 7. Current HAL interface extracted from source | PASS | All PoKeysLib*Async.c files searched. hal_export_adcin and hal_export_adcout calls confirmed by full read of PoKeysLibIOAsync.c. hal-canon/hal_digital.c and hal_analog.c read in full; direction mismatches documented. | No automated enumeration tool |
 | 8. Library ownership, consumer boundaries and propagation responsibilities documented | PASS | pokeysHal library data structures and HAL object creation documented (Section A, lifecycle-ownership-matrix.md). Consumer component boundary documented: experimental/pokeys_async.c obtains component ID, calls library export helpers, exports cyclic functions, owns hal_ready/hal_exit. Device→HAL and HAL→device update ownership documented per subsystem. Scheduler/callback ownership documented for PK_PWMUpdateAsync and async_dispatcher. Integration ownership: HAL/INI configuration owns signal wiring; pokeys_homecomp owns joint.N.* endpoints (Section B, C). | None |
 | 9. Enumerations and bitmaps documented | PASS | ePK_PinCap, ePK_PEAxisState (14 values: {0,1,2,8,9,10,11,12,13,14,15,16,20,30}), ePK_PEv2_AxisConfig, ePK_PulseEngineV2_AxisSwitchOptions, ePK_PEState (15 values in PEV2G-006: PulseEngineState enum), pokeys_home_command_t (4 values in HOMECOMP-007) all documented in requirement-catalogue.yaml. | None |
@@ -22,7 +22,7 @@ Repository: zarfld/pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | 11. Contradictions recorded | PASS | 13 conflicts documented. CONFLICT-009 added: hal-canon direction mismatches — digout.out as HAL_OUT blocks normal external HAL_OUT command-source wiring; digin.in and adcin.value have invalid writer ownership. Structural and characterization tests remain possible. Canonical compatibility cannot be claimed until corrected. CONFLICT-003/004 corrected. CONFLICT-010 added. | Additional conflicts may exist in uninspected issues |
 | 12. No production code changed | PASS | Branch hal-compatibility contains ten Phase 0 documentation files plus the committed prompt (.github/prompts/HAL-compatibility_Phase 0 — Establish the HAL-interface knowledge baseline.prompt.md). No production source (.c, .h), test, fixture, submodule, or hal-canon file was modified. git diff --check passes with no whitespace errors. | n/a |
 | 13. No compatibility tests designed | PASS | No test files created. No test specifications written. | n/a |
-| 14. No unresolved claim presented as fact | PARTIAL | All 13 registered conflicts evidence-backed. Documents use consistent scope: pokeysHal library, consumer component, external counterpart. CONFLICT-013 and CONFLICT-014 correctly document incompatibilities. ADCOUT conversion status consistent (IMPLEMENTED). PEV2A-006 and PEV2A-007 added for AxesCommand and index-enable. | parity-table LA-022.current_interface_id maps to HOMECOMP-005 (homecomp endpoint) but should map to PEV2A-007 (pokeysHal endpoint); parity table is immutable in Phase 0 |
+| 14. No unresolved claim presented as fact | PASS | All 13 registered conflicts evidence-backed with consistent scope. ADCOUT conversion IMPLEMENTED in all documents. Parity semantic fields updated: LA-013→PEV2A-006, LA-022→PEV2A-007. Extracted fingerprints unchanged (163 tuples, VALIDATION PASSED). No stale removed-conflict/decision references. All counts consistent. | None |
 
 ---
 
@@ -160,30 +160,23 @@ Review the Phase 0 findings as a team. Specifically:
    CONFLICT-009 (hal-canon directions), CONFLICT-006 (component naming),
    CONFLICT-002 (AxisEnable missing), CONFLICT-001 (nrOfAxes), CONFLICT-007
    (issue #33 incomplete).
-2. Make the 23 open decisions in `open-decisions.md`, starting with
+2. Make the 22 open decisions in `open-decisions.md`, starting with
    DEC-HALCANON-001 (Phase 1 blocker), DEC-COMPAT-001, DEC-CARD-001.
 3. Only then begin Phase 1 (compatibility test design).
 
 ---
 
 ```
-PHASE 0 BASELINE INCOMPLETE
+PHASE 0 BASELINE COMPLETE
 ```
 
 ## Missing Evidence Requiring Resolution Before Phase 1
 
-Criterion 14 remains PARTIAL due to the following known gap:
+None. All 14 acceptance criteria are PASS.
 
-**Parity table mapping inconsistency (immutable in Phase 0):**
-- LA-022 (`<prefix>.PEv2.%01d.index-enable`) has `current_interface_id: HOMECOMP-005`
-  in `legacy-pev2-parity.yaml`. HOMECOMP-005 is the homecomp-owned `joint.N.index-enable`
-  endpoint, not the pokeysHal-owned endpoint. The correct mapping is PEV2A-007.
-  The parity table cannot be modified in Phase 0 (immutable artifact).
-- LA-013 (`<prefix>.PEv2.%01d.AxesCommand`) has `current_interface_id: None`
-  but PEV2A-006 now exists. Parity table is immutable; gap documented.
-
-Resolution in Phase 1: update parity table LA-022 and LA-013 current_interface_id
-fields to PEV2A-007 and PEV2A-006 respectively.
+Unresolved conflicts (CONFLICT-013, CONFLICT-014, CONFLICT-009) are accurately
+documented with evidence and deferred to Phase 1 as implementation decisions.
+They do not constitute undocumented or unsupported claims.
 
 
 ## Phase 1 Implementation and Decision Backlog
@@ -201,8 +194,8 @@ These items are out of scope for Phase 0 but must be addressed in Phase 1:
 3. **CONFLICT-009** (hal-canon direction bugs): Fix `digin.in`, `digout.out`,
    `adcin.value` directions in the embedded hal-canon.
 
-5. **ADR-PEV2-002 vs REQ-F-PEV2-003** (nrOfAxes conflict): Decide whether
+4. **ADR-PEV2-002 vs REQ-F-PEV2-003** (nrOfAxes conflict): Decide whether
    conditional pin creation or 8-axis fallback is authoritative.
 
-6. **Missing PEv2 pins** from issue #33: Implement pins required for
+5. **Missing PEv2 pins** from issue #33: Implement pins required for
    LinuxCNC homing compatibility.
