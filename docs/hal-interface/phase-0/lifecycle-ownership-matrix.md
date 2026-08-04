@@ -38,7 +38,7 @@ Evidence from pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | **PEv2 per-axis** | arrays within `device->PEv2`: `pin_joint_pos_cmd[8]` etc. | struct arrays within device | `PoKeysLibPulseEngine_v2Async.c:380` (loop `i=0..7`, unconditional) | zeroed by `memset` | `PK_PEv2_StatusGetAsync` reads position, state; parsed into `pin_joint_pos_fb`, `pin_CurrentPosition`, `pin_AxesState` | `PK_PEv2_PulseEngineMovePVAsync` reads `pin_joint_pos_cmd`, `pin_joint_vel_cmd` | `PK_PEv2_AxisConfigurationGet/SetAsync` | before `hal_ready` | none found | `PoKeysLibPulseEngine_v2Async.c:380-435` |
 | **PoExtBus** | `device->PoExtBusData` via `hal_malloc` | `PoKeysLibCoreAsync.c:172` | **ABSENT** — no `hal_pin_*_newf` calls | n/a | n/a | n/a | n/a | n/a | n/a | `PoKeysLibCoreAsync.c:172; issue #34` |
 
-| **pokeys_homecomp (homecomp-owned pins)** | HAL shared-memory (zeroed by hal_malloc) | `makepins(id, n_joints)` in `homing_init()` | `pokeys_rt/pokeys_homecomp.comp:251-288` | Zeroed (0 = HOME_IDLE/IDLE/STOPPED) via HAL init; explicit loop at lines 366-397 is UNREACHABLE (return at line 364 precedes it; CONFLICT-012) | Homecomp read function per LinuxCNC servo thread | Homecomp write function per LinuxCNC servo thread | n/a — homecomp owns its own pins | hal_ready called by LinuxCNC runtime | hal_exit called by LinuxCNC runtime | `pokeys_rt/pokeys_homecomp.comp`; CONFLICT-012 |
+| **pokeys_homecomp (homecomp-owned pins)** | HAL shared-memory (zeroed by hal_malloc) | `makepins(id, n_joints)` in `homing_init()` | `pokeys_rt/pokeys_homecomp.comp:251-288` | 0 from rtapi_shmem_new zeroed allocation (hal_malloc does not memset; shmem is zeroed by OS at rtapi_shmem_new); explicit init loop at lines 366-397 is unreachable (return precedes it; CONFLICT-012; volatile_home=1 not applied) | Homecomp read function per LinuxCNC servo thread | Homecomp write function per LinuxCNC servo thread | n/a — homecomp owns its own pins | hal_ready called by LinuxCNC runtime | hal_exit called by LinuxCNC runtime | `pokeys_rt/pokeys_homecomp.comp`; CONFLICT-012 |
 
 ---
 
@@ -64,7 +64,7 @@ Evidence from pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 5. **Cleanup** is handled by `hal_exit(comp_id)` only (pokeysHal component) or by
    the LinuxCNC runtime (for homecomp). All HAL-malloc memory is reclaimed at exit.
    Per-subsystem cleanup is component-level, not subsystem-specific.
-6. **CONFLICT-012**: `homing_init()` has an unreachable initialization block.
+7. **CONFLICT-012**: `homing_init()` has an unreachable initialization block.
    All homecomp HAL pin defaults are zero from HAL shared-memory initialization.
 
 6. **PoExtBus** has allocated storage (`hal_malloc` at `PoKeysLibCoreAsync.c:172`)

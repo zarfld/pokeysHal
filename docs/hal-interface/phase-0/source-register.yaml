@@ -845,16 +845,23 @@ sources:
     state: current
     inspected: true
     notes: >
-      Body retrieved. HAL pins exported per joint (jno):
-        joint.jno.PEv2.AxesState (HAL_IN u32) — reads PEv2 state from pokeysHal
-        joint.jno.PEv2.AxesCommand (HAL_OUT u32) — writes homing command to pokeysHal
-        joint.jno.homing (HAL_OUT bit), joint.jno.homed (HAL_OUT bit)
-        joint.jno.home-state (HAL_OUT s32), joint.jno.index-enable (HAL_IO bit)
-        joint.jno.home-sw-in (HAL_IN bit).
-      AxisCommand enum (pokeys_home_command_t): IDLE=0, HOMINGSTART=1, HOMINGCANCEL=2,
-      HOMINGFINALIZE=3. AxisState enum (pokeys_home_state_t): STOPPED=0, READY=1,
-      RUNNING=2, HOMING_RESETTING=8, HOMING_BACKING_OFF=9, HOME=10, HOMINGSTART=11,
-      HOMINGSEARCH=12, HOMINGBACK=13, PROBED=14, ERROR=20, LIMIT=30.
+      Body retrieved (complete, E-010). Inspected at 0c058e6c.
+      Cardinality: jno=0..n_joints-1 (set at LinuxCNC startup).
+      CONFLICT-012: homing_init() returns at line 364 before explicit init loop;
+        defaults come from zeroed rtapi_shmem_new; volatile_home=1 unreachable;
+        no runtime read of volatile_home found in inspected source.
+      joint.N.home-state: HAL_OUT s32; local_home_state_t values 0..25.
+      joint.N.PEv2.AxesState: HAL_IN u32; hardware ePK_PEAxisState values
+        {0,1,2,8,9,10,11,12,13,14,15,16,20,30}. Legacy userspace also defines
+        PEAxisStateEx extended states {3,4,17,18,19} that may appear on the
+        <prefix>.PEv2.I.AxesState pin; whether homecomp handles them is unverified.
+      joint.N.PEv2.AxesCommand: HAL_OUT u32; homecomp values {0=IDLE,1=HOMINGSTART,
+        2=HOMINGCANCEL,3=HOMINGFINALIZE}. Incompatible with legacy userspace command
+        enum (see CONFLICT-013). See integration-links.yaml IK-003.
+      PROBESTART=15 and PROBESEARCH=16 confirmed in ePK_PEAxisState.
+      Integration links documented in integration-links.yaml (IK-001..IK-004).
+      Homecomp owns joint.N.* pins; pokeysHal owns <prefix>.PEv2.I.* pins;
+      coupling via HAL net statements in machine configuration.
 
   - source_id: F-009
     repository: zarfld/pokeysHal

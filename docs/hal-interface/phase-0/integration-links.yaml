@@ -1,0 +1,96 @@
+---
+# Integration links — Phase 0 HAL-Interface Baseline
+# These records describe how pokeysHal (device-side) and pokeys_homecomp (joint-side)
+# are coupled via HAL net commands in machine configuration.
+# Each object has exactly one owner. Integration is via HAL/INI-level net statements.
+# Source: pokeys_rt/pokeys_homecomp.comp (E-010), pokeysHal (F-005), G-002
+
+integration_links:
+
+  - link_id: IK-001
+    description: "Home switch input"
+    producer_object: "<prefix>.PEv2.I.digin.Home.in"
+    producer_owner: pokeysHal
+    producer_direction: HAL_OUT
+    consumer_object: "joint.N.home-sw-in"
+    consumer_owner: pokeys_homecomp
+    consumer_direction: HAL_IN
+    hal_type: hal_bit_t
+    semantic_contract: >
+      pokeysHal reads the PoKeys device home-switch input state and drives
+      <prefix>.PEv2.I.digin.Home.in (HAL_OUT). The homecomp reads this
+      signal via joint.N.home-sw-in (HAL_IN). Net statement required in
+      HAL/INI configuration.
+    enum_contract: "binary bit; no enum"
+    mapping_scope: HAL/INI configuration
+    compatibility_status: compatible
+    conflicts: []
+    evidence: "E-010 (LA-069 pokeys side), E-010 (HOMECOMP-001 homecomp side)"
+
+  - link_id: IK-002
+    description: "Index-enable handshake"
+    producer_object: "<prefix>.PEv2.I.index-enable"
+    producer_owner: pokeysHal
+    producer_direction: HAL_IO
+    consumer_object: "joint.N.index-enable"
+    consumer_owner: pokeys_homecomp
+    consumer_direction: HAL_IO
+    hal_type: hal_bit_t
+    semantic_contract: >
+      Both objects are HAL_IO. The LinuxCNC motion controller sets/clears
+      index-enable to request/acknowledge index-pulse position capture.
+      pokeysHal exposes this via <prefix>.PEv2.I.index-enable (HAL_IO);
+      homecomp exposes joint.N.index-enable (HAL_IO). Both must be netted
+      together and also connected to the motion controller's joint.N.index-enable.
+    enum_contract: "binary bit; no enum"
+    mapping_scope: HAL/INI configuration
+    compatibility_status: compatible
+    conflicts: []
+    evidence: "E-010 (LA-022 pokeys side), E-010 (HOMECOMP-005 homecomp side)"
+
+  - link_id: IK-003
+    description: "PEv2 AxesCommand — homing command from homecomp to pokeysHal"
+    producer_object: "joint.N.PEv2.AxesCommand"
+    producer_owner: pokeys_homecomp
+    producer_direction: HAL_OUT
+    consumer_object: "<prefix>.PEv2.I.AxesCommand"
+    consumer_owner: pokeysHal
+    consumer_direction: HAL_IN
+    hal_type: hal_u32_t
+    semantic_contract: >
+      pokeys_homecomp writes a command value to joint.N.PEv2.AxesCommand (HAL_OUT)
+      each servo cycle. pokeysHal reads the same value via <prefix>.PEv2.I.AxesCommand (HAL_IN)
+      and sends it to the PoKeys hardware. The two components use different enum vocabularies
+      for the command values — see CONFLICT-013.
+    enum_contract: >
+      pokeys_homecomp uses {0=IDLE, 1=HOMINGSTART, 2=HOMINGCANCEL, 3=HOMINGFINALIZE}.
+      Legacy userspace uses {0=IDLE, 1=HOMINGSTART, 2=ARMENCODER, 3=HOMINGWaitFinalMove,
+      4=HOMINGFinalMove, 5=HOMINGCancel, 6=HOMINGFinalize}. Value 2 is incompatible.
+    mapping_scope: HAL/INI configuration
+    compatibility_status: incompatible
+    conflicts: [CONFLICT-013]
+    evidence: "E-010 (HOMECOMP-007 homecomp side, LA-013 pokeys side)"
+
+  - link_id: IK-004
+    description: "PEv2 AxesState — hardware state from pokeysHal to homecomp"
+    producer_object: "<prefix>.PEv2.I.AxesState"
+    producer_owner: pokeysHal
+    producer_direction: HAL_OUT
+    consumer_object: "joint.N.PEv2.AxesState"
+    consumer_owner: pokeys_homecomp
+    consumer_direction: HAL_IN
+    hal_type: hal_u32_t
+    semantic_contract: >
+      pokeysHal reads the hardware axis state from the PoKeys device and writes
+      it to <prefix>.PEv2.I.AxesState (HAL_OUT). pokeys_homecomp reads this via
+      joint.N.PEv2.AxesState (HAL_IN) to drive its homing state machine.
+    enum_contract: >
+      Hardware device states (ePK_PEAxisState): {0,1,2,8,9,10,11,12,13,14,15,16,20,30}.
+      Legacy userspace also defines extended states {3=ReadyToFinalizeHoming,
+      4=ReadyToArmEncoder, 17=HOMINGARMENCODER, 18=HOMINGWaitFINALMOVE, 19=HOMINGFINALMOVE}
+      in PEAxisStateEx enum. These may reach the HAL pin if the userspace component
+      writes them; whether pokeys_homecomp interprets them is unverified.
+    mapping_scope: HAL/INI configuration
+    compatibility_status: partially-compatible
+    conflicts: []
+    evidence: "E-010 (HOMECOMP-006 homecomp side, LA-012 pokeys side)"

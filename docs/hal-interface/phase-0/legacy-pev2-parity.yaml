@@ -2254,3 +2254,375 @@ parity_rows:
     compatibility: absent-in-pokeysHal
     conflicts: [CONFLICT-007]
 
+
+  # ── ADDITIONAL SWITCH CONFIG AND PIN ASSIGNMENTS (j=0..7, lines 647-730) ───
+
+  - legacy_id: LA-109
+    name_pattern: "%s.PEv2.%01d.AxesSwitchConfig"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: "ePK_PulseEngineV2_AxisSwitchOptions bitmap"
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 647
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-110
+    name_pattern: "%s.PEv2.%01d.digin.LimitN.Enabled"
+    object_kind: param
+    hal_type: hal_bit_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 650
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-111
+    name_pattern: "%s.PEv2.%01d.digin.LimitP.Enabled"
+    object_kind: param
+    hal_type: hal_bit_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 654
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-112
+    name_pattern: "%s.PEv2.%01d.digin.Home.Enabled"
+    object_kind: param
+    hal_type: hal_bit_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 658
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-113
+    name_pattern: "%s.PEv2.%01d.digin.Home.OnLimitN"
+    object_kind: param
+    hal_type: hal_bit_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 661
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-114
+    name_pattern: "%s.PEv2.%01d.digin.Home.OnLimitP"
+    object_kind: param
+    hal_type: hal_bit_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 665
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-115
+    name_pattern: "%s.PEv2.%01d.digin.LimitN.invert"
+    object_kind: param
+    hal_type: hal_bit_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 669
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-116
+    name_pattern: "%s.PEv2.%01d.digin.LimitP.invert"
+    object_kind: param
+    hal_type: hal_bit_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 673
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-117
+    name_pattern: "%s.PEv2.%01d.digin.Home.invert"
+    object_kind: param
+    hal_type: hal_bit_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 677
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-118
+    name_pattern: "%s.PEv2.%01d.digin.LimitN.Pin"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 681
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-119
+    name_pattern: "%s.PEv2.%01d.digin.LimitN.Filter"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 685
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-120
+    name_pattern: "%s.PEv2.%01d.digin.LimitP.Pin"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 689
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-121
+    name_pattern: "%s.PEv2.%01d.digin.Probe.Filter"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 694
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-122
+    name_pattern: "%s.PEv2.%01d.digin.LimitP.Filter"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 698
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-123
+    name_pattern: "%s.PEv2.%01d.digin.Home.Pin"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 702
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-124
+    name_pattern: "%s.PEv2.%01d.digin.Home.Filter"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 706
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-125
+    name_pattern: "%s.PEv2.%01d.digout.AxisEnable.Pin"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 710
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LA-126
+    name_pattern: "%s.PEv2.%01d.digout.AxisEnable.invert"
+    object_kind: param
+    hal_type: hal_bit_t
+    direction_or_access: HAL_RW
+    cardinality: "8"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 714
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  # ── GLOBAL PIN ASSIGNMENTS (lines 718-730) ──────────────────────────────────
+
+  - legacy_id: LG-033
+    name_pattern: "%s.PEv2.digin.Emergency.Pin"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "1 (global)"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 718
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LG-034
+    name_pattern: "%s.PEv2.digin.Emergency.invert"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "1 (global)"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 721
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LG-035
+    name_pattern: "%s.PEv2.digout.Emergency.Pin"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "1 (global)"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 724
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LG-036
+    name_pattern: "%s.PEv2.digin.Probe.Pin"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "1 (global)"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 727
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]
+
+  - legacy_id: LG-037
+    name_pattern: "%s.PEv2.digin.Probe.invert"
+    object_kind: param
+    hal_type: hal_u32_t
+    direction_or_access: HAL_RW
+    cardinality: "1 (global)"
+    creation_condition: unconditional
+    default_evidence: "0"
+    enum_or_bitmap: null
+    source_file: PokeysCompPulsEngine_base.c
+    source_line: 730
+    active_or_commented: active
+    current_interface_id: null
+    compatibility: absent-in-pokeysHal
+    conflicts: [CONFLICT-007]

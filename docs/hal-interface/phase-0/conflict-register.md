@@ -541,3 +541,57 @@ Required action:
      document that the LinuxCNC homing framework guarantees its assignment.
 Status: unresolved
 ```
+
+---
+
+```
+Conflict ID: CONFLICT-013
+Subject: PEv2 AxesCommand semantic mismatch between legacy userspace component and pokeys_homecomp
+
+Source A: pokeys_uspace/PoKeysComp.h @ 0c058e6c (pokeys_uspace PK_PEAxisCommand enum, L931-937):
+  PK_PEAxisCommand_axIDLE              = 0  // Axis in IDLE
+  PK_PEAxisCommand_axHOMINGSTART       = 1  // Start Homing procedure
+  PK_PEAxisCommand_axARMENCODER        = 2  // reset position to zeros
+  PK_PEAxisCommand_axHOMINGWaitFinalMove = 3  // move to homeposition
+  PK_PEAxisCommand_axHOMINGFinalMove   = 4  // move to homeposition
+  PK_PEAxisCommand_axHOMINGCancel      = 5  // Cancel Homing procedure
+  PK_PEAxisCommand_axHOMINGFinalize    = 6  // Finish Homing procedure
+  This enum has 7 values (0-6). Values 2-6 are ARMENCODER, Wait, Final, Cancel, Finalize.
+
+Source B: pokeys_rt/pokeys_homecomp.comp @ 0c058e6c (pokeys_home_command_t enum, inspected E-010):
+  PK_PEAxisCommand_axIDLE       = 0  // IDLE
+  PK_PEAxisCommand_axHOMINGSTART = 1  // Start Homing
+  PK_PEAxisCommand_axHOMINGCANCEL = 2  // Cancel Homing procedure
+  PK_PEAxisCommand_axHOMINGFINALIZE = 3  // Finish Homing procedure
+  This enum has 4 values (0-3). Values 2 and 3 are CANCEL and FINALIZE.
+
+Observed incompatibility:
+  Value 2: legacy = ARMENCODER; homecomp = HOMINGCANCEL  — INCOMPATIBLE SEMANTICS
+  Value 3: legacy = HOMINGWaitFinalMove; homecomp = HOMINGFINALIZE — INCOMPATIBLE SEMANTICS
+  The AxesCommand HAL pin carries the value as a raw u32. If the legacy userspace component
+  reads a command written by pokeys_homecomp, or vice versa, the action taken will be wrong.
+
+Why the sources conflict:
+  The two components were developed with different homing state machines. The homecomp
+  is a skeleton/minimal implementation; the userspace component has a more elaborate
+  multi-step sequence requiring ARMENCODER and separate wait/finalize states.
+  No shared header enforces a single canonical enum.
+
+Safety or compatibility impact:
+  HIGH. A value-2 command from pokeys_homecomp (HOMINGCANCEL) would be interpreted
+  as ARMENCODER by the legacy userspace PEv2 component, potentially causing unintended
+  encoder reset and position loss during a homing procedure.
+
+Authority assessment:
+  Neither source has normative authority over the other. The PoKeysLib hardware enum
+  (ePK_PEAxisState in PoKeysLib.h) defines axis states but not HAL-level commands.
+  The HAL command contract must be agreed between the two software components through
+  a shared header or documented convention.
+
+Required decision:
+  1. Define a single authoritative PEv2 AxesCommand enum shared by all components.
+  2. Determine which component's homing state machine is the reference implementation.
+  3. Align homecomp and userspace component on a common command vocabulary.
+  4. Integration link IK-003 (AxesCommand) must not be classified compatible until resolved.
+Status: unresolved
+```
