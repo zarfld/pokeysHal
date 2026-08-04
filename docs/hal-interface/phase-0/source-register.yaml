@@ -155,6 +155,7 @@ sources:
     state: closed
     inspected: true
     notes: >
+      Body and 3 comments retrieved and inspected (comment_count=3, all complete).
       CLOSED but many specified pins absent from implementation.
       Specifies PulseEngineEnabled, PulseGeneratorType, MiscInputStatus,
       LimitOverride, AxisEnabledMask, HomingStartMaskSetup, ProbeStartMaskSetup,
@@ -189,6 +190,7 @@ sources:
     state: closed
     inspected: true
     notes: >
+      Body and 1 comment retrieved and inspected (comment_count=1, complete).
       Specifies adcin.J.value-raw (float) and adcin.J.value (float, scaled).
       Canonical objects ARE exported via hal_export_adcin (PoKeysLibIOAsync.c:85):
       value (HAL_IN — direction defect per CONFLICT-009), scale, offset,
@@ -257,7 +259,8 @@ sources:
     state: open
     inspected: true
     notes: >
-      Body retrieved. Issue #37 is a cross-reference issue pointing to #39 as the specification.
+      Body and 2 comments retrieved and inspected (comment_count=2, all complete).
+      Issue #37 is a cross-reference issue pointing to #39 as the specification.
       Canonical adcout objects ARE exported via hal_export_adcout (PoKeysLibIOAsync.c:110).
       Propagation path IMPLEMENTED per C4 trace (PK_PWMUpdateAsync at 100ms).
 
@@ -476,6 +479,7 @@ sources:
     state: closed
     inspected: true
     notes: >
+      Body and all 14 comments retrieved (complete, paginated).
       Evidence: "hal_param_bit_newf 'pokeys[0].encoder.UltraFastEncoder.Enable4xSampling'
       exceeds length of 50." — confirms HAL name length is a real production issue
       in the legacy component.
@@ -491,6 +495,7 @@ sources:
     state: open
     inspected: true
     notes: >
+      Body and all 12 comments retrieved (complete, paginated).
       Reported on LinuxCNC 2.9.4. HAL_NAME_LEN=47 on target system.
       Confirmed by E-004.
 
@@ -710,7 +715,7 @@ sources:
 
   - source_id: C-022
     repository: zarfld/pokeysHal
-    revision: "inspected 2026-08-05"
+    revision: "inspected 2026-08-04"
     path_or_issue: "issue #42"
     url: https://github.com/zarfld/pokeysHal/issues/42
     source_type: issue_body
@@ -724,7 +729,7 @@ sources:
     state: closed
     inspected: true
     notes: >-
-      Body inspected 2026-08-05. 0 comments. Strikethrough items (velocity,
+      Body inspected 2026-08-04. 0 comments. Strikethrough items (velocity,
       index-enable) are struck through in the original body and excluded from
       the specified interface. Reference for encoder requirement entries.
 
@@ -1033,3 +1038,115 @@ sources:
     notes: >-
       Body empty. 1 of 1 comments retrieved and inspected. Comment provides
       analog output implementation context. CONFLICT-004 evidence.
+
+  - source_id: E-018
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: "issue #28"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/28
+    source_type: issue_body
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #28: userspace equivalence. CLOSED. Verify pokeys_userspace
+      equals pokeys.comp. Body=complete. 0 comments.
+    state: closed
+    inspected: true
+    notes: >-
+      Body retrieved and inspected. 0 comments. No material new HAL-interface
+      requirements beyond equivalence verification scope.
+
+  - source_id: E-019
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: "issue #73"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/73
+    source_type: issue_body
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #73: Align with LinuxCNC builds. OPEN. Build environment
+      2.8.x/2.9.x compatibility. Body=complete. 0 comments.
+    state: open
+    inspected: true
+    notes: >-
+      Body retrieved and inspected. 0 comments. Build and environment alignment;
+      no HAL pin interface requirements identified.
+
+  - source_id: E-020
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: "issue #79"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/79
+    source_type: issue_body
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #79: CDI conformity. OPEN. Ensure conformity with LinuxCNC
+      Canonical Device Interface. Body=complete. 0 comments. References CONFLICT-010.
+    state: open
+    inspected: true
+    notes: >-
+      Body retrieved and inspected. 0 comments. CDI scope discussion supports
+      CONFLICT-010 (CDI terminology extension beyond official spec).
+
+  - source_id: E-021
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: "issue #157"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/157
+    source_type: issue_body
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #157: Common pin I/O handling. CLOSED. Combine I/O handling
+      across components. Body=complete. 0 comments.
+    state: closed
+    inspected: true
+    notes: >-
+      Body retrieved and inspected. 0 comments. Code organization issue; no new
+      HAL pin interface requirements.
+
+  - source_id: E-022
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: "issue #223"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/223
+    source_type: issue_body
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #223: PEv2 LimitOverride. OPEN. LimitOverride linked to AXIS
+      Override. Body=complete. 0 comments.
+    state: open
+    inspected: true
+    notes: >-
+      Body retrieved and inspected. 0 comments. LimitOverride feature scope; supports
+      missing-pin evidence for CONFLICT-002.
+
+  - source_id: E-023
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: "PR #29"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/pull/29
+    source_type: pull_request_body
+    authority_class: E
+    scope: >-
+      LC_PKComp PR #29: Add missing userspace functions. MERGED 2024-09-27. Adds
+      PWM and PoExtBus to userspace component. Body=complete. 0 comments.
+    state: merged
+    inspected: true
+    notes: >-
+      Body retrieved and inspected. 0 comments. Adds PWM/PoExtBus to userspace;
+      confirms analog output and PoExtBus userspace capability.
+
+  - source_id: E-024
+    repository: zarfld/LinuxCnc_PokeysLibComp
+    revision: "0c058e6c7136ddb28a6b9f463a8af3d973496246"
+    path_or_issue: "issue #69"
+    url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/69
+    source_type: issue_body
+    authority_class: E
+    scope: >-
+      LC_PKComp issue #69: Modular architecture. OPEN. Refactor codebase to modular
+      structure. Body=complete. 0 comments.
+    state: open
+    inspected: true
+    notes: >-
+      Body retrieved and inspected. 0 comments. Architecture refactoring issue; no
+      HAL pin interface requirements identified.

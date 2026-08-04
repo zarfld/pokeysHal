@@ -1296,11 +1296,9 @@ requirements:
   scaling_formula: n/a
   default_value: 0
   initialization_phase: export_pev2_pins
-  update_phase: bidirectional; motion controller sets on index request; runtime trace
-    unverified
-  device_field: n/a — via encoder index mechanism
-  pokeyslib_function: untraced; PK_EncoderValuesGetAsync referenced but call path
-    to index-enable unverified
+  update_phase: unknown — runtime read/write propagation untraced
+  device_field: no runtime mapping identified
+  pokeyslib_function: none identified
   enumeration: n/a — binary bit
   bitmap_definition: n/a
   linuxcnc_canonical_status: LinuxCNC convention (not official CDI)
@@ -1418,8 +1416,8 @@ requirements:
   creation_condition: unconditional
   units: n/a — see local_home_state_t enum (LinuxCNC homing state machine)
   scaling_formula: n/a
-  default_value: 0 (rtapi_shmem_new zeroed allocation; explicit init unreachable at
-    homing_init():366-397)
+  default_value: 0 (explicit init unreachable at homing_init():366-397; actual runtime
+    default unverified — no primary LinuxCNC RTAPI allocator source registered in Phase 0)
   initialization_phase: pokeys_homecomp hal_pin_s32_newf
   update_phase: written by homecomp state machine each cycle
   device_field: addr->home_state (local home state machine)

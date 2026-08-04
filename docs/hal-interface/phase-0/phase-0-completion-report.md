@@ -22,7 +22,7 @@ Repository: zarfld/pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | 11. Contradictions recorded | PASS | 13 conflicts documented. CONFLICT-009 added: hal-canon direction mismatches — digout.out as HAL_OUT blocks normal external HAL_OUT command-source wiring; digin.in and adcin.value have invalid writer ownership. Structural and characterization tests remain possible. Canonical compatibility cannot be claimed until corrected. CONFLICT-003/004 corrected. CONFLICT-010 added. | Additional conflicts may exist in uninspected issues |
 | 12. No production code changed | PASS | Branch hal-compatibility contains ten Phase 0 documentation files plus the committed prompt (.github/prompts/HAL-compatibility_Phase 0 — Establish the HAL-interface knowledge baseline.prompt.md). No production source (.c, .h), test, fixture, submodule, or hal-canon file was modified. git diff --check passes with no whitespace errors. | n/a |
 | 13. No compatibility tests designed | PASS | No test files created. No test specifications written. | n/a |
-| 14. No unresolved claim presented as fact | PASS | All 13 registered conflicts evidence-backed with consistent scope. ADCOUT conversion IMPLEMENTED in all documents. Parity semantic fields updated: LA-013→PEV2A-006, LA-022→PEV2A-007. Extracted fingerprints unchanged (163 tuples, VALIDATION PASSED). No stale removed-conflict/decision references. All counts consistent. | None |
+| 14. No unresolved claim presented as fact | PASS | All 13 registered conflicts evidence-backed. Scope consistent. Parity semantic fields correct (LA-013→PEV2A-006, LA-022→PEV2A-007). All source-register coverage gaps for retained HIGH/MEDIUM issues resolved. No stale phrases or removed-ID references. All counts consistent. | None |
 
 ---
 
@@ -103,7 +103,7 @@ Expected output: no tracked file modifications.
 All files are in `docs/hal-interface/phase-0/`:
 
 1. `README.md` — objective, scope, methodology, principal findings
-2. `source-register.yaml` — 64 source entries, classes A–G
+2. `source-register.yaml` — 71 source entries, classes A–G
 3. `requirement-catalogue.yaml` — 53 interface requirement entries
 4. `lifecycle-ownership-matrix.md` — per-subsystem ownership table
 5. `canonical-vs-legacy-matrix.md` — ~72 interface items classified
@@ -120,7 +120,7 @@ All files are in `docs/hal-interface/phase-0/`:
 
 | Category | Count |
 |---|---|
-| Source register entries | 64 |
+| Source register entries | 71 |
 | Requirement catalogue entries | 53 |
 | Conflicts registered | 13 |
 | Open decisions required | 22 |
@@ -173,10 +173,6 @@ PHASE 0 BASELINE COMPLETE
 ## Missing Evidence Requiring Resolution Before Phase 1
 
 None. All 14 acceptance criteria are PASS.
-
-Unresolved conflicts (CONFLICT-013, CONFLICT-014, CONFLICT-009) are accurately
-documented with evidence and deferred to Phase 1 as implementation decisions.
-They do not constitute undocumented or unsupported claims.
 
 
 ## Phase 1 Implementation and Decision Backlog

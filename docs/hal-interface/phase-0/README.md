@@ -79,7 +79,8 @@ by comparing file contents against the upstream repository.
    integration HAL files, Python modules, and selected issue bodies inspected.
 8. `zarfld/pokeysHal` GitHub issues #24, #30, #32–#39, #116–#133 fetched;
    issue bodies inspected for #24, #30, #32, #33, #35, #36, #38, #118, #128;
-   remaining HIGH-relevance issue bodies (#37, #39, #119–#126) not body-inspected.
+   all HIGH-relevance issue bodies retrieved (#37, #39, #119–#126 bodies complete);
+   #132 and #133 bodies complete.
 9. `zarfld/LinuxCnc_PokeysLibComp` GitHub issues #16, #21, #24, #28, #29, #30,
    #31, #69, #79, #129, #157, #213, #216, #222, #223, #264, #310, #326 fetched;
    bodies inspected for #21, #24, #28, #29, #30, #31, #69, #79, #129, #157,
