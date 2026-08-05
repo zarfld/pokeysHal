@@ -97,7 +97,12 @@ Minimum context record:
 - task identifier;
 - requested behavior;
 - changed surface area candidates;
-- expected verification layers.
+- requested change scope (HAL contract, async/protocol behavior, both, or neither);
+- expected verification streams.
+
+Rule:
+- `task_scope` describes requested behavior/change.
+- `verification_streams` describe evidence and checks needed to assess or implement it.
 
 ### B. Detect HAL-interface impact
 
@@ -118,6 +123,12 @@ Evaluate potential impact on each dimension below:
 - external HAL/INI compatibility expectations.
 
 After evaluating HAL impact, evaluate async/protocol impact independently.
+
+Do not classify by implementation mechanism alone:
+- use of an async implementation does not automatically imply `HAL-AND-ASYNC`.
+- `HAL-COMPAT` tasks may still require ASYNC-PARITY verification evidence.
+- use `HAL-AND-ASYNC` only when both HAL contract and async/protocol behavior
+   are requested or changed.
 
 Task-scope decision table:
 - HAL impact and async impact -> `HAL-AND-ASYNC`
@@ -142,6 +153,13 @@ Rules:
   - `linked_conflicts`: `[]`
   - `linked_open_decisions`: `[]`
   - `decision_gate`: `out-of-scope`
+   - `work_items`:
+      - `subject`: `non-hal-routing`
+         `affected_interface_ids`: `[]`
+         `verification_streams`: `[]`
+         `decision_gate`: `out-of-scope`
+         `evidence_required`: `[]`
+         `explicit_exclusions`: `outside the HAL/async compatibility workflow`
   - `required_tests_by_stream`: `{}`
   - `async_impact`: `not-applicable`
   - `hil_applicability`: `not-applicable`
@@ -186,6 +204,27 @@ For each affected object, record separate fields:
 - linked conflicts;
 - linked open decisions;
 - evidence confidence.
+
+For each object, require exactly one value for each of:
+- `canonical_relationship`
+- `legacy_relationship`
+- `interface_role`
+- `implementation_state`
+
+Do not use combined values like `compatible / conflict`.
+Dimension-level detail belongs in:
+- `contract_comparison.contract_dimensions`
+
+Example contract dimensions:
+- `existence`
+- `name`
+- `kind`
+- `type`
+- `direction_or_access`
+- `cardinality`
+- `scaling_semantics`
+- `default_or_initialization`
+- `propagation`
 
 Do not collapse these into one ambiguous contract statement.
 
@@ -276,6 +315,8 @@ Required output fields:
 - implementation state per object;
 - conflicts and open decisions;
 - decision-gate result;
+- aggregate/strictest issue `decision_gate`;
+- `work_items` (per-work-item decision and evidence routing);
 - claim evidence level;
 - required issue decomposition;
 - required tests by verification stream;
@@ -284,6 +325,21 @@ Required output fields:
 - HIL status when hardware evidence exists;
 - traceability changes;
 - explicit exclusions.
+
+`work_items` is required. Each work item must contain:
+- `subject`
+- `affected_interface_ids`
+- `verification_streams`
+- `decision_gate`
+- `evidence_required`
+- `explicit_exclusions`
+
+Rules:
+- the top-level `decision_gate` is the strictest aggregate issue gate;
+- blocked work items must not erase actionable work items;
+- characterization and independent test work may proceed when its own work item
+   is implementable or characterization-only, even if another work item is
+   decision-required.
 
 ### H. Produce module-test-design output
 
@@ -298,12 +354,21 @@ Required output fields:
 - async-parity tests;
 - HAL-integration tests;
 - verification streams;
+- `work_items`;
 - expected claim evidence level from each test layer;
 - HIL applicability;
 - HIL status only when existing hardware evidence is available;
 - mocks and fixtures;
 - evidence source for each assertion;
 - known gaps and decision blockers.
+
+For module design, include work items with the same required shape:
+- `subject`
+- `affected_interface_ids`
+- `verification_streams`
+- `decision_gate`
+- `evidence_required`
+- `explicit_exclusions`
 
 ### I. Completion and traceability
 
@@ -320,6 +385,22 @@ Compatibility statements must include verification layer:
 For hardware-backed claims, report optional `hil_status` using labels from:
 - `.github/skills/hil-tdd/references/result-schema.md`
 
+`hil_status` rules:
+- omit `hil_status` when no hardware evidence exists;
+- do not set `hil_status` to placeholders such as `not applicable` or `none`;
+- when present, use an exact value from the HIL result schema.
+
+`claim_evidence_level` is required for issue burn-down outputs.
+
+Evidence classification rule:
+- classify evidence per material claim;
+- distinguish evidence for observed current behavior from evidence for
+   authoritative or target requirement;
+- do not mark directly visible source expressions as `inferred` merely because
+   correctness is disputed;
+- when expected behavior lacks authority evidence, mark `evidence-required` and
+   create evidence-gathering work.
+
 ## Guardrails
 
 - Do not copy Phase 0 catalogue rows into this skill.
@@ -328,6 +409,20 @@ For hardware-backed claims, report optional `hil_status` using labels from:
 - `inferred` and `unknown` confidence are insufficient for behavior-changing
   implementation decisions.
 - Do not claim HIL pass from `HIL-observed` alone.
+- Do not invent test oracles. Every expected value/behavior must cite authority.
+- If no authority supports an expected behavior, record `evidence-required` and
+   plan evidence gathering instead of asserting an oracle.
+
+## Broad Burn-Down Readiness
+
+Open product decisions do not block using this issue burn-down workflow.
+Phase 0 catalogue gaps do not block burn-down execution.
+Those become:
+- `decision-required` work items;
+- `evidence-required` work items; or
+- Phase 0 erratum work items.
+
+Only infrastructure contradictions block broad workflow use.
 
 ## Suggested Procedure Skeleton
 

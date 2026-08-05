@@ -51,6 +51,7 @@ the required human-readable outcome line:
 - `linked_conflicts`
 - `linked_open_decisions`
 - `decision_gate`
+- `work_items`
 - `claim_evidence_level`
 - `hil_status` (when hardware evidence exists)
 - `required_issue_decomposition`
@@ -61,15 +62,36 @@ the required human-readable outcome line:
 - `explicit_exclusions`
 - `evidence_confidence`
 
+Work-item requirement:
+- `work_items` is mandatory.
+- each work item must include:
+  - `subject`
+  - `affected_interface_ids`
+  - `verification_streams`
+  - `decision_gate`
+  - `evidence_required`
+  - `explicit_exclusions`
+
+Use top-level `decision_gate` as strictest aggregate status, while preserving
+actionable work items when another item is blocked.
+
 ## Required analysis behavior
 
 - Distinguish `HAL-COMPAT`, `ASYNC-PARITY`, `HAL-AND-ASYNC`, and `NON-HAL` scope.
 - Identify affected Phase 0 interface IDs.
 - Identify conflicts and open decisions that govern behavior-changing work.
 - Provide a decision gate result with no guessed resolution.
+- Require one `claim_evidence_level` per material compatibility claim.
+- Omit `hil_status` when hardware evidence is absent.
+- When present, `hil_status` must use an exact value from
+  `.github/skills/hil-tdd/references/result-schema.md`.
 - Propose decomposition and verification work by stream:
   HAL-ABI, HAL-PROPAGATION, HAL-INTEGRATION, ASYNC-PARITY, HIL.
 - Identify HIL applicability using the existing HIL skill/schema references.
+
+Do not invent test oracles. Every expected behavior/value must cite authority.
+If authority evidence is missing, mark `evidence-required` and add an
+evidence-gathering work item.
 
 ## Outcome mapping
 
@@ -82,6 +104,10 @@ proceed through the normal repository workflow.
 
 Keep `OUT OF SCOPE` for items genuinely outside pokeysHal scope, distinguishing
 the two cases through `explicit_exclusions`.
+
+Open product decisions and Phase 0 catalogue gaps do not block this burn-down
+workflow itself; they become decision/evidence/erratum work items unless there
+is an infrastructure contradiction.
 
 End with one line containing one of:
 - `READY FOR TDD` for

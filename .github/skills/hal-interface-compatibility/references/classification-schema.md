@@ -25,6 +25,13 @@ Interpretation:
 - `HAL-AND-ASYNC`: both streams are materially affected.
 - `NON-HAL`: no relevant HAL or async compatibility impact.
 
+Scope vs streams rule:
+- `task_scope` classifies the requested behavior/change.
+- `verification_streams` classify what evidence/testing is needed.
+- `HAL-COMPAT` may still require `ASYNC-PARITY` verification.
+- `HAL-AND-ASYNC` is used only when both HAL contract and async/protocol
+  behavior are requested or changed.
+
 ## 2. canonical_relationship
 
 Allowed labels:
@@ -164,6 +171,49 @@ Do not reproduce the HIL status table in this schema.
 
 ## Required Output Fields
 
+## Work Item Schema
+
+`work_items` is a required field for issue burn-down and module-test-design
+outputs.
+
+Each work item must contain:
+- `subject`
+- `affected_interface_ids`
+- `verification_streams`
+- `decision_gate`
+- `evidence_required`
+- `explicit_exclusions`
+
+Decision-gate behavior:
+- top-level `decision_gate` is the strictest aggregate issue gate;
+- per-work-item gates govern what can proceed immediately;
+- blocked work items must not make independent characterization/test work appear
+  non-actionable.
+
+## Contract Comparison Structure
+
+For each object, record exactly one value for each:
+- `canonical_relationship`
+- `legacy_relationship`
+- `interface_role`
+- `implementation_state`
+
+Do not use combined values like `compatible / conflict`.
+
+Dimension-level details belong in:
+- `contract_comparison.contract_dimensions`
+
+Example dimensions:
+- `existence`
+- `name`
+- `kind`
+- `type`
+- `direction_or_access`
+- `cardinality`
+- `scaling_semantics`
+- `default_or_initialization`
+- `propagation`
+
 ### Issue burn-down output
 
 Required fields:
@@ -178,6 +228,7 @@ Required fields:
 - `linked_conflicts`
 - `linked_open_decisions`
 - `decision_gate`
+- `work_items`
 - `claim_evidence_level`
 - `hil_status` (when hardware evidence exists)
 - `required_issue_decomposition`
@@ -202,6 +253,7 @@ Required fields:
 - `async_parity_tests`
 - `hal_integration_tests`
 - `verification_streams`
+- `work_items`
 - `expected_claim_evidence_level_by_layer`
 - `hil_applicability`
 - `hil_status` (only when existing hardware evidence is available)
@@ -210,6 +262,25 @@ Required fields:
 - `known_gaps`
 - `decision_blockers`
 - `evidence_confidence`
+
+## Claim and Evidence Rules
+
+- `claim_evidence_level` is required in issue burn-down outputs.
+- `hil_status` is optional and must be omitted when hardware evidence is absent.
+- `hil_status` must never be set to placeholders such as `not applicable` or `none`.
+- when present, `hil_status` must use an exact value from the HIL result schema.
+
+Evidence confidence must be recorded per material claim and must distinguish:
+- evidence for observed current behavior;
+- evidence for authoritative/target requirement.
+
+Do not classify directly visible source expressions as `inferred` only because
+their correctness is uncertain.
+
+When expected behavior lacks supporting authority evidence:
+- classify as `evidence-required`;
+- add an evidence-gathering work item;
+- do not present an invented oracle as expected behavior.
 
 ## Normalization Rules
 
