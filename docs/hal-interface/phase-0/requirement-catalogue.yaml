@@ -1327,7 +1327,9 @@ requirements:
     LinuxCNC)
   units: n/a
   scaling_formula: n/a
-  default_value: '0'
+  default_value: >-
+    n/a (HAL_IN: value is determined by the signal source connected in HAL
+    configuration, not by pokeys_homecomp. No homecomp initialization of this pin.)
   initialization_phase: pokeys_homecomp hal_pin_bit_newf
   update_phase: read each homing cycle by homecomp
   device_field: addr->home_sw (pokeys_homecomp local)
@@ -1358,7 +1360,10 @@ requirements:
   creation_condition: unconditional
   units: n/a
   scaling_formula: n/a
-  default_value: '0'
+  default_value: >-
+    unknown/unverified — no concrete initialization cited; explicit init block
+    unreachable; actual value before homecomp first cycle depends on allocator
+    behavior not verified in Phase 0.
   initialization_phase: pokeys_homecomp hal_pin_bit_newf
   update_phase: written by homecomp each cycle
   device_field: addr->homing
@@ -1387,7 +1392,10 @@ requirements:
   creation_condition: unconditional
   units: n/a
   scaling_formula: n/a
-  default_value: '0'
+  default_value: >-
+    unknown/unverified — no concrete initialization cited; explicit init block
+    unreachable; actual value before homecomp first cycle depends on allocator
+    behavior not verified in Phase 0.
   initialization_phase: pokeys_homecomp hal_pin_bit_newf
   update_phase: written by homecomp when joint is homed
   device_field: addr->homed
@@ -1416,8 +1424,10 @@ requirements:
   creation_condition: unconditional
   units: n/a — see local_home_state_t enum (LinuxCNC homing state machine)
   scaling_formula: n/a
-  default_value: 0 (explicit init unreachable at homing_init():366-397; actual runtime
-    default unverified — no primary LinuxCNC RTAPI allocator source registered in Phase 0)
+  default_value: >-
+    HOME_IDLE=0 is the intended initial state (from unreachable init block L397);
+    actual runtime value at startup is unverified — explicit init block unreachable;
+    no primary LinuxCNC allocator source registered in Phase 0
   initialization_phase: pokeys_homecomp hal_pin_s32_newf
   update_phase: written by homecomp state machine each cycle
   device_field: addr->home_state (local home state machine)
@@ -1454,7 +1464,8 @@ requirements:
   creation_condition: unconditional
   units: n/a
   scaling_formula: n/a
-  default_value: '0'
+  default_value: unknown/unverified — HAL_IO; actual value before first cycle depends
+    on allocator behavior; explicit init block unreachable.
   initialization_phase: pokeys_homecomp hal_pin_bit_newf
   update_phase: read and written by homecomp
   device_field: addr->index_enable
@@ -1489,7 +1500,9 @@ requirements:
   creation_condition: unconditional
   units: n/a — see pokeys_home_state_t enum (same as ePK_PEAxisState)
   scaling_formula: n/a
-  default_value: '0'
+  default_value: >-
+    n/a (HAL_IN: value set by pokeysHal when HAL signal is connected;
+    not initialized by homecomp)
   initialization_phase: pokeys_homecomp hal_pin_u32_newf
   update_phase: homecomp reads; must be connected to pokeysHal PEv2.I.AxesState
   device_field: addr->PEv2_AxesState (homecomp local)
@@ -1526,7 +1539,10 @@ requirements:
   creation_condition: unconditional
   units: n/a — see pokeys_home_command_t enum
   scaling_formula: n/a
-  default_value: 0 (IDLE)
+  default_value: >-
+    unknown/unverified before first cycle; IDLE=0 is the intended initial
+    command from homecomp but actual pin value at startup is unverified (explicit
+    init block unreachable; allocator behavior not cited)
   initialization_phase: pokeys_homecomp hal_pin_u32_newf
   update_phase: homecomp writes command each cycle; must be connected to pokeysHal
     PEv2.I.AxesCommand

@@ -75,7 +75,7 @@ Inspected: 2026-08-03 through 2026-08-04.
 | Issue #129 | HAL-Interface: RTC | CLOSED | None | LOW | complete | 0 | none | rtc.* pins; matches pokeysHal | None | MAYBE |
 | Issue #157 | Common pin I/O handling | CLOSED | E-021 | HIGH | complete | 0 | none | Combine I/O handling | None | YES |
 | Issue #213 | Encoder modularization | CLOSED | E-015 | HIGH | complete | 2 | complete | Encoder pin declarations; PoKeysLib struct | None | YES |
-| Issue #216 | Missing PEv2 homing pin | OPEN | E-011 | HIGH | complete | 21 | complete | joint-in-homing absent; all 21 comments read (E-011); confirms homecomp load-order; pin naming | CONFLICT-002 | YES |
+| Issue #216 | Missing PEv2 homing pin | OPEN | E-011 | HIGH | complete | 21 | complete | joint-in-homing absent; all 21 comments read (E-011); confirms homecomp load-order; pin naming | None | YES |
 | Issue #222 | Physical pin-function setup | CLOSED | E-016 | HIGH | complete | 5 | complete | PK_PinConfigurationSet; PinFunction=0 device override | None | YES |
 | Issue #223 | PEv2 LimitOverride | OPEN | E-022 | HIGH | complete | 0 | none | LimitOverride linked to AXIS Override | None | YES |
 | Issue #264 | Analog output userspace | CLOSED | E-017 | HIGH | empty | 1 | complete | Body empty; uspace supports analog output | CONFLICT-004 | YES |

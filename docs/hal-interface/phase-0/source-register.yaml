@@ -725,7 +725,7 @@ sources:
       encoder pins: count (S32), position (FLOAT), reset (BIT); strikethrough items
       velocity and index-enable are struck through in the issue body and therefore
       treated as out of scope for this specification. Parameter: scale (FLOAT).
-      Encoder count=29. Governs encoder export in PoKeysLibEncodersAsync.c.
+      Encoder cardinality stated as 29. Active interface: count (S32), position (FLOAT), reset (BIT), scale (FLOAT param). Struck through: velocity, index-enable.
     state: closed
     inspected: true
     notes: >-
@@ -921,14 +921,14 @@ sources:
       JOINTS=3 does not establish PEv2 export cardinality.
   - source_id: C-021
     repository: zarfld/pokeysHal
-    revision: "inspected 2026-08-05"
+    revision: "inspected 2026-08-04"
     path_or_issue: "issue #41"
     url: https://github.com/zarfld/pokeysHal/issues/41
     source_type: issue_body
     authority_class: C
     scope: >-
       pokeysHal issue #41: PEv2 async implementation to be able to run it in RT.
-      Body null/empty (retrieved via GitHub API 2026-08-05). 0 comments.
+      Body null/empty (retrieved via GitHub API 2026-08-04). 0 comments.
       No HAL ABI specification content.
     state: open
     inspected: true
@@ -938,7 +938,7 @@ sources:
 
   - source_id: E-011
     repository: zarfld/LinuxCnc_PokeysLibComp
-    revision: "inspected 2026-08-05"
+    revision: "inspected 2026-08-04"
     path_or_issue: "issue #216"
     url: https://github.com/zarfld/LinuxCnc_PokeysLibComp/issues/216
     source_type: issue_body_and_comments
@@ -946,14 +946,14 @@ sources:
     scope: >-
       LC_PKComp issue #216: Missing PEv2 homing pin. All 21 comments retrieved
       (pagination complete). Confirms joint.0.PEv2.AxesState pin naming in
-      integration; homecomp load-order dependency; CONFLICT-002 (joint-in-homing
+      integration; homecomp load-order dependency; missing joint-in-homing pin (no dedicated pokeysHal conflict registered; joint-in-homing
       absent). No new HAL ABI requirements beyond documented.
     state: open
     inspected: true
     notes: >-
       21 of 21 comments retrieved and inspected. No deleted/minimised comments
       noted. No referenced commits required separate inspection.
-      CONFLICT-002 evidence confirmed.
+      joint-in-homing pin absence confirmed (no dedicated conflict registered in Phase 0).
 
 
   - source_id: E-013
@@ -1048,12 +1048,16 @@ sources:
     authority_class: E
     scope: >-
       LC_PKComp issue #28: userspace equivalence. CLOSED. Verify pokeys_userspace
-      equals pokeys.comp. Body=complete. 0 comments.
+      equals pokeys.comp. Body discusses HAL naming convention (pokeys.[DevID].*),
+      pin parity between userspace and RT components, and integration requirements
+      for signal wiring. Body=complete. 0 comments.
     state: closed
     inspected: true
     notes: >-
-      Body retrieved and inspected. 0 comments. No material new HAL-interface
-      requirements beyond equivalence verification scope.
+      Body retrieved and inspected (2026-08-04). 0 comments. Confirms HAL naming
+      convention pokeys.[DevID].* as the legacy contract. Naming differences from
+      current pokeysHal (pokeys-async.*) are covered by CONFLICT-006. Integration
+      and parity requirements are covered by existing catalogue entries.
 
   - source_id: E-019
     repository: zarfld/LinuxCnc_PokeysLibComp
@@ -1117,7 +1121,7 @@ sources:
     inspected: true
     notes: >-
       Body retrieved and inspected. 0 comments. LimitOverride feature scope; supports
-      missing-pin evidence for CONFLICT-002.
+      missing-pin evidence for CONFLICT-007 (or unregistered).
 
   - source_id: E-023
     repository: zarfld/LinuxCnc_PokeysLibComp

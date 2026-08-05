@@ -93,7 +93,7 @@ LinuxCNC CDI: adcout.value (float, HAL_IN), adcout.enable (bit, HAL_IN),
 Official LinuxCNC CDI (canonical-devices.html, Authority A): does NOT define encoder
   as a canonical device type. CDI covers digin, digout, adcin, adcout only.
   hal-canon hal_export_encoder, hal_encoder_t [B-004] is a hal-canon convention.
-  → issue #42 (CLOSED): Encoder [C-022] (body=complete, 0 comments; count=29 pins specified)
+  → issue #42 (CLOSED): Encoder [C-022] (body=complete, 0 comments; encoder cardinality stated as 29; active interface: count, position, reset, scale; struck through: velocity, index-enable)
   ✗ no ADR/SDD found
   → manually exported (not via hal_export_encoder):
       PoKeysLibEncodersAsync.c:43-71 (count, position, velocity, reset, index-enable, scale)

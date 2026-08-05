@@ -77,10 +77,10 @@ by comparing file contents against the upstream repository.
    `ePK_PEv2_AxisConfig`, `ePK_PulseEngineV2_AxisSwitchOptions`).
 7. `LinuxCnc_PokeysLibComp` accessed via GitHub API:
    integration HAL files, Python modules, and selected issue bodies inspected.
-8. `zarfld/pokeysHal` GitHub issues #24, #30, #32–#39, #116–#133 fetched;
-   issue bodies inspected for #24, #30, #32, #33, #35, #36, #38, #118, #128;
-   all HIGH-relevance issue bodies retrieved (#37, #39, #119–#126 bodies complete);
-   #132 and #133 bodies complete.
+8. `zarfld/pokeysHal` GitHub issues #24, #30, #32–#42, #116–#133 fetched;
+   all retained HIGH/MEDIUM issue bodies retrieved and inspected (includes #37, #39,
+   #41, #42, #116, #117, #119–#127, #128–#133; see issue-inventory.md for per-issue
+   status). #41 body is null/empty. #42 specifies encoder interface.
 9. `zarfld/LinuxCnc_PokeysLibComp` GitHub issues #16, #21, #24, #28, #29, #30,
    #31, #69, #79, #129, #157, #213, #216, #222, #223, #264, #310, #326 fetched;
    bodies inspected for #21, #24, #28, #29, #30, #31, #69, #79, #129, #157,
