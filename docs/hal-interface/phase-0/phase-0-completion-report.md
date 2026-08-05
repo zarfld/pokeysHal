@@ -15,9 +15,9 @@ Repository: zarfld/pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | 4. Official LinuxCNC rules recorded | PASS | The HAL name-length and CDI rules were recorded from A-001 and A-002. | None |
 | 5. Exact hal-canon provenance recorded | PASS | The embedded hal-canon tree provenance is recorded and the upstream commit match is documented. | None |
 | 6. Legacy HAL interface extracted from source | PASS | The legacy PEv2 parity table and the legacy homecomp counterpart evidence were extracted and recorded in the Phase 0 package. | None |
-| 7. Current HAL interface extracted from source | PASS | The current pokeysHal interface was extracted from the async implementation and the relevant HAL export helpers. | None |
+| 7. Current HAL interface extracted from source | PASS | The current pokeysHal interface was extracted from the async implementation and verified against the current-export scanner and the normative requirement catalogue. | None |
 | 8. Library ownership, consumer boundaries and propagation responsibilities documented | PASS | The lifecycle matrix documents the pokeysHal component boundary, the external homecomp counterpart, and the ownership split between library and integration shell. | None |
-| 9. Enumerations and bitmaps documented | PASS | The PEv2 and homecomp enums and bitmaps are documented in the requirement catalogue. | None |
+| 9. Enumerations and bitmaps documented | PASS | The normative PoKeys-side enums and bitmaps are documented in the requirement catalogue, with homecomp-specific material kept as external evidence only. | None |
 | 10. Canonical and project-specific extensions distinguished | PASS | The canonical-vs-legacy matrix distinguishes canonical HAL objects from PoKeys-specific extensions. | None |
 | 11. Contradictions recorded | PASS | The conflict register documents the known incompatibilities and unresolved gaps. | None |
 | 12. No production code changed | PASS | The change set remains confined to the Phase 0 documentation package and validator tooling. | None |
@@ -119,6 +119,7 @@ All files are in `docs/hal-interface/phase-0/`:
 11. `legacy-pev2-parity.yaml` — 163 rows parity table (162 active, 1 commented)
 12. `integration-links.yaml` — 4 integration link records
 13. `tools/extract_legacy_pev2_exports.py` — exact-tuple extractor/validator
+14. `tools/scan_current_exports.py` — current PoKeys-side export scanner
 
 ## Summary Statistics
 
@@ -170,15 +171,15 @@ Review the Phase 0 findings as a team. Specifically:
 
 ---
 
-Lifecycle and conflict semantics must be corrected and revalidated before Phase 0 can be promoted.
+## Phase 1 Inputs and Registered Decisions
 
-## Missing Evidence Requiring Resolution Before Phase 1
+The remaining items below are Phase 1 inputs and registered decisions for the next implementation pass; they are not missing Phase 0 evidence within the narrowed scope.
 
-- The external homecomp lifecycle section must not cite pokeysHal F-class evidence or `__comp_state`/`memset` semantics.
-- Integration link IK-002 must be reclassified as unverified-incomplete and its propagation semantics must remain untraced.
-- The conflict mappings for LC #216, LC #223, and LC #310 must be reconciled to the registered conflicts.
-- The completion report and validator must agree that criterion 14 remains FAIL until the narrowed scope is fully reflected in the report and lifecycle matrix.
-
+- `CONFLICT-009` — hal-canon direction defects remain a Phase 1 compatibility blocker.
+- `CONFLICT-006` — component naming remains a compatibility decision for downstream users.
+- `CONFLICT-001` — nrOfAxes conditional creation remains a decision input.
+- `CONFLICT-007` — PEv2 compatibility gaps remain a registered conflict, with LC #216 and #223 retained as supporting evidence only for the external/homecomp-facing boundary.
+- `CONFLICT-005` — HAL name-length guidance remains a registered conflict for the legacy path.
 
 ## Phase 1 Implementation and Decision Backlog
 

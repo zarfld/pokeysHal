@@ -3,6 +3,7 @@
 Phase 0 Closure Validator — comprehensive strengthened edition.
 Independently derives all 14 acceptance criteria from parsed artifacts.
 """
+import json
 import sys, os, re, subprocess, yaml
 
 PHASE0_DIR       = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
@@ -262,6 +263,20 @@ c6 = (len(parity)==163 and n_act==162 and n_com==1 and rv.returncode==0
       and (not la022 or la022.get('current_interface_id')=='PEV2A-007'))
 
 # ── C7: Current interface extraction ────────────────────────────────────────
+scanner_path = os.path.join(PHASE0_DIR, 'tools', 'scan_current_exports.py')
+scanner_output = None
+if os.path.exists(scanner_path):
+    rv_scanner = subprocess.run([sys.executable, scanner_path], capture_output=True, text=True, cwd=REPO_ROOT)
+    if rv_scanner.returncode != 0:
+        err(f"C7: scanner failed: {rv_scanner.stderr.strip() or rv_scanner.stdout.strip()}")
+    else:
+        try:
+            scanner_output = json.loads(rv_scanner.stdout)
+        except Exception as e:
+            err(f"C7: scanner JSON parse failed: {e}")
+else:
+    err("C7: scanner missing")
+
 f_ids = {s['source_id'] for s in sources if s.get('authority_class','')=='F'}
 for fid in ['F-001','F-002','F-003','F-005','F-008']:
     if fid not in f_ids: err(f"C7: {fid} missing")
@@ -286,8 +301,16 @@ for r in reqs:
         dir_ = r.get('direction_or_access','')
         if dir_=='HAL_OUT' and dv.strip() in ('0','0 (IDLE)'):
             err(f"C7: {r['interface_id']} HAL_OUT uses bare default_value without initialization evidence")
+
+scanner_inventory = scanner_output.get('inventory', []) if scanner_output else []
+scanner_ids = {cid for row in scanner_inventory for cid in row.get('catalogue_ids', [])}
+required_ids = {'DIGIN-001','DIGOUT-001','ADCIN-001','ADCOUT-001','PEV2A-006','PEV2A-007','LIFE-003'}
+missing_ids = sorted(required_ids - scanner_ids)
+if missing_ids:
+    err(f"C7: scanner missing catalogue IDs: {', '.join(missing_ids)}")
+
 c7 = (all(fid in f_ids for fid in ['F-001','F-002','F-003','F-005','F-008'])
-      and has_axescmd and has_idxen and not any('C7:' in e for e in errors))
+      and has_axescmd and has_idxen and not missing_ids and not any('C7:' in e for e in errors))
 
 # ── C8: Library ownership ───────────────────────────────────────────────────
 sA_end = lm_txt.find('\n## B.')
@@ -465,7 +488,20 @@ c14 = c14_ok and not any('C14:' in e for e in errors)
 # ── Criterion statuses ──────────────────────────────────────────────────────
 computed = {1:c1,2:c2,3:c3,4:c4,5:c5,6:c6,7:c7,8:c8,9:c9,10:c10,11:c11,12:c12,13:c13,14:c14}
 
-rows = re.findall(r'^\| (\d+)\. .*?\| (PASS|PARTIAL|FAIL) \|', rpt_txt, re.M)
+rows = []
+for line in rpt_txt.splitlines():
+    if not line.startswith('| '):
+        continue
+    if 'Criterion' in line and 'Status' in line:
+        continue
+    if '---' in line and '|' in line:
+        continue
+    cells = [c.strip() for c in line.strip().strip('|').split('|')]
+    if not cells:
+        continue
+    m = re.match(r'^(\d+)\.', cells[0])
+    if m:
+        rows.append((m.group(1), cells[1] if len(cells) > 1 else '', cells))
 if len(rows) != len(computed):
     err(f"C14: acceptance table has {len(rows)} rows, expected {len(computed)}")
 for cnum, cpass in computed.items():
@@ -474,6 +510,10 @@ for cnum, cpass in computed.items():
         err(f"Criterion {cnum} not uniquely present in report")
         continue
     rs = matches[0][1]
+    cells = matches[0][2]
+    if len(cells) != 4:
+        err(f"C14: criterion {cnum} row has {len(cells)} columns, expected 4")
+        continue
     if cpass and rs not in ('PASS',):
         err(f"Criterion {cnum}: computed PASS but report says {rs}")
     elif not cpass and rs=='PASS':

@@ -211,11 +211,11 @@ by comparing file contents against the upstream repository.
 
 ## Completion Status
 
-Thirteen deliverables have been created in `docs/hal-interface/phase-0/`. Evidence
+Fourteen deliverables have been created in `docs/hal-interface/phase-0/`. Evidence
 for every finding is referenced by file and line number or issue number. No
 production code was modified, no tests were designed, and no compatibility plan
-was created. Criteria 2, 3, 8, and 14 remain under review until the report and
-lifecycle matrix fully reflect the narrowed Phase 0 scope.
+was created. The package now records the narrowed Phase 0 scope consistently
+across the report, lifecycle matrix, and validator tooling.
 
 **pokeys_homecomp is a separate external counterpart component.** It is not part
 of the normative pokeysHal baseline. Its `joint.N.*` pins are recorded only as

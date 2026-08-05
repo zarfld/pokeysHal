@@ -89,11 +89,8 @@ requirements.
 |---|---|
 | Component | `pokeys_homecomp` |
 | Repository | `zarfld/LinuxCnc_PokeysLibComp` (E-010) |
-| Pins owned | `joint.N.home-sw-in`, `joint.N.homing`, `joint.N.homed`, `joint.N.home-state`, `joint.N.index-enable`, `joint.N.PEv2.AxesState`, `joint.N.PEv2.AxesCommand`, etc. |
-| HAL memory | `pokeys_homecomp` allocates its own HAL objects through the LinuxCNC RTAPI path described in E-010. The Phase 0 evidence set does not claim any additional pokeysHal-specific initialization semantics for this external component. |
-| Initialization | `homing_init()` calls `makepins()` at line 364, then returns. The explicit init loop at lines 366–397 is unreachable dead code. The startup semantics for the external pins are therefore documented from E-010 only; no pokeysHal F-class evidence is claimed for this section. |
-| Internal defects | The counterpart `pokeys_homecomp` (E-010) has an unreachable initialization block in `homing_init()`. This is an external-component observation only and is not a pokeysHal library issue. See the out-of-scope note in `conflict-register.md`. |
-| Lifecycle owner | LinuxCNC runtime (loads/unloads `pokeys_homecomp` independently) |
+| Status | Separate external component; not owned or implemented by pokeysHal |
+| Notes | `joint.N.*` endpoints may appear in external HAL net examples, but lifecycle and internal behavior are outside this baseline |
 
 ---
 

@@ -945,15 +945,16 @@ sources:
     authority_class: E
     scope: >-
       LC_PKComp issue #216: Missing PEv2 homing pin. All 21 comments retrieved
-      (pagination complete). Confirms joint.0.PEv2.AxesState pin naming in
-      integration; homecomp load-order dependency; missing joint-in-homing pin (no dedicated pokeysHal conflict registered; joint-in-homing
-      absent). No new HAL ABI requirements beyond documented.
+      (pagination complete). The evidence is treated as external/homecomp-side
+      observation only for the Phase 0 pokeysHal baseline; no normative pokeysHal
+      requirement is inferred from the joint-in-homing absence.
     state: open
     inspected: true
     notes: >-
       21 of 21 comments retrieved and inspected. No deleted/minimised comments
       noted. No referenced commits required separate inspection.
-      joint-in-homing pin absence confirmed (no dedicated conflict registered in Phase 0).
+      joint-in-homing pin absence is treated as an external/homecomp-side
+      observation, not a normative pokeysHal requirement.
 
 
   - source_id: E-013
@@ -1120,8 +1121,9 @@ sources:
     state: open
     inspected: true
     notes: >-
-      Body retrieved and inspected. 0 comments. LimitOverride feature scope; supports
-      missing-pin evidence for CONFLICT-007 (or unregistered).
+      Body retrieved and inspected. 0 comments. LimitOverride is treated as an
+      external/homecomp-side observation for this baseline and does not create a
+      normative pokeysHal requirement.
 
   - source_id: E-023
     repository: zarfld/LinuxCnc_PokeysLibComp
