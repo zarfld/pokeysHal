@@ -1298,6 +1298,7 @@ requirements:
   initialization_phase: export_pev2_pins
   update_phase: unknown — runtime read/write propagation untraced
   device_field: no runtime mapping identified
+  integration_link: IK-002
   pokeyslib_function: none identified
   enumeration: n/a — binary bit
   bitmap_definition: n/a
@@ -1330,6 +1331,10 @@ requirements:
   default_value: >-
     n/a (HAL_IN: value is determined by the signal source connected in HAL
     configuration, not by pokeys_homecomp. No homecomp initialization of this pin.)
+  startup_pin_value: "n/a (HAL_IN: the runtime value comes from the connected signal source and is not initialized by homecomp)"
+  local_state_initial_value: "n/a"
+  first_propagation: "The first propagation occurs once the connected HAL source drives the net after the components are loaded; homecomp does not initialize this pin."
+  steady_state_ownership: "The pin value is owned by the connected HAL producer and the HAL net; homecomp only consumes it."
   initialization_phase: pokeys_homecomp hal_pin_bit_newf
   update_phase: read each homing cycle by homecomp
   device_field: addr->home_sw (pokeys_homecomp local)
@@ -1428,6 +1433,10 @@ requirements:
     HOME_IDLE=0 is the intended initial state (from unreachable init block L397);
     actual runtime value at startup is unverified — explicit init block unreachable;
     no primary LinuxCNC allocator source registered in Phase 0
+  startup_pin_value: "unknown/unverified — the homecomp state pin is created by homecomp but the Phase 0 evidence does not prove a concrete startup value."
+  local_state_initial_value: "HOME_IDLE=0 is the intended initial value of the local homecomp state machine, but the unreachable init block means this is not a verified startup path."
+  first_propagation: "The first propagation occurs once the homing state machine writes the pin during the first cycle; the reachable path is not proven by the Phase 0 evidence."
+  steady_state_ownership: "homecomp owns the pin value once the state machine is active; it is not a pokeysHal-owned output."
   initialization_phase: pokeys_homecomp hal_pin_s32_newf
   update_phase: written by homecomp state machine each cycle
   device_field: addr->home_state (local home state machine)
@@ -1466,6 +1475,10 @@ requirements:
   scaling_formula: n/a
   default_value: unknown/unverified — HAL_IO; actual value before first cycle depends
     on allocator behavior; explicit init block unreachable.
+  startup_pin_value: "unknown/unverified — the pin is created by homecomp and no concrete startup value is proven by the Phase 0 evidence."
+  local_state_initial_value: "unknown/unverified — no concrete local-state initialization was cited in E-010."
+  first_propagation: "The first propagation is through the HAL net to the pokeysHal peer endpoint; the Phase 0 evidence does not trace a concrete runtime path."
+  steady_state_ownership: "the HAL_IO value is shared between homecomp and pokeysHal through a HAL net; Phase 0 does not claim a single authoritative runtime owner beyond that connection."
   initialization_phase: pokeys_homecomp hal_pin_bit_newf
   update_phase: read and written by homecomp
   device_field: addr->index_enable
@@ -1503,6 +1516,10 @@ requirements:
   default_value: >-
     n/a (HAL_IN: value set by pokeysHal when HAL signal is connected;
     not initialized by homecomp)
+  startup_pin_value: "n/a (HAL_IN: the runtime value is supplied by the connected pokeysHal producer once the net is established)"
+  local_state_initial_value: "n/a"
+  first_propagation: "The first propagation occurs when pokeysHal writes the pin after the HAL net is connected; homecomp does not initialize it."
+  steady_state_ownership: "pokeysHal owns the producer-side value; homecomp consumes it as a HAL_IN endpoint."
   initialization_phase: pokeys_homecomp hal_pin_u32_newf
   update_phase: homecomp reads; must be connected to pokeysHal PEv2.I.AxesState
   device_field: addr->PEv2_AxesState (homecomp local)
@@ -1543,6 +1560,10 @@ requirements:
     unknown/unverified before first cycle; IDLE=0 is the intended initial
     command from homecomp but actual pin value at startup is unverified (explicit
     init block unreachable; allocator behavior not cited)
+  startup_pin_value: "unknown/unverified before first cycle; IDLE=0 is the intended initial command from homecomp but the Phase 0 evidence does not prove a reachable startup path."
+  local_state_initial_value: "IDLE=0 is the intended initial value of the local homecomp command enum, but the unreachable init block means this is not a validated startup path."
+  first_propagation: "The first propagation occurs when homecomp writes the command pin once the homing cycle begins; no concrete initialization path is proven in Phase 0."
+  steady_state_ownership: "homecomp owns the command pin value after startup; the peer pokeysHal pin is a consumer connected through the HAL net."
   initialization_phase: pokeys_homecomp hal_pin_u32_newf
   update_phase: homecomp writes command each cycle; must be connected to pokeysHal
     PEv2.I.AxesCommand

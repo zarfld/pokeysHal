@@ -37,12 +37,13 @@ integration_links:
     consumer_direction: HAL_IO
     hal_type: hal_bit_t
     semantic_contract: >-
-      HAL_IO pin netted between pokeysHal and pokeys_homecomp. The
-      joint.N.index-enable pin is the homecomp-exported endpoint; no third
-      separate motion-controller object exists.
+      The pokeysHal endpoint and the homecomp endpoint both exist, but the
+      runtime read/write propagation semantics between them are not traced by
+      the Phase 0 evidence set. This link remains unverified-incomplete until
+      a concrete propagation path is demonstrated in source or runtime evidence.
     enum_contract: "binary bit; no enum"
-    mapping_scope: HAL/INI configuration
-    compatibility_status: compatible
+    mapping_scope: HAL/INI configuration (propagation untraced)
+    compatibility_status: unverified-incomplete
     conflicts: []
     legacy_pokeys_endpoint_evidence: "E-009 / LA-022"
     current_pokeyshal_endpoint_evidence: "F-005"

@@ -331,17 +331,30 @@ for lk in ilinks:
         if c not in reg_conflicts: err(f"C11: unregistered {c!r} in IK {lk['link_id']}")
 
 # Validate conflict subject relevance in inventory/source
-# CONFLICT-002 = AxisEnable only
 conflict_subjects = {}
 for m in re.finditer(r'Conflict ID: (CONFLICT-\d+)\nSubject: ([^\n]+)', conf_txt, re.M):
     conflict_subjects[m.group(1)] = m.group(2).strip()
 
 c002_subject = conflict_subjects.get('CONFLICT-002','')
-# Any issue/source with CONFLICT-002 that discusses LimitOverride or joint-in-homing is suspect
 for r in inv_rows:
     if 'CONFLICT-002' in r.get('conf',''):
         if any(kw in r.get('title','').lower() for kw in ['limitoverride','limit override','homing pin','joint-in-homing']):
             err(f"C11: {r['repo']}/{r['obj']} links CONFLICT-002 ({c002_subject!r}) but topic differs")
+
+# Validate the requested special-case mappings for LC #216, #223, #310
+for row in inv_rows:
+    if row['repo'] == 'lc' and row['obj'] in ('Issue #216', 'Issue #223', 'Issue #310'):
+        expected = {'Issue #216': 'CONFLICT-007', 'Issue #223': 'CONFLICT-007', 'Issue #310': 'CONFLICT-005'}
+        if expected[row['obj']] not in row.get('conf',''):
+            err(f"C11: {row['repo']}/{row['obj']} missing expected conflict {expected[row['obj']]}" )
+
+# Ensure IK-002 is classified as unverified-incomplete and not as compatible
+for lk in ilinks:
+    if lk.get('link_id') == 'IK-002':
+        if lk.get('compatibility_status') != 'unverified-incomplete':
+            err("C11: IK-002 compatibility_status must be unverified-incomplete")
+        if 'propagation' not in str(lk.get('semantic_contract','')).lower():
+            err("C11: IK-002 semantic_contract must mention untraced propagation")
 
 c11 = not any('C11:' in e for e in errors)
 
@@ -369,6 +382,55 @@ c13 = not any('C13:' in e for e in errors)
 
 # ── C14: Cross-document consistency ─────────────────────────────────────────
 c14_ok = True
+
+# Criterion 14 must stay FAIL until the lifecycle/conflict corrections are present.
+if 'PHASE 0 BASELINE INCOMPLETE' not in rpt_txt:
+    err("C14: completion report not marked INCOMPLETE")
+    c14_ok = False
+
+# Lifecycle matrix must not attribute F-008/__comp_state/memset evidence to the external homecomp section.
+section_b_match = re.search(r'^## B\. External Counterpart Evidence: pokeys_homecomp\s*(.*?)(?=^## |\Z)', lm_txt, re.M | re.S)
+section_b = section_b_match.group(1) if section_b_match else lm_txt
+if '__comp_state' in section_b:
+    err("C14: lifecycle matrix still cites __comp_state in external homecomp section")
+    c14_ok = False
+if 'memset' in section_b:
+    err("C14: lifecycle matrix still cites memset in external homecomp section")
+    c14_ok = False
+
+# HOMECOMP lifecycle phases must be explicit and tied to E-010 evidence.
+for req_id in ['HOMECOMP-001','HOMECOMP-004','HOMECOMP-005','HOMECOMP-006','HOMECOMP-007']:
+    entry = req_map.get(req_id)
+    if not entry:
+        err(f"C14: missing {req_id}")
+        c14_ok = False
+        continue
+    fields = [entry.get('startup_pin_value'), entry.get('local_state_initial_value'), entry.get('first_propagation'), entry.get('steady_state_ownership')]
+    if any(v is None for v in fields):
+        err(f"C14: {req_id} missing lifecycle phase fields")
+        c14_ok = False
+
+# PEV2A-007/HOMECOMP-005/IK-002 chain must be explicit.
+for req_id in ['PEV2A-007','HOMECOMP-005']:
+    entry = req_map.get(req_id)
+    if not entry:
+        err(f"C14: missing {req_id}")
+        c14_ok = False
+        continue
+    if 'IK-002' not in str(entry.get('evidence','')) and 'IK-002' not in str(entry.get('integration_link','')):
+        err(f"C14: {req_id} missing IK-002 linkage")
+        c14_ok = False
+
+# All conflict mappings must be present and relevant.
+for conflict_id in ['CONFLICT-005', 'CONFLICT-007']:
+    if conflict_id not in reg_conflicts:
+        err(f"C14: missing {conflict_id}")
+        c14_ok = False
+
+# The completion report should contain the explicit missing-evidence note.
+if 'Lifecycle and conflict semantics must be corrected' not in rpt_txt:
+    err("C14: completion report missing lifecycle/conflict remediation note")
+    c14_ok = False
 
 # ADCOUT consistency
 for dn, dt in [("traceability",tr_txt),("open-decisions",od_txt),("req-catalogue",rc_raw)]:

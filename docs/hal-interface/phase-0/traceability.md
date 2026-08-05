@@ -137,7 +137,7 @@ PoKeys-specific requirement:
   → joint-pos-cmd, joint-pos-fb, joint-vel-cmd: implemented
   → AxesState, AxesCommand, CurrentPosition: implemented
   → digin.LimitN/LimitP/Home.in/.in-not: implemented
-  → HomingStatus, index-enable: implemented (both pokeysHal PEv2.I.index-enable and homecomp joint.N.index-enable)
+  → HomingStatus, index-enable: both endpoints exist, but the runtime propagation semantics remain untraced (PEV2A-007 / HOMECOMP-005 / IK-002)
   ✗ digout.AxisEnable.out: ABSENT [CONFLICT-002]
   ✗ stepgen.* parameters: ABSENT [CONFLICT-007]
   ✗ HomingSpeed, HomingReturnSpeed, HomingAlgorithm, HomeOffsets: ABSENT
