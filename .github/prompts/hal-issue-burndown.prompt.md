@@ -38,7 +38,8 @@ Treat external counterpart references (including `joint.N.*` and
 
 ## Required output fields
 
-Produce exactly the issue burn-down fields defined by the classification schema:
+Produce all required issue burn-down fields defined by the schema, followed by
+the required human-readable outcome line:
 - `issue_or_request`
 - `task_scope`
 - `affected_interface_ids`
@@ -72,6 +73,16 @@ Produce exactly the issue burn-down fields defined by the classification schema:
 
 ## Outcome mapping
 
+For `task_scope` `NON-HAL`, use:
+- `decision_gate`: `out-of-scope`
+- human outcome: `NOT APPLICABLE TO HAL/ASYNC COMPATIBILITY`
+
+This means outside the HAL/async compatibility workflow. The issue may still
+proceed through the normal repository workflow.
+
+Keep `OUT OF SCOPE` for items genuinely outside pokeysHal scope, distinguishing
+the two cases through `explicit_exclusions`.
+
 End with one line containing one of:
 - `READY FOR TDD` for
   `implementable-preserve-contract`,
@@ -82,5 +93,7 @@ End with one line containing one of:
 - `BLOCKED BY EVIDENCE` for `evidence-required`
 - `DEFERRED` for `deferred`
 - `OUT OF SCOPE` for `out-of-scope`
+- `NOT APPLICABLE TO HAL/ASYNC COMPATIBILITY` for `task_scope` `NON-HAL` with
+  `decision_gate` `out-of-scope`
 
 Also print the exact `decision_gate` value alongside the human-readable outcome.

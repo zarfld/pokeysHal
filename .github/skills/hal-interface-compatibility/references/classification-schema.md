@@ -96,6 +96,12 @@ Interpretation rules:
 - choose `evidence-required` when required source evidence is missing;
 - choose `characterization-only` when current behavior can be documented/tested
   without contract-selection decisions.
+- `out-of-scope` means either:
+  - outside the HAL/async compatibility procedure; or
+  - outside pokeysHal scope,
+  as stated explicitly in `explicit_exclusions`.
+- For `NON-HAL` tasks, use `out-of-scope` for compatibility-workflow routing and
+  return the issue to the normal repository workflow.
 
 ## 7. verification_stream
 

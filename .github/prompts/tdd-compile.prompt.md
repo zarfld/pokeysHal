@@ -42,8 +42,17 @@ The TDDDriver must:
 3. **Green** — implement the smallest complete change that makes Red pass
    without weakening or removing any existing check. Preserve C99,
    PoKeysLib subsystem boundaries, async infrastructure / subsystem /
-   integration-shell separation, protocol semantics, HAL ABI, and bounded
-   execution on RT-reachable paths.
+   integration-shell separation, protocol semantics, approved target HAL
+   contract, and bounded execution on RT-reachable paths.
+
+   Preserve existing HAL ABI unless the approved issue and compatibility gate
+   explicitly authorize `implementable-recorded-correction` or
+   `implementable-compatibility-alias`.
+   For `implementable-recorded-correction`, implement only the recorded target
+   contract.
+   For `implementable-compatibility-alias`, preserve both interfaces exactly as
+   specified.
+   Do not infer authorization from a bug title or a failing implementation.
 
 4. **Refactor** — remove duplication and simplify without changing observable
    behavior. Keep all applicable checks green.

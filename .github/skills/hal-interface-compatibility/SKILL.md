@@ -131,7 +131,27 @@ Rules:
 - For `ASYNC-PARITY` tasks, you may skip HAL-specific contract-comparison
    sections, but you must still produce the ASYNC-PARITY verification stream and
    required outputs.
-- For `NON-HAL`, stop this skill after recording exclusions.
+- For `NON-HAL`, return this minimal output and then stop HAL-specific analysis:
+  - `task_scope`: `NON-HAL`
+  - `affected_interface_ids`: `[]`
+  - `contract_comparison`: `not-applicable`
+  - `canonical_relationship`: `not-applicable`
+  - `legacy_relationship`: `not-applicable`
+  - `interface_role`: `unknown`
+  - `implementation_state`: `not-applicable`
+  - `linked_conflicts`: `[]`
+  - `linked_open_decisions`: `[]`
+  - `decision_gate`: `out-of-scope`
+  - `required_tests_by_stream`: `{}`
+  - `async_impact`: `not-applicable`
+  - `hil_applicability`: `not-applicable`
+  - `traceability_changes`: `route through the normal non-HAL repository workflow`
+  - `explicit_exclusions`: `outside the HAL/async compatibility workflow`
+  - `evidence_confidence`: `source-confirmed` when issue/source scope proves
+    NON-HAL classification; otherwise `unknown`
+
+`out-of-scope` here means outside the HAL-interface compatibility workflow.
+It does not automatically mean the issue is outside pokeysHal scope or should be rejected.
 
 ### C. Resolve Phase 0 evidence
 
