@@ -24,6 +24,13 @@ The TestingSpecialist may design or review the Red check but must not duplicate 
 
 Establish a baseline before judging the change, confirm that the Red result fails for the intended reason, and do not report zero relevant tests as green.
 
+For tasks that affect HAL compatibility or async parity:
+- invoke `.github/skills/hal-interface-compatibility/SKILL.md` before test design;
+- identify affected interface IDs via that workflow;
+- consume per-object contract comparison and `decision_gate` from the skill outputs;
+- do not convert current observed behavior into target contract behavior unless a recorded decision supports it;
+- cite evidence source for every assertion.
+
 ## Verification layers
 1. Static and structural validation: frontmatter, schemas, generated-file checks, formatting, and repository rules.
 2. Compile and link validation: individual PoKeysLib objects, libraries, and HAL components.
@@ -47,6 +54,18 @@ For the affected behavior, consider:
 - repeated execution without state leakage.
 
 Not every change requires every case. Record why omitted cases are not applicable.
+
+When applicable, design and report separate test groups:
+- HAL-ABI: existence, exact name, kind, type, direction/access, cardinality,
+	creation condition, defaults where relevant.
+- HAL-PROPAGATION: HAL-to-library/device and device/parser-to-HAL paths.
+- HAL-INTEGRATION: component load/readiness, prefix/instance naming, object
+	resolution, net/setp/addf behavior, ownership compatibility, conditional
+	creation visibility, and HAL/INI loading behavior.
+- ASYNC-PARITY: command, payload, offsets, parser, callback, transaction
+	matching, queue/scheduler behavior, timeout/retry/stale-response handling.
+- HIL: route through `.github/skills/hil-tdd/SKILL.md` and
+	`.github/skills/hil-tdd/references/result-schema.md`.
 
 ## Result classification
 - PASS: the intended behavior was exercised and met its expectation.

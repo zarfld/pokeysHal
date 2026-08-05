@@ -46,6 +46,26 @@ Do not duplicate complete content from agents, instructions, or skills.
 
 ### 4. LinuxCNC HAL exports and component integration
 
+For HAL-compatibility-focused audits, use:
+- `.github/skills/hal-interface-compatibility/SKILL.md`
+- `.github/skills/hal-interface-compatibility/references/classification-schema.md`
+- `docs/hal-interface/phase-0/requirement-catalogue.yaml`
+- `docs/hal-interface/phase-0/source-register.yaml`
+- `docs/hal-interface/phase-0/legacy-pev2-parity.yaml`
+- `docs/hal-interface/phase-0/conflict-register.md`
+- `docs/hal-interface/phase-0/open-decisions.md`
+
+Audit checks must confirm:
+- changed HAL-facing behavior identifies affected interface IDs;
+- authoritative, legacy, and current-observed contracts remain distinguished;
+- recorded conflicts and decisions are respected;
+- no accidental drift in naming, type, direction/access, cardinality,
+  defaults, or scaling;
+- HAL compatibility and async parity evidence are separated;
+- homecomp internals are not introduced as pokeysHal requirements;
+- compatibility claims identify `claim_evidence_level`;
+- hardware claims use existing HIL result-schema terminology.
+
 - HAL-visible struct members must use `hal_u32_t`, `hal_s32_t`, `hal_bit_t`, or
   `hal_float_t`. Flag any raw C type used where a HAL type is required.
 - Confirm pin names follow the documented naming convention.

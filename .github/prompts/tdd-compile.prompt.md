@@ -18,6 +18,17 @@ This prompt states the orchestration contract only.
 
 The TDDDriver must:
 
+0. **HAL/Async compatibility gate** — detect whether the issue can affect
+   HAL-visible behavior or async parity. When applicable, invoke
+   `.github/skills/hal-interface-compatibility/SKILL.md` and report
+   `affected_interface_ids` and `decision_gate` (per
+   `.github/skills/hal-interface-compatibility/references/classification-schema.md`).
+   Do not proceed into production Red-Green-Refactor when gate outcome is:
+   `characterization-only`, `decision-required`, `evidence-required`,
+   `deferred`, or `out-of-scope`.
+   For `characterization-only`, deterministic characterization tests are
+   allowed, but no production behavior change.
+
 1. **Baseline** — run the narrowest relevant build or test before editing;
    record pass/fail; separate pre-existing failures from the new Red result.
 

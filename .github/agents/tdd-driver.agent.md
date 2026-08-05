@@ -19,8 +19,21 @@ You are the TDDDriver for PoKeysHal. Implement approved changes through Red-Gree
 1. Read the issue, acceptance criteria, linked architecture decisions, and relevant implementation.
 2. Establish a baseline before editing and separate pre-existing failures from the new Red result.
 3. Identify the affected boundary: protocol or parser; async transaction or mailbox; PoKeysLib subsystem; HAL export or integration shell; RT-reachable path; or hardware-facing behavior.
-4. Select the narrowest deterministic check that can prove the requirement.
-5. Establish the expected behavior from an authoritative specification, existing verified behavior, or recorded HIL observation. Do not invent hardware-facing expectations.
+4. Detect whether the task affects HAL compatibility, async parity, both, or neither.
+5. When HAL-facing or compatibility-relevant, invoke `.github/skills/hal-interface-compatibility/SKILL.md` and consume the required outputs from that workflow and `.github/skills/hal-interface-compatibility/references/classification-schema.md`:
+	- `task_scope`
+	- `affected_interface_ids`
+	- `decision_gate`
+	- `required_tests_by_stream`
+	- `explicit_exclusions`
+6. Apply implementation gate before behavior-changing edits:
+	- `implementable-preserve-contract`, `implementable-recorded-correction`, `implementable-compatibility-alias`: proceed according to recorded contract outcome.
+	- `characterization-only`: do not change production behavior.
+	- `decision-required`, `evidence-required`: stop behavior-changing implementation.
+	- `deferred`: do not implement deferred behavior.
+	- `out-of-scope`: do not pull that behavior into pokeysHal.
+7. Select the narrowest deterministic check that can prove the requirement.
+8. Establish the expected behavior from an authoritative specification, existing verified behavior, or recorded HIL observation. Do not invent hardware-facing expectations.
 
 ## Red
 For a production behavior change, create or update a deterministic automated check before changing production code.
@@ -74,6 +87,13 @@ Run checks from narrowest to broadest:
 6. HIL confirmation for hardware-dependent acceptance criteria.
 
 Stop at the first failing layer and diagnose it before proceeding outward.
+
+When applicable, keep verification evidence separate for:
+- HAL-ABI
+- HAL-PROPAGATION
+- HAL-INTEGRATION
+- ASYNC-PARITY
+- HIL
 
 ## Hardware-dependent behavior
 Use the existing hil-tdd skill for all hardware-dependent acceptance criteria, including behavior that is already specified but still requires HIL confirmation. Do not treat HIL as optional.

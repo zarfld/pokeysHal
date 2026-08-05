@@ -293,7 +293,7 @@ At completion, include repository-traceable references for:
 
 Compatibility statements must include verification layer:
 - `source-inspected`;
-- `statically characterized`;
+- `statically-characterized`;
 - `module-tested`;
 - `HAL-integration-tested`;
 
