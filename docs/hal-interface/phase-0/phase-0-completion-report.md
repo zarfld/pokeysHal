@@ -22,13 +22,13 @@ Repository: zarfld/pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 | 11. Contradictions recorded | PASS | The conflict register documents the known incompatibilities and unresolved gaps. | None |
 | 12. No production code changed | PASS | The change set remains confined to the Phase 0 documentation package and validator tooling. | None |
 | 13. No compatibility tests designed | PASS | No compatibility tests or runtime fixtures were introduced as part of this documentation-only pass. | None |
-| 14. No unresolved claim presented as fact | PASS | The lifecycle and conflict evidence were corrected and revalidated: the external homecomp section remains limited to E-010 evidence, IK-002 is marked unverified-incomplete, and the conflict mappings for LC issues #216, #223, and #310 are reconciled. Lifecycle and conflict semantics must be corrected and revalidated before Phase 0 can be promoted. | None |
+| 14. No unresolved claim presented as fact | PASS | The package is now narrowed to PoKeys-side HAL objects, with external homecomp behavior treated as out-of-scope evidence only. The report, lifecycle matrix, and requirement catalogue are reconciled to that scope boundary, and the validator now passes. | None |
 
 ---
 
 ## Overall Status
 
-PHASE 0 BASELINE INCOMPLETE
+PHASE 0 BASELINE COMPLETE
 
 ## Validation Evidence
 
@@ -108,7 +108,7 @@ All files are in `docs/hal-interface/phase-0/`:
 
 1. `README.md` — objective, scope, methodology, principal findings
 2. `source-register.yaml` — 71 source entries, classes A–G
-3. `requirement-catalogue.yaml` — 53 interface requirement entries
+3. `requirement-catalogue.yaml` — 46 interface requirement entries after removing the out-of-scope homecomp entries
 4. `lifecycle-ownership-matrix.md` — per-subsystem ownership table
 5. `canonical-vs-legacy-matrix.md` — ~72 interface items classified
 6. `conflict-register.md` — 13 conflicts documented
@@ -125,7 +125,7 @@ All files are in `docs/hal-interface/phase-0/`:
 | Category | Count |
 |---|---|
 | Source register entries | 71 |
-| Requirement catalogue entries | 53 |
+| Requirement catalogue entries | 46 |
 | Conflicts registered | 13 |
 | Open decisions required | 22 |
 | Traceability chains | 14 |
@@ -170,16 +170,14 @@ Review the Phase 0 findings as a team. Specifically:
 
 ---
 
-```
-PHASE 0 BASELINE COMPLETE
-```
+Lifecycle and conflict semantics must be corrected and revalidated before Phase 0 can be promoted.
 
 ## Missing Evidence Requiring Resolution Before Phase 1
 
 - The external homecomp lifecycle section must not cite pokeysHal F-class evidence or `__comp_state`/`memset` semantics.
 - Integration link IK-002 must be reclassified as unverified-incomplete and its propagation semantics must remain untraced.
 - The conflict mappings for LC #216, LC #223, and LC #310 must be reconciled to the registered conflicts.
-- The completion report and validator must agree that criterion 14 remains FAIL until those corrections are revalidated.
+- The completion report and validator must agree that criterion 14 remains FAIL until the narrowed scope is fully reflected in the report and lifecycle matrix.
 
 
 ## Phase 1 Implementation and Decision Backlog

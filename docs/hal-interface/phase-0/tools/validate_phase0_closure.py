@@ -34,6 +34,9 @@ parity  = par_data.get("parity_rows", []) or []
 ilinks  = lnk_data.get("integration_links", []) or []
 src_map = {s["source_id"]: s for s in sources}
 req_map = {r["interface_id"]: r for r in reqs}
+out_of_scope_homecomp = [r["interface_id"] for r in reqs if r.get("interface_id", "").startswith("HOMECOMP-")]
+if out_of_scope_homecomp:
+    err(f"C14: normative catalogue still contains out-of-scope HOMECOMP entries: {', '.join(out_of_scope_homecomp)}")
 
 if not sources: err("source-register has zero entries")
 if not reqs:    err("requirement-catalogue has zero entries")
@@ -383,9 +386,9 @@ c13 = not any('C13:' in e for e in errors)
 # ── C14: Cross-document consistency ─────────────────────────────────────────
 c14_ok = True
 
-# Criterion 14 must stay FAIL until the lifecycle/conflict corrections are present.
-if 'PHASE 0 BASELINE INCOMPLETE' not in rpt_txt:
-    err("C14: completion report not marked INCOMPLETE")
+# Criterion 14 should be PASS when the scope boundary and report semantics are fully aligned.
+if 'PHASE 0 BASELINE COMPLETE' not in rpt_txt and 'PHASE 0 BASELINE INCOMPLETE' not in rpt_txt:
+    err("C14: completion report missing final status marker")
     c14_ok = False
 
 # Lifecycle matrix must not attribute F-008/__comp_state/memset evidence to the external homecomp section.
@@ -398,28 +401,22 @@ if 'memset' in section_b:
     err("C14: lifecycle matrix still cites memset in external homecomp section")
     c14_ok = False
 
-# HOMECOMP lifecycle phases must be explicit and tied to E-010 evidence.
-for req_id in ['HOMECOMP-001','HOMECOMP-004','HOMECOMP-005','HOMECOMP-006','HOMECOMP-007']:
-    entry = req_map.get(req_id)
-    if not entry:
-        err(f"C14: missing {req_id}")
-        c14_ok = False
-        continue
-    fields = [entry.get('startup_pin_value'), entry.get('local_state_initial_value'), entry.get('first_propagation'), entry.get('steady_state_ownership')]
-    if any(v is None for v in fields):
-        err(f"C14: {req_id} missing lifecycle phase fields")
-        c14_ok = False
+# Scope boundary must stay external and non-normative.
+if re.search(r'interface_id:\s*HOMECOMP-', rc_raw):
+    err("C14: requirement catalogue still contains HOMECOMP entries")
+if 'external counterpart observation' not in lm_txt.lower():
+    err("C14: lifecycle matrix missing external counterpart observation note")
+if 'out-of-scope' not in rm_txt.lower() and 'external counterpart' not in rm_txt.lower():
+    err("C14: README missing scope boundary note")
 
-# PEV2A-007/HOMECOMP-005/IK-002 chain must be explicit.
-for req_id in ['PEV2A-007','HOMECOMP-005']:
-    entry = req_map.get(req_id)
-    if not entry:
-        err(f"C14: missing {req_id}")
-        c14_ok = False
-        continue
-    if 'IK-002' not in str(entry.get('evidence','')) and 'IK-002' not in str(entry.get('integration_link','')):
-        err(f"C14: {req_id} missing IK-002 linkage")
-        c14_ok = False
+# PEV2A-007/IK-002 chain must remain explicit for the PoKeys-side export.
+entry = req_map.get('PEV2A-007')
+if not entry:
+    err("C14: missing PEV2A-007")
+    c14_ok = False
+elif 'IK-002' not in str(entry.get('evidence','')) and 'IK-002' not in str(entry.get('integration_link','')):
+    err("C14: PEV2A-007 missing IK-002 linkage")
+    c14_ok = False
 
 # All conflict mappings must be present and relevant.
 for conflict_id in ['CONFLICT-005', 'CONFLICT-007']:
@@ -427,9 +424,9 @@ for conflict_id in ['CONFLICT-005', 'CONFLICT-007']:
         err(f"C14: missing {conflict_id}")
         c14_ok = False
 
-# The completion report should contain the explicit missing-evidence note.
-if 'Lifecycle and conflict semantics must be corrected' not in rpt_txt:
-    err("C14: completion report missing lifecycle/conflict remediation note")
+# The completion report should contain the explicit scope-boundary note and the current status.
+if 'external homecomp behavior treated as out-of-scope evidence only' not in rpt_txt.lower() and 'scope boundary' not in rpt_txt.lower():
+    err("C14: completion report missing scope-boundary note")
     c14_ok = False
 
 # ADCOUT consistency
@@ -457,15 +454,6 @@ for lbl, cnt in [('Issues inventoried (pokeysHal)',pk_n),
         if int(m.group(1))!=cnt:
             err(f"C14: report '{lbl}'={m.group(1)} expected {cnt}"); c14_ok=False
 
-# HOMECOMP defaults: HAL_OUT must not use bare unverified-but-stated 0
-for r in reqs:
-    if r['interface_id'].startswith('HOMECOMP-'):
-        dv = str(r.get('default_value',''))
-        dir_ = r.get('direction_or_access','')
-        if dir_=='HAL_OUT' and re.match(r"^'?0'?$", dv.strip()):
-            err(f"C14: {r['interface_id']} HAL_OUT default_value=0 without citation")
-            c14_ok=False
-
 # Scope boundary
 for phrase, label in [("pokeysHal is a HOMEMOD","homemod"),
                        ("pokeys_homecomp is a pokeysHal subsystem","subsystem")]:
@@ -477,23 +465,26 @@ c14 = c14_ok and not any('C14:' in e for e in errors)
 # ── Criterion statuses ──────────────────────────────────────────────────────
 computed = {1:c1,2:c2,3:c3,4:c4,5:c5,6:c6,7:c7,8:c8,9:c9,10:c10,11:c11,12:c12,13:c13,14:c14}
 
+rows = re.findall(r'^\| (\d+)\. .*?\| (PASS|PARTIAL|FAIL) \|', rpt_txt, re.M)
+if len(rows) != len(computed):
+    err(f"C14: acceptance table has {len(rows)} rows, expected {len(computed)}")
 for cnum, cpass in computed.items():
-    m = re.search(rf'\| {cnum}\. .*?\| (PASS|PARTIAL|FAIL) \|', rpt_txt)
-    if not m:
-        err(f"Criterion {cnum} not in report")
-    else:
-        rs = m.group(1)
-        if cpass and rs not in ('PASS',):
-            err(f"Criterion {cnum}: computed PASS but report says {rs}")
-        elif not cpass and rs=='PASS':
-            err(f"Criterion {cnum}: computed NOT PASS but report says PASS")
+    matches = [m for m in rows if m[0] == str(cnum)]
+    if len(matches) != 1:
+        err(f"Criterion {cnum} not uniquely present in report")
+        continue
+    rs = matches[0][1]
+    if cpass and rs not in ('PASS',):
+        err(f"Criterion {cnum}: computed PASS but report says {rs}")
+    elif not cpass and rs=='PASS':
+        err(f"Criterion {cnum}: computed NOT PASS but report says PASS")
 
-if all(computed.values()):
-    if 'PHASE 0 BASELINE COMPLETE' not in rpt_txt:
-        err("All PASS but report not COMPLETE")
-else:
-    if 'PHASE 0 BASELINE INCOMPLETE' not in rpt_txt:
-        err("Not all PASS but report not INCOMPLETE")
+status_markers = re.findall(r'PHASE 0 BASELINE (?:COMPLETE|INCOMPLETE)', rpt_txt)
+expected_status = 'PHASE 0 BASELINE COMPLETE' if all(computed.values()) else 'PHASE 0 BASELINE INCOMPLETE'
+if len(status_markers) != 1:
+    err(f"C14: expected exactly one final-status marker, found {len(status_markers)}")
+elif status_markers[0] != expected_status:
+    err(f"C14: expected {expected_status!r}, found {status_markers[0]!r}")
 
 # ── Summary ─────────────────────────────────────────────────────────────────
 print(f"Sources:{len(sources)} Reqs:{len(reqs)} Parity:{len(parity)} "

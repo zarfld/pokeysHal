@@ -609,7 +609,8 @@ Status: unresolved
 The following observations concern a separate component and are not pokeysHal conflicts.
 
 **pokeys_homecomp implementation observations** belong to `zarfld/LinuxCnc_PokeysLibComp`
-and are not part of the pokeysHal library baseline. Specifically:
+and are recorded as external counterpart observations only. They are not part of the
+pokeysHal library baseline. Specifically:
 
 - The unreachable initialization block in `homing_init()` (lines 366–397) and its
   effect on `volatile_home` is an internal defect of `pokeys_homecomp` (E-010).

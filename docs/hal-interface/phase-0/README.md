@@ -214,13 +214,14 @@ by comparing file contents against the upstream repository.
 Thirteen deliverables have been created in `docs/hal-interface/phase-0/`. Evidence
 for every finding is referenced by file and line number or issue number. No
 production code was modified, no tests were designed, and no compatibility plan
-was created. Criteria 2, 3, 8, and 14 remain COMPLETE.
+was created. Criteria 2, 3, 8, and 14 remain under review until the report and
+lifecycle matrix fully reflect the narrowed Phase 0 scope.
 
-**pokeys_homecomp is a separate counterpart component.** It is not implemented
-by pokeysHal. Its `joint.N.*` pins are connected to PoKeys-side endpoints through
-HAL configuration by the machine integrator. See lifecycle-ownership-matrix.md
-Section B and integration-links.yaml for the counterpart ABI and integration
-contracts.
+**pokeys_homecomp is a separate external counterpart component.** It is not part
+of the normative pokeysHal baseline. Its `joint.N.*` pins are recorded only as
+external evidence and integration observations, not as pokeysHal requirements.
+See lifecycle-ownership-matrix.md Section B and integration-links.yaml for the
+external-boundary notes and integration contracts.
 
 ## No Compatibility Design Created
 

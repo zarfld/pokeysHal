@@ -89,7 +89,7 @@ Inspected: 2026-08-03 through 2026-08-04.
 1. Body status vocabulary: complete | partial | empty | title-only | not-inspected
 2. Comment status vocabulary: complete | partial | none | not-inspected
 3. CLOSED status not treated as proof of complete implementation.
-4. homecomp joint.N.* pins are owned by pokeys_homecomp; they are signal endpoints.
+4. homecomp joint.N.* pins are owned by pokeys_homecomp; they are external counterpart signal endpoints and not normative pokeysHal requirements.
 5. PR #29 is a pull request, explicitly labeled.
 6. Source ID None: no source-register entry exists for this issue. This is a
    source-register coverage gap. Retained HIGH/MEDIUM issues must have a

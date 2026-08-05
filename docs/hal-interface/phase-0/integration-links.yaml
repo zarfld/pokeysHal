@@ -1,6 +1,7 @@
 # Integration Link Catalogue — Phase 0
 # Each entry records the producer endpoint, consumer endpoint, HAL contract,
-# and compatibility status for one PoKeys↔homecomp signal boundary.
+# and compatibility status for one PoKeys-side signal boundary with an external
+# homecomp counterpart observation.
 # Evidence fields are separated by source domain.
 ---
 integration_links:
@@ -37,10 +38,12 @@ integration_links:
     consumer_direction: HAL_IO
     hal_type: hal_bit_t
     semantic_contract: >-
-      The pokeysHal endpoint and the homecomp endpoint both exist, but the
-      runtime read/write propagation semantics between them are not traced by
-      the Phase 0 evidence set. This link remains unverified-incomplete until
-      a concrete propagation path is demonstrated in source or runtime evidence.
+      The pokeysHal endpoint exists and the homecomp endpoint is recorded as
+      external counterpart evidence only. The runtime read/write propagation
+      semantics between the PoKeys-side pin and the external counterpart are not
+      traced by the Phase 0 evidence set. This link remains unverified-incomplete
+      until a concrete propagation path is demonstrated in source or runtime
+      evidence.
     enum_contract: "binary bit; no enum"
     mapping_scope: HAL/INI configuration (propagation untraced)
     compatibility_status: unverified-incomplete

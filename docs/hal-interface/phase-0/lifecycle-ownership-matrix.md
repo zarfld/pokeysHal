@@ -77,12 +77,13 @@ Evidence from pokeysHal@cd1f0dc8a0f64f92dc6bdce21bddcb36d33a14cd.
 
 **Source:** E-010 (`pokeys_rt/pokeys_homecomp.comp` in `zarfld/LinuxCnc_PokeysLibComp@0c058e6c`)
 
-`pokeys_homecomp` is a **separate, independently loaded LinuxCNC component**.
-It is not a subsystem of pokeysHal.
-It is not implemented by pokeysHal.
-It owns the `joint.N.*` pins exclusively.
-Its lifecycle (hal_init, hal_ready, hal_exit) is external to pokeysHal and
-managed by the LinuxCNC runtime.
+`pokeys_homecomp` is a **separate, externally managed LinuxCNC component**.
+It is not part of the normative pokeysHal baseline and is not implemented by
+pokeysHal. Its `joint.N.*` pins are recorded as external counterpart evidence and
+integration observations only. This is an external counterpart observation note
+for the Phase 0 baseline. The Phase 0 baseline does not claim ownership of those
+pins for pokeysHal, nor does it define their lifecycle semantics as pokeysHal
+requirements.
 
 | Property | Value |
 |---|---|
@@ -91,7 +92,7 @@ managed by the LinuxCNC runtime.
 | Pins owned | `joint.N.home-sw-in`, `joint.N.homing`, `joint.N.homed`, `joint.N.home-state`, `joint.N.index-enable`, `joint.N.PEv2.AxesState`, `joint.N.PEv2.AxesCommand`, etc. |
 | HAL memory | `pokeys_homecomp` allocates its own HAL objects through the LinuxCNC RTAPI path described in E-010. The Phase 0 evidence set does not claim any additional pokeysHal-specific initialization semantics for this external component. |
 | Initialization | `homing_init()` calls `makepins()` at line 364, then returns. The explicit init loop at lines 366–397 is unreachable dead code. The startup semantics for the external pins are therefore documented from E-010 only; no pokeysHal F-class evidence is claimed for this section. |
-| Internal defects | The counterpart `pokeys_homecomp` (E-010) has an unreachable initialization block in `homing_init()`. This is internal to `zarfld/LinuxCnc_PokeysLibComp` and is not a pokeysHal library issue. See the out-of-scope note in `conflict-register.md`. |
+| Internal defects | The counterpart `pokeys_homecomp` (E-010) has an unreachable initialization block in `homing_init()`. This is an external-component observation only and is not a pokeysHal library issue. See the out-of-scope note in `conflict-register.md`. |
 | Lifecycle owner | LinuxCNC runtime (loads/unloads `pokeys_homecomp` independently) |
 
 ---
