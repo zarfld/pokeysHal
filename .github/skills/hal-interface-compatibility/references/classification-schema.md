@@ -25,25 +25,44 @@ Interpretation:
 - `HAL-AND-ASYNC`: both streams are materially affected.
 - `NON-HAL`: no relevant HAL or async compatibility impact.
 
-## 2. contract_relationship
+## 2. canonical_relationship
 
 Allowed labels:
-- `canonical-compatible`
-- `legacy-compatible`
-- `canonical-and-legacy-compatible`
-- `canonical-conflict`
-- `legacy-conflict`
+- `compatible`
+- `conflict`
+- `not-applicable`
+- `unknown`
+
+Interpretation rules:
+- classify canonical relationship independently from legacy relationship;
+- do not infer compatibility by naming similarity alone.
+
+## 3. legacy_relationship
+
+Allowed labels:
+- `compatible`
+- `conflict`
+- `not-applicable`
+- `unknown`
+
+Interpretation rules:
+- classify legacy relationship independently from canonical relationship;
+- preserve documented legacy behavior when measuring compatibility.
+
+## 4. interface_role
+
+Allowed labels:
+- `normal`
 - `current-only-extension`
 - `required-absent`
 - `external-integration-only`
 - `unknown`
 
 Interpretation rules:
-- classify against explicit evidence, not naming similarity;
 - use `external-integration-only` for HAL/INI counterpart mapping context;
 - do not treat external counterpart behavior as pokeysHal implementation scope.
 
-## 3. implementation_state
+## 5. implementation_state
 
 Allowed labels:
 - `implemented-matching`
@@ -60,7 +79,7 @@ Interpretation rules:
 - `partially-implemented` means only part of required behavior is implemented;
 - `unknown` requires explicit evidence follow-up.
 
-## 4. decision_gate
+## 6. decision_gate
 
 Allowed labels:
 - `implementable-preserve-contract`
@@ -78,7 +97,7 @@ Interpretation rules:
 - choose `characterization-only` when current behavior can be documented/tested
   without contract-selection decisions.
 
-## 5. verification_stream
+## 7. verification_stream
 
 Allowed labels:
 - `HAL-ABI`
@@ -91,7 +110,13 @@ Interpretation rules:
 - plan and report each stream separately;
 - do not merge HAL compatibility and async parity into one pass/fail claim.
 
-## 6. evidence_confidence
+`HAL-INTEGRATION` specifically covers component load/readiness, object
+resolution, naming/prefix behavior, representative HAL operations, function
+registration behavior where relevant, ownership compatibility, conditional
+creation visibility, HAL/INI loading behavior, and external counterpart wiring
+as configuration evidence.
+
+## 8. evidence_confidence
 
 Allowed labels:
 - `source-confirmed`
@@ -105,6 +130,32 @@ Interpretation rules:
 - `inferred` and `unknown` are insufficient for behavior-changing decisions;
 - use higher-authority evidence precedence before concluding compatibility.
 
+## 9. claim_evidence_level
+
+Allowed non-HIL labels:
+- `source-inspected`
+- `statically-characterized`
+- `module-tested`
+- `HAL-integration-tested`
+
+Definitions:
+- `source-inspected`: source and declarations were reviewed.
+- `statically-characterized`: contract tuple was derived without executing it.
+- `module-tested`: deterministic module-level test passed.
+- `HAL-integration-tested`: component was loaded and the relevant HAL contract
+  was exercised in LinuxCNC HAL.
+
+Do not place HIL statuses in this field.
+
+## 10. hil_status
+
+Optional field used only when hardware evidence exists.
+
+Its value must be taken exactly from:
+- `.github/skills/hil-tdd/references/result-schema.md`
+
+Do not reproduce the HIL status table in this schema.
+
 ## Required Output Fields
 
 ### Issue burn-down output
@@ -114,11 +165,15 @@ Required fields:
 - `task_scope`
 - `affected_interface_ids`
 - `contract_comparison`
-- `contract_relationship`
+- `canonical_relationship`
+- `legacy_relationship`
+- `interface_role`
 - `implementation_state`
 - `linked_conflicts`
 - `linked_open_decisions`
 - `decision_gate`
+- `claim_evidence_level`
+- `hil_status` (when hardware evidence exists)
 - `required_issue_decomposition`
 - `required_tests_by_stream`
 - `async_impact`
@@ -133,11 +188,17 @@ Required fields:
 - `module`
 - `task_scope`
 - `affected_interface_ids`
+- `canonical_relationship`
+- `legacy_relationship`
+- `interface_role`
 - `hal_abi_tests`
 - `hal_propagation_tests`
 - `async_parity_tests`
 - `hal_integration_tests`
+- `verification_streams`
+- `expected_claim_evidence_level_by_layer`
 - `hil_applicability`
+- `hil_status` (only when existing hardware evidence is available)
 - `mocks_and_fixtures`
 - `assertion_evidence_sources`
 - `known_gaps`

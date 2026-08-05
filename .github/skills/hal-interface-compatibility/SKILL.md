@@ -117,7 +117,21 @@ Evaluate potential impact on each dimension below:
 - PoKeys-side propagation;
 - external HAL/INI compatibility expectations.
 
-If no HAL-interface impact is found, classify as `NON-HAL` and stop this skill.
+After evaluating HAL impact, evaluate async/protocol impact independently.
+
+Task-scope decision table:
+- HAL impact and async impact -> `HAL-AND-ASYNC`
+- HAL impact only -> `HAL-COMPAT`
+- async impact only -> `ASYNC-PARITY`
+- neither HAL nor async impact -> `NON-HAL`
+
+Rules:
+- `ASYNC-PARITY` tasks must not be reclassified as `NON-HAL` only because no
+   HAL contract changed.
+- For `ASYNC-PARITY` tasks, you may skip HAL-specific contract-comparison
+   sections, but you must still produce the ASYNC-PARITY verification stream and
+   required outputs.
+- For `NON-HAL`, stop this skill after recording exclusions.
 
 ### C. Resolve Phase 0 evidence
 
@@ -145,6 +159,9 @@ For each affected object, record separate fields:
 - legacy contract;
 - current observed contract;
 - decided target contract (when one exists);
+- canonical relationship;
+- legacy relationship;
+- interface role;
 - evidence sources;
 - linked conflicts;
 - linked open decisions;
@@ -192,6 +209,20 @@ HAL-PROPAGATION stream:
 
 For each path, classify as complete, partial, missing, or untraced.
 
+HAL-INTEGRATION stream:
+- component load and readiness behavior;
+- expected object resolution after load;
+- prefix and instance naming behavior;
+- HAL name-length acceptance/failure behavior;
+- representative `net` operations;
+- representative `setp` operations;
+- `addf` or function registration behavior where relevant;
+- signal source/reader ownership compatibility;
+- conditional object creation visibility after HAL/INI configuration loading;
+- external counterpart wiring as configuration evidence only.
+
+HAL-INTEGRATION must not inspect or require `pokeys_homecomp` internals.
+
 ASYNC-PARITY stream:
 - synchronous PoKeysLib function or protocol authority;
 - command/subcommand;
@@ -208,18 +239,29 @@ HIL stream:
 - use `.github/skills/hil-tdd/references/result-schema.md`;
 - do not redefine HIL status or outcome terms in this skill.
 
+HIL claim rules:
+- `HIL-observed` is exploratory physical evidence, not a passing test result.
+- `HIL-test-executed` means a named HIL test completed, regardless of outcome.
+- `HIL-verified` is required to claim named behavior passed HIL verification.
+
 ### G. Produce issue-burn-down output
 
 Required output fields:
 - issue and scope;
 - affected interface IDs;
 - contract comparison per object;
+- canonical relationship per object;
+- legacy relationship per object;
+- interface role per object;
+- implementation state per object;
 - conflicts and open decisions;
 - decision-gate result;
+- claim evidence level;
 - required issue decomposition;
 - required tests by verification stream;
 - async impact statement;
 - HIL applicability statement;
+- HIL status when hardware evidence exists;
 - traceability changes;
 - explicit exclusions.
 
@@ -228,10 +270,17 @@ Required output fields:
 Required output fields:
 - module;
 - affected interface IDs;
+- canonical relationship per object;
+- legacy relationship per object;
+- interface role per object;
 - HAL-ABI tests;
 - propagation tests;
 - async-parity tests;
+- HAL-integration tests;
+- verification streams;
+- expected claim evidence level from each test layer;
 - HIL applicability;
+- HIL status only when existing hardware evidence is available;
 - mocks and fixtures;
 - evidence source for each assertion;
 - known gaps and decision blockers.
@@ -247,8 +296,9 @@ Compatibility statements must include verification layer:
 - `statically characterized`;
 - `module-tested`;
 - `HAL-integration-tested`;
-- `HIL-observed` or stronger status from
-  `.github/skills/hil-tdd/references/result-schema.md`.
+
+For hardware-backed claims, report optional `hil_status` using labels from:
+- `.github/skills/hil-tdd/references/result-schema.md`
 
 ## Guardrails
 
@@ -257,6 +307,7 @@ Compatibility statements must include verification layer:
 - Do not claim compatibility from inferred evidence alone.
 - `inferred` and `unknown` confidence are insufficient for behavior-changing
   implementation decisions.
+- Do not claim HIL pass from `HIL-observed` alone.
 
 ## Suggested Procedure Skeleton
 
